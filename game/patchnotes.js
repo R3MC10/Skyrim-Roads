@@ -3,13 +3,19 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b215-fightdeclutter", build: 215, date: "25 Nov 2026", title: "A calmer fight screen", items: [
+    { id: "b217-fightdeclutter", build: 217, date: "25 Nov 2026", title: "A calmer fight screen", items: [
       "The fight screen is tidier, mostly on phones. The top is one slim strip with the round and the turn order; the fight log and the combat wheel sit in the new … menu.",
       "The foe's card shows its name and kind on one line and only its next move. Tap the card to see everything it plans this round.",
       "The target is a thin ring on the ground under the foe. The dashed line to it only shows while you aim.",
       "Your health, magicka and stamina live only in the orb now; its striped band shows how much the foe is about to take. No more bars over your hero or numbers in the Moves row.",
       "The Moves diamonds and \"Your turn\" share one thin line, and a move's description shows as a fixed line just above your buttons, never on top of them.",
       "End turn is a plain button in its own corner. Snow falls as soft round flakes.",
+    ] },
+    { id: "b216-dungeonphone", build: 216, date: "25 Nov 2026", title: "Dungeons fit your phone better", items: [
+      "A strip above the room shows how deep you are and the rooms you can go to next. Tap one to go there, or tap Map for the whole chart.",
+      "The room's choices sit two to a row, so Fight, Sneak, Run and your potion fit on the screen without scrolling.",
+      "No more snow or rain inside caves and ruins. Instead you see dust in the torchlight in barrows, water dripping in caves, and sparks drifting in Dwemer ruins and by campfires.",
+      "The foe waiting in a room now stands in the painting, so a draugr that opens its eyes is really there.",
     ] },
     { id: "b214-daedric", build: 214, date: "25 Nov 2026", title: "Daedric bargains and artifacts that wake up", items: [
       "Black shrines by the road can now carry an offer from one of six Daedric princes: Mehrunes Dagon, Azura, Nocturnal, Hircine, Boethiah and Meridia (from level 8).",

@@ -175,13 +175,13 @@ const TABMENU = (() => {
   }
   function drawBG(el, S) {
     const pos = posOf(S), place = !S.trip && S.location;
-    let key = place ? `p|${place}` : "w";
+    let key = place ? `p|${place}${S.dungeon ? "|in" : ""}` : "w";
     try { if (typeof SKY !== "undefined") key += "|" + SKY.state(pos).key; } catch { /* ignore */ }
     if (key === bgKey && el.firstChild) return;
     bgKey = key;
     let html = "";
     try {
-      if (place && typeof PLACEART !== "undefined") html = PLACEART.scene(place);
+      if (place && typeof PLACEART !== "undefined") html = PLACEART.scene(place, { indoor: !!S.dungeon });   // [dungeonphone] no weather inside
       if (!html && typeof ART !== "undefined") {
         html = ART.html(240, 400, (g, H, w, h) => {
           const st = typeof SKY !== "undefined" ? SKY.state(pos) : null;
