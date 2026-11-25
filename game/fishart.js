@@ -8,6 +8,10 @@
    - The float bobs with rings, twitches on nibbles and goes under with a splash on the real bite.
    - Reeling: the fish's shadow darts under the water (faster on its runs), and on a run it may leap out, painted.
      The catch card shows the painted fish (fish-<kind>, mapped below; other fish keep the ink drawing).
+   - Painted splashes and rings on the water (fish-splash-small/medium/big, fish-ripple-1/2/3), anchored where the float
+     touches the water: the cast lands with a small splash and spreading rings; a nibble is a little plop and one ring
+     (a bit different every time); the bite a crown splash and quick rings; the catch a big burst and wide rings. Rings
+     grow to ~180% while they fade; the float's idle rings are painted too.
    Every picture is optional: without it that part keeps the old ink drawing. */
 const FISHART = (() => {
   const DOM = typeof document !== "undefined";
@@ -54,7 +58,36 @@ const FISHART = (() => {
     cache.set(id, rec); return rec;
   }
   /* ask for the pictures early so they're there when needed */
-  function warm(id) { img("mg-fishing-bg"); img("tool-fishing-rod"); if (id && SPR[id]) img("fish-" + SPR[id][0]); }
+  function warm(id) { img("mg-fishing-bg"); img("tool-fishing-rod"); FXK.forEach((k) => img(k)); if (id && SPR[id]) img("fish-" + SPR[id][0]); }
+  /* painted water effects: [key, width in drawing units at float size 1, seconds]. Splashes pivot on their bottom centre
+     (the water line), rings on their centre. */
+  const FXK = ["fish-splash-small", "fish-splash-medium", "fish-splash-big", "fish-ripple-1", "fish-ripple-2", "fish-ripple-3"];
+  const FXS = { small: ["fish-splash-small", 30, 0.45], medium: ["fish-splash-medium", 46, 0.7], big: ["fish-splash-big", 78, 0.95],
+    r1: ["fish-ripple-1", 40, 0.6], r2: ["fish-ripple-2", 50, 0.9], r3: ["fish-ripple-3", 64, 1.5] };
+  /* add one: k a FXS key, s the float's size there, o: { at: delay (s), dur, size, rot, a (alpha) } */
+  function addFx(fx, k, x, y, s, o = {}) {
+    const d = FXS[k]; if (!d || !img(d[0])) return false;
+    fx.sp.push({ k, x, y, s: s * (o.size || 1), t: -(o.at || 0), dur: o.dur || d[2], rot: o.rot || 0, a: o.a ?? 1, ring: k[0] === "r" });
+    return true;
+  }
+  function drawFx(g, fx, rings) {
+    for (const e of fx.sp) {
+      if (e.ring !== rings || e.t < 0) continue;
+      const d = FXS[e.k], im = img(d[0]); if (!im) continue;
+      const k = clamp(e.t / e.dur), w0 = d[1] * e.s, h0 = w0 * im.height / im.width;
+      g.save(); g.translate(e.x, e.y); if (e.rot) g.rotate(e.rot);
+      if (e.ring) {   // grows to ~180% while it fades out
+        const sc = 0.55 + 1.25 * (1 - (1 - k) * (1 - k));
+        g.globalAlpha = e.a * (k < 0.12 ? k / 0.12 : 1) * (1 - k);
+        g.drawImage(im, -w0 * sc / 2, -h0 * sc / 2, w0 * sc, h0 * sc);
+      } else {   // shoots up fast, hangs, settles back and fades
+        const up = k < 0.25 ? 0.45 + 0.55 * (k / 0.25) : 1 - 0.25 * (k - 0.25) / 0.75, sx = 0.8 + 0.3 * Math.min(1, k * 2);
+        g.globalAlpha = e.a * (k < 0.6 ? 1 : 1 - (k - 0.6) / 0.4);
+        g.drawImage(im, -w0 * sx / 2, -h0 * up, w0 * sx, h0 * up);
+      }
+      g.restore();
+    }
+  }
 
   // ---------------------------------------------------------------- where things are
   const castD = (st) => clamp(((st.ctx.cast ?? 0.5) - 0.15) / 0.85);
@@ -80,7 +113,7 @@ const FISHART = (() => {
     { x: 200, y: 150, r: 120, v: 9, a: 0.09 }, { x: 470, y: 108, r: 170, v: 3, a: 0.1 }];
 
   // ---------------------------------------------------------------- state kept on st.fx
-  function fresh() { return { parts: [], crowns: [], rises: [], bend: 0, bv: 0, prev: {}, sh: null, leap: null, out: null, snap: null, lost: null, lastLeap: 0, nextRise: 0, dartT: 0, dartX: 0, lt: 0 }; }
+  function fresh() { return { sp: [], seen: typeof WeakSet !== "undefined" ? new WeakSet() : null, idleR: 0, parts: [], crowns: [], rises: [], bend: 0, bv: 0, prev: {}, sh: null, leap: null, out: null, snap: null, lost: null, lastLeap: 0, nextRise: 0, dartT: 0, dartX: 0, lt: 0 }; }
   function splash(fx, x, y, s, n, pow) {
     for (let i = 0; i < n; i++) {
       const a = (Math.random() * 2 - 1) * 0.95, sp = (50 + Math.random() * 110) * s * pow;
@@ -221,22 +254,38 @@ const FISHART = (() => {
     const pr = fx.prev;
     if (pr.phase !== p) {
       if (p === "aim") { const keep = fx.nextRise; Object.assign(fx, fresh(), { nextRise: keep, lt: T }); }
-      if (pr.phase === "fly" && p === "wait") splash(fx, sp.x, sp.y, sp.s, 9, 0.6);
+      if (pr.phase === "fly" && p === "wait") {   // cast: small splash, rings, then a wide fading ring
+        splash(fx, sp.x, sp.y, sp.s, 9, 0.6);
+        const wy = sp.y + 0.5 * sp.s;
+        addFx(fx, "small", sp.x, wy, sp.s); addFx(fx, "r2", sp.x, wy, sp.s, { at: 0.1 }); addFx(fx, "r3", sp.x, wy, sp.s, { at: 0.35, dur: 1.2, a: 0.8 });
+      }
       if (p === "reel") { fx.sh = { x: sp.x, y: sp.y + 6 * sp.s, vx: 0, vy: 0, face: -1 }; fx.d0 = d; fx.lastLeap = T; }
       if (pr.phase === "reel" && p === "done") {
         const sh = fx.sh || { x: sp.x, y: sp.y, face: -1 };
-        if (st.result) { fx.out = { t: 0, x: sh.x, y: sh.y, face: sh.face, s: depthS(sh.y) }; splash(fx, sh.x, sh.y, depthS(sh.y), 16, 1); }
+        if (st.result) {   // the catch: a big burst, then growing, fading rings
+          const ds = depthS(sh.y); fx.out = { t: 0, x: sh.x, y: sh.y, face: sh.face, s: ds }; splash(fx, sh.x, sh.y, ds, 16, 1);
+          addFx(fx, "big", sh.x, sh.y, ds); addFx(fx, "r2", sh.x, sh.y, ds, { at: 0.15, size: 1.2 }); addFx(fx, "r3", sh.x, sh.y, ds, { at: 0.4, dur: 1.4, size: 1.2 });
+        }
         else if (st.g?.over === "snap") fx.snap = { t: 0 };
         else fx.lost = { t: 0, x: sh.x, y: sh.y, face: sh.face || -1 };
         fx.leap = null;
       }
     }
-    if (p === "wait" && st.bit && !pr.bit) { splash(fx, sp.x, sp.y, sp.s, 26, 1.35); fx.bv += 3; }
+    if (p === "wait" && st.bit && !pr.bit) {   // the bite: a crown splash and quick rings
+      splash(fx, sp.x, sp.y, sp.s, 26, 1.35); fx.bv += 3;
+      const wy = sp.y + 0.5 * sp.s;
+      addFx(fx, "medium", sp.x, wy, sp.s); addFx(fx, "r1", sp.x, wy, sp.s, { dur: 0.45, size: 1.1 }); addFx(fx, "r2", sp.x, wy, sp.s, { at: 0.12, dur: 0.8 });
+    }
+    if (p === "wait" && fx.seen) for (const rp of st.ripple || []) {   // a nibble: a little plop and one ring, never quite the same
+      if (!rp || typeof rp !== "object" || fx.seen.has(rp)) continue; fx.seen.add(rp);
+      if (rp.small && !still()) { const wy = sp.y + 0.5 * sp.s, z = 0.85 + Math.random() * 0.3; addFx(fx, "small", sp.x + (Math.random() - 0.5) * 2 * sp.s, wy, sp.s, { size: z * 0.8, rot: (Math.random() - 0.5) * 0.16, dur: 0.4 }); addFx(fx, "r1", sp.x, wy, sp.s, { size: z, dur: 0.6 }); }
+    }
     if (p === "reel" && st.g) {
       const running = st.g.run > 0;
       if (running && !pr.run && !fx.leap && T - fx.lastLeap > 2.4 && Math.random() < 0.6 && fx.sh) {
         const s = depthS(fx.sh.y);
         fx.leap = { t: 0, dur: 0.85, x: fx.sh.x, y: fx.sh.y, face: fx.sh.face, s }; fx.lastLeap = T; splash(fx, fx.sh.x, fx.sh.y, s, 12, 0.9);
+        addFx(fx, "medium", fx.sh.x, fx.sh.y, s, { size: 0.8 }); addFx(fx, "r1", fx.sh.x, fx.sh.y, s, { at: 0.1 });
       }
       pr.run = running;
     }
@@ -263,6 +312,9 @@ const FISHART = (() => {
       const L2 = fx.lost; L2.t += dt;
       if (L2.t < 1.2) shadow(g, st.landed || st.fish, L2.x + L2.face * 130 * L2.t * depthS(L2.y), L2.y - 30 * L2.t, depthS(L2.y) * (1 - L2.t * 0.4), L2.face, 0.45 * (1 - L2.t / 1.2), T);
     }
+    // ---- painted rings on the water (behind the float)
+    fx.sp = fx.sp.filter((e) => (e.t += dt) < e.dur);
+    if (painted) drawFx(g, fx, true);
     // ---- float, rings and line
     if (p === "fly") {
       const k = clamp(st.pt / 0.7), ke = 1 - (1 - k) * (1 - k);
@@ -271,8 +323,11 @@ const FISHART = (() => {
       drawFloat(g, fl.x, fl.y, lerp(0.95, sp.s, ke), 0, painted);
     } else if (p === "wait" || (p === "done" && !st.g && st.wait)) {
       const S = sp.s, live = p === "wait";
-      for (let j = 0; j < 2; j++) { const age = ((T / 2.6) + j * 0.5) % 1; ring(g, sp.x, sp.y + 0.5 * S, (5 + age * 16) * S * 1.3, 0.22 * (1 - age), painted); }
-      for (const r of st.ripple || []) ring(g, sp.x, sp.y + 0.5 * S, (4 + r.t * (r.small ? 14 : 30)) * S * 1.3, (1 - r.t / 1.4) * (r.small ? 0.45 : 0.75), painted);
+      const pr1 = painted && !still() && img("fish-ripple-1");
+      if (pr1) {   // the float's idle rings: a painted ring now and then, growing as it fades
+        if (live && T >= fx.idleR) { fx.idleR = T + 1.3 + Math.random() * 0.6; addFx(fx, "r1", sp.x, sp.y + 0.5 * S, S, { dur: 2.2, a: 0.5, size: 0.8 }); }
+      } else for (let j = 0; j < 2; j++) { const age = ((T / 2.6) + j * 0.5) % 1; ring(g, sp.x, sp.y + 0.5 * S, (5 + age * 16) * S * 1.3, 0.22 * (1 - age), painted); }
+      if (!pr1) for (const r of st.ripple || []) ring(g, sp.x, sp.y + 0.5 * S, (4 + r.t * (r.small ? 14 : 30)) * S * 1.3, (1 - r.t / 1.4) * (r.small ? 0.45 : 0.75), painted);
       const nib = live && (st.ripple || []).filter((r) => r.small && r.t < 0.3).map((r) => 1 - r.t / 0.3)[0];
       const under = live && st.bit ? clamp((st.pt - st.wait.at) / 0.25) : 0;
       const bob = (still() ? 0 : Math.sin(T * 2 * Math.PI / 2.6) * 0.12) + (nib ? nib * 0.35 : 0);
@@ -292,7 +347,7 @@ const FISHART = (() => {
     // ---- out of the water: a leap, or the landed fish jumping out
     if (p === "reel" && fx.leap) {
       const lp = fx.leap; lp.t += dt; const k = lp.t / lp.dur;
-      if (k >= 1) { splash(fx, lp.x + lp.face * 70 * lp.s, lp.y, lp.s, 14, 0.9); fx.leap = null; if (fx.sh) fx.sh.x = lp.x + lp.face * 70 * lp.s; }
+      if (k >= 1) { const ex = lp.x + lp.face * 70 * lp.s; splash(fx, ex, lp.y, lp.s, 14, 0.9); addFx(fx, "medium", ex, lp.y, lp.s); addFx(fx, "r2", ex, lp.y, lp.s, { at: 0.1 }); fx.leap = null; if (fx.sh) fx.sh.x = lp.x + lp.face * 70 * lp.s; }
       else {
         const x = lp.x + lp.face * 70 * lp.s * k, y = lp.y - Math.sin(k * Math.PI) * 62 * lp.s;
         fishPic(g, st.fish, x, y, lp.s * fishW(st), lp.face, lp.face * (-0.75 + 1.5 * k), opt, T);
@@ -303,6 +358,8 @@ const FISHART = (() => {
       const o = fx.out; o.t += dt; const k = clamp(o.t / 0.55);
       if (k < 1) fishPic(g, st.result.item, o.x + o.face * 30 * k, o.y - Math.sin(k * Math.PI * 0.6) * 110 * o.s - k * 40, o.s * fishW(st) * (1 + k * 0.4), o.face, o.face * (-0.9 + k * 0.7), opt, T, 1 - k * k);
     }
+    // ---- painted splashes (in front of the float, behind the rod)
+    if (painted) drawFx(g, fx, false);
     // ---- the rod over everything on the water
     drawRod(g, pts, painted ? true : null);
     // ---- splashes
@@ -313,7 +370,9 @@ const FISHART = (() => {
       g.beginPath(); g.arc(q.x, q.y, q.r, 0, 7); g.fill();
     }
     fx.crowns = fx.crowns.filter((c) => (c.t += dt) < 0.5);
+    const paintedSplash = painted && fx.sp.some((e) => !e.ring && e.t >= 0);
     for (const c of fx.crowns) {
+      if (paintedSplash) break;
       const k = c.t / 0.5, h = Math.sin(Math.min(1, k * 1.6) * Math.PI) * 13 * c.s, rx = (4 + k * 9) * c.s;
       g.strokeStyle = LITE ? `rgba(236,242,246,${(0.75 * (1 - k)).toFixed(3)})` : `rgba(35,29,23,${(0.6 * (1 - k)).toFixed(3)})`; g.lineWidth = 1.1 * Math.max(0.6, c.s);
       g.beginPath();

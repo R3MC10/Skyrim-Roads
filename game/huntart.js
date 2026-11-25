@@ -11,6 +11,9 @@
      Off (fur and dust only), Reduced (a few dark drops) or Full (a spray, drops on the grass and a pool).
    - Skinning: the hide (cut from the painting, spine in the middle) stretched on a pole frame, a knife pass along its edge.
      The scene is graded for the clock and the weather (scenegrade.js); the arrows are the painted rig-w-arrow.
+   - Painted foreground (hunt-fg-branch-left/-right, hunt-fg-grass): branches hanging from the top corners, each swaying
+     about a degree on its own 5-9 s wind cycle, and grass along the bottom edge bending a few pixels; darker and a touch
+     soft, kept to the sides so the middle (where the animals walk and you aim) stays clear.
    All drawing is in huntgame.js units (560×300); FITCANVAS keeps it sharp from 360 px phones to 3440 px screens.
    Visual-only randomness: a local generator (the shared rolls stay in huntgame.js). */
 const HUNTART = (() => {
@@ -289,6 +292,7 @@ const HUNTART = (() => {
     // ---- the near layer (ferns and heather of the blind), then grass blowing in front of you
     layer(g, L.fore, W, H, 1 + 0.3 * near, ax, ay, bobX, bobY);
     blades(g, W, H, V.T, wind, V.mv);
+    foreground(g, W, H, V.T, wd, bobX * 1.4, bobY * 1.4, still());
     // leaves and seeds on the wind
     if (!V.leaves) spawnLeaves(V, W, H, wind);
     for (const l of V.leaves) {
@@ -321,6 +325,44 @@ const HUNTART = (() => {
     // ---- skinning, once it's down (or tracked down)
     if (kill) skinView(g, st, V, W, H, clean ? V.phT - 1.9 : V.phT - 1.6, P, A);
     return true;
+  }
+
+  // ---------------------------------------------------------------- the painted foreground (branches, grass)
+  /* sizes in drawing units: branches 42% of the height (≈20% of the width each, the middle 60% stays clear), grass the
+     full width and squashed a little so the middle third stays low (under the animals' feet) */
+  const FG = { left: { key: "hunt-fg-branch-left", h: 0.42 }, right: { key: "hunt-fg-branch-right", h: 0.42 }, grass: { key: "hunt-fg-grass", sq: 0.78 } };
+  const fgSoft = {};
+  /* a darker, slightly soft copy (made once): the foreground is out of focus and in shade */
+  function fgPic(k) {
+    if (fgSoft[k]) return fgSoft[k];
+    const im = img(k); if (!im || !DOM) return null;
+    const w = Math.min(im.naturalWidth || im.width, 900), h = Math.round(w * (im.naturalHeight || im.height) / (im.naturalWidth || im.width));
+    let c = im;
+    try {
+      c = mk(w, h); const x = c.getContext("2d");
+      if ("filter" in x) x.filter = "blur(0.8px) brightness(0.8) saturate(0.9)";
+      x.drawImage(im, 0, 0, w, h);
+      if (!("filter" in x)) { x.globalCompositeOperation = "source-atop"; x.fillStyle = "rgba(10,10,6,.2)"; x.fillRect(0, 0, w, h); }
+    } catch (e) { c = im; }
+    return (fgSoft[k] = c);
+  }
+  /* dx/dy: a few units of parallax (the creep bob); wd: the wind (-1..1 dir × strength) */
+  function foreground(g, W, H, T, wd, dx, dy, calm) {
+    const sway = (per, ph) => (calm ? 0 : Math.sin(T * 2 * PI / per + ph));
+    for (const side of ["left", "right"]) {
+      const F = FG[side], pic = fgPic(F.key); if (!pic) continue;
+      const h = H * F.h, w = h * pic.width / pic.height, L = side === "left";
+      const a = (L ? 1 : -1) * (0.012 * sway(L ? 6.7 : 8.3, L ? 0.4 : 2.1) + 0.006 * sway(L ? 2.9 : 3.4, 1.3)) + wd * 0.006;
+      g.save(); g.translate(L ? -2 + dx : W + 2 + dx, -2 + dy * 0.6); g.rotate(a);
+      g.drawImage(pic, L ? 0 : -w, 0, w, h);
+      g.restore();
+    }
+    const gp = fgPic(FG.grass.key);
+    if (gp) {
+      const w = W + 8, h = w * gp.height / gp.width * FG.grass.sq, y0 = H - h + 3 + Math.max(0, dy);
+      const bend = (wd * 2.5 + 2 * sway(5.3, 0.7) + 1 * sway(2.2, 2.6)) / h;   // 2-5 units at the tips, nothing at the roots
+      g.save(); g.transform(1, 0, -bend, 1, bend * (H + 3), 0); g.drawImage(gp, -4 + dx * 1.2, y0, w, h); g.restore();
+    }
   }
 
   // ---------------------------------------------------------------- pieces of the scene

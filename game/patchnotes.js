@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b205-artround3", build: 205, date: "25 Nov 2026", title: "Fresh paint for fights and mini-games", items: [
+      "Fourteen more fight places are freshly painted, bigger and sharper: the arena, ash wastes, autumn woods, bandit camps, Forsworn cliffs, forts, giant camps, lairs, marshes, mines, rocky highlands, temples, Thalmor halls and vampire lairs.",
+      "Fighters pick up the light of each of these places, so they match the new paintings.",
+      "The shiny floor in Thalmor halls reflects a bit less, so it doesn't steal the show.",
+      "Black and chestnut horses now rear up in their own colours when you get thrown from the saddle.",
+      "Lockpicking happens on a painted chest front, with the lock sitting right on its iron plate. When a chest opens, its lid lifts a little.",
+      "Hunting: branches hang in from the top corners and grass grows along the bottom, swaying in the wind, without hiding the animals or your aim.",
+      "Fishing: painted splashes and rings on the water when the line lands, on every nibble, on the bite and when you land the fish.",
+    ] },
     { id: "b204-tidy2", build: 204, date: "25 Nov 2026", title: "Arrows you can see, and a fresh Coming next", items: [
       "Hunting: the arrow stuck in an animal is now sized to the animal, with its feathers sticking out, so you can see where you hit.",
       "Mining: the mine's name and the line under it stay on top when the pickaxe swings at the top row on small phones.",

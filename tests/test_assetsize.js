@@ -31,7 +31,7 @@ const RULES = [
   [/^title$/, 1080, 1920, null], [/^bg-loading-\d$/, 1080, 1920, 9 / 16, 0.02], [/^ui-nightsky$/, 1080, 1920, 9 / 16, 0.02],
   [/^(place|biome)-/, 1600, 900, 16 / 9, 0.01], [/^shop-/, 1200, 320, null],
   [/^foe-dragon$/, 1536, 1024, 1.5, 0.01], [/^foe-/, 1254, 1254, 1, 0.01],
-  [/^bs-(forest|snow|tundra|cave|barrow|dwemer|town)$/, 2808, 1290, 2808 / 1290, 0.01], [/^bs-/, 1480, 680, 1480 / 680, 0.01], [/^bsf-/, 1480, 40, null], [/^bsp-/, 60, 60, null],
+  [/^bs-/, 2808, 1290, 2808 / 1290, 0.01], [/^bsf-/, 1480, 40, null], [/^bsp-/, 60, 60, null],
   [/^(gev|wev)-.*-thumb$/, 280, 200, null], [/^gev-(black-shrine|draugr-altar|dwemer-pipe|arkay-temple|werewolf-moon)$/, 1280, 480, 8 / 3, 0.01], [/^(gev|wev)-/, 1280, 440, null],
   [/^map-world$/, 2000, 1400, 10 / 7, 0.01], [/^map-world-2x$/, 3000, 2100, 10 / 7, 0.01],
   [/^ui-compass3d$/, 2240, 2240, 1, 0], [/^ui-(compass|frame|panel|parchment)$/, 1024, 1024, 1, 0],
@@ -41,7 +41,7 @@ const RULES = [
   [/^mg-.*-bg$/, 1600, 900, 16 / 9, 0.01], [/^ore-(iron|silver|gold|ebony)$/, 256, 220, null], [/^tool-pickaxe$/, 600, 250, null],
   [/^lock-(iron|steel|nordic|dwemer|noble)$/, 700, 700, 1, 0.01], [/^tool-lockpick$/, 900, 70, null], [/^tool-tension-wrench$/, 680, 100, null],
   [/^room-/, 1280, 720, null],
-  [/^mg-hunting-bg$/, 2048, 1152, 16 / 9, 0.01], [/^animal-/, 500, 320, null],
+  [/^mg-hunting-bg$/, 2048, 1152, 16 / 9, 0.01], [/^hunt-fg-(branch-left|branch-right|grass)$/, 600, 500, null], [/^fish-(splash|ripple)-/, 300, 100, null], [/^animal-/, 500, 320, null],
   [/^rig-w-(bow|bow-drawn|shield|shield-side|shield-kite|shield-kite-side)$/, 30, 190, null], [/^rig-w-/, 190, 20, null], [/^rig-nord[mf]-/, 250, 220, null], [/^rig-head-/, 400, 480, null], [/^horse-/, 1000, 1000, null], [/^icon-192/, 192, 192, 1, 0], [/^icon-/, 256, 256, 1, 0],
 ];
 const files = fs.readdirSync(W).filter((f) => /\.(webp|png|jpe?g)$/i.test(f));
