@@ -43,6 +43,11 @@
                                          light, same painted look as bust-*.webp, WebP q85 (made at 512, shipped at 256). Named people
                                          first (npc-adrianne-avenicci), then generics npcg-<role>-<race>-<sex> (guard, merchant,
                                          innkeeper). Only the names in ASSETS.NPC below are asked for; the drawn face stays until it loads.
+                                         Planned first batch (NPCART.PLAN): npc- adrianne-avenicci belethor farengar-secret-fire hulda
+                                         arcadia balgruuf-the-greater proventus-avenicci alvor orgnar lucan-valerius beirand corpulus-vinius
+                                         sybille-stentor sayma elisif-the-fair oengul-war-anvil elda-early-dawn wuunferth-the-unliving
+                                         revyn-sadri ulfric-stormcloak balimund keerava wylandriah bersi-honey-hand laila-law-giver arngeir;
+                                         npcg- guard-nord-m guard-nord-f merchant-nord-m merchant-nord-f innkeeper-nord-m innkeeper-nord-f.
      shop-<id>                1200×375   painted banners for town sections (shown above each shop's list)
        ids: general forge (also blacksmith) inn (also cook) alchemy wizard (also enchanter) market stables home hall
             fence arena mine — raw 3:2 paintings go through art/conv: crop the middle band, WebP q80
@@ -156,13 +161,9 @@ const ASSETS = (() => {
   const PAINTED = new Set(["icon-hs-brooch", "icon-hs-compass", "icon-hs-draught", "icon-hs-goblet", "icon-hs-papers", "icon-hs-signet", "icon-hs-torc",
     "icon-ing-blue-flower", "icon-ing-fire-salts", "icon-ing-garlic", "icon-ing-lavender", "icon-ing-salt", "icon-ing-wheat",
     "icon-mat-dwarven", "icon-mat-firewood", "icon-mat-iron", "icon-mat-leather", "icon-mat-moonstone", "icon-mat-steel"]);
-  /* [npcportraits] painted NPC portraits in the game folder (npcart.js only asks for these). Add a name when its file lands. */
-  const NPC = new Set(["npc-adrianne-avenicci", "npc-belethor", "npc-farengar-secret-fire", "npc-hulda", "npc-arcadia", "npc-balgruuf-the-greater", "npc-proventus-avenicci",
-    "npc-alvor", "npc-orgnar", "npc-lucan-valerius",
-    "npc-beirand", "npc-corpulus-vinius", "npc-sybille-stentor", "npc-sayma", "npc-elisif-the-fair",
-    "npc-oengul-war-anvil", "npc-elda-early-dawn", "npc-wuunferth-the-unliving", "npc-revyn-sadri", "npc-ulfric-stormcloak",
-    "npc-balimund", "npc-keerava", "npc-wylandriah", "npc-bersi-honey-hand", "npc-laila-law-giver", "npc-arngeir",
-    "npcg-guard-nord-m", "npcg-guard-nord-f", "npcg-merchant-nord-m", "npcg-merchant-nord-f", "npcg-innkeeper-nord-m", "npcg-innkeeper-nord-f"]);
+  /* [npcportraits] painted NPC portraits that are in the game folder (npcart.js only asks for these; the rest of
+     NPCART.PLAN keeps the drawing). Add a name here when its file lands; tests/test_npcart.js checks each file exists. */
+  const NPC = new Set([]);
   const guessed = (key) => /^icon-/.test(key) || key === "map-world-2x";
   const wantHi = () => { try { return innerWidth >= 1100 || (devicePixelRatio || 1) > 1.5; } catch { return false; } };
   const state = new Map();   // key -> { st: "loading"|"ok"|"none", img, url }

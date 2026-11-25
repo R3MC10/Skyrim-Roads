@@ -248,8 +248,13 @@ const NPCART = (() => {
      colours as a tinted frame. */
   const slugOf = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   const GENERIC = { guard: 1, merchant: 1, innkeeper: 1 };
-  function paintKey(n) {
-    const list = typeof ASSETS !== "undefined" && ASSETS.NPC; if (!list || !n) return null;
+  /* the first batch of 32 (only the ones listed in ASSETS.NPC are in the game folder so far) */
+  const PLAN = ["adrianne-avenicci", "belethor", "farengar-secret-fire", "hulda", "arcadia", "balgruuf-the-greater", "proventus-avenicci", "alvor", "orgnar", "lucan-valerius",
+    "beirand", "corpulus-vinius", "sybille-stentor", "sayma", "elisif-the-fair", "oengul-war-anvil", "elda-early-dawn", "wuunferth-the-unliving", "revyn-sadri", "ulfric-stormcloak",
+    "balimund", "keerava", "wylandriah", "bersi-honey-hand", "laila-law-giver", "arngeir"].map((s) => "npc-" + s)
+    .concat(["guard", "merchant", "innkeeper"].flatMap((r) => ["m", "f"].map((x) => `npcg-${r}-nord-${x}`)));
+  function paintKey(n, all) {
+    const list = all ? new Set(PLAN) : typeof ASSETS !== "undefined" && ASSETS.NPC; if (!list || !n) return null;
     const k = "npc-" + slugOf(n.name);
     if (!n.generic && n.role !== "guard" && list.has(k)) return k;
     if (GENERIC[n.role]) { const g = `npcg-${n.role}-${n.race}-${n.sex === "f" ? "f" : "m"}`; if (list.has(g)) return g; }
@@ -348,5 +353,5 @@ const NPCART = (() => {
     const line = greeting(n, s);
     return `<div class="npctalk">${portrait(n, 96)}<div class="npct"><b>${n.name.replace(/[<>&"]/g, "")}</b><span class="npcrole">${(n.title || "").replace(/[<>&"]/g, "")}</span>${line ? `<q>${line.replace(/[<>&"]/g, "")}</q>` : ""}</div></div>`;
   }
-  return { TOWN, who, talk, portrait, paintKey, slugOf, trainer, follower, giver, steward, jarlOf, greeting, HOLD_COLOR, CAPITAL, FOLLOWER_LOOK, TRAINER_RACE };
+  return { TOWN, who, talk, portrait, paintKey, slugOf, PLAN, trainer, follower, giver, steward, jarlOf, greeting, HOLD_COLOR, CAPITAL, FOLLOWER_LOOK, TRAINER_RACE };
 })();
