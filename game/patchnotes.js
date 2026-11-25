@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b208-stables", build: 208, date: "25 Nov 2026", title: "Tidier stables", items: [
+      "The stables screen is now fully in Polish: saddlebags, horseshoes, horse armor, breeds, coats, the cart and renaming your horse.",
+      "Your horse's card shows its painted picture in its own coat, in a proper frame, instead of a tiny icon. A knocked-down horse lies down in the picture.",
+      "The bond bar now says what it measures, for example 4/100 toward level 4, so a nearly empty bar right after a new level doesn't look broken.",
+      "The banners in the corner, like Quest started, Objective and Skill increased, are in Polish now too.",
+    ] },
     { id: "b207-bonds", build: 207, date: "25 Nov 2026", title: "Bonds with followers and horses", items: [
       "Followers now have ranks: Hireling, Companion, Trusted and Sworn. They climb as loyalty grows, and each rank gives something real.",
       "Companion: they carry 25 more for you. Trusted: they fight smarter, stepping in front of you when you're badly hurt, healing you sooner and finishing off wounded foes. Sworn: a signature move once per fight, even before their personal quest.",
