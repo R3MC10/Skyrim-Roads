@@ -81,6 +81,7 @@ async def main():
         await shot("1_procedural")
         ok = await pg.evaluate("()=>PAINTEDMAP.image(1)===null && PAINTEDMAP.settingsHTML(()=>'')===''")
         assert ok, "no painting: procedural map, no roads switch"
+        await pg.evaluate("()=>typeof MAPTILES!=='undefined' && MAPTILES.enable(false)")   # the real tile pyramid would cover the placeholder
         size = await pg.evaluate(PLACEHOLDER, ["map-world", 2, "sepia(.7) saturate(1.6) hue-rotate(-15deg)"])
         print("placeholder map-world", size)
         await pg.wait_for_timeout(400)

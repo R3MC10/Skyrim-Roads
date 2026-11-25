@@ -572,8 +572,11 @@ const WorldMap = (() => {
     const Pcss = k / dpr;                 // CSS px per map unit
     // the painting is never shown bigger than PAINT_MAX × its own pixels (it would turn soft): past PAINT_FADE it fades
     // into the close-up ink chart (inkmap.js), a wash of its own colours with crisp hand-inked detail on top
-    const IK = painted && typeof INKMAP !== "undefined" ? INKMAP : null;
-    const pscale = painted ? (W * Pcss) / painted.naturalWidth : 0;
+    // with the tile pyramid (maptiles.js) the painting has 8000 px across: it stays the map at every zoom, with a fine
+    // painted grain past its own pixels, and the ink chart is only the fallback for builds without the tiles
+    const MT = painted && typeof MAPTILES !== "undefined" && !MAPTILES.off ? MAPTILES : null;
+    const IK = painted && !MT && typeof INKMAP !== "undefined" ? INKMAP : null;
+    const pscale = painted ? (W * Pcss) / (MT ? MT.LEVELS[MT.TOP][0] : painted.naturalWidth) : 0;
     const pa = !painted ? 1 : !IK ? 1 : Math.max(0, Math.min(1, (PAINT_MAX - pscale) / (PAINT_MAX - PAINT_FADE)));
     // how far into the close-up we are (0 at the painting's own size … 1 well into the ink chart): the sky's light shafts,
     // cloud shadows, mist and town glows tone down with it so the chart stays clear (lightfx.js, mapart.js)
@@ -582,6 +585,7 @@ const WorldMap = (() => {
     stats.paintScale = pa > 0 ? pscale : 0; stats.paintAlpha = painted ? pa : 0; stats.ink = IK ? 1 - pa : 0; stats.roads = ROAD_STYLE; stats.dpr = dpr;
     if (IK && pa < 1) { g.save(); g.setTransform(1, 0, 0, 1, 0, 0); IK.draw(g, painted, k, ox, oy, canvas.width, canvas.height, dpr, 1); g.restore(); }
     if (bimg && pa > 0) { g.globalAlpha = pa; g.drawImage(bimg, 0, 0, W, H); g.globalAlpha = 1; }   // the painting is stretched over the world bounds: world (x, y) → (x·W, y·H)
+    if (MT) { const over = MT.draw(g, k, ox, oy, canvas.width, canvas.height); const ts = MT.stats(); stats.tiles = ts.tiles; stats.tileLevel = ts.level; stats.grain = ts.grain; stats.tileOver = +over.toFixed(2); }   // sharp tiles over the base painting (same world → screen mapping)
     else if (!bimg) { g.fillStyle = "#26404c"; g.fillRect(0, 0, W, H); }
     if (painted) { if (PM.roads()) paintRoads(g, s / UI); paintChrome(g, s / UI); }   // roads (Settings → Graphics), compass, frame (the names come after the places)
     const sl = SV ? null : seasonLayer(v.season ?? (typeof WEVENTS !== "undefined" ? WEVENTS.season() : null)); if (sl) g.drawImage(sl, 0, 0, W, H);   // winter snow, autumn colours, spring green

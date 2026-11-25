@@ -6,6 +6,7 @@
    An optional map-world-2x (3000×2100) is asked for the first time you zoom in to 2× or more; once it has arrived it is
    used at every zoom (only asked for when map-world itself is in), so only one big picture is drawn (and kept decoded) at a time. No file, a picture of the wrong shape,
    or Solstheim: the procedural map, unchanged.
+   Close up, maptiles.js draws an 8000 px tile pyramid of the same painting on top (mapt-* files), so it stays sharp.
    Settings → Graphics → Roads on the map (prefs key "mapRoads", default on; shown only when a painting is in). */
 const PAINTEDMAP = (() => {
   const W = 1000, H = 700, ASPECT = W / H, KEY = "map-world", KEY2 = "map-world-2x", ZOOM_2X = 2;
