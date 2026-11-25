@@ -471,6 +471,30 @@ const G = (() => {
     const seen = (1 - base - sm) * (1 - 0.12 * P(s, "stealth"));   // [Skyrim] Stealth: 20% harder to detect per rank (our scale)
     return Math.max(0.05, Math.min(0.92, 1 - seen));
   }
+  /* [OURS] the most one sneak blow may take: sneak2.js decides (Ambusher raises it); without it, the same rule here so a
+     strong foe never drops to one quiet blow, however much a pact artifact, perks or a power attack stack on it */
+  function sneakCap(f) {
+    if (typeof SNEAK2 !== "undefined") return SNEAK2.cap(f);
+    const e = f.e;
+    if (!e.boss && (e.danger === "low" || (!e.danger && (e.level ?? 99) <= (f.s.level || 1) - 12))) return 0;   // minor foes: no cap
+    return (e.boss ? 0.35 : 0.5) * (e.health || f.ehp0 || f.ehp);
+  }
+  /* [OURS] the instant fight's answer to the turn-based blow cap (tbfight.js HIT_CAP): one blow or spell takes at most
+     this share of a strong foe's full health, so stacked damage (a pact artifact, perks, a power attack) can't fell a
+     dangerous foe, elite or boss from full in one go. A beaten-down foe still falls to the blow that finishes it. */
+  const BLOW_CAP = 0.6;
+  function blowCap(f) {
+    const e = f.e || {};
+    if (e.player || e.pvp || e.friendly) return 0;
+    const strong = e.boss || e.qboss || e.danger === "high" || (f.tags && (f.tags.has("elite") || f.tags.has("dragon") || f.tags.has("boss")));
+    return strong ? BLOW_CAP * Math.max(e.health || 0, f.ehp0 || 0) : 0;
+  }
+  /* the blow after the cap (as tbfight.js: a foe already near the cap still falls to a big finishing blow) */
+  function capBlow(f, dmg) {
+    const c = blowCap(f), before = Math.max(0, f.ehp);
+    if (!c || before <= c || dmg <= c) return dmg;
+    return dmg >= before && before <= c * 1.2 ? dmg : c;
+  }
 
   class Fight {
     constructor(s, enemy, rules, t = now()) {
@@ -756,7 +780,8 @@ const G = (() => {
         dmg *= fp.taken;
         if (fp.reflect && Math.random() < fp.reflect) { const rb = dmg * 0.5; this.hp -= rb; label += ` · ${this.e.name} turns it back on you (${Math.round(rb)})`; }
       }
-      if (sneak && typeof SNEAK2 !== "undefined") { const c = SNEAK2.cap(this); if (c && dmg > c) { dmg = c; label += " (it reels, but stands)"; } }   // no one-shots on strong foes
+      if (sneak) { const c = sneakCap(this); if (c && dmg > c) { dmg = c; label += " (it reels, but stands)"; } }   // no one-shots on strong foes
+      if (capBlow(this, dmg) < dmg) { dmg = capBlow(this, dmg); label += " (it reels, but stands)"; }
       this.ehp -= dmg;
       if (typeof PFX !== "undefined") {
         label += PFX.onHit(this, px, dmg);
@@ -796,6 +821,7 @@ const G = (() => {
         if (this.turn === 1 && this.hidden && P(s, "quiet_casting")) { amt *= 2; label += " (sneak ×2)"; }
         if (sp.school === "Destruction" && P(s, "impact") && Math.random() < 0.3) { this.stagger = true; label += ", staggers"; }
         if (this.fp && this.fp.ward) { amt *= 1 - this.fp.ward; label += ` (${this.e.name}'s ward soaks ${Math.round(this.fp.ward * 100)}%)`; }   // Ward Absorb, Magic Resistance, Atronach
+        if (capBlow(this, amt) < amt) { amt = capBlow(this, amt); label += " (it reels, but stands)"; }   // no one-shots on strong foes
         this.ehp -= amt;
         if (typeof PFX !== "undefined") label += PFX.hitFoe(this, sp.element, amt, "spell");   // fire burns, frost chills, shock jolts
         return `${label}: ${Math.round(amt)}`;

@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b283-boethiahbal", build: 283, date: "25 Nov 2026", title: "No one-hit wins on strong foes", items: [
+      "With turn-based fights switched off, a strong foe (a troll, a vampire, a Thalmor patrol, an elite or a boss) can no longer drop to a single blow or spell from full health: one hit takes at most 60% of it. A foe that's already beaten down still falls to the blow that finishes it.",
+      "The Sigil of Boethiah stays just as strong, it just can't turn a heavy power attack or a sneak blow into a one-hit win on a dangerous foe any more.",
+    ] },
     { id: "b282-rewardtips", build: 282, date: "25 Nov 2026", title: "Item cards on rewards", items: [
       "Every loot and reward icon now shows the full item card, like in your pack: damage or armour, weight, value, the enchantment and what it does, potion effects, how many you already have, and the same \"against what you wear\" lines as the Items menu (damage, weight and value, better in green, worse in red).",
       "On a PC rest the mouse on an icon. On a phone tap it: the card slides up from the bottom of the screen, so it never covers the loot or the buttons. Tap anywhere else to close it.",

@@ -2,10 +2,11 @@
 // the design rules, the power budget, crafting, saves, the Magic tab, both fight systems, the combos (frost → Shatter,
 // fire → burning ground), poison, the perks, Polish, and a balance sim: no crafted spell beats the best bought spell of
 // its tier (per cast and per magicka), no one-shots on strong foes, fights don't end faster than with bought spells.
-//   W=/path/to/game/ node test_runecraft.js      (N=10 fights per row by default, N=3 for a quick run)
+//   W=/path/to/game/ node test_runecraft.js      (N=10 fights per row by default, N=3 for a quick run; SEED=n for another dice roll)
 const fs = require("fs"), vm = require("vm"), path = require("path");
 const W = process.env.W || path.join(__dirname, "../game/");
-const c = { console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, WeakMap, Proxy, Number, String, process };
+const SM = Object.create(Math); let seed = +(process.env.SEED || 2718); SM.random = () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };   // seeded: the small fight sims gave a different answer every run
+const c = { console, Math: SM, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, WeakMap, Proxy, Number, String, process };
 c.__lang = "en"; c.localStorage = { getItem: () => JSON.stringify({ lang: c.__lang }), setItem() {}, removeItem() {} };
 vm.createContext(c);
 for (const f of fs.readFileSync(W + "index.html", "utf8").match(/<script src="[^"]+"/g).map((m) => m.slice(13, -1)))
