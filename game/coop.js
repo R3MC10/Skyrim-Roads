@@ -90,7 +90,7 @@ const COOP = (() => {
     const bonus = waves ? Math.min(0.5, WAVE_BONUS * (members - 1)) : FOE_BONUS * clamp(members - 1, 0, MAX_MEMBERS - 1);
     const e = G.scaleEnemy({ ...def }, s.level), m = [0, 0.8, 0.95, 1.1][tier] * (1 + bonus);
     e.health = Math.round(e.health * m); e.hp = e.health; e.damage = Math.round(e.damage * [0, 0.8, 0.95, 1.1][tier] * 10) / 10;
-    if (typeof DEEPDELVE !== "undefined") DEEPDELVE.scaleFoe(s, e, false);   // the run's difficulty tier and depth
+    if (typeof DEEPDELVE !== "undefined") { DEEPDELVE.scaleFoe(s, e, false); if (!waves && DEEPDELVE.partyFoe) DEEPDELVE.partyFoe(s, e, members); }   // the run's difficulty tier and depth; tiered foes grow more with a bigger party
     return e;
   }
   const canPick = (s, run) => !!run && run.leader === s.id && !s.dungeon?.room && (s.dungeon?.cstep || 0) >= run.path.length;   // ahead of the record = a pick the store dropped: the next pick is still written
@@ -109,7 +109,7 @@ const COOP = (() => {
     const n = activeMembers(run).length;
     const W = typeof PARTYPLAY !== "undefined" && r?.enemy && r.type !== "boss" ? PARTYPLAY.waves(n) : 1;
     if (r?.enemy && spec?.key && r.type !== "boss") { const e = foe(s, spec.key, d.tier, n, W > 1); if (e) { r.enemy = e; r.text = e.text; } }
-    else if (r?.enemy && n > 1) { const b = W > 1 ? Math.min(0.5, WAVE_BONUS * (n - 1)) : FOE_BONUS * clamp(n - 1, 0, MAX_MEMBERS - 1); r.enemy.health = Math.round(r.enemy.health * (1 + b)); r.enemy.hp = r.enemy.health; }
+    else if (r?.enemy && n > 1) { const b = W > 1 ? Math.min(0.5, WAVE_BONUS * (n - 1)) : FOE_BONUS * clamp(n - 1, 0, MAX_MEMBERS - 1); r.enemy.health = Math.round(r.enemy.health * (1 + b)); r.enemy.hp = r.enemy.health; if (W === 1 && typeof DEEPDELVE !== "undefined" && DEEPDELVE.partyFoe) DEEPDELVE.partyFoe(s, r.enemy, n); }
     if (W > 1 && r?.enemy) {   // [OURS] a bigger party meets more foes: one after another, one per hero (at most 6)
       r.waves = W; r.wave = 1; r.wkey = spec?.key || keyOf(r.enemy.name); r.wn = n;
       r.text = `${r.text} ${W - 1} more ${W - 1 > 1 ? "shapes move" : "shape moves"} in the dark behind it.`;

@@ -79,6 +79,17 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Od 30. poziomu każde podziemie ma trudność Weteran, Legendarny i Mityczny: twardsi wrogowie, więcej złota i od 1 do 3 modyfikatorów, które przeczytasz na mapie przed wejściem (Zamarznięte głębiny, Niespokojni zmarli, Przeciążenie Dwemerów, Krwawy księżyc, Niestabilność magii, Pradawna ciemność, Przeklęte sanktuarium, Nieustępliwe łowy). Zmieniają się co tydzień.",
     "New perks: Dungeon Veteran (Athletics) and Deep Delver (Lockpicking). Pathfinder (Athletics) now also finds the way out of the depths.":
       "Nowe atuty: Weteran podziemi (Atletyka) i Głębinowy poszukiwacz (Otwieranie zamków). Tropiciel (Atletyka) znajduje teraz też drogę z głębin.",
+    // patch note: re-balance (b178)
+    "Fairer deep expeditions and difficulty tiers":
+      "Uczciwsze głębokie wyprawy i poziomy trudności",
+    "Veteran, Legendary and Mythic are fairer when you go alone: a careful hero with a follower now beats the legendary lair about 1 time in 3 on Legendary and now and then even on Mythic.":
+      "Weteran, Legendarny i Mityczny są uczciwsze, gdy idziesz sam: rozważny bohater z towarzyszem pokonuje teraz legendarne leże mniej więcej raz na trzy razy na Legendarnym, a od czasu do czasu nawet na Mitycznym.",
+    "A full party has it tougher on Legendary and Mythic: the foes grow more for every extra player, so four friends still need to work for the deepest hoard.":
+      "Pełna drużyna ma trudniej na Legendarnym i Mitycznym: wrogowie rosną z każdym dodatkowym graczem, więc czwórka przyjaciół wciąż musi się napracować, by zdobyć najgłębszy skarb.",
+    "Going higher in level no longer makes the depths harder. A level 40 hero now does better down there than a level 30 one.":
+      "Wyższy poziom nie utrudnia już głębin. Bohater na 40. poziomie radzi sobie tam teraz lepiej niż na 30.",
+    "The master of the legendary lair at the very bottom has a little less health, so that fight is long but winnable.":
+      "Pan legendarnego leża na samym dnie ma trochę mniej zdrowia, więc ta walka jest długa, ale do wygrania.",
   };
   for (const [k, v] of Object.entries(TIER)) W[k] = W[k] || v;
   for (const [k, [n, d]] of Object.entries(MOD)) { W[k] = n; W[`${ICONS[k]} ${k}`] = `${ICONS[k]} ${n}`; W[I18N_DESC_EN(k)] = d; W[`${k}: ${I18N_DESC_EN(k)}`] = `${n}: ${d}`; }
