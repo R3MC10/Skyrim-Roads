@@ -76,7 +76,7 @@ async def main():
             # the arcane enchanter takes rings and amulets
             await pg.evaluate("document.querySelectorAll('#modal,#sky').forEach(m=>m.remove())")
             await pg.evaluate("(()=>{ const D2=Date.now.bind(Date); let off=0; while (Math.floor(G.clock(D2()/1000+off).hour)!==12) off+=60; Date.now=()=>D2()+off*1000; })()")
-            await pg.click("[data-tab=map]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(300)
+            await pg.click("[data-tab=world]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(300)
             has = await pg.evaluate("!!document.querySelector('[data-act=shop][data-id=enchanter]')")
             if has:
                 await pg.click("[data-act=shop][data-id=enchanter]"); await pg.wait_for_timeout(400)

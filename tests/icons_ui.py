@@ -26,9 +26,9 @@ async def main():
         await pg.wait_for_timeout(400)
         for _ in range(4): await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())"); await pg.wait_for_timeout(250)
         n = await pg.evaluate("window.__dbg.save().inv.length"); print("pack rows:", n)
-        t = await pg.evaluate("""()=>{ const t0=performance.now(); document.querySelector('[data-tab=pack]').click(); return performance.now()-t0; }""")
+        t = await pg.evaluate("""()=>{ const t0=performance.now(); __ui.go('items'); return performance.now()-t0; }""")
         await pg.wait_for_timeout(400)
-        t2 = await pg.evaluate("""()=>{ document.querySelector('#sky')?.remove(); const t0=performance.now(); document.querySelector('[data-tab=pack]').click(); return performance.now()-t0; }""")
+        t2 = await pg.evaluate("""()=>{ document.querySelector('#sky')?.remove(); const t0=performance.now(); __ui.go('items'); return performance.now()-t0; }""")
         print(f"sky menu with {n} items: first open {t:.0f} ms (draws icons), again {t2:.0f} ms (cached)")
         await pg.screenshot(path=_SHOTS + "icons_menu.png")
         sel = await pg.query_selector(".sky-row"); 

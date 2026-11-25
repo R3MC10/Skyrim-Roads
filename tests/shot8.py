@@ -13,7 +13,7 @@ async def main():
         await pg.fill("#nm","Remi"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
         await pg.click("[data-tab=log]"); await pg.wait_for_timeout(300)
         await pg.screenshot(path="/home/claude/tests/a2_log.png")
-        await pg.click("[data-tab=map]"); await pg.click("[data-act=go] >> nth=0"); await pg.wait_for_timeout(2000)
+        await pg.click("[data-tab=world]"); await pg.click("[data-act=go] >> nth=0"); await pg.wait_for_timeout(2000)
         print("travelling:", await pg.evaluate("window.__dbg.save().trip && window.__dbg.save().trip.destName"))
         print("errors:", errs)
         await b.close()

@@ -31,7 +31,7 @@ async def main():
             await pg.evaluate("(t)=>{const S=window.__dbg.save(); S.location=t; [S.x,S.y]=WORLD.places[t]; S.gold=5000; S.level=20; for(const k of Object.keys(S.skills)) S.skills[k].lvl+=20; G.setHealth(S,G.maxHealth(S)); if(!S.discovered.includes(t)) S.discovered.push(t);}", town)
         # cart (A): horse then cart
         await A.evaluate("()=>{const S=window.__dbg.save(); S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; HORSES.buy(S,'Bess','bay');}")
-        await click(A, "[data-tab=map]"); await click(A, "[data-tab=town]"); await A.wait_for_timeout(300)
+        await click(A, "[data-tab=world]"); await click(A, "[data-tab=town]"); await A.wait_for_timeout(300)
         await click(A, "[data-act=shop][data-id=stables]"); await A.wait_for_timeout(300)
         if await A.evaluate("!!document.querySelector('[data-act=cartbuy]:not([disabled])')"): await click(A, "[data-act=cartbuy]")
         else: print("stables closed now:", await A.evaluate("CARAVANS.buyCart(window.__dbg.save())"))
@@ -41,7 +41,7 @@ async def main():
         await A.evaluate("(t)=>{const S=window.__dbg.save(); CARAVANS.toggleCart(S); S.location=t; [S.x,S.y]=WORLD.places[t];}", town)
         # both sign on
         for pg in (A, B):
-            await click(pg, "[data-tab=map]"); await click(pg, "[data-tab=town]"); await pg.wait_for_timeout(300)
+            await click(pg, "[data-tab=world]"); await click(pg, "[data-tab=town]"); await pg.wait_for_timeout(300)
             await pg.evaluate("document.querySelector('#side [data-act=areahub]')?.click()"); await pg.wait_for_timeout(300)   # back to the town board (areaui.js)
             await click(pg, "[data-act=shop][data-id=caravans]"); await pg.wait_for_timeout(300)
             await click(pg, "[data-act=cvsign]"); await pg.wait_for_timeout(700)
@@ -53,7 +53,7 @@ async def main():
             await pg.evaluate("()=>{const S=window.__dbg.save(), j=S.caravanJob; const d=j.depart-G.now()+2; j.depart-=d; j.arrive-=d;}")
         await A.wait_for_timeout(2500)
         print("trips:", await A.evaluate("JSON.stringify({c:window.__dbg.save().trip?.caravan,s:window.__dbg.save().trip?.speed})"), await B.evaluate("!!window.__dbg.save().trip?.caravan"))
-        await click(A, "[data-tab=map]"); await A.wait_for_timeout(600); await A.screenshot(path="cv_map.png")
+        await click(A, "[data-tab=world]"); await A.wait_for_timeout(600); await A.screenshot(path="cv_map.png")
         # fast-forward A along the road, fighting ambushes
         fights = 0
         for i in range(40):

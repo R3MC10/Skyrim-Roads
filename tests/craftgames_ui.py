@@ -38,7 +38,7 @@ async def main():
             await pg.wait_for_selector("#smithgame", state="detached", timeout=60000)
             await pg.evaluate("clearInterval(window.__sgbot)")
         # ---- smithing: hammer, played well → masterful/perfect and a temper bonus
-        await click(pg, "[data-tab=map]"); await click(pg, "[data-tab=town]"); await pg.wait_for_timeout(300); await click(pg, "[data-id=forge]"); await pg.wait_for_timeout(300)
+        await click(pg, "[data-tab=world]"); await click(pg, "[data-tab=town]"); await pg.wait_for_timeout(300); await click(pg, "[data-id=forge]"); await pg.wait_for_timeout(300)
         await click(pg, "[data-act=smake][data-id=iron_sword]")
         res["hammer"] = await wait_forge()
         await play_hammer(True, "cg_hammer_ink.png")

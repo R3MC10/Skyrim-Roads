@@ -153,7 +153,7 @@ async def pc_stack(b):
         await pg.evaluate("""()=>{const S=window.__dbg.save(); const n=GATHER.nodes().find(n=>n.ing==='ing_juniper'); S.location=null; S.trip=null; S.x=n.pos[0]; S.y=n.pos[1];
            for (const m of GATHER.around([S.x,S.y],120)) GATHER.st(S).seen[m.id]=1;}""")
         await pg.evaluate("document.querySelector('[data-tab=log]')?.click()"); await pg.wait_for_timeout(300)
-        await pg.evaluate("document.querySelector('[data-tab=map]')?.click()"); await pg.wait_for_timeout(1200)
+        await pg.evaluate("document.querySelector('[data-tab=world]')?.click()"); await pg.wait_for_timeout(1200)
         # a tall world event card at the top of the left column, with its Go button at the very bottom
         await pg.evaluate("""()=>{const t=document.getElementById('topcards'); const c=document.createElement('div'); c.id='pltall';
            c.style.cssText='height:900px;display:flex;flex-direction:column;justify-content:flex-end;background:#222';

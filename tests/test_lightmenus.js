@@ -1,5 +1,5 @@
 const __GAME = process.env.W || require("path").join(__dirname, "../game/");
-// Lighter menus: the bottom bar lights Items/Magic while that menu is open, Social has 4 big tabs + a More row that
+// Lighter menus: the bottom bar lights Hero while the Items/Magic menu is open, Social has 4 big tabs + a More row that
 // still reaches every old screen, gold knotwork only on prestige windows, one button family, crisis titles wrap, patch note.
 const fs = require("fs"), vm = require("vm");
 const W = __GAME;
@@ -10,11 +10,11 @@ vm.runInContext(fs.readFileSync(W + "menus.js", "utf8").replace(/^const (\w+) =/
 const M = c.MENUS;
 
 // the bottom tab to light
-ok(M.activeGroup("map", "items") === "pack", "Items menu open over the map lights Items");
-ok(M.activeGroup("map", "magic") === "magic", "Magic menu open over the map lights Magic");
-ok(M.activeGroup("social", "skills") === "hero", "Skills page lights Character");
+ok(M.activeGroup("map", "items") === "hero", "Items menu open over the map lights Hero (tabs5: Items lives under Hero)");
+ok(M.activeGroup("map", "magic") === "hero", "Magic menu open over the map lights Hero");
+ok(M.activeGroup("social", "skills") === "hero", "Skills page lights Hero");
 ok(M.activeGroup("social", null) === "social" && M.activeGroup("perks", undefined) === "hero", "no menu open: the screen's own tab");
-ok(M.activeGroup(undefined, null) === "map", "nothing at all: Map");
+ok(M.activeGroup(undefined, null) === "world", "nothing at all: World");
 
 const UI = fs.readFileSync(W + "ui.js", "utf8");
 const soc = UI.slice(UI.indexOf("function panelSocial()"), UI.indexOf("function panelSocial()") + 2400);

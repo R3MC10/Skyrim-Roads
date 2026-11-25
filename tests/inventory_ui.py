@@ -52,7 +52,7 @@ async def main():
                     if bad: fails.append(f"{tag} {name}: {bad[:5]}")
 
                 # the shop: sell side with junk + arrows
-                await pg.click("[data-tab=map]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(300)
+                await pg.click("[data-tab=world]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(300)
                 await pg.click("[data-act=shop][data-id=general]"); await pg.wait_for_timeout(300)
                 await pg.evaluate("document.querySelector('[data-act=smode][data-id=buy]')?.click()"); await pg.wait_for_timeout(200)
                 await pg.evaluate("document.querySelector('[data-act=smode][data-id=sell]').scrollIntoView({block:'start'})"); await shot("shop_sell_top")
@@ -116,7 +116,7 @@ async def main():
                 # the old-style pack page (sort chips), at Biggest text too
                 for size in ["0", "3"]:
                     await pg.evaluate(f"typeof ACCESS!=='undefined' && ACCESS.pref('a11yText','{size}')")
-                    has_pack = await pg.evaluate("!!document.querySelector('[data-tab=pack]')")
+                    has_pack = await pg.evaluate("!!document.querySelector('[data-tab=hero]')")
                     shown = await pg.evaluate("(()=>{ const s=document.querySelector('#side'); return s ? s.innerHTML.includes('iq-sort') : false })()")
                     if not shown:
                         await pg.evaluate("(()=>{ const S=window.__dbg.save(); S.location='Whiterun'; })()")

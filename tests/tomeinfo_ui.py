@@ -20,7 +20,7 @@ async def run(b, style):
       for (const k of ['Destruction','Restoration','Alteration','Conjuration','Illusion']) S.skills[k].lvl = 40;
       if(!S.discovered.includes('Winterhold')) S.discovered.push('Winterhold'); G.shopsOpen=()=>true;
       }""", style)
-    await pg.click("[data-tab=map]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(400)
+    await pg.click("[data-tab=world]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(400)
     for _ in range(4):
         await pg.evaluate(CLEAR); await pg.wait_for_timeout(400)
     await pg.evaluate("document.querySelector('[data-act=shop][data-id=wizard]')?.click()"); await pg.wait_for_timeout(900)
@@ -35,7 +35,7 @@ async def run(b, style):
     await pg.screenshot(path=OUT + f"shop_{style}.png")
     # a tome in the pack: its item card shows the same info (SkyUI stat strip)
     await pg.evaluate("G.give(window.__dbg.save(),'tome_lesser_ward')"); await pg.evaluate(CLEAR)
-    await pg.click("[data-tab=pack]"); await pg.wait_for_timeout(400); await pg.evaluate(CLEAR)
+    await pg.evaluate("__ui.go('items')"); await pg.wait_for_timeout(400); await pg.evaluate(CLEAR)
     rid = await pg.evaluate("window.__dbg.save().inv.find(r=>r.item==='tome_lesser_ward').id")
     await pg.evaluate("document.querySelector('[data-act=skycat][data-id=all]')?.click()"); await pg.wait_for_timeout(300)
     await pg.evaluate(f"document.querySelector(\"[data-act=skysel][data-id='{rid}']\")?.click()"); await pg.wait_for_timeout(400)

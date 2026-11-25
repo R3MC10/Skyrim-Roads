@@ -232,7 +232,7 @@ const REMIND = (() => {
 
   // ------------------------------------------------------------ badges on menu buttons
   /* buttons to badge: [selector, tab id]. Other helpers can add more with REMIND.attach(selector, tabId). */
-  const TARGETS = [["#tabs [data-tab=hero]", "hero"], ["#tabs [data-tab=town]", "town"], ["#tabs [data-tab=log]", "log"], ["#tabs [data-tab=map]", "map"], ["#socBtn", "social"], ["[data-twgo=char]", "hero"]];
+  const TARGETS = [["#tabs [data-tab=hero]", "hero"], ["#tabs [data-tab=town]", "town"], ["#tabs [data-tab=log]", "log"], ["#tabs [data-tab=world]", "map"], ["#socBtn", "social"], ["[data-twgo=char]", "hero"]];
   const attach = (sel, tabId) => { if (!TARGETS.some(([s]) => s === sel)) TARGETS.push([sel, tabId]); paint(); };
   function paint(S) {
     if (!live) return;

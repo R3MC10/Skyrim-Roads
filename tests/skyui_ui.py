@@ -29,7 +29,7 @@ async def main():
             await pg.screenshot(path=OUT + f"{TAG}_{name}.png", full_page=full)
             el = await pg.query_selector("#side")
             if el: await el.screenshot(path=OUT + f"{TAG}_{name}_side.png")
-        await tab("map", "travel", False)
+        await tab("world", "travel", False)
         await pg.evaluate("window.scrollTo(0, 700)"); await pg.wait_for_timeout(200); await pg.screenshot(path=OUT + f"{TAG}_travel_panel.png")
         await tab("hero", "hero")
         await tab("follower", "follower")
@@ -44,7 +44,7 @@ async def main():
         el = await pg.query_selector("#side"); await el.screenshot(path=OUT + f"{TAG}_inn.png")
         await tab("log", "journal")
         # pack menu (items / magic / skills)
-        await clear(); await pg.click("[data-tab=pack]"); await pg.wait_for_timeout(600)
+        await clear(); await pg.evaluate("__ui.go('items')"); await pg.wait_for_timeout(600)
         await pg.screenshot(path=OUT + f"{TAG}_menu_worn.png")
         for pgid in ["items", "magic", "skills"]:
             b2 = await pg.query_selector(f"[data-act=skytab][data-id={pgid}]")
@@ -66,7 +66,7 @@ async def main():
         await clear()
         # dungeon
         await pg.evaluate("""()=>{const S=window.__dbg.save(); S.location='Bleak Falls Barrow'; [S.x,S.y]=WORLD.places['Bleak Falls Barrow']; S.discovered.push('Bleak Falls Barrow');}""")
-        await tab("map", "dungeon_out", False)
+        await tab("world", "dungeon_out", False)
         e = await pg.query_selector("[data-act=enter]")
         if e: await e.click(); await pg.wait_for_timeout(800); await clear(); await pg.screenshot(path=OUT + f"{TAG}_dungeon.png")
         print("errors:", errs, "| google font requests:", len(ext))

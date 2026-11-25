@@ -40,13 +40,14 @@ async def main():
             if shot: await pg.screenshot(path=os.path.join(OUT, shot + ".png"))
 
         # bottom tabs + their sub-tabs
-        for t in ["hero", "map", "log", "social", "town"]:
+        for t in ["hero", "world", "log", "social", "town"]:
             await pg.evaluate(DOWN)
             await pg.evaluate(f"document.querySelector('#tabs [data-tab={t}]').click()")
             await at_top(f"bottom tab {t}", f"tab_{t}")
-            for s in await pg.evaluate("[...document.querySelectorAll('#side .mn-sub button')].map(b=>b.dataset.id)"):
+            # (Hero's Items and Magic open the item menu, checked further down)
+            for s in await pg.evaluate("[...document.querySelectorAll('#side .mn-sub button')].map(b=>b.dataset.id).filter(id=>id[0]!=='@')"):
                 await pg.evaluate(DOWN)
-                await pg.evaluate(f"document.querySelector('#side .mn-sub button[data-id={s}]').click()")
+                await pg.evaluate(f"document.querySelector('#side .mn-sub button[data-id=\"{s}\"]').click()")
                 await at_top(f"  sub-tab {s}")
         # journal's Active / Misc / Completed
         await pg.evaluate("document.querySelector('#tabs [data-tab=log]').click()"); await pg.wait_for_timeout(500)

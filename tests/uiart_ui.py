@@ -24,12 +24,12 @@ async def main():
         await pg.wait_for_timeout(400)
         for st in ["ink"]:
             # Hero tab
-            await click("[data-tab=map]"); await click("[data-tab=hero]"); await pg.wait_for_timeout(400)
+            await click("[data-tab=world]"); await click("[data-tab=hero]"); await pg.wait_for_timeout(400)
             t0 = await pg.evaluate("()=>{ const t=performance.now(); document.querySelector('[data-tab=hero]').click(); return performance.now()-t; }")
             print(st, "hero tab render ms:", round(t0, 1))
             await pg.screenshot(path=f"uia_hero_{st}.png", full_page=True)
             # magic menu
-            await click("[data-tab=pack]"); await pg.wait_for_timeout(300)
+            await pg.evaluate("__ui.go('items')"); await pg.wait_for_timeout(300)
             await click("[data-act=skytab][data-id=magic]"); await pg.wait_for_timeout(300)
             await pg.screenshot(path=f"uia_magic_{st}.png")
             r = await pg.query_selector(".sky-row"); 

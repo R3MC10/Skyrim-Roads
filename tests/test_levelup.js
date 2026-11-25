@@ -3,7 +3,7 @@
 const fs = require("fs"), vm = require("vm"), path = require("path");
 const W = process.env.W || path.join(__dirname, "../game/");
 const c = vm.createContext({ console, Math, Date, JSON, Object, Array, Set, Map, Number, String });
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "respec.js", "powers.js", "engine.js", "levelup.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkreset.js", "powers.js", "engine.js", "levelup.js"])
   vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 let fails = 0;
 const ok = (v, m) => { if (!v) { fails++; console.log("FAIL", m); } };

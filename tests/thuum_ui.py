@@ -32,7 +32,7 @@ async def main():
             # ---- rain in the wilds near Whiterun: the chip, the tooltip, the card
             await pg.evaluate(FORCE, "rain")
             await pg.evaluate("""()=>{const S=window.__dbg.save(); S.location=null; const p=WORLD.places.Whiterun; S.x=p[0]+0.012; S.y=p[1]+0.01;}""")
-            await tab("log"); await tab("map"); await pg.wait_for_timeout(600)
+            await tab("log"); await tab("world"); await pg.wait_for_timeout(600)
             chip = await pg.query_selector(".hstat .wxchip")
             ok(chip is not None, f"{tag}: weather chip in the HUD")
             tip = await pg.evaluate("document.querySelector('.hstat .wxchip')?.dataset.tip || ''")
@@ -63,7 +63,7 @@ async def main():
                 for (const id of ['fire_breath','slow_time']) for (const w of POWERS.SHOUTS[id][1]) { POWERS.learnWord(S,w); S.unlocked=[...new Set([...(S.unlocked||[]),w])]; }
                 S.perks=Object.assign(S.perks||{}, {commanding_voice:1, thuum_mastery:2}); S.voiceAt=0; S.coldV=70; S.coldT=G.now(); }""")
             await pg.evaluate(FORCE, "blizzard")
-            await tab("pack"); await pg.evaluate("document.querySelector('[data-act=skytab][data-id=magic]')?.click()"); await pg.wait_for_timeout(300)
+            await pg.evaluate("__ui.go('items')"); await pg.evaluate("document.querySelector('[data-act=skytab][data-id=magic]')?.click()"); await pg.wait_for_timeout(300)
             await pg.evaluate(clean); await pg.evaluate("document.querySelector('#sky .sky-cat[data-id=shouts]')?.click()"); await pg.wait_for_timeout(300)
             rows = await pg.evaluate("[...document.querySelectorAll('#sky .sky-row')].map(b=>b.textContent.trim())")
             idx = next((i for i, t in enumerate(rows) if "Slow Time" in t), -1)
