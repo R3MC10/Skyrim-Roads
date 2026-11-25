@@ -79,9 +79,23 @@ has("fightart.js", 'L("You")'); has("fightart.js", 'L(won ? (turned ? "They flee
 has("fightart.js", "L(b.sneak)"); has("fightart.js", "ftx[i] = L(txt)"); has("fightart.js", "L(rec.foeName)");
 has("dunart.js", 'LX("CLEARED")'); has("dungeongames.js", 'LX("Noticed")'); has("dungeongames.js", "LX(`Hits ${st.hits}`)"); has("craftgames.js", 'LX("Aim")');
 has("map.js", 'LX("Sea of Ghosts")'); has("solart.js", 'LX("TO WINDHELM \uE12F")'); has("worldevents.js", 'LX("Khajiit market")'); has("raidart.js", "LX(`Season of ${name}`)");
+// second sweep (i18n_sweep2.js): the trip line, the Journal, the inn, the market, road events, the fight log, icon-led lines
+ok(order.includes("i18n_sweep2.js") && order.indexOf("i18n_sweep2.js") < order.indexOf("i18n.js"), "i18n_sweep2.js loads before i18n.js");
+const want2 = {
+  "the wilds → Riverwood": "Dzicz → Riverwood", "Road · fast going · on foot": "Droga · szybko · pieszo", "On the way to Riverwood": "W drodze do: Riverwood",
+  "Side quests": "Zadania poboczne", "Recommended level 3": "Zalecany poziom 3", "Reward: 50 gold": "Nagroda: 50 złota", "Before the Storm": "Przed burzą",
+  "✓ Before the Storm": "✓ Przed burzą", "Sleep to heal and get Rested; hear rumours.": "Prześpij się, żeby się wyleczyć i wypocząć; posłuchaj plotek.",
+  "The inn, 2 people inside": "Karczma, osób w środku: 2", "Steward of Whiterun": "Zarządca: Whiterun", "Travel to Markarth": "Podróżuj do: Markarth",
+  " Pay (90 gold)": " Zapłać (90 złota)", " Fight": " Walcz", " Something by the road": " Coś przy drodze",
+  " A dragon is circling Markarth!": " Smok krąży nad: Markarth!", "(you 100 · foe 52)": "(ty 100 · wróg 52)", "Fight log (8 turns)": "Przebieg walki (tury: 8)",
+  "Flames (dual)": "Płomienie (podwójnie)", "Rare wares, one of each · 58 min left": "Rzadkie towary, po jednej sztuce · zostało 58 min",
+  " Defeated the Bandit toll gang (+50 gold)": " Pokonano: Bandit toll gang (+50 złota)", "Falkreath (from level 10)": "Falkreath (od poziomu 10)",
+};
+for (const [en, pl] of Object.entries(want2)) { ok(t(en) === pl, `sweep2: "${en}" → "${t(en)}" (want "${pl}")`); n++; }
 // the English lines still exist in the game (so the Polish isn't stale)
 const game = fs.readdirSync(W).filter((f) => f.endsWith(".js") && !f.startsWith("i18n")).map(src).join("\n");
 for (const en of ["You can't afford that.", "Ready check cancelled.", "Raises guard", "They flee", "Khajiit market", "Unbreakable pick"]) ok(game.includes(en), "still in the game: " + en);
+for (const en of ["Side quests", "Recommended level ${rec}", "Sleep to heal and get Rested; hear rumours.", "The trip keeps going while the page is closed.", "Fight log (${f.turn} turns)", "the wilds"]) ok(game.includes(en), "still in the game: " + en);
 
 console.log(`polishsweep: ${n} lines checked`);
 console.log(fail ? `FAILED ${fail} of ${checks}` : `polishsweep ok · ${checks} checks`);
