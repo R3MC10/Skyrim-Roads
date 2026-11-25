@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b193-rigpolish", build: 193, date: "25 Nov 2026", title: "Painted weapons and better swings", items: [
+      "Fighters swing like they mean it: a sword goes up and back over the shoulder, then comes down and forward in one arc, the body turning into the blow and the weight stepping onto the front foot. No more blade sliding through your own head.",
+      "Bows are drawn properly: the bow arm straight, the string hand pulled back to the cheek, then the hand flies back as the arrow goes.",
+      "Painted weapons and shields: swords, daggers, greatswords, axes, battleaxes, maces, staffs, bows (relaxed and drawn) and round or kite shields are now painted like the fighters, with a soft shadow. Glass, ebony and other coloured gear gets its colour.",
+      "Getting hit looks like it: the head snaps back, the body follows and a foot steps back to catch the weight, then it settles.",
+      "The numbers for what you spend (stamina, magicka) float above your name, side by side, and never land on top of each other or your name.",
+      "On small phones the move buttons fit: quick slots share their row instead of sliding under Flee, and long move names wrap onto two lines instead of being cut off.",
+    ] },
     { id: "b192-combos", build: 192, date: "25 Nov 2026", title: "Combat combos and teamwork", items: [
       "Set a foe up, then cash in. Freeze it and hit it with a power attack to Shatter the frost for big extra damage. Shield-bash it and follow with a power attack this round for an Exploit: it hits harder and the foe keeps reeling. Knock it off balance with a shout and your next blows land harder.",
       "New in the general store: the Oil Flask. Throw it at a foe, then any fire (a spell, a fire weapon, Fire Breath) sets the ground ablaze and burns it for a few rounds.",

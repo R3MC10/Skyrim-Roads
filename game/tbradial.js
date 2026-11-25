@@ -108,7 +108,12 @@ const TBRADIAL = (() => {
     const me = document.querySelector("#tbf .tbu.me") || document.querySelector("#tbf .tbap"), stage = document.querySelector("#tbf .tbstage");
     if (me) {
       const r = me.getBoundingClientRect(); let i = 0;
-      const put = (n, tag, cls) => { if (Math.abs(n) >= 1) chip(r.left + r.width * (0.2 + 0.2 * (i % 4)), r.top - 4, `${n > 0 ? "+" : "−"}${Math.abs(Math.round(n))} ${tag}`, cls, 120 * i++); };
+      /* [rigpolish] on the immersive screen your name sits at the top of this frame: the numbers start above the name
+         and the orb (never on top of them), and line up from the orb's middle to the right */
+      const orb = me.querySelector(".c2orb"), nm = me.querySelector(".nm");
+      const top = Math.min(r.top, nm ? nm.getBoundingClientRect().top : r.top, orb ? orb.getBoundingClientRect().top : r.top);
+      const x0 = orb ? orb.getBoundingClientRect().left + orb.getBoundingClientRect().width / 2 : null;
+      const put = (n, tag, cls) => { if (Math.abs(n) >= 1) chip(x0 != null ? Math.min(innerWidth - 50, Math.max(40, x0 + 80 * (i % 4))) : r.left + r.width * (0.2 + 0.2 * (i % 4)), x0 != null ? top - 24 : r.top - 4, `${n > 0 ? "+" : "−"}${Math.abs(Math.round(n))} ${tag}`, cls, 120 * i++); };
       put(-d.sp, "SP", "sp"); put(-d.mp, "MP", "mp"); put(d.hp, "HP", d.hp > 0 ? "hp up" : "hp");
     }
     if (g && stage) {
