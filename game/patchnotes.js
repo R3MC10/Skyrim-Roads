@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b230-arrivearea", build: 230, date: "25 Nov 2026", title: "The Area tab opens when you arrive", items: [
+      "When you reach a town, a dungeon entrance or another place on the map, the Area tab opens by itself, so shops, the inn and what you can do there are right in front of you.",
+      "If a fight, a road event or any window is still open, it waits until you close it.",
+      "Stopping at a spot you picked in the wilds or a map pin keeps you on the map.",
+      "In a party, if you follow the leader, it only switches when you're just looking at the map, never while you're reading something else.",
+      "Plants you can gather nearby also show at the top of the Area tab.",
+    ] },
     { id: "b229-gatherfix", build: 229, date: "25 Nov 2026", title: "Picking herbs fixed", items: [
       "On a PC the Gathering card sat in the side panel, which the big map hides, so there was no way to pick plants or forage. It now floats on the left of the map whenever plants are in reach.",
       "Some older saves made the Gather button do nothing. Those heroes pick plants, forage and plant gardens normally again.",
