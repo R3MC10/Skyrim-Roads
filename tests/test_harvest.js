@@ -8,7 +8,7 @@ const c = { console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, I
 vm.createContext(c);
 const files = ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "smithing.js", "roam.js"];
 if (fs.existsSync(W + "solworld.js")) files.push("solworld.js");
-files.push("explore.js", "cooking.js", "gather.js", "mp.js", "harvest.js");
+files.push("explore.js", "cooking.js", "gather.js", "mp.js", "harvest.js"); if (fs.existsSync(W + "gatherui.js")) files.push("gatherui.js");
 for (const f of files) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 let fails = 0;
 c.ok = (cond, msg) => { if (!cond) { fails++; console.log("FAIL", msg); } else console.log("ok  ", msg); };

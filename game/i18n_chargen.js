@@ -136,3 +136,23 @@ Object.assign(I18N_EXTRA.words, {
   "Switching keeps your race and everything else you chose; a woman just loses the beard. Randomise now keeps the one you picked.": "Przełączenie zachowuje rasę i wszystko inne, co wybrałeś; kobieta traci tylko brodę. Losowanie zostawia teraz wybraną płeć.",
 });
 // [/chargensex]
+
+// [remake] "Make your hero anew" (remake.js) and its patch note
+Object.assign(I18N_CHARGEN, {
+  "Make your hero anew": "Stwórz bohatera na nowo",
+  "We've added women heroes and new looks. Pick your race, sex and look again — your level, skills, gear and quests stay.": "Dodaliśmy bohaterki i nowe wyglądy. Wybierz jeszcze raz rasę, płeć i wygląd — poziom, umiejętności, ekwipunek i zadania zostają.",
+  "Keep as is": "Zostaw jak jest", "Your name": "Twoje imię",
+});
+Object.assign(I18N_EXTRA.words, {
+  "Everyone gets to remake their hero once": "Każdy może raz stworzyć bohatera na nowo",
+  "Everyone gets to remake their hero once: pick race, sex and look again.": "Każdy może raz stworzyć bohatera na nowo: wybierz jeszcze raz rasę, płeć i wygląd.",
+  "When you next step onto the map, the character creator opens once for every hero made before this update. Your name, level, trained skills, perks, gear and quests all stay.": "Gdy następnym razem wejdziesz na mapę, tworzenie postaci otworzy się raz dla każdego bohatera stworzonego przed tą aktualizacją. Imię, poziom, wytrenowane umiejętności, perki, ekwipunek i zadania zostają.",
+  "Change race and only the race's starting skill boost moves: what you trained yourself is kept, and you get the new race's power and gifts.": "Zmiana rasy przenosi tylko startowy bonus umiejętności rasy: to, co wytrenowałeś sam, zostaje, a dostajesz moc i dary nowej rasy.",
+  "Happy with your hero? Tap Keep as is. It never pops up in a fight, a dungeon or a party vote: it waits until you're back on the map.": "Podoba ci się twój bohater? Stuknij Zostaw jak jest. Nigdy nie wyskoczy w walce, lochu ani podczas głosowania drużyny: czeka, aż wrócisz na mapę.",
+  "Your hero stays as they are. The barber or your mirror can change your look later.": "Twój bohater zostaje taki, jaki jest. Fryzjer albo twoje lustro zmienią wygląd później.",
+});
+I18N_EXTRA.pat.push(
+  [/^You are (.+) the (.+) now\. Your race's skill boost moved with you; everything you trained stays\.$/, (m) => `Jesteś teraz ${m[1]}, rasa: ${m[2]}. Bonus umiejętności rasy przeszedł z tobą; wszystko, co wytrenowałeś, zostaje.`],
+  [/^You are (.+), made anew\.$/, (m) => `Jesteś ${m[1]}, stworzony na nowo.`],
+);
+// [/remake]

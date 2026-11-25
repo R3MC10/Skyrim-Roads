@@ -26,6 +26,7 @@
   const tiBox = (item) => (TI ? TI.box(S, item) : "");
   const tiCls = (item) => (TI && TI.isTome(item) ? " ti-row" : "");
   let zoom = innerWidth < 700 ? 2.4 : 1, follow = true, center = [0.5, 0.5], view = {}, version = 0, rendered = -1, lastPanelRender = 0;
+  let townCtx = null;   // locscreen.js: what panelTown found at this place, for the full-screen scene
   let tacticsDraft = { if: "hp_below", pct: 40, do: "potion:health", edit: null }, testResult = null, townShop = null, townShopAt = null, townNews = false, forgeTab = "make", forgeGroup = "iron", packOpen = null, searchText = "", uxAllPlaces = false, uxHelpOpen = null, packSearch = "";
   let raidDocs = [], raidSeen = null, raidJoined = null, raidAuto = null, enchDraft = {};
   let chatDocs = [], chatRaw = [], chatCh = "world", chatDraft = "", chatSeen = 0, chatSeenIds = new Set(), lastChatSend = 0;
@@ -173,6 +174,19 @@
         else { APPEAR.apply(S, look); toast("You like what you see."); }
         lookCache.k = ""; persist(true); renderPanel(true);
       } });
+  }
+
+  /* [remake] a hero made before women heroes and the new looks: "Make your hero anew" once, at a quiet moment on the map
+     (not in a fight, a dungeon, a party run or vote, a trade or a mini-game); remake.js does the race swap */
+  let remakeOpen = false;
+  function remakeCheck() {
+    if (remakeOpen || !S || typeof REMAKE === "undefined" || !REMAKE.pending(S) || !gameStarted || document.querySelector(".cg-over")) return;
+    if (!REMAKE.quiet({ S, title: !!$("#title"), voting: () => !!(pvUI && pvUI.showing && pvUI.showing()), safe: () => window.__ui.safeToUpdate() })) return;
+    remakeOpen = true;
+    const done = (text) => { remakeOpen = false; lookCache.k = ""; persist(true); publishCard(true); try { renderTop(); } catch { /* top bar redraws later */ } renderPanel(true); toast(text); };
+    CHARGEN.open({ mode: "remake", save: S, toast,
+      onDone: (o) => { const was = S.race; REMAKE.finish(S, o); done(was !== S.race ? `You are ${S.name} the ${D.RACES[S.race].name} now. Your race's skill boost moved with you; everything you trained stays.` : `You are ${S.name}, made anew.`); },
+      onKeep: () => { REMAKE.keep(S); done("Your hero stays as they are. The barber or your mirror can change your look later."); } });
   }
 
   // ------------------------------------------------------------ title screen (main menu)
@@ -531,6 +545,7 @@
       if ($("#sky") && !$("#modal")) { closeMenu(); if (typeof TABMENU !== "undefined") TABMENU.menuClosed(); return true; }
       if ($("#modal")) { if (!$("#modal [data-act=enc], #modal [data-act=ev], #modal [data-act=guard]")) closeModal(); return true; }
       if (typeof MAPSHEET !== "undefined" && MAPSHEET.isOpen()) { MAPSHEET.close(); selected = null; return true; }   // [map-panels] a caravan's, place's or hero's panel: back closes it
+      if (typeof LOCSCREEN !== "undefined" && LOCSCREEN.closeSheet()) return true;   // a card open on the place's scene
       if (typeof DWEMER !== "undefined" && DWEMER.closeOv()) return true;   // a lexicon / valve puzzle (dwemer.js)
       if (typeof BLACKREACH !== "undefined" && BLACKREACH.close()) return true;   // the Blackreach map (blackreach.js)
       if ($("#dun")) { closeDungeon(); return true; }
@@ -642,13 +657,15 @@
     $("#sndBtn").onclick = openSound;
     $("#socBtn").onclick = () => { SOUND.fx("click"); closeMenu(); tab = "social"; bump(); renderTabs(); renderPanel(true); $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };
     $("#side").addEventListener("click", onPanelClick);
+    { let ls = $("#locs"); if (!ls) { ls = document.createElement("div"); ls.id = "locs"; ls.hidden = true; document.body.appendChild(ls); } ls.addEventListener("click", onPanelClick); ls.addEventListener("change", onPanelChange); }   // locscreen.js: the place full screen
     $("#side").addEventListener("change", onPanelChange);
     $("#side").addEventListener("input", onPanelInput);
     $("#side").addEventListener("pointerdown", onRuleDrag);   // drag a rule's number to reorder tactics
     $("#side").addEventListener("keydown", (e) => { if (e.target.id === "chatin" && e.key === "Enter") { e.preventDefault(); chatSend(e.target.value); } if (e.target.id === "dmin" && e.key === "Enter") { e.preventDefault(); sendDM(); } });
     $("#trip").addEventListener("click", onPanelClick);
     $("#raid").addEventListener("click", onPanelClick);
-    { let gp = $("#gpop"); if (!gp) { gp = document.createElement("div"); gp.id = "gpop"; document.body.appendChild(gp); gp.addEventListener("click", onPanelClick); } }   // the Gathering card floating over the PC map (the side panel is hidden there)
+    // [gatherarea] the Gathering card no longer floats over the map (#gpop): it is a section of the Area tab (gatherui.js)
+    if (typeof GATHERUI !== "undefined") GATHERUI.bind((what, id) => gatherAct(what, id));   // a screen hosting GATHERUI.render() hands its taps here
     { let gn = $("#gnear"); if (!gn) { gn = document.createElement("div"); gn.id = "gnear"; document.body.appendChild(gn); gn.addEventListener("click", onPanelClick); } }   // "Snowberries in reach: Gather" over the map, on the road too
     Store.watch("raids", (docs) => { raidDocs = docs; });
     if (typeof LEVELUP !== "undefined") LEVELUP.mount({ S: () => S, persist, toast, refresh: () => { bump(); renderPanel(true); if ($("#sky")) renderMenu(); }, publishCard: () => publishCard() });   // levelup.js: skill/level notices, the three pillars
@@ -838,6 +855,7 @@
     const t = G.now();
     { const cm = CARAVANS.tick(S, t); if (cm) { persist(true); toast(cm); if (S.caravanJob === null) Store.change("guards", `${lastJobId}-${S.id}`, (d) => (d && d.status === "signed" ? { ...d, status: "left" } : d)); bump(); } lastJobId = S.caravanJob?.id || lastJobId; }
     tickTimers(t); hallTick(t); discoveryToast(); if (lvUI && Math.floor(t) % 3 === 0) lvUI.tick(); if (pvUI) pvUI.tick(); if (Math.floor(t) % 5 === 0) courierCheck();
+    if (S.remake) remakeCheck();   // [remake] once per old hero
     if (typeof LIVING !== "undefined") { const lm = LIVING.tick(S, t); if (lm) { toast(lm); bump(); } }   // deeds remembered, whispers come true, the party leader's world (livingworld.js)
     if (typeof IMM !== "undefined") { IMM.tick(S); if (S.lastSeen && t - S.lastSeen > 3600 && !S.trip?.status) IMM.loading("Welcome back to Skyrim"); S.lastSeen = t; }
     if (S.trip?.status === "travel") {
@@ -875,7 +893,7 @@
     if (Math.floor(t) % 3 === 0) { const qm = QUESTS.check(S); if (qm.length) { persist(true); showMessage("Quest", qm.join(" ")); } }
     if (Math.floor(t) % 30 === 0) { publishCard(false); publishHome(); publishClan(); }
     if (Math.floor(t) % 60 === 0) BACKUP.autoSave(S);
-    renderTop(); renderVitals(); renderTrip(); renderGatherPop(); renderGatherNear(); renderTabs(); hudCompass();
+    renderTop(); renderVitals(); renderTrip(); renderGatherNear(); renderTabs(); hudCompass();
     if (version !== rendered || Date.now() - lastPanelRender > 20000) renderPanel(false);
   }
 
@@ -967,15 +985,6 @@
     const row = (label, cur, max, color) => `<div class="vital"><small><span>${label}</span><span class="num">${Math.round(cur)}/${max}</span></small><div class="bar"><i style="width:${pct(cur, max)}%;background:${color}"></i></div></div>`;
     const w = G.carried(S), cap = G.capacity(S);
     $("#vitals").innerHTML = row("Health", hp, mh, "var(--hp)") + row("Magicka", G.maxMagicka(S), G.maxMagicka(S), "var(--mp)") + row(G.overweight(S) ? "Weight · too heavy" : "Weight", w, cap, w > cap ? "var(--ember)" : "#8a7a5c");
-  }
-  /* PC map home screen: the side panel (and the Gathering card in it) is hidden, so the card floats over the map instead.
-     Without this a PC player could never pick a plant patch or forage. Only redraws on change, so taps don't get lost. */
-  function renderGatherPop() {
-    const el = $("#gpop"); if (!el) return;
-    const on = typeof GATHER !== "undefined" && typeof PCMAP !== "undefined" && PCMAP.on() && (tab === "map" || tab === "places") && !S.dungeon;
-    let html = "";
-    if (on) { try { html = GATHER.card(S); } catch (e) { html = ""; } }
-    if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; }
   }
   /* a ripe patch within reach (also while walking or riding): a small Gather prompt over the map (harvestgame.js) */
   function renderGatherNear() {
@@ -1567,7 +1576,7 @@
     HARVESTGAME.open({ ing: n.ing, kind: HARVEST.kindOf(n.ing), name: D.ITEMS[n.ing]?.name || n.ing, tol: HARVEST.tolOf(S), fast: HARVEST.tolOf(S) > 1,
       onDone: (grade) => {
         let r; try { r = GATHER.act(S, "gpick", id, undefined, { grade, passing: true }); } catch (e) { console.error(e); r = { err: "Couldn't gather that. Please try again." }; }
-        if (r.ok) { G.note(S, ` ${r.text}`); SOUND.fx("coin"); persist(true); renderPanel(true); renderGatherPop(); }
+        if (r.ok) { G.note(S, ` ${r.text}`); SOUND.fx("coin"); persist(true); renderPanel(true); }
         return { ...r, before, after: HARVEST.progress(S, n.ing), thumb: G.P(S, "green_thumb") > 0 };
       } });
   }
@@ -1580,7 +1589,7 @@
     if (r.err) return toast(r.err);
     SOUND.fx(what === "gauto" || what === "gunplant" ? "click" : "coin");
     if (r.ok && /^(g(pick|quick|pickall|forage|plant)|hdeliver)$/.test(what)) G.note(S, ` ${r.text}`);
-    persist(true); renderPanel(true); renderGatherPop(); toast(r.text);
+    persist(true); renderPanel(true); toast(r.text);
   }
   function exploreAct(what, id) {
     const r = EXPLORE.act(S, what, id);
@@ -2960,20 +2969,32 @@
     return `<div class="uxhead"><div class="uxh-t"><b>${h[0]}</b><span>${h[1]}</span></div><button class="uxi" data-act="uxhelp" data-id="${tab}" aria-label="What is this screen?" aria-expanded="${uxHelpOpen === tab}">ⓘ</button></div>
       ${uxHelpOpen === tab ? `<div class="uxpop" role="note"><p>${h[2]}</p>${typeof CC !== "undefined" ? CC.legend() : ""}<button class="btn sm" data-act="uxhelp" data-id="${tab}">Got it</button></div>` : ""}`;
   }
+  /* locscreen.js: the Area tab at a real place opens as a painted scene ("" = no scene: another tab, a shop open, List mode) */
+  function locScene() {
+    const L = typeof LOCSCREEN !== "undefined" ? LOCSCREEN : null;
+    if (!L || !S || tab !== "town" || !townCtx || $("#sky") || L.mode(S) !== "scene" || L.placeOf(S) !== townCtx.l) return "";
+    const c = townCtx, l = c.l, gather = typeof GATHERUI !== "undefined" ? GATHERUI.html(S) : "";   // gatherui.js: its g* buttons reach onPanelClick through #locs
+    const players = others.filter((o) => o && o.id !== S.id && o.loc === l && !o.hiding).map((o) => ({ name: typeof GREET !== "undefined" ? GREET.label(S, o, party) : o.name, sub: party && party.members?.some((m) => m.id === o.id) ? "In your party" : "Player" }));
+    try {
+      if (c.town) return L.html({ S, l, sections: c.sections, names: c.names, open: c.open, hold: c.hold, wanted: c.wanted, players, sheets: { gather, news: c.news.join("") + (c.rumours || "") } });
+      return L.html({ S, l, sections: [], players, sheets: { main: placeHere(), gather, hunt: typeof LEGHUNT !== "undefined" ? LEGHUNT.wildHTML(S, esc) : "", camp: wildsFood() } });
+    } catch (e) { console.warn("locscreen", e); return ""; }
+  }
   function renderPanel(force) {
     const side = $("#side"); if (!side) return;   // the game screen isn't up yet (title or intro)
     if (typeof RIDING !== "undefined" && S) RIDING.sync(S);   // the map's ride button: a horse just bought, back on its feet, out of a dungeon …
     if (!force && side.contains(document.activeElement) && document.activeElement.matches("input,select")) return;
     rendered = version; lastPanelRender = Date.now();
-    side.dataset.tab = tab;
+    side.dataset.tab = tab; townCtx = null;
     const openD = [...side.querySelectorAll("details")].map((d) => d.open), y = scrollY;
     const twp = typeof TABMENU !== "undefined" ? { stars: () => TABMENU.stars(S), perks: () => TABMENU.perks(S) } : {};
     const mnp = typeof MENUS !== "undefined" ? MENUS.panels({ S, ach: achPanel, settings: settingsHTML, fest: festPanel, idPanel, update }) : {};   // menus.js: tab homes
-    side.innerHTML = tutTip() + (typeof MENUS !== "undefined" ? MENUS.subnav(tab) : "") + screenHead() + ({ ...mnp, map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: () => (typeof ARRIVEAREA !== "undefined" ? ARRIVEAREA.gatherHTML(S) : "") + panelTown(), log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, follower: () => typeof FOLTAB !== "undefined" ? FOLTAB.panel(S, esc, svgI) : "", ...twp }[tab] || panelTravel)();
+    side.innerHTML = tutTip() + (typeof MENUS !== "undefined" ? MENUS.subnav(tab) : "") + screenHead() + ({ ...mnp, map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: () => { const t = panelTown(); return (townCtx && typeof LOCSCREEN !== "undefined" ? LOCSCREEN.sceneBtn() : "") + (typeof ARRIVEAREA !== "undefined" ? ARRIVEAREA.gatherHTML(S) : "") + t; }, log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, follower: () => typeof FOLTAB !== "undefined" ? FOLTAB.panel(S, esc, svgI) : "", ...twp }[tab] || panelTravel)();
     if (typeof TABMENU !== "undefined") TABMENU.afterPanel(tab);
     if (typeof MENUS !== "undefined") MENUS.afterPanel(tab);
     if (typeof MENUS2 !== "undefined") MENUS2.afterPanel(tab, side);   // menus2.js: Find a quest
     if (tab === "town" && typeof AREAUI !== "undefined") AREAUI.fitSoon(side);   // areaui.js: one or two columns of places
+    if (typeof LOCSCREEN !== "undefined") LOCSCREEN.show(locScene());   // locscreen.js: the place full screen
     if (!force) { side.querySelectorAll("details").forEach((d, i) => { if (openD[i] != null) d.open = openD[i]; }); scrollTo(0, y); }
     const cl = $("#chatlog"); if (cl) cl.scrollTop = cl.scrollHeight;
   }
@@ -3019,7 +3040,7 @@
       .map((n) => ({ n, d: G.pxDist(here, WORLD.places[n]), kind: WORLD.places[n][2], visited: S.discovered.includes(n) })).sort((a, b) => a.d - b.d);
     const places = MP ? all.filter((p) => MP.match(p.kind, p.visited)) : all;
     const bag = myBag();
-    return `${ppUI ? ppUI.panelHTML() : ""}${typeof WFX !== "undefined" ? WFX.coldHTML(S) : ""}${nextCard()}${typeof REMIND !== "undefined" && typeof MAPPANEL === "undefined" ? REMIND.card(S) : ""}${placeHere()}${typeof EXPLORE !== "undefined" ? EXPLORE.placeCard(S) : ""}${typeof RUMOURS !== "undefined" ? RUMOURS.card(S) : ""}${typeof GATHER !== "undefined" ? GATHER.card(S) : ""}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map, or press <b>Go</b> below. Tap empty ground on the map to roam off the road.</p>${typeof FASTQOL !== "undefined" ? FASTQOL.recentHTML(S) : ""}
+    return `${ppUI ? ppUI.panelHTML() : ""}${typeof WFX !== "undefined" ? WFX.coldHTML(S) : ""}${nextCard()}${typeof REMIND !== "undefined" && typeof MAPPANEL === "undefined" ? REMIND.card(S) : ""}${placeHere()}${typeof EXPLORE !== "undefined" ? EXPLORE.placeCard(S) : ""}${typeof RUMOURS !== "undefined" ? RUMOURS.card(S) : ""}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map, or press <b>Go</b> below. Tap empty ground on the map to roam off the road.</p>${typeof FASTQOL !== "undefined" ? FASTQOL.recentHTML(S) : ""}
       <input id="search" placeholder="Search places" value="${esc(searchText)}" autocomplete="off" aria-label="Search places">${MP ? MP.chips(MP.countAll(all)) : ""}
       <div class="list">${bag ? `<div class="item on"><div class="t"> Your lost bag<span>${bag.gold} gold · ${Math.max(0, Math.floor((bag.expires - G.now()) / 60))} min left before it's fair game</span></div><button class="btn pri sm" data-act="go" data-place="__bag">Go</button></div>` : ""}
       ${places.slice(0, searchText || uxAllPlaces ? 40 : 8).map(({ n, d }) => { const k = WORLD.places[n][2]; return `<div class="item"><div class="t">${esc(n)}<span>${KIND[k]} · ${esc(G.holdAt(WORLD.places[n]))}${typeof PLACESTUFF !== "undefined" ? PLACESTUFF.tag(n) : ""}${S.discovered.includes(n) ? "" : " · unvisited"}${(() => { const lf = DUNGEONS.enterable(n) ? DUNGEONS.refillLeft(S, n) : 0; return lf ? ` ·  opens in ${cdSpan(G.now() + lf)}` : ""; })()}</span></div><span class="num sub">${d * 1.1 / G.speed(S) < 1 ? "" : "~"}${fmtMin(d * 1.1 / G.speed(S))}</span><button class="btn sm" data-act="go" data-place="${esc(n)}">Go</button></div>`; }).join("") || (searchText ? `<p class="sub">No places match “${esc(searchText)}”. Try part of the name, like “riv”.</p>` : `<p class="sub">No places of this kind yet. Tap All to see every place.</p>`)}${!searchText && places.length > 8 ? `<button class="btn" data-act="uxall" style="width:100%;margin-top:8px">${uxAllPlaces ? "Show only the nearest" : `Show all ${places.length} places`}</button>` : ""}${(() => { const n = Object.keys(clearedLeft()).length; return `<button class="btn" data-act="tabgo" data-id="places" style="width:100%;margin-top:8px"> Locations: cleared places${n ? ` (${n})` : ""}</button>`; })()}</div>
@@ -3057,7 +3078,7 @@
       return `<div class="item" style="flex-wrap:wrap">${UIART.shout(id, 30)}<div class="t">${esc(name)} <span class="num">${words.map((w) => POWERS.known(S, w) ? (POWERS.unlocked(S, w) ? `<b>${w}</b>` : `${w}\uE117`) : "···").join(" ")}</span><span>${esc(desc)}${lv ? ` · cooldown ${typeof SHOUTS !== "undefined" ? SHOUTS.cd(S, id, lv) : cds[lv - 1]} s` : ""}</span></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;width:100%">${words.filter((w) => POWERS.known(S, w) && !POWERS.unlocked(S, w)).map((w) => `<button class="btn sm" data-act="unlock" data-id="${w}" ${(S.souls || 0) > 0 ? "" : "disabled"}>Unlock ${w} (1 soul)</button>`).join("")}
         ${(typeof SHOUTS !== "undefined" ? SHOUTS.outside(id) : POWERS.ROAD_SHOUTS.includes(id)) && lv ? `<button class="btn sm pri" data-act="roadshout" data-id="${id}" ${POWERS.voiceReady(S) ? "" : "disabled"}>Shout</button>` : ""}</div></div>`; }).join("");
-    const fol = typeof FOLTAB !== "undefined" ? (S.follower ? `<div class="panel ft-sum">${FOLTAB.summary(S, esc)}</div>` : "") : typeof FOL2 !== "undefined" ? FOL2.panel(S, esc) : S.follower ? `<div class="panel"><h2>Follower</h2><div class="item">${NPCART.follower(S.follower.id, 36)}<div class="t">${esc(TOWNS.FOLLOWERS[S.follower.id][0])}<span>${Math.round(TOWNS.followerHp(S))}/${TOWNS.followerMax(S, S.follower.id)} health · fights beside you · carries 100 for you · goes down instead of dying</span></div><button class="btn sm" data-act="dismiss">Dismiss</button></div></div>` : "";
+    const fol = typeof FOLTAB !== "undefined" ? (S.follower || S.pet ? `<div class="panel ft-sum">${FOLTAB.summary(S, esc)}</div>` : "") : typeof FOL2 !== "undefined" ? FOL2.panel(S, esc) : S.follower ? `<div class="panel"><h2>Follower</h2><div class="item">${NPCART.follower(S.follower.id, 36)}<div class="t">${esc(TOWNS.FOLLOWERS[S.follower.id][0])}<span>${Math.round(TOWNS.followerHp(S))}/${TOWNS.followerMax(S, S.follower.id)} health · fights beside you · carries 100 for you · goes down instead of dying</span></div><button class="btn sm" data-act="dismiss">Dismiss</button></div></div>` : "";
     const powersHtml = `<div class="list">
       <div class="item">${UIART.power(S.race, 30)}<div class="t">${esc(rp[0])} <span class="num">${cd(S.powerAt)}</span><span>${esc(rp[1])} Once a day, from the Magic menu (Powers).</span></div></div>
       <div class="item">${S.stone ? UIART.stone(S.stone, 30) : ""}<div class="t">${S.stone ? esc(POWERS.STONES[S.stone][0]) : "No standing stone"}${S.stone && POWERS.stoneHasPower(S) ? ` <span class="num">${cd(S.stonePowerAt)}</span>` : ""}<span>${S.stone ? esc(POWERS.STONES[S.stone][1]) : "Visit one of the 13 standing stones (Guardian Stones are near Riverwood) to take its blessing."}</span></div></div>
@@ -3347,6 +3368,7 @@
   function panelTown() {
     const l = S.location, types = l ? G.shopTypes(l) : [];
     if (!l || (!types.length && !TOWNS.isTown(l))) {
+      if (l && WORLD.places[l]) townCtx = { l };   // locscreen.js: a place without shops (cave mouth, farm, stone...)
       if (l && (DUNGEONS.enterable(l) || POWERS.STONE_AT[l] || l === "High Hrothgar" || (typeof PLACESTUFF !== "undefined" && PLACESTUFF.offers(l).length))) return (typeof LEGHUNT !== "undefined" ? LEGHUNT.wildHTML(S, esc) : "") + placeHere();
       return (typeof LEGHUNT !== "undefined" ? LEGHUNT.wildHTML(S, esc) : "") + wildsFood() + `<div class="panel"><h2>${l ? esc(l) : "The wilds"}</h2><p class="sub">${l ? "There's nothing to buy here." : "You're out on the road."} Cities and towns have shops, inns, trainers, alchemy labs, forges and jobs.</p></div>`;
     }
@@ -3361,6 +3383,7 @@
     const townTop = news.join("") + wantedLine;
     /* [stations] on a place's own page the town lines the board already shows fold into one "Town news (N)" row; being wanted stays in view */
     const newsRow = news.length ? `<div class="au-news${townNews ? " on" : ""}"><button class="au-newsb" data-act="townnews" aria-expanded="${townNews}"><span>Town news</span> <span class="au-nn">(${news.length})</span><span class="au-chev" aria-hidden="true">${townNews ? "▴" : "▾"}</span></button>${townNews ? `<div class="au-newsin">${news.join("")}</div>` : ""}</div>` : "";
+    if (AU && !townShop) townCtx = { l, town: true, sections, names, open, hold, news, wanted: wantedLine, rumours: typeof RUMOURS !== "undefined" ? RUMOURS.townHTML(S, l, "", open) : "" };   // locscreen.js
     if (AU && !townShop) return `<div class="panel au-panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${townTop}${typeof RUMOURS !== "undefined" ? RUMOURS.townHTML(S, l, "", open) : ""}${AU.hub({ S, l, sections, names, open, hold })}<p class="sub au-gold">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
@@ -3795,6 +3818,7 @@
     if (!b || b.disabled) return;
     const a = b.dataset.act, L = G.loadout(S);
     if (a.startsWith("coop") && coopUI) return void coopUI.act(b);
+    if (/^loc(sheet|mode|leave)$/.test(a) && typeof LOCSCREEN !== "undefined") { SOUND.fx("click"); return void LOCSCREEN.act(b, { S, refresh: () => { townShop = ""; renderPanel(true); }, leave: () => { tab = "map"; bump(); renderTabs(); renderPanel(true); } }); }
     if ((a === "lvpick" || a === "lvsend") && lvUI) return void lvUI.act(b);
     if (/^pp(ready|go|cancel|kick|catch|vote|vhide)$/.test(a) && ppUI) return void ppUI.act(b);
     if (a.startsWith("cq") && CQ) return void CQ.act(S, b, { toast, openModal, closeModal, persist, renderPanel, tally, sound: (n) => SOUND.fx(n), guide: (k) => GUIDE.mark(S, k), selectMix: (ids) => { alchSel = ids; renderPanel(true); }, alchSel: () => alchSel });   // crafting shortcuts (craftqol.js)
