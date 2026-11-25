@@ -106,7 +106,7 @@ const ROAD_EVENTS = (() => {
       read: (s, e) => {
         const sk = s.skills[e.skill];
         if (sk.lvl >= 100) return { text: "There's nothing in it you don't already know." };
-        const msgs = G.raiseSkill(s, e.skill);              // [Skyrim] skill books raise the skill by 1 (and give character XP)
+        const msgs = [...G.raiseSkill(s, e.skill), ...(typeof LONGHOUSE !== "undefined" ? LONGHOUSE.onBook(s, e.skill) : [])];              // [Skyrim] skill books raise the skill by 1 (and give character XP)
         return { text: `You read it cover to cover. ${e.skill} increased to ${sk.lvl}.`, skills: msgs };
       } },
 

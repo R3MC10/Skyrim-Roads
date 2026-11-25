@@ -1,7 +1,7 @@
 """Daedric bargains on screen (bargains.js): the black shrine on the road, accepting a contract, the Daedric bargains
 fold on the Character page (contract card, artifact cards, Ascend / Refuse / Bind), and the Ascend popup.
 Phone (390x844), desktop (1920x1080) and phone in Polish.
-Run from the repo root:  PYTHONIOENCODING=utf-8 python tests/daedric_ui.py [port] [outdir]   (default tests/out_dbg/)"""
+Run from the repo root:  PYTHONIOENCODING=utf-8 python tests/bargains_ui.py [port] [outdir]   (default tests/out_dbg/)"""
 import asyncio, os, socket, subprocess, sys, time
 from playwright.async_api import async_playwright
 
@@ -116,7 +116,7 @@ async def main():
         except Exception: srv.kill()
     check(not errs, f"no page errors {errs[:3]}")
     print("\n".join(shots))
-    print("daedric_ui", "FAILED " + str(len(bad)) if bad else "ok")
+    print("bargains_ui", "FAILED " + str(len(bad)) if bad else "ok")
     sys.exit(1 if bad else 0)
 
 asyncio.run(main())

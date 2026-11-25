@@ -223,12 +223,13 @@ const RUNECRAFT = (() => {
     if (c.kind === "regen" && !turns) sp.turns = 5;
     return sp;
   }
+  /* one crafted spell into D.SPELLS: yours, or a teammate's in a shared party fight (partyspells.js) */
+  function define(c) { D.SPELLS[c.id] = entry(c); if (c.pl) addPolish(c.name, c.pl); return D.SPELLS[c.id]; }
   /* put a save's crafted spells into D.SPELLS (on load and after crafting) */
   function register(s) {
     if (!s) return s;
     for (const c of s.runeSpells || []) {
-      D.SPELLS[c.id] = entry(c);
-      if (c.pl) addPolish(c.name, c.pl);
+      define(c);
       s.spells = s.spells || [];
       if (!s.spells.includes(c.id)) s.spells.push(c.id);
     }
@@ -596,7 +597,7 @@ const RUNECRAFT = (() => {
 
   installMagic(); installFight(); installHooks(); installIcons();
   if (typeof TB !== "undefined" && Array.isArray(TB.FOE_KEYS) && !TB.FOE_KEYS.includes("rcRearm")) TB.FOE_KEYS.push("rcRearm");
-  return { TIERS, ELEMENTS, DELIVERIES, MODS, RUNES, NAMES, MAX, PW_MIN, CHAIN, LINGER, refs, budget, design, fee, names, describe, research, register, craft, forget,
+  return { TIERS, ELEMENTS, DELIVERIES, MODS, RUNES, NAMES, MAX, PW_MIN, CHAIN, LINGER, refs, budget, design, fee, names, describe, research, register, define, craft, forget,
     poisonK, canCraftHere, where, modSlots, icon, drawIcon, svg, open, close, button, freshText, _reset: () => { refCache = null; } };
 })();
 if (typeof module !== "undefined") module.exports = RUNECRAFT;

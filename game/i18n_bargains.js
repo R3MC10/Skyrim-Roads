@@ -139,6 +139,7 @@ var I18N_BARG = (() => {
     "New perks: Princely Favour (Mysticism, deeds count more), Bound Will (Restoration, curses half as strong) and Awakened Bond (Enchanting, artifact powers stronger).":
       "Nowe atuty: Książęca łaska (Mistycyzm, czyny liczą się bardziej), Związana wola (Przywracanie, klątwy o połowę słabsze) i Przebudzona więź (Zaklinanie, mocniejsze moce artefaktu).",
     "Daedric bargains are off the Coming next list: they're in the game now.": "Daedryczne układy zniknęły z listy „Wkrótce”: są już w grze.",
+    "The notes for the adventuring company (build 213) were hidden by mistake. They show up now.": "Opis zmian dla kompanii poszukiwaczy przygód (wersja 213) był przez pomyłkę ukryty. Teraz już go widać.",
   };
   for (const [k, v] of Object.entries(TPL)) if (!k.includes("{")) words[k] = words[k] || v;
   if (typeof I18N_STORY !== "undefined" && I18N_STORY.ex) for (const [k, v] of Object.entries(words)) if (!(k in I18N_STORY.ex)) I18N_STORY.ex[k] = v;

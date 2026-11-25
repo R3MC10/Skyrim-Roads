@@ -360,6 +360,10 @@ const PFX = (() => {
     [ "Mysticism", "princely_favour", "Princely Favour", 1, [30], [], "Daedric princes see the old arts in you: deeds for their contracts and for your pact artifact count 50% more. [OURS]", [["dbdeed", 0.5, {}]]],
     [ "Restoration", "bound_will", "Bound Will", 1, [40], ["novice_restoration"], "You keep your own mind: an Ascendant artifact's curse is half as strong. [OURS]", [["dbcurse", 0.5, {}]]],
     [ "Enchanting", "awakened_bond", "Awakened Bond", 1, [40], ["enchanter"], "You understand what sleeps in a Daedric artifact: your pact artifact's powers are 25% stronger. [OURS]", [["dbpow", 0.25, {}]]],
+    // the adventuring company longhouse (longhouse.js reads lhcost / lhplan / lhtrophy)
+    [ "Mercantile", "lng_purse", "Company Purse", 1, [30], ["haggling"], "You drive a hard bargain with builders: founding a longhouse and building its rooms cost 20% less when you pay. [OURS]", [["lhcost", 0.2, {}]]],
+    [ "Etiquette", "lng_council", "War Council", 1, [35], ["courtly_manners"], "You know how to read a plan aloud: the company's battle plan is 50% stronger for you. [OURS]", [["lhplan", 0.5, {}]]],
+    [ "Smithing", "lng_trophies", "Trophy Mounter", 1, [30], ["steel_smithing"], "You mount the company's trophies properly: their bonuses against each kind of foe count double for you. [OURS]", [["lhtrophy", 1, {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {
@@ -443,6 +447,8 @@ const PFX = (() => {
     if (typeof RACEFX !== "undefined" && s.race) for (const [k, v, c] of RACEFX.fx(s)) if (k === key && ok(s, c, f, x)) fn(v, "race");
     // worn enchantments that work like perks (Resist Fire, Fortify Block, Fortify Critical, Evasion... see enchanting.js PFXMAP)
     if (typeof ENCH !== "undefined" && ENCH.pfxWorn && s.loadouts && s.inv) for (const [k, v, c] of ENCH.pfxWorn(s, f)) if (k === key && ok(s, c, f, x)) fn(v, "ench");
+    // the company longhouse (longhouse.js): forge, library, trophy hall and battle plan lines
+    if (typeof LONGHOUSE !== "undefined" && LONGHOUSE.pfx && s.lhId) for (const [k, v, c] of LONGHOUSE.pfx(s, f)) if (k === key && ok(s, c, f, x)) fn(v, "lh");
   }
   const sum = (s, key, f, x) => { let t = 0; each(s, key, f, x, (v) => (t += v)); return t; };
   const has = (s, key, f, x) => sum(s, key, f, x) > 0;

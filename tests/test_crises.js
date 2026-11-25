@@ -157,7 +157,7 @@ const sim = (L, boss, N) => { let won = 0, turns = 0, died = 0, one = 0;
     if (f.won) { won++; if (f.turn <= 1) one++; } if (f.hp <= 0) died++; turns += f.turn; }
   return { win: won / N, turns: turns / N, died: died / N, one }; };
 const lines = [];
-for (const L of [10, 20, 30, 40]) { const a = sim(L, false, 80), b = sim(L, true, 80);
+for (const L of [5, 10, 20, 30, 40]) { const a = sim(L, false, 80), b = sim(L, true, 80);
   lines.push("L" + L + " contract win " + (a.win * 100).toFixed(0) + "% " + a.turns.toFixed(1) + "t · ringleader win " + (b.win * 100).toFixed(0) + "% " + b.turns.toFixed(1) + "t died " + (b.died * 100).toFixed(0) + "%");
   ok(a.one === 0 && b.one === 0, "L" + L + ": no one-turn fights");
   ok(a.win >= 0.9, "L" + L + ": contracts are winnable (" + a.win + ")");
@@ -165,6 +165,10 @@ for (const L of [10, 20, 30, 40]) { const a = sim(L, false, 80), b = sim(L, true
   ok(b.turns >= 10, "L" + L + ": the ringleader is a real fight (" + b.turns.toFixed(1) + ")");
   ok(b.win >= 0.6 && b.died <= 0.3, "L" + L + ": the ringleader is beatable solo (" + b.win + ", died " + b.died + ")"); }
 console.log(lines.join("\\n"));
+{ const s = mk("FL", 5, cr.place), e = C.makeFoe(s, cr, true), f = new G.Fight(s, e); f.canFlee = true;
+  ok(f.affordable("flee"), "a Run away rule works against the ringleader");
+  ok(/f\\.canFlee = true;[^\\n]*\\n\\s*f\\.run/.test(SRC.slice(SRC.indexOf("function boss("))), "the ringleader fight lets you run");
+  ok(e.health < C.makeFoe(mk("FL2", 10, cr.place), cr, true).health, "the ringleader is softer under level 10"); }
 
 // ---- 7. a long run: busy players can't spiral a hold, and crises always end
 for (let k = 0; k < 30; k++) { const tt = T0 + k * C.CYCLE + 5 * H;
