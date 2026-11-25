@@ -3,6 +3,17 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b206-crises", build: 206, date: "25 Nov 2026", title: "Hard times in the holds", items: [
+      "Every hold now has four numbers you can see: Security, Food, Prosperity and Corruption. They drift with time and the weather, and they follow what players do.",
+      "Escorting caravans and beating bandits makes a hold safer, bringing food feeds it, and bribes, pickpocketing and selling stolen goods make it more crooked.",
+      "Low numbers make shops dearer (food most of all when food is short) and trouble finds you more often on that hold's roads. Good numbers do the opposite.",
+      "When a hold is under pressure, a crisis starts: The Long Winter, Outlaw Roads, The Blight, Rot in the Court or Beasts at the Door. Each gets worse in five stages, for example snowstorm, caravans cut, shortage, bandits, then the Jarl's call.",
+      "From stage 2 the Jarl posts contracts in the hold's capital: escort the supply wagons, clear out bandits, hunt the pack, deliver food or expose a crooked guard. Enough help from everyone draws out the ringleader for a boss fight.",
+      "Beat the ringleader and the hold recovers with cheaper shops for a day. Everyone who helped can claim a reward, and the one who struck him down earns the title Shield of the Hold.",
+      "Nothing is required: a crisis left alone burns out after 40 hours and leaves the hold poorer for a day. Everyone sees the same crises at the same time.",
+      "See it on the map (a sign and five pips by the capital), in the notices under the world event card, and on every town page: tap Hold status for the full card.",
+      "New perks: Hard Times Trader (Mercantile) halves crisis price rises, and Jarl's Agent (Etiquette) makes your contracts count more and pays more.",
+    ] },
     { id: "b205-artround3", build: 205, date: "25 Nov 2026", title: "Fresh paint for fights and mini-games", items: [
       "Fourteen more fight places are freshly painted, bigger and sharper: the arena, ash wastes, autumn woods, bandit camps, Forsworn cliffs, forts, giant camps, lairs, marshes, mines, rocky highlands, temples, Thalmor halls and vampire lairs.",
       "Fighters pick up the light of each of these places, so they match the new paintings.",

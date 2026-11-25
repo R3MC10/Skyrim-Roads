@@ -246,6 +246,9 @@ const PFX = (() => {
     [ "One-Handed", "siege_breaker", "Siege Breaker", 1, [40], ["armsman"], "Bandit raiders, ram crews and warlords take 15% more damage from you, and your charges against a siege count 20% more. [OURS]", [["out", 0.15, { tag: ["siege"] }], ["gevsiege", 0.2, {}]]],
     [ "Mercantile", "fairgoer", "Fairgoer", 1, [30], ["haggling"], "At a town fair the shops sell to you another 10% cheaper, and every fair game gives you 1 more point. [OURS]", [["gevshop", 0.1, {}], ["gevgame", 1, {}]]],
     [ "Etiquette", "hero_of_the_hour", "Hero of the Hour", 1, [35], ["courtly_manners"], "Rewards from great world events and fair prizes pay you 20% more gold. [OURS]", [["gevgold", 0.2, {}]]],
+    // ---------------------------------------------------------------- regional crises (crises.js)
+    [ "Mercantile", "hard_times_trader", "Hard Times Trader", 1, [35], ["haggling"], "When a hold runs short of food, trade or honesty, its shops raise their prices on you only half as much. [OURS]", [["crisisprice", 0.5, {}]]],
+    [ "Etiquette", "jarls_agent", "Jarl's Agent", 1, [35], ["courtly_manners"], "The Jarl trusts you: your contracts in a hold crisis count 25% more, exposing crooked guards is easier, and crisis rewards pay 25% more gold. [OURS]", [["crisisrelief", 0.25, {}]]],
     // ---------------------------------------------------------------- homesteads (homestead.js)
     [ "Smithing", "carpenter", "Carpenter", 1, [30], ["steel_smithing"], "Building at your homestead takes 25% fewer materials. [OURS, from Hearthfire]", [["hsmats", 0.25, {}]]],
     [ "Athletics", "woodsman", "Woodsman", 1, [30], ["long_strider"], "The sawmill, quarry and clay pit at your homestead give 50% more. [OURS]", [["hsyield", 0.5, {}]]],
