@@ -54,7 +54,7 @@ const CGRIG = (() => {
      frame is drawn once off screen and the topmost painted row read back. Cached per look + clip; a figure whose parts were
      still arriving is measured again a couple of times (the biggest reach wins). null: can't tell (node, no canvas). */
   const BOUNDS = new Map(), NB = 10, BK = 2, BW = 220, BH = 360, BFEET = 340;
-  function reach(look, clip, extra) {   // extra: more PAINTRIG.draw options (the paper doll's { doll: true })
+  function reach(look, clip, extra) {   // extra: more PAINTRIG.draw options
     if (typeof document === "undefined") return null;
     const key = clip + "|" + JSON.stringify(look) + (extra ? "|" + JSON.stringify(extra) : ""), had = BOUNDS.get(key), now = Date.now();
     if (had && (had.n >= 3 || now - had.at < 1500)) return had.up;

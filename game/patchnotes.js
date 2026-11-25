@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b335-dollrig2", build: 335, date: "25 Nov 2026", title: "Your hero stands face-on on the Items screen", items: [
+      "On the Items screen your hero now faces you, like in Skyrim's inventory, and stands relaxed with their gear: they breathe, sway a little, their cape and hair lag behind, and now and then they shift their grip.",
+      "A one-handed weapon hangs from the right hand, a two-hander rests point-down in both hands, a bow sits in the left hand and a staff or spear stands planted by the right foot.",
+      "Your shield sits on your left arm in front of your body, and every weapon is held by its handle with the fist closed round it.",
+      "In fights the same goes for your fighter: the main weapon is always in the right hand and the shield or second weapon in the left, each drawn in its own layer, so arms, shields and blades don't overlap into weird shapes anymore.",
+      "Reduce motion in Settings keeps your hero still, and they stop moving while the game is in the background.",
+    ] },
     { id: "b334-locintro", build: 334, date: "25 Nov 2026", title: "Every arrival shows the place", items: [
       "Every time you arrive somewhere (a town, a hold's capital, a dungeon, a camp, a shrine...), the place fills the screen for a moment: its painting, its name, the time, the weather and the season. Night and bad weather tint the picture.",
       "The first time you see a place you get the full view for a few seconds. Coming back, a shorter one. Tap anywhere or press Esc to skip; it fades out by itself and never holds up the game.",
