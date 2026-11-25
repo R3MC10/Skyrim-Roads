@@ -1715,6 +1715,9 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 #pcupd .t{color:var(--gold);font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:13px}
 #pcupd .d{color:var(--ink);font-size:14px;line-height:1.4}
 #pcupd .b{display:flex;gap:8px;justify-content:flex-end}
+#pcupd .b:empty{display:none}
+#pcupd .pbar{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;box-shadow:inset 0 0 0 1px rgba(226,187,100,.25)}
+#pcupd .pbar i{display:block;height:100%;width:3%;background:linear-gradient(90deg,#9c7a35,var(--gold));transition:width .4s ease-out}
 @keyframes pcupdIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 /* [fightread] fightread.js: foe intents, what's coming off each health bar, your own statuses, round banners, low health */
 .tbbar s.tbfc{position:absolute;top:0;bottom:0;text-decoration:none;pointer-events:none;background:repeating-linear-gradient(135deg,rgba(255,255,255,.55) 0 3px,rgba(255,255,255,.08) 3px 6px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);animation:tbfc 1.4s ease-in-out infinite}
@@ -5041,6 +5044,22 @@ body:has(#tbf) #gnear{display:none!important}
 .cgsexb.on{color:#f3e7c4;border-color:var(--gold);background:linear-gradient(0deg,rgba(226,187,100,.18),rgba(226,187,100,.06));box-shadow:inset 0 0 0 1px rgba(226,187,100,.35)}
 .cgsexb:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
 @media (min-width:900px){.cgsex{padding:8px 20px 6px}}
+/* [hotbardnd] hotbar drag and drop + 1x / 2x (single / dual cast) per spell slot */
+#tbf .hb-cell{position:relative;display:flex;min-width:0}
+#tbf .hb-cell>.hb-slot{flex:1;min-width:0}
+#tbf .hb-mode{position:absolute;left:1px;top:1px;z-index:1;min-width:22px;height:18px;padding:0 3px;border-radius:4px;border:1px solid rgba(160,190,240,.45);background:rgba(10,14,22,.88);color:#b9cbe8;font:700 10.5px/16px "Barlow Semi Condensed",sans-serif;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#tbf .hb-mode::after{content:"";position:absolute;inset:-8px -6px -4px -4px}
+#tbf .hb-mode.x2{border-color:#8fb6ff;background:linear-gradient(180deg,#2c4a86,#16264a);color:#eef4ff;box-shadow:0 0 6px rgba(120,170,255,.55)}
+#tbf .hb-mode:hover,#tbf .hb-mode:focus-visible{border-color:#e2bb64;outline:none}
+#tbf .hb-mode[disabled]{opacity:.4;cursor:default;border-style:dashed}
+#tbf .hb-slot.hb-dual{border-color:rgba(120,170,255,.55);box-shadow:inset 0 0 10px rgba(90,140,240,.25)}
+#tbf .hb-slot.hb-dual.gone{border-style:dashed}
+#tbf .hb-bar .hb-x2{position:absolute;left:2px;top:1px;padding:0 3px;border-radius:3px;background:linear-gradient(180deg,#2c4a86,#16264a);border:1px solid #8fb6ff;color:#eef4ff;font:700 9.5px/12px "Barlow Semi Condensed",sans-serif;pointer-events:none}
+#tbf .hb-bar .hb-dual .ic{box-shadow:0 0 0 2px rgba(120,170,255,.6),0 0 9px rgba(120,170,255,.45)}
+#tbf.hb-dragging .hb-ebar .hb-slot{border-style:dashed;border-color:rgba(226,187,100,.55)}
+#tbf.hb-dragging .hb-ebar .hb-slot.hb-over{border-style:solid;border-color:#f3d98b;box-shadow:0 0 0 2px rgba(243,217,139,.6),0 0 16px rgba(243,217,139,.45)}
+#tbf .hb-p.hb-lift{background:rgba(226,187,100,.22);box-shadow:inset 3px 0 0 #e2bb64}
+@media (prefers-reduced-motion:reduce){#tbf .hb-slot.hb-over{transform:none}}
 /* pets.js: the Pet section under the Follower section */
 .pet-panel{margin-top:10px}
 .pet-panel .ft-lead{font-size:18px;margin:4px 0}
@@ -5436,6 +5455,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_layout3.js"></script>
 <script src="i18n_followersize.js"></script>
 <script src="i18n_caravanpanel.js"></script>
+<script src="i18n_hotbardnd.js"></script>
 <script src="i18n_magicaim.js"></script>
 <script src="i18n_perksky.js"></script>
 <script src="i18n_crafticons.js"></script>
@@ -5448,6 +5468,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_gatherarea.js"></script>
 <script src="i18n_weaponfx.js"></script>
 <script src="i18n_phantom.js"></script>
+<script src="i18n_pcupdate.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

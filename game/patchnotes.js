@@ -3,12 +3,26 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b302-foepanel", build: 302, date: "25 Nov 2026", title: "A cleaner look at your foe", items: [
+    { id: "b304-foepanel", build: 304, date: "25 Nov 2026", title: "A cleaner look at your foe", items: [
       "The foe's name and health float above its head as a thin Skyrim-style bar with no dark box, and never cover the foe or anyone else. Its statuses are small icons in one row under the bar.",
       "The exact numbers and the rest of its moves show when you hover over it on a PC or tap it on the phone. A boss keeps its big bar at the top, with its icons and next move just under it.",
       "A boss's big attack warning is one slim line now. Hover or hold it to read how to answer it.",
       "The fight log holds the whole fight: scroll it with your finger or the mouse wheel. It stays on the newest line unless you scrolled up, and a small \"newest\" button takes you back down.",
       "The log finds a corner where nobody is standing, and its help bubble no longer covers the lines.",
+    ] },
+    { id: "b303-pcupdates", build: 303, date: "25 Nov 2026", title: "The PC game updates itself", items: [
+      "On Windows the game now updates by itself in the background, the installed and the portable version alike: no more downloading a new setup for every build.",
+      "Usually only the files that changed get downloaded, so an update is often just a few megabytes. A card in the corner shows how far along it is.",
+      "When it's ready the card says Restart to update. On the title screen it switches over by itself, and otherwise the new version starts the next time you open the game. Your saves stay.",
+      "If a new version ever fails to start, the game goes back to the one before by itself and skips the broken one.",
+      "The title screen's Update page now works on PC too. The whole app only downloads again when the app itself changes.",
+      "Older PC copies need the new version once (from the GitHub page); after that they keep themselves up to date.",
+    ] },
+    { id: "b302-hotbardnd", build: 302, date: "25 Nov 2026", title: "Drag and drop on the hotbar, single or dual cast", items: [
+      "In Edit hotbar you can now drag moves, spells, potions and poisons from the list onto a slot, drag one slot onto another to swap them, or drag a slot off the bar to empty it. With a mouse just drag; on a phone hold a row for a moment until it lifts, then drag. Tapping still works too.",
+      "Every spell slot has a small 1× / 2× switch: 1× casts with one hand, 2× casts with both hands (stronger, costs more, with your dual casting perks). The same spell can sit in two slots, once each way, and the key or a tap uses the slot's way. The rune game plays for both.",
+      "A spell that can't be dual cast (like a summon) can't be switched to 2×, and an old 2× slot of one shows greyed out and says why.",
+      "The list shows each spell once now; your bar keeps what it had (old Dual slots stay 2×).",
     ] },
     { id: "b301-gatherarea", build: 301, date: "25 Nov 2026", title: "Gathering moved to the Area tab", items: [
       "Gathering no longer floats over the map. It's now its own section in the Area tab: the plants around you, which ones are ripe and when picked ones grow back, Gather or Quick pick for each, Forage here (with how long until you can search again), Herbalist's notes and the Auto-pick switch.",
