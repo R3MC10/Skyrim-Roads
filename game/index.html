@@ -5002,7 +5002,7 @@ body:has(#tbf) #gnear{display:none!important}
 .fpt-view canvas{position:absolute;inset:0;display:block;width:100%;height:100%}
 .fpt.shut .fpt-view{aspect-ratio:auto;min-height:0;height:36px;background:linear-gradient(180deg,rgba(6,7,9,.9),rgba(16,17,20,.9))}
 .fpt.shut .fpt-view canvas{display:none}
-.fpt-say{position:absolute;left:8px;bottom:8px;max-width:calc(100% - 16px);padding:4px 10px;border-left:2px solid #e2bb64;background:linear-gradient(90deg,rgba(6,7,9,.82),rgba(6,7,9,.55));color:#efe8d6;font:500 13px/1.3 "Barlow",sans-serif;opacity:0;transform:translateY(4px);transition:opacity .3s,transform .3s;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fpt-say{position:absolute;left:8px;bottom:8px;max-width:calc(100% - 16px);padding:4px 10px;border-left:2px solid #e2bb64;background:linear-gradient(90deg,rgba(6,7,9,.82),rgba(6,7,9,.55));color:#efe8d6;font:500 13px/1.3 "Barlow",sans-serif;opacity:0;transform:translateY(4px);transition:opacity .3s,transform .3s;pointer-events:none;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
 .fpt-say.on{opacity:1;transform:none}.fpt-say b{color:#f1cd72;font-weight:600}
 .fpt-bar{display:grid;gap:5px;padding:6px 8px 7px;border-top:1px solid rgba(214,182,110,.32);min-width:0}
 .fpt-row{display:flex;align-items:center;gap:8px;min-width:0}
@@ -5036,6 +5036,7 @@ body:has(#tbf) #gnear{display:none!important}
 html:not(.pcmap):not(.a11y-1h) .mapwrap.fpt-on .mapbtns{top:calc(var(--fpt-h,0px) + 10px)}
 html.pcmap .mapwrap.fpt-on .fpt{left:50%;right:auto;width:min(980px,52vw);transform:translateX(-50%);top:6px}
 html.pcmap .mapwrap.fpt-on .compass{left:50%;right:auto;width:calc(min(980px,52vw) - 16px);top:9px}
+@media (max-width:700px){.fpt-view{aspect-ratio:2.6/1}}
 @media (max-width:420px){.fpt-route{font-size:13px}.fpt-b{width:30px;height:30px}.fpt-chips{font-size:11.5px}}
 @media (prefers-reduced-motion:reduce){.fpt-say{transition:none}}
 </style>

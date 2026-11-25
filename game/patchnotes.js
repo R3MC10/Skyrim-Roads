@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b297-fptravel", build: 297, date: "25 Nov 2026", title: "Through your own eyes", items: [
+      "On the road you now look down the road through your own eyes, in a band at the top of the map. The compass runs along its top edge, and the place you're heading for rises under its marker and grows as you get closer.",
+      "The road bends with your route, and the land is the region you're crossing: tundra, pine forest, the Rift's birches, marsh, snow, ash wastes, rocky hills, river fords, bridges, and the open sea on a ship.",
+      "The sky is the real time of day and weather: sun, moon, stars, the aurora, snow, rain, lightning, fog and ash.",
+      "Riding, you see your horse's ears and your hands on the reins, in your own gloves. On foot the view sways with your steps.",
+      "Your follower's lines show at the bottom of the view.",
+      "Route, time left, the places you'll pass, Walk/Ride and Stop sit in one slim bar under the view. The arrow button folds the view away (it remembers your choice).",
+    ] },
     { id: "b296-nomountfight", build: 296, date: "25 Nov 2026", title: "Horses are for travel", items: [
       "Horses are for travel now: fights always happen on foot.",
       "Riding when a fight starts on the road? You get down and fight on foot. Your horse waits beside you, safe: nobody goes for it and a fight never hurts it. You ride on afterwards.",

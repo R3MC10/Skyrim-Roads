@@ -41,7 +41,7 @@ async def main():
             ok = ok and pa and pb
             for pg, nm in ((A, "a"), (B, "b")):
                 await clean(pg); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(1500)
-                v = await pg.query_selector(".tripvig canvas")
+                v = await pg.query_selector("#fpt .fpt-view canvas")
                 if v: await v.screenshot(path=f"{SHOT}{style}_travel_{nm}.png")
                 else: print(style, nm, "no travel picture"); ok = False
             # a road encounter on A's side; B stops right beside A

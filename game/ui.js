@@ -1015,7 +1015,7 @@
     const html = `<div class="trip"><div class="row"><b>${esc(tr.origin)} → ${esc(tr.destName)}</b><span class="num sub">${fmtMin(mins)}</span>${!tr.carriage && !tr.boat && HORSES.present(S) && HORSES.downed(S) ? `<span class="chip hdownchip">\uE12D Downed</span>` : ""}${!tr.carriage && !tr.boat && HORSES.present(S) && !HORSES.downed(S) ? `<button class="btn sm" data-act="hride">${HORSES.riding(S) ? "Walk" : "Ride"}</button>` : ""}${tr.follow ? `<span class="chip ppfollow">⚑ following</span>` : `<button class="btn sm" data-act="stop">Stop</button>`}</div>
       <div class="bar"><i style="background:var(--frost)"></i></div>
       <div class="sub">${tr.boat ? `\uE12F aboard ${esc(tr.ship || "the ship")} · nothing attacks a ship at sea` : tr.carriage ? "\uE12D by carriage · safe on the Jarl's roads" : `${esc(ground)} · ${pace} · ${HORSES.riding(S) ? `riding ${esc(S.horse.name)}` : HORSES.present(S) && HORSES.downed(S) ? `on foot · ${esc(S.horse.name)} is downed and limps beside you` : HORSES.present(S) ? `walking beside ${esc(S.horse.name)}` : G.overweight(S) ? "too heavy to run" : "on foot"}`}${S.follower ? ` · ${esc(TOWNS.FOLLOWERS[S.follower.id][0])} with you` : ""}</div>
-      ${tr.log.length ? `<div class="sub">${esc(tr.log[0])}</div>` : `<div class="sub">The trip keeps going while the page is closed.</div>`}</div>`;
+      ${tr.log.length ? `<div class="sub">${esc(tr.log[0])}</div>` : ""}</div>`;
     put(html.replace(/<\/div>$/, `<div class="tripvig"></div></div>`));
     const bar = el.querySelector(".bar i"); if (bar) bar.style.width = `${p}%`;
     if (tr.boat && typeof SOLART !== "undefined") { const tv = el.querySelector(".tripvig"); if (tv && !tv.dataset.sea) { tv.dataset.sea = 1; tv.innerHTML = SOLART.sea(); } }   // at sea (solart.js)
@@ -1050,7 +1050,7 @@
     try { if (S.follower && typeof BONDS !== "undefined") { const e = BONDS.bond(S, S.follower.id)?.bond?.log?.[0]; if (e && G.now() - e.t < 20 && e.w) say = { who: e.w, line: e.dog ? e.l : `"${BONDS.T(e.l)}"` }; } } catch { /* no line */ }
     const wx = WEVENTS.weather(here);
     return { id: S.id || S.name, origin: tr.origin, dest: tr.destName, timeText: fmtMin(mins), p: tr.boat ? Math.max(0, Math.min(1, 1 - mins / Math.max(mins, tr.total || 1))) : f,
-      stops: fptStops.list.map((s) => ({ ...s, passed: s.f <= f })), ground, pace: tr.boat || tr.carriage ? "" : pace, slow: sp < 0.6,
+      stops: fptStops.list.map((s) => ({ ...s, passed: s.f <= f })), ground, pace: tr.boat || tr.carriage ? "" : pace, slow: pace === "very slow going",
       riding: riding && !tr.carriage && !tr.boat, canRide: !tr.carriage && !tr.boat && hp && !downed, horse: hp ? { name: S.horse.name, coat: HORSES.coat(S.horse.coat)[2] } : null, downed,
       heavy: G.overweight(S), carriage: !!tr.carriage, boat: !!tr.boat, ship: tr.ship, follow: !!tr.follow, weather: wx && wx.id !== "clear" ? wx.name : "",
       sky: typeof SKY !== "undefined" ? SKY.state(here) : null, heading, turn, destBear: tr.dest ? brg(here, tr.dest) : null, look: myLook(),

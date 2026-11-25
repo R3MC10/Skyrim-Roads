@@ -109,6 +109,7 @@ const FPT = (() => {
     if (shut) stop(); else kick();
   }
   function hide() {
+    if (!band && !info) return;   // called every refresh while not travelling: nothing to do
     stop(); io?.disconnect(); io = null;
     if (band) { band.remove(); band = null; }
     if (wrapEl) { wrapEl.classList.remove("fpt-on"); wrapEl.style.removeProperty("--fpt-h"); }
@@ -159,8 +160,9 @@ const FPT = (() => {
     return 0.5 + 0.28 * Math.sin(r * 3 + seed) + 0.16 * Math.sin(r * 7 + seed * 2.1) + rough * 0.09 * Math.sin(r * 17 + seed * 0.7) + rough * 0.05 * Math.sin(r * 31 + seed * 1.3);
   }
   function paint(g, w, h, I, t) {
-    const T = TA(), st = I.sky || null, { k: kind, B } = BIO(I.ground), L = T ? T.draw.light(st) : { tod: "day", wx: "clear", tints: [], horizon: "#e8dcc0", hazeAdd: 0, glow: 0 };
-    const tod = L.tod, wx = L.wx, snowy = !!B.snowy || (st?.season === "winter" && st?.cold) || wx === "blizzard";
+    const T = TA(), st = I.sky || null, { k: kind, B: B0 } = BIO(I.ground), L = T ? T.draw.light(st) : { tod: "day", wx: "clear", tints: [], horizon: "#e8dcc0", hazeAdd: 0, glow: 0 };
+    const tod = L.tod, wx = L.wx, snowy = !!B0.snowy || (st?.season === "winter" && st?.cold) || wx === "blizzard";
+    const B = snowy && !B0.snowy ? { ...B0, ground: mix(B0.ground, "#e4eaee", 0.72), gd: mix(B0.gd, "#c3cdd6", 0.72), hill: mix(B0.hill, "#d4dde4", 0.6) } : B0;   // a winter coat on any region
     const bobA = I.reduce ? 0 : I.boat ? 0 : I.carriage ? 0.004 : I.riding ? 0.016 : 0.01;
     const bob = Math.sin(walkPh * (I.riding ? 1 : 2)) * h * bobA;
     const hz = Math.round(h * 0.46 + bob);
@@ -220,7 +222,7 @@ const FPT = (() => {
     if (T && I.dest && I.destBear != null && !I.boat) {
       const rel = relDeg(I.destBear - headS);
       if (Math.abs(rel) < FOV / 2 + 10) {
-        const p = clamp(I.p || 0, 0, 1), k = (h / 112) * (0.5 + p * 0.95), x = w / 2 + rel * pxDeg;
+        const p = clamp(I.p || 0, 0, 1), k = (h / 112) * (0.32 + p * 0.6), x = w / 2 + rel * pxDeg;
         g.save(); g.translate(x, hz + 1); g.scale(k, k); g.translate(-(360 * 0.84 - p * 8), -(74 + p * 2));
         try { T.draw.destination(g, { dest: I.dest }, p, { B, L, ink: true, st }, lights, t); } catch { /* no picture */ }
         glow(g, lights, L); g.restore(); lights.length = 0;
@@ -255,12 +257,12 @@ const FPT = (() => {
     g.restore();
   }
   /* the road: slices from your feet to the horizon, bending with the route; things on both sides come toward you */
-  const ZF = 46, NS = 54, STEP = 1.05;
+  const ZF = 46, NS = 54, STEP = 1.05, FORD = 3;
   function road(g, w, h, hz, I, B, kind, snowy, tone, nightK, t, lights, dbg) {
     const T = TA(), H = h - hz, half0 = w * 0.3;
     const cx = (z) => w / 2 + curveS * w * 0.42 * Math.pow((z - 1) / (ZF - 1), 0.7);
     const yz = (z) => hz + H / z, hw = (z) => half0 / z;
-    const rc = mix(snowy ? "#d6d2ca" : B.road, "#0c1424", nightK), rd = mix(rc, "#000000", 0.12), edge = mix(B.gd, "#000000", 0.25 + nightK * 0.3);
+    const rc = mix(snowy ? "#d6d2ca" : B.road, "#0c1424", nightK * 1.2), rd = mix(rc, "#000000", 0.06), edge = mix(B.gd, "#000000", 0.25 + nightK * 0.3);
     const paved = I.ground === "Road" || I.ground === "Bridge", ford = I.ground === "River (ford)", bridge = I.ground === "Bridge", shore = I.ground === "Lake" || I.ground === "Sea";
     // ground stripes moving toward you (grass rows)
     for (let i = 0; i < NS; i++) {
@@ -268,7 +270,7 @@ const FPT = (() => {
       if (Math.floor((z0 + travel) / 1.6) % 2) { g.fillStyle = "rgba(0,0,0,0.05)"; g.fillRect(-4, y1, w + 8, y0 - y1 + 0.5); }
     }
     if (ford || shore) {   // water across (ford) or along one side (lake, sea)
-      const zA = ford ? 1 : 1, zB = ford ? 5.5 : ZF;
+      const zA = 1, zB = ford ? FORD : ZF;
       g.fillStyle = mix("#5f8aa0", "#0c1424", nightK);
       if (ford) g.fillRect(-4, yz(zB), w + 8, h - yz(zB) + 4);
       else { g.beginPath(); g.moveTo(-4, yz(zB)); for (let z = ZF; z >= 1; z /= 1.15) g.lineTo(cx(z) - hw(z) * 2.2, yz(z)); g.lineTo(-4, h + 4); g.closePath(); g.fill(); }
@@ -278,7 +280,7 @@ const FPT = (() => {
     // the road itself
     for (let i = NS - 1; i >= 0; i--) {
       const z0 = Math.pow(ZF, i / NS), z1 = Math.pow(ZF, (i + 1) / NS), y0 = yz(z0), y1 = yz(z1);
-      if (ford && z0 < 5.5) continue;   // under water at the ford
+      if (ford && z0 < FORD) continue;   // under water at the ford
       const a0 = cx(z0), a1 = cx(z1), h0 = hw(z0), h1 = hw(z1);
       const band = Math.floor((z0 + travel) / (paved ? 0.7 : 1.3)) % 2;
       g.fillStyle = edge; g.beginPath(); g.moveTo(a0 - h0 * 1.12, y0 + 0.5); g.lineTo(a1 - h1 * 1.12, y1); g.lineTo(a1 + h1 * 1.12, y1); g.lineTo(a0 + h0 * 1.12, y0 + 0.5); g.fill();
@@ -286,16 +288,17 @@ const FPT = (() => {
       if (!paved && z0 < 20) { g.fillStyle = "rgba(40,30,20,0.16)"; for (const k of [-0.45, 0.45]) { g.beginPath(); g.moveTo(a0 + h0 * k - h0 * 0.06, y0 + 0.5); g.lineTo(a1 + h1 * k - h1 * 0.06, y1); g.lineTo(a1 + h1 * k + h1 * 0.06, y1); g.lineTo(a0 + h0 * k + h0 * 0.06, y0 + 0.5); g.fill(); } }
       if (paved && band && z0 < 24) { g.fillStyle = "rgba(255,250,235,0.08)"; g.fillRect(a0 - h0 * 0.9, y1, h0 * 1.8, Math.max(0.6, (y0 - y1) * 0.25)); }
     }
-    if (ford) { g.fillStyle = "rgba(235,245,250,0.25)"; g.fillRect(-4, yz(5.5) - 1, w + 8, 2); }
+    if (ford) { g.fillStyle = "rgba(235,245,250,0.3)"; g.fillRect(-4, yz(FORD) - 1, w + 8, 2); }
     // things by the road, far first
     if (!T) return;
     const D = T.draw, trees = Object.entries(B.trees || { pine: 1 }), sum = trees.reduce((a, [, v]) => a + v, 0);
     const pickTree = (r) => { let x = r() * sum; for (const [k, v] of trees) { x -= v; if (x <= 0) return k; } return trees[0][0]; };
-    const season = I.sky?.season || "summer", ink = true, dens = clamp((B.n || 10) / 16, 0.3, 1.1);
+    const season = I.sky?.season || "summer", ink = true, dens = clamp((B.n || 10) / 14, 0.55, 1.15), tuft = mix(B.gd, "#0c1424", nightK);
     const i0 = Math.floor(travel / STEP) + 1, i1 = Math.floor((travel + ZF * 0.75) / STEP);
     const seedBase = "fpt|" + (I.dest || "") + "|" + kind;
     for (let i = i1; i >= i0; i--) {
       const z = i * STEP - travel; if (z < 0.55) continue;
+      if (ford && z < FORD + 0.4) continue;   // nothing grows in the river
       const r = seeded(seedBase + "|" + i), fade = z > 14 ? clamp(1 - (z - 14) / (ZF * 0.75 - 14), 0, 1) : 1;
       const base = yz(z), c = cx(z), hwz = hw(z), sc = H / z;
       g.globalAlpha = fade;
@@ -306,7 +309,7 @@ const FPT = (() => {
         if (x > -sc && x < w + sc) { g.save(); g.translate(x, base); g.scale(k, k); try { D.landmark(g, ty, 0, 0, r, ink, lights, t, snowy); } catch { /* skip */ } g.restore(); dbg.objects++; }
       }
       for (const side of [-1, 1]) {
-        if (r() > 0.55 * dens) continue;
+        if (r() > 0.75 * dens) continue;
         const lat = 1.35 + r() * 3.2, x = c + side * lat * hwz, kindT = pickTree(r), th = sc * (0.75 + r() * 0.55);
         if (x < -th || x > w + th) continue;
         dbg.objects++;
@@ -320,6 +323,8 @@ const FPT = (() => {
           else if (kindT === "bush") D.bush(g, x, base, th * 0.16, ["#6b7a44", "#56643a"]);
         } catch { /* skip */ }
       }
+      // grass tufts and stones by the verge, so the ground moves past you
+      if (z < 12 && !snowy) { g.strokeStyle = tuft; g.lineWidth = Math.max(0.8, sc * 0.012); g.beginPath(); for (const side of [-1, 1]) { const x = c + side * hwz * (1.2 + r() * 1.4), l = sc * 0.06; g.moveTo(x - l * 0.4, base); g.lineTo(x - l * 0.6, base - l); g.moveTo(x, base); g.lineTo(x, base - l * 1.2); g.moveTo(x + l * 0.4, base); g.lineTo(x + l * 0.6, base - l); } g.stroke(); }
       // bridge rails
       if (bridge && z < 14) for (const side of [-1, 1]) { const x = c + side * hwz * 1.08; g.fillStyle = "#5a4430"; g.fillRect(x - sc * 0.015, base - sc * 0.2, sc * 0.03, sc * 0.2); }
     }
@@ -369,7 +374,7 @@ const FPT = (() => {
   function rider(g, w, h, I, ph, nightK) {
     const coat = mix(I.horse?.coat || "#8a5a3b", "#0c1424", nightK * 0.8), dark = mix(coat, "#000000", 0.35), mane = mix(I.horse?.coat === "#ebe6da" || I.horse?.coat === "#d6aa5b" ? "#e8dcc0" : "#2a2018", "#0c1424", nightK * 0.6);
     const b = Math.sin(ph) * h * 0.02, nod = Math.sin(ph + 0.6) * h * 0.012, cx = w / 2;
-    const top = h * 0.6 + b + nod, s = h / 112;
+    const top = h * 0.64 + b + nod, s = h / 112;
     g.save();
     // neck rising from the bottom to the poll
     g.fillStyle = coat; g.beginPath(); g.moveTo(cx - 34 * s, h + 4); g.quadraticCurveTo(cx - 20 * s, top + 22 * s, cx - 9 * s, top + 6 * s); g.lineTo(cx + 9 * s, top + 6 * s); g.quadraticCurveTo(cx + 20 * s, top + 22 * s, cx + 34 * s, h + 4); g.closePath(); g.fill();
