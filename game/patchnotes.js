@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b343-perkreset", build: 343, date: "26 Nov 2026", title: "Reset your perks at a shrine", items: [
+      "Want a different build? Kneel at any wayside shrine, or visit the temple in Whiterun, Riften, Solitude, Markarth, Windhelm or Falkreath (Area tab → Services), and reset your perks.",
+      "Every perk point comes back, and so does every Health, Magicka or Stamina choice. Your skills and level stay.",
+      "Your first reset is free. After that it costs gold from level 5: about one or two jobs' pay, more at higher levels, and a little more each time you reset in the same week (it settles down again after a week).",
+      "The window tells you the price, what you get back and what the next reset will cost before anything happens. Not during fights, dungeons or heists.",
+      "The old 10,000 gold Respec button on the Character screen is gone; it now points you to the shrines.",
+    ] },
     { id: "b342-redtests", build: 342, date: "26 Nov 2026", title: "A fresh Coming next", items: [
       "The Coming next list in Patch notes shows what's really being built now: a clearer turn order, parts of the game that open up as you level, and simpler menus.",
     ] },
