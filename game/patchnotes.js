@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b320-phonefight", build: 320, date: "25 Nov 2026", title: "Fights fit your phone", items: [
+      "On a phone the fight log now shows only its newest line. Tap the small arrow next to it to see the last few lines, and again to fold it. The game remembers your choice.",
+      "The foe's health shows as numbers under its bar on a phone, so you can see how close it is to falling without tapping it.",
+      "Every status icon in a fight shows its number: how many stacks of burning, poison, bleeding, vulnerable, winded and the rest, or how many turns a spell has left. On the foe, on you and on your party. Hold or hover an icon for the full text.",
+    ] },
     { id: "b314-reportname", build: 314, date: "25 Nov 2026", title: "Reports show who sent them", items: [
       "When you report a problem, your player name (your account name, or your hero's name if you're not signed in) now goes with it, so we know who to ask if we need more details.",
       "The report window shows the name it's sent as, right above the Send button.",

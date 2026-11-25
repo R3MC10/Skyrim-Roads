@@ -890,6 +890,7 @@ const TB = (() => {
     if (typeof HOTBAR !== "undefined") { try { HOTBAR.decorate(el, sess); } catch (e) { console.warn("hotbar", e); } }   // "Edit hotbar" for the … menu (hotbar.js)
     if (typeof FIGHTDC !== "undefined") { try { FIGHTDC.decorate(el, sess); } catch (e) { console.warn("declutter", e); } }   // the "…" menu, the foe's folded moves (fightdeclutter.js)
     if (typeof FOEPANEL !== "undefined") { try { FOEPANEL.decorate(el, sess); } catch (e) { console.warn("foepanel", e); } }   // the slim foe plate, the scrollable log (foepanel.js)
+    if (typeof PHONEFIGHT !== "undefined") { try { PHONEFIGHT.decorate(el, sess); } catch (e) { console.warn("phonefight", e); } }   // phones: the log folds, the foe's health in numbers (phonefight.js)
   }
   /* floating numbers for what just happened: damage coloured by element, heals, crits, and what you spent */
   const ELEM = [["fire", /\b(fire|flame|burn|scorch|ember)/i], ["frost", /\b(frost|ice|cold|freez|chill)/i], ["shock", /\b(shock|lightning|spark|thunder)/i], ["poison", /\b(poison|venom|toxic)/i]];
@@ -961,6 +962,8 @@ const TB = (() => {
     if (typeof REACT !== "undefined") for (const [c, ic, tip] of REACT.chips(f)) out.push(`<i class="st rxc rxc-${c}" data-tip="${esc(tip)}">${ic}</i>`);   // soaked, marked, burning ground (reactions.js)
     if (typeof COMBO !== "undefined") for (const [c, ic, tip] of COMBO.chips(f)) out.push(`<i class="st ${c}" data-tip="${esc(tip)}">${ic}</i>`);   // followers2: weak/resists
     if (typeof SPELLFX !== "undefined") { const h = SPELLFX.foeHTML(f); if (h) out.push(h); }   // calm, fear, walls, runes, soul trap (spellfx.js)
+    // [phonefight] the other stacking statuses with their stack count (burn, chill, shock and paralysis are above)
+    if (typeof FXICONS !== "undefined") for (const x of FXICONS.foe(f)) if (x.stk && x.n != null && ["poisoned", "bleeding", "vuln", "sunder", "weakened", "resolve"].includes(x.k)) out.push(`<i class="st stk fx-${x.k}" data-tip="${esc(x.tip)}" aria-label="${esc(x.lbl)}: ${x.n}">${x.ic}<small>${x.n}</small></i>`);
     return out.length ? `<div class="tbst">${out.join("")}</div>` : "";
   }
   /* animate just what happened since the last screen: a view of the fight with only those lines (the full fight-scene
