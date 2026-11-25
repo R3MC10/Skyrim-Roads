@@ -793,6 +793,7 @@
     if (typeof LIVING !== "undefined") { const lm = LIVING.tick(S, t); if (lm) { toast(lm); bump(); } }   // deeds remembered, whispers come true, the party leader's world (livingworld.js)
     if (typeof IMM !== "undefined") { IMM.tick(S); if (S.lastSeen && t - S.lastSeen > 3600 && !S.trip?.status) IMM.loading("Welcome back to Skyrim"); S.lastSeen = t; }
     if (S.trip?.status === "travel") {
+      const wasFollow = !!S.trip.follow && party?.leader !== S.id;   // following the party leader (arrivearea.js)
       const out = G.advance(S, t, reachableBags());
       if (out.taken.length || out.bag || out.died || out.encounter || out.arrived) {
         out.taken.forEach((id) => Store.takeBag(id));
@@ -815,6 +816,7 @@
           const qa = QUESTS.active(S).find((a) => a.st.obj.talk === out.arrived);
           if (qa) setTimeout(() => toast(` ${qa.st.title}: "${qa.st.obj.label}" is waiting in the Journal.`), 2500);
           if (out.solIntro) { persist(true); setTimeout(() => showMessage("Quest", out.solIntro), 700); }
+          if (typeof ARRIVEAREA !== "undefined") ARRIVEAREA.arrive({ s: S, place: out.arrived, known: !!WORLD.places[out.arrived], follower: wasFollow, tab, menu: !!$("#sky"), go: goArea });   // the Area tab opens (once the screen is clear)
         }
       } else { Store.save(S); maybeRoadEvent(); maybeCaravan(); }
     }
@@ -2669,6 +2671,13 @@
     return others.filter((o) => party.members.some((m) => m.id === o.id) && (S.dungeon ? o.dungeon === S.dungeon.place : (!o.dungeon && G.pxDist(otherPos(o), me) <= MP.NEAR_PX)))
       .map(MP.allyFromCard);
   }
+  /* open the Area tab after arriving (arrivearea.js); like tapping it, without scrolling a phone away from the map */
+  function goArea() {
+    if (tab === "town" && !$("#sky")) return;
+    closeMenu(); tab = "town"; testResult = null; bump(); renderTabs(); renderPanel(true);
+    if (typeof PCMAP !== "undefined" && PCMAP.on()) PCMAP.refresh();
+    if (typeof MOTION !== "undefined") MOTION.panel($("#side"));
+  }
   function followParty() {
     const tr = party?.trip;
     if (!tr || party.leader === S.id || tr.t <= (S.followT || 0) || S.dungeon || (S.trip && S.trip.status !== "travel")) return;
@@ -2860,7 +2869,7 @@
     const openD = [...side.querySelectorAll("details")].map((d) => d.open), y = scrollY;
     const twp = typeof TABMENU !== "undefined" ? { stars: () => TABMENU.stars(S), perks: () => TABMENU.perks(S) } : {};
     const mnp = typeof MENUS !== "undefined" ? MENUS.panels({ S, ach: achPanel, settings: settingsHTML, fest: festPanel, idPanel, update }) : {};   // menus.js: tab homes
-    side.innerHTML = tutTip() + (typeof MENUS !== "undefined" ? MENUS.subnav(tab) : "") + screenHead() + ({ ...mnp, map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: panelTown, log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, follower: () => typeof FOLTAB !== "undefined" ? FOLTAB.panel(S, esc, svgI) : "", ...twp }[tab] || panelTravel)();
+    side.innerHTML = tutTip() + (typeof MENUS !== "undefined" ? MENUS.subnav(tab) : "") + screenHead() + ({ ...mnp, map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: () => (typeof ARRIVEAREA !== "undefined" ? ARRIVEAREA.gatherHTML(S) : "") + panelTown(), log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, follower: () => typeof FOLTAB !== "undefined" ? FOLTAB.panel(S, esc, svgI) : "", ...twp }[tab] || panelTravel)();
     if (typeof TABMENU !== "undefined") TABMENU.afterPanel(tab);
     if (typeof MENUS !== "undefined") MENUS.afterPanel(tab);
     if (typeof MENUS2 !== "undefined") MENUS2.afterPanel(tab, side);   // menus2.js: Find a quest
