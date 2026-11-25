@@ -145,7 +145,7 @@ const PERKS = (() => {
     ],
     "Speechcraft": [
       ["persuasion", "Persuasion", 1, [50], [], "Persuasion attempts are 30% easier. [Skyrim]"],
-      ["intimidation", "Intimidation", 1, [70], ["persuasion"], "Intimidation is twice as successful. [Skyrim] (toll guards, bounty hunters)"],
+      ["intimidation", "Intimidation", 1, [70], ["persuasion"], "Intimidation is twice as successful (toll guards, bounty hunters). [Skyrim]"],
       ["bribery", "Bribery", 1, [30], [], "You can bribe guards to ignore your crimes. [Skyrim]"],
     ],
     "Etiquette": [
