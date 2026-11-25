@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b232-arrivearea", build: 232, date: "25 Nov 2026", title: "The Area tab opens when you arrive", items: [
+      "When you reach a town, a dungeon entrance or another place on the map, the Area tab opens by itself, so shops, the inn and what you can do there are right in front of you.",
+      "If a fight, a road event or any window is still open, it waits until you close it.",
+      "Stopping at a spot you picked in the wilds or a map pin keeps you on the map.",
+      "In a party, if you follow the leader, it only switches when you're just looking at the map, never while you're reading something else.",
+      "Plants you can gather nearby also show at the top of the Area tab.",
+    ] },
     { id: "b231-nomountfight", build: 231, date: "25 Nov 2026", title: "Horses wait at the edge of the fight", items: [
       "Horses now wait at the edge of the fight; you always fight on foot. That goes for solo fights, parties and co-op.",
       "Nobody goes for your horse and it never gets knocked down in a fight. If you rode in, you're back in the saddle when it's over.",
