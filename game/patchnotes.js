@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b255-qacore2", build: 255, date: "25 Nov 2026", title: "Title screen in Polish and the level-up tip", items: [
+      "Fixed: in Polish, the title screen, How to Play, Credits, Settings and the Updates page still had lines in English.",
+      "Fixed: in Polish, every perk description, the hirelings' descriptions and the patch-note dates were still in English.",
+      "Fixed: the first level-up tip and one Dawnguard line still sent you to the Hero tab; it's called Character now."
+    ] },
     { id: "b254-qafight", build: 254, date: "25 Nov 2026", title: "Party dungeon fixes", items: [
       "Fixed: in a party dungeon, the waiting screen still said only the leader decides. It now says everyone votes on each choice.",
     ] },
