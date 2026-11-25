@@ -52,7 +52,34 @@ const Store = (() => {
 
   // a BroadcastChannel stand-in for tests (?net=bc): tabs of one browser act as phones
   function transport() {
-    if (typeof SERVERNET !== "undefined" && SERVERNET.on()) return SERVERNET;   // [OURS] signed in: the shared world comes through our server (servernet.js)
+    const phones = phoneNet();
+    if (typeof SERVERNET !== "undefined" && SERVERNET.on()) return phones ? bothLines(SERVERNET, phones) : SERVERNET;   // [OURS] signed in: the shared world comes through our server (servernet.js)
+    return phones;
+  }
+  /* Signed in: the server world AND the phone-to-phone world at once. They used to be two separate worlds, so a player
+     who signed in vanished for friends who hadn't (and the other way round). Peer ids get "s:" (server) or "p:" (phones)
+     in front, so a reply goes back down the line it came from. */
+  function bothLines(S, P) {
+    return {
+      name: S.name,
+      join(code, h) {
+        const wrap = (pre) => ({ onJoin: (p) => h.onJoin(pre + p), onLeave: (p) => h.onLeave(pre + p), onMessage: (m, p) => h.onMessage(m, pre + p), onWorld: h.onWorld, onError: (e) => h.onError?.(e) });
+        const s = S.join(code, wrap("s:"));
+        let p = null; try { p = P.join(code, wrap("p:")); } catch (e) { console.warn("phone-to-phone line unavailable", e); }
+        return {
+          send(data, peer) {
+            if (peer == null) { s.send(data); p?.send(data); return; }
+            const id = String(peer);
+            if (id.startsWith("s:")) s.send(data, id.slice(2)); else if (id.startsWith("p:")) p?.send(data, id.slice(2));
+          },
+          leave() { try { s.leave(); } catch { /* gone */ } try { p?.leave(); } catch { /* gone */ } },
+          direct: () => (s.direct?.() ?? 0) + (p?.direct?.() ?? 0),
+        };
+      },
+      ...(P.backup ? { backup: (code, on) => P.backup(code, on) } : {}),
+    };
+  }
+  function phoneNet() {
     if (/[?&]net=bc/.test(location.search) && window.BroadcastChannel) return {
       name: "bc",
       join(code, h) {
