@@ -28,11 +28,6 @@ async def main():
             print(style, "encounter scene:", bool(el), "| modal:", (await pg.evaluate("document.querySelector('#modal h2')?.textContent")))
             if el: await el.screenshot(path=f"vf_{style}_enc_mid.png"); await pg.wait_for_timeout(3000); await el.screenshot(path=f"vf_{style}_enc_end.png")
             await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
-            # tactics test fight
-            await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(250); await pg.click("[data-act=tabgo][data-id=tactics]"); await pg.wait_for_timeout(300)
-            await pg.select_option("#te", "Lone wolf"); await pg.click("[data-act=test]"); await pg.wait_for_timeout(3600)
-            el = await pg.query_selector("#side .fscene"); print(style, "tactics scene:", bool(el))
-            if el: await el.screenshot(path=f"vf_{style}_tac.png")
             # gallery of foes (real fights, final frames)
             await pg.evaluate("""(foes)=>{ const S=window.__dbg.save(); const box=document.createElement('div'); box.id='gal'; box.style.cssText='position:fixed;inset:0;z-index:999;background:#111;overflow:auto;padding:4px;display:grid;grid-template-columns:1fr 1fr;gap:4px';
                for (const n of foes) { const base=D.ENCOUNTERS.find(e=>e.name===n); const f=new G.Fight(S, G.scaleEnemy(base,S.level)); f.run(); const d=document.createElement('div'); d.innerHTML=FIGHTART.placeholder(f,S); box.appendChild(d); }

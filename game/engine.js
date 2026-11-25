@@ -140,6 +140,7 @@ const G = (() => {
     if (typeof AMMO !== "undefined") { const m = AMMO.migrate(s); if (m) note(s, m); }
     if (typeof CHARGE !== "undefined") CHARGE.migrate(s);   // enchanted weapons with no charge number start full (chargebar.js)
     if (s.horse && typeof HORSES !== "undefined") HORSES.fix(s);   // a horse once sent off to a stables (or marked dead or lost) is yours again, downed
+    oneLoadout(s);   // the AI & Loadouts tab is gone: one hidden loadout with the gear you had on
     if (fixTactics(s)) note(s, "\uE101 Your tactics were fixed: rules you added under \"Always → Attack\" never fired. They now come first.");
     if (typeof SPELLCRAFT !== "undefined") SPELLCRAFT.register(s);   // crafted spells back into the spellbook
     if (typeof RUNECRAFT !== "undefined") { RUNECRAFT.research(s); RUNECRAFT.register(s); }   // rune spells too, and runes you earned (runecraft.js)
@@ -401,18 +402,21 @@ const G = (() => {
     return moved;
   }
 
-  // loadouts
-  function saveLoadoutAs(s, name) {
-    if (!s.loadouts[name] && Object.keys(s.loadouts).length >= D.MAX_LOADOUTS) return `Max ${D.MAX_LOADOUTS} loadouts.`;
-    s.loadouts[name] = clone(lo(s));
-    s.loadout = name;
-    return `Saved as ${name}.`;
-  }
-  function deleteLoadout(s, name) {
-    if (Object.keys(s.loadouts).length <= 1) return "You need at least one loadout.";
-    delete s.loadouts[name];
-    if (s.loadout === name) s.loadout = Object.keys(s.loadouts)[0];
-    return `Deleted ${name}.`;
+  /* [OURS] one hidden loadout. The AI & Loadouts tab is gone: players pick every move and wear one set of gear.
+     The fight AI still needs a loadout object (party timeouts, arena duels, sims), so every save keeps exactly one,
+     "Main", on Smart AI with the default rules. Old saves with several sets keep the gear of the one they had on;
+     the others are dropped (their items stay in the pack). Safe to run on every load. */
+  function oneLoadout(s) {
+    const all = s.loadouts && typeof s.loadouts === "object" ? s.loadouts : {};
+    let cur = all[s.loadout];
+    if (!cur || typeof cur !== "object") cur = Object.values(all).find((l) => l && typeof l === "object") || {};
+    const eq = cur.equipment && typeof cur.equipment === "object" ? cur.equipment : {};
+    const ids = new Set((s.inv || []).map((r) => r.id));
+    for (const k of Object.keys(eq)) if (!ids.has(eq[k])) delete eq[k];   // gear that isn't in the pack any more
+    if (s.oneLo !== 1) { cur = { rules: clone(D.PRESETS[D.DEFAULT_PRESET].rules), equipment: eq }; s.oneLo = 1; }   // hidden custom rules and AI settings go back to the default once
+    else { cur.equipment = eq; if (!Array.isArray(cur.rules)) cur.rules = clone(D.PRESETS[D.DEFAULT_PRESET].rules); delete cur.mode; }
+    s.loadouts = { Main: cur }; s.loadout = "Main";
+    return s;
   }
 
   // ---------------------------------------------------------------- combat
@@ -1508,10 +1512,10 @@ const G = (() => {
   }
 
   return {
-    MAP_W, MAP_H, STEP_SECONDS, SLOTS, ARMOR_SLOTS, JEWEL_SLOTS, wornSlot, GAME_SPEED, now, pxDist, holdAt, clock, isNight, shopsOpen, clockText,
+    MAP_W, MAP_H, BASE_WALK, STEP_SECONDS, SLOTS, ARMOR_SLOTS, JEWEL_SLOTS, wornSlot, GAME_SPEED, now, pxDist, holdAt, clock, isNight, shopsOpen, clockText,
     P, wtype, fxSum, lockChance, lockRoll, setAllyProvider, hiddenChance, rested, haggle, SPELL_TIER, newSave, maxHealth, maxMagicka, maxStamina, curHealth, setHealth, skill, useSkill, skillRose, raiseSkill, levelUp, fightLevel,
     riding, withHorse, STACKABLE, give, take, invRow, wornCount, freeQty, handable, carried, capacity, overweight, equipment, equip, unequip, equipOff, canOffhand, countRestore, itemStats,
-    loadout: lo, addRule, ruleSlot, deadRules, fixTactics, saveLoadoutAs, deleteLoadout, spellCost, describeRule, describeAction, Fight, scaleEnemy, scaleQuestFoe, questLevel, rollLoot,
+    loadout: lo, addRule, ruleSlot, deadRules, fixTactics, oneLoadout, spellCost, describeRule, describeAction, Fight, scaleEnemy, scaleQuestFoe, questLevel, rollLoot,
     rollEncounter, die, speed, discoverRadius, startTrip, startEvent, eventChoices, eventChoice, buyFrom, minutesLeft, minutesTo, posAfter, advance, encounterAction, migrate, PLACES,
     theFoe, spellDamage, spellHeal, spellArmor, spellSummon, spellCalm, dualCost, shopTypes, shopStock, buyPrice, sellPrice, lotPrice, buy, sell, readTome, drinkPotion, recharge, clone, note,
   };

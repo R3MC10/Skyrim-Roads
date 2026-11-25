@@ -1,7 +1,8 @@
 /* pcupdate.js: game updates on the Windows app. [OURS]
    Newer PC apps (desktop/main.js + preload.js give the page window.rotnPC) update the game files by themselves,
    installed or portable: a small card shows the download, then "Restart to update"; on the title screen it just
-   switches over, and anything not switched yet goes live the next time the game opens. A build that doesn't reach
+   switches over (and by itself once the player is back there), so friends stay on the same build (samever.js). Files
+   not switched yet still go live if the game is closed first. A build that doesn't reach
    the title screen goes back to the one before by itself (desktop/gameupdate.js). Only a release that needs a newer
    app downloads the installer (installed copy) or shows a download link (portable).
    It also sets window.__app like the phone app does, so the title screen's Update page works on PC too.
@@ -86,6 +87,8 @@ const PCUPDATE = (() => {
     const ui = () => (typeof window !== "undefined" ? window.__ui : null) || env.ui || null;
     const onTitle = () => (env.onTitle ? env.onTitle() : has() && !!document.getElementById("title"));
     const safe = () => { try { return env.safe ? env.safe() : !!ui()?.safeToUpdate?.(); } catch (e) { return false; } };
+    /* pressing Restart: fine in a menu (it saves first), never mid-fight or in a dungeon (ui.js safeToRestart) */
+    const restartOk = () => { try { const u = ui(); return env.safe ? env.safe() : u?.safeToRestart ? !!u.safeToRestart() : safe(); } catch (e) { return false; } };
     let staged = 0, busy = null, lastFail = "", hidden = 0, appState = null, readyDone = false, waitTimer = null;
     const clean = (e) => String(e?.message || e).replace(/^Error invoking remote method '[^']+': (Error: )?/, "");
 
@@ -95,6 +98,7 @@ const PCUPDATE = (() => {
       if (busy) return busy;
       const b = r.latest.build;
       const step = (pct, txt) => {
+        try { ui()?.updateProgress?.(b, pct); } catch (e) { /* the Updates page is optional */ }
         onStep(pct >= 0 ? `Downloading… ${pct}%` : txt || "Downloading…", pct);
         if (hidden !== b) card({ title: "Updating", text: pct >= 0 && pct < 100 ? `Downloading build ${b}… ${pct}%` : txt === "Unpacking" ? "Unpacking the new files…" : `Downloading build ${b}…`, pct: Math.max(0, pct),
           buttons: [["Hide", "hide"]], onClick(k) { if (k === "hide") { hidden = b; closeCard(); } } });
@@ -102,7 +106,7 @@ const PCUPDATE = (() => {
       const off = B.onProgress?.((p) => step(+p?.pct, p?.text));
       step(0);
       busy = B.download().then((x) => { staged = b; lastFail = ""; return x; })
-        .catch((e) => { lastFail = clean(e); closeCard(); throw new Error(lastFail); })
+        .catch((e) => { lastFail = clean(e); closeCard(); try { ui()?.updateProgress?.(0, -1, lastFail); } catch (x) { /* fine */ } throw new Error(lastFail); })
         .finally(() => { busy = null; try { off?.(); } catch (e) { /* fine */ } });
       return busy;
     }
@@ -111,13 +115,15 @@ const PCUPDATE = (() => {
       card({ title: "Updating", text: "Restarting on the new version…", pct: 100, buttons: [] });
       if (!(await B.apply())) { closeCard(); staged = 0; }
     }
-    /* the new files are here: switch now on the title screen, else ask (and switch by itself once back on the title screen) */
+    /* the new files are here: switch now on the title screen, else ask (and switch by itself once back on the title screen).
+       Friends on other builds can't play together (samever.js), so it never waits for the next start */
     function offer(b) {
       clearInterval(waitTimer); waitTimer = null;
       if (onTitle() && safe()) return restart();
-      if (hidden !== b) card({ title: "Update ready", text: `Build ${b} is downloaded. Restart to play it now, or keep playing: it switches over on the title screen or the next time you open the game.`,
+      try { ui()?.updateStaged?.(lastR, restart, true); } catch (e) { /* the Updates page shows it too (samever.js); this card is the PC's own */ }
+      if (hidden !== b) card({ title: "Update ready", text: `Build ${b} is downloaded. Restart now to play it, or keep playing: it switches over by itself once you're back on the title screen.`,
         buttons: [["Restart to update", "go", true], ["Later", "no"]],
-        onClick(k) { if (k === "go") { if (safe() || onTitle()) restart(); else card({ title: "Update ready", text: "Finish what you're doing first (a fight, a dungeon, a trade or a menu), then press it again.", buttons: [["Restart to update", "go", true], ["Later", "no"]], onClick: this.onClick }); } else { hidden = b; closeCard(); } } });
+        onClick(k) { if (k === "go") { if (restartOk() || onTitle()) restart(); else card({ title: "Update ready", text: "Finish the fight or dungeon first, then press it again. Your progress is saved either way.", buttons: [["Restart to update", "go", true], ["Later", "no"]], onClick: this.onClick }); } else { hidden = b; closeCard(); } } });
       waitTimer = setInterval(() => { if (onTitle() && safe()) { clearInterval(waitTimer); waitTimer = null; restart(); } }, 15000);
     }
     /* a release that needs a newer app */
@@ -171,7 +177,7 @@ const PCUPDATE = (() => {
         if (readyDone) return; readyDone = true;
         try { B.ready()?.catch?.(() => {}); } catch (e) { /* older app */ }
       },
-      /* background check: on start and every 10 minutes */
+      /* background check: on start, every 10 minutes and when the window comes back */
       async auto() {
         let r;
         try { r = await upd.check(); } catch (e) { return null; }   // offline: next time
@@ -194,6 +200,8 @@ const PCUPDATE = (() => {
     if (window.__rotnTitleDrawn) upd.ready();   // ui.js calls __app.ready() when the title screen draws
     window.addEventListener("load", () => setTimeout(() => upd.auto(), 8000));
     setInterval(() => upd.auto(), 10 * 60000);
+    let back = 0;   // back to the game window: look again (at most once a minute)
+    document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - back > 60000) { back = Date.now(); upd.auto(); } });
   }
   if (typeof window !== "undefined" && typeof document !== "undefined" && typeof window.addEventListener === "function") start();
   return { buildOf, shouldShow, text, check: checkOld, makeUpdater };

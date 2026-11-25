@@ -46,7 +46,7 @@ async function serve(env, store, clock) {
   const times = [];
   for (let i = 0; i < 5; i++) {
     clock.t += 60e3; times.push(clock.t);
-    const r = await s.call("POST", "/api/report", { ip: "10.9.0." + i, body: { title: "Bug number " + i, text: "Something broke " + i, category: i === 2 ? "balance" : "bug",
+    const r = await s.call("POST", "/api/report", { ip: "10.9.0." + i, body: { title: "Bug number " + i, text: "Something broke " + i, category: i === 2 ? "balance" : "bug", ...(i === 0 ? { player: "Remi", character: "Ysolda" } : {}),
       info: { build: 220 + i, platform: "Android app", appBuild: 70 }, log: i === 0 ? ["line a", "line b"] : [], state: i === 0 ? { hp: 5 } : null } });
     ok(r.status === 200 && r.issue === null, "report " + i + " stored (no GitHub token)");
   }
@@ -64,6 +64,8 @@ async function serve(env, store, clock) {
   ok(Array.isArray(first.log) && first.log[1] === "line b" && first.snapshot && first.snapshot.hp === 5, "log and snapshot when present");
   ok(!("log" in r.reports[0]) && !("snapshot" in r.reports[0]), "no log or snapshot fields when empty");
   ok(r.reports[2].category === "balance", "category kept");
+  ok(first.player === "Remi" && first.character === "Ysolda", "the player's name and the hero's name come back");
+  ok(r.reports[3].player === null && r.reports[3].character === null, "an old client without a name → player null");
 
   r = await s.call("GET", "/api/reports?limit=2", { key: KEY });
   ok(r.status === 200 && r.reports.length === 2 && r.reports[0].title === "Bug number 4", "limit=2 → the newest two");

@@ -5,7 +5,7 @@
    Changing race moves only the race's starting skill boost (+10 / +5 / +5, Speech = Speechcraft and Mercantile) from the old
    race to the new one; racial power, abilities and resistances follow s.race by themselves (powers.js, racefx.js).
    "Keep as is" confirms what you have and counts as done.
-     REMAKE.bonus(race) → { skill: +n } · REMAKE.swapRace(s, race) · REMAKE.finish(s, { name, race, app }) · REMAKE.keep(s)
+     REMAKE.bonus(race) → { skill: +n } · REMAKE.swapRace(s, race) · REMAKE.finish(s, { name, race, app, avatar }) · REMAKE.keep(s)
      REMAKE.pending(s) · REMAKE.quiet(ctx) (ctx = { S, title, safe(), voting() }) */
 const REMAKE = (() => {
   const V = 1;
@@ -53,6 +53,7 @@ const REMAKE = (() => {
     if (o.race && o.race !== s.race) swapRace(s, o.race);
     if (o.app && typeof APPEAR !== "undefined") APPEAR.apply(s, o.app);
     else if (o.app) { s.app = o.app; if (o.app.sx === "f") s.sex = "f"; else delete s.sex; }
+    if ("avatar" in o && typeof AVATAR !== "undefined") AVATAR.set(s, o.avatar);   // [avatars] the portrait picked on the Race tab ("" = Automatic)
     keep(s);
     return s;
   }

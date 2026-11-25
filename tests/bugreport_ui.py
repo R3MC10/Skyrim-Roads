@@ -32,6 +32,9 @@ async def main():
                 ok(await pg.locator("#bugrep").count() == 1, f"{tag}/{style}: F12 opens the report window")
                 for sel in ["#brtitle", "#brtext", "#bugrep [data-brep=send]", "#bugrep [data-brep=cancel]"]:
                     r = await pg.evaluate(REACH, sel); ok(r == "ok", f"{tag}/{style}: {sel} reachable ({r})")
+                who = await pg.evaluate("(()=>{const e=document.querySelector('#bugrep .brfrom'); return e ? e.textContent : ''})()")
+                hero = await pg.evaluate("(window.__dbg && __dbg.save && (__dbg.save()||{}).name) || ''")
+                ok((not hero) or who in ("Sent as " + hero, "Wysyłasz jako " + hero), f"{tag}/{style}: shows who it's sent as ({who!r}, hero {hero!r})")
                 await pg.screenshot(path=f"{OUT}{tag}_{style}_open.png")
                 await pg.keyboard.press("Escape"); await pg.wait_for_timeout(200)
                 ok(await pg.locator("#bugrep").count() == 0, f"{tag}/{style}: Esc closes it")

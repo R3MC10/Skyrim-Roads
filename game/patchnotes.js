@@ -3,10 +3,132 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b314-fightfixes", build: 314, date: "25 Nov 2026", title: "Small fixes around fights", items: [
+    { id: "b335-fightfixes", build: 335, date: "25 Nov 2026", title: "Small fixes on the road and in hero creation", items: [
       "A new quest popping up no longer wipes the choices of a road encounter (Pay, Talk, Fight...). It waits until you've made your pick.",
       "On small phones the round compass button no longer sits on your health, magicka and stamina bars.",
-      "Fighting a big boss, the fight log narrows a little so it doesn't cover the boss.",
+      "The male and female symbols on the new hero screen show as plain symbols on every phone, not as colourful emoji.",
+    ] },
+    { id: "b334-locintro", build: 334, date: "25 Nov 2026", title: "Every arrival shows the place", items: [
+      "Every time you arrive somewhere (a town, a hold's capital, a dungeon, a camp, a shrine...), the place fills the screen for a moment: its painting, its name, the time, the weather and the season. Night and bad weather tint the picture.",
+      "The first time you see a place you get the full view for a few seconds. Coming back, a shorter one. Tap anywhere or press Esc to skip; it fades out by itself and never holds up the game.",
+      "Up to two lines say what's new since your last visit: friends or party members here, new jobs on the notice board, fresh spell tomes or a caravan in town.",
+      "In a party, everyone sees it on their own when they arrive. If you're already there when friends walk in, you don't see it again.",
+      "In the Area tab, the little landscape button next to the place's name shows the picture again, until you tap it away.",
+      "Settings → Look → Location introductions: Always, First visit only or Off.",
+      "It waits its turn: never on top of a window, a tip or a fight. It replaces the old quick \"You arrive at\" name over the map.",
+    ] },
+    { id: "b333-maprider", build: 333, date: "25 Nov 2026", title: "Your rider on the map looks like you", items: [
+      "On the world map your hero now looks like they really do: your race, your helmet, your armour, your shield and weapon, the same as on the hero screen. That goes for walking and standing too.",
+      "Your horse on the map has a new body that really moves: it walks, trots and gallops, and it picks the one that fits how fast you're going. On a road you gallop; in deep snow or rough hills you slow down to a trot or a walk.",
+      "At the gallop there's a moment with all four hooves off the ground, and you lean forward in the saddle. At the trot you bounce a bit.",
+      "Standing still, your horse breathes, nods, flicks its tail and rests a back hoof now and then. Stopping and turning round are smooth now.",
+      "Riding in a party, every horse moves in its own rhythm, so a group of eight doesn't march in step, and when the line gets crowded only your name and the leader's stay over the riders.",
+      "Reduce motion in Settings still keeps the horses calm and still.",
+    ] },
+    { id: "b332-fightscreen", build: 332, date: "25 Nov 2026", title: "A clearer fight screen", items: [
+      "On a phone the fight screen now has three parts: the turn order, the foe's next move, its health and the latest line of the fight at the top; the battle in the middle with nothing covering the fighters; your health, your party and the move buttons at the bottom, in easy reach of your thumbs.",
+      "On a PC your party stands down the left side, the foe you're fighting and the whole fight story down the right, and the battle in the middle.",
+      "A gold ring under the foe shows who your blows go to.",
+      "Only one big banner shows at a time (Your turn, a new round, a combo, a boss's new phase), and they appear above the fighters' heads instead of over them.",
+      "A boss's introduction plays once per fight, and the first-fight tips and Your turn wait until it's over.",
+    ] },
+    { id: "b331-partyfoeturns", build: 331, date: "25 Nov 2026", title: "Foes take proper turns in party fights", items: [
+      "In a party fight the foe now says who its next move goes for, and that's who it really hits. Before, it could say \"you\" and then hit a teammate.",
+      "When a fast foe moves twice in a round, its 1st move always comes before its 2nd in the turn strip.",
+      "With a big party, or a phone that was slow for a moment, every teammate still sees every one of the foe's moves play out, round by round, the same as the leader.",
+    ] },
+    { id: "b330-fightfeel", build: 330, date: "25 Nov 2026", title: "Blows that land with weight", items: [
+      "Swings now wind up and hold for a moment before they snap through. A dagger is quick, a sword is steady and a warhammer takes its time.",
+      "When a blow lands, both fighters freeze for a split second, then the one who got hit is knocked back, staggers and finds their stance again. A miss never freezes anyone, and the fight doesn't get any slower.",
+      "Blocks flash on the shield and your feet skid. Dodges leave speed streaks. Fire, frost and shock each leave their own burst, and so do enchanted weapons.",
+      "A fighter low on health stands hunched and breathes hard.",
+      "In big fights everyone stands in proper rows with shadows under their feet. On a phone your whole party and all five foes now fit on screen, with every head visible.",
+      "With Reduce motion on, there's no freeze or shaking, but you still see what each blow did.",
+    ] },
+    { id: "b329-notices", build: 329, date: "25 Nov 2026", title: "Pop-ups take turns", items: [
+      "Windows that pop up on their own (a quest, a courier, a world event) now open one at a time. If one arrives while another window, a fight or a menu is open, it waits and opens right after, instead of replacing the one you were reading.",
+      "The same message arriving twice shows once.",
+      "Banners, messages, tips and a stranger's greeting stack neatly under each other and never cover each other or the top and bottom bar buttons. If there's no room, they wait.",
+      "In fights, combo banners and a boss's phase card never sit on your action buttons, and they wait while Items, Magic or the result is open. Taps go through the boss's phase card to your buttons.",
+    ] },
+    { id: "b328-dunloop", build: 328, date: "25 Nov 2026", title: "Dungeons no longer send you round in circles", items: [
+      "Dungeons no longer send you round in circles: every room you finish moves you on to the next one, all the way to the boss and out.",
+      "On a deep expedition in a party, the others now follow the leader down the stairs and through every new level, instead of waiting at the camp for good.",
+      "In a party, the leader's choices reach everyone in the order they were made, so nobody gets left behind in a cleared room or at the camp when the connection is slow.",
+      "If your game was saved at a camp or right after a boss and the room got lost, loading it puts you back at the camp (or lets you leave), instead of making you fight the same boss again.",
+    ] },
+    { id: "b327-phonefight", build: 327, date: "25 Nov 2026", title: "Fights fit your phone", items: [
+      "On a phone the fight log now shows only its newest line. Tap the small arrow next to it to see the last few lines, and again to fold it. The game remembers your choice.",
+      "The foe's health shows as numbers under its bar on a phone, so you can see how close it is to falling without tapping it.",
+      "Every status icon in a fight shows its number: how many stacks of burning, poison, bleeding, vulnerable, winded and the rest, or how many turns a spell has left. On the foe, on you and on your party. Hold or hover an icon for the full text.",
+    ] },
+    { id: "b326-smooth", build: 326, date: "25 Nov 2026", title: "Smoother map, travel and fights", items: [
+      "The map is much lighter to draw: the painted ground and the fog are kept ready while you look around, so the map no longer stutters and your phone stays cooler.",
+      "The first-person travel view rests between its pictures instead of waking up all the time.",
+      "Fight scenes that are scrolled away stop redrawing, and quick turns no longer pile up extra work, so fights stay smooth.",
+      "Fewer little hitches every second on every screen, and saving your game is quicker.",
+    ] },
+    { id: "b325-dundropout", build: 325, date: "25 Nov 2026", title: "When someone leaves a dungeon run", items: [
+      "If someone in a co-op dungeon run closes the game or loses their connection for about half a minute, the run now ends for everyone in it, party or not. A short network hiccup or a quick switch to another app doesn't count.",
+      "Everyone is taken safely back to the dungeon's entrance: a fight that was going on just stops (nobody dies), you keep everything you picked up, and the party's loot pile is shared out by the usual vote, gold split evenly.",
+      "A notice tells you who left, with Go back in together (a new run with the same group), Wait for them (shows when they're back online) and OK.",
+      "The one who left sees what happened when they come back, with Back to the map or Ask the group to go again. Their share of the loot waits for them.",
+    ] },
+    { id: "b324-samever", build: 324, date: "25 Nov 2026", title: "Everyone on the same version", items: [
+      "The game now looks for a new version when it starts, when you come back to it, and every 10 minutes while it's open.",
+      "New versions download in the background. On the title screen the game switches over straight away; while you play, a small Update ready card offers Restart now. It never restarts in the middle of a fight or a dungeon, and your progress is saved first.",
+      "The web version reloads itself onto the newest version the same way.",
+      "Your version now goes with you online. If someone in your party or co-op run is on a different version, the one who's behind gets an Update to play together message with an Update button, and invites between different versions say why instead of quietly not working.",
+      "The Updates page shows your version and the newest one, what's going on right now (checking, downloading, ready) and a Retry button if something went wrong. Check again really checks again.",
+      "Playing alone offline is never blocked.",
+    ] },
+    { id: "b322-noaitab", build: 322, date: "25 Nov 2026", title: "One set of gear, no fight robot settings", items: [
+      "Character → AI & Loadouts is gone: the fight rules editor, share codes, the AI tester and gear loadouts. You pick every move in a fight yourself, so they had nothing left to do.",
+      "You wear one set of gear. If you had several loadouts, you keep the gear of the one you had on; nothing leaves your pack.",
+      "Old saves load as before. Hint texts that pointed to AI & Loadouts now give a real tip instead.",
+    ] },
+    { id: "b321-dollrig", build: 321, date: "25 Nov 2026", title: "Your hero holds their gear properly", items: [
+      "On the Items screen your hero now stands calmly with the weapon gripped in the fist, the shield strapped on the arm in front of the body and the helmet on the head.",
+      "In fights your hero, party members and followers wear their helmets too, and the shield arm comes up into a guard in front of the chest instead of hanging behind the hip.",
+      "Bows hang low by the hip on the Items screen, so the string no longer cuts across the face.",
+      "The equipment slots around your hero line up in even rows (weapon across from the head, shield across from the chest), with bigger, easier to read names on phones and PCs.",
+      "The gear set name under your hero on the Items screen is gone.",
+    ] },
+    { id: "b320-avatars", build: 320, date: "25 Nov 2026", title: "Your portrait follows your sex", items: [
+      "Your round portrait now always shows someone of your hero's sex. A Breton man no longer gets the Breton woman's face: until every race has a painting of both a man and a woman, you get the closest one of your sex.",
+      "Pick your own portrait: tap it on your Character page, or choose one on the Race tab when you make a hero (or remake one). Automatic follows your race and sex.",
+      "Your Friends list shows each friend's painted portrait, the one they picked. Friends who are offline keep the portrait you last saw; someone you've never seen shows a plain outline.",
+      "The tiny figure squeezed next to each face in the Friends and travellers lists is gone, so rows are easier to read.",
+      "Party lists, party vote chips, Ask to join and party invite cards, and your face in fights all show the same portrait.",
+    ] },
+    { id: "b319-partyinvites", build: 319, date: "25 Nov 2026", title: "Your party goes in together", items: [
+      "When your party leader starts a co-op dungeon run, everyone in the party is in it straight away: no separate invites and no Accept cards for people already in your party.",
+      "Invites in the co-op lobby are only for friends and others outside your party, and only while there's room (up to 8 heroes in all; followers don't count).",
+      "In a party, only the leader starts co-op runs. If you step out of your party's run, a Rejoin button takes you back in.",
+      "Friends and travellers who are already in your party show \"In your party\" instead of an Invite or Ask to join button.",
+      "Old invites and join requests for someone who has since joined your party are cleared away, with no leftover pop-ups.",
+    ] },
+    { id: "b318-partytrain", build: 318, date: "25 Nov 2026", title: "Your party walks in a line", items: [
+      "Travelling as a party, everyone now walks in a line on the map so you can see each of you: the leader in front, the rest following one behind another along the road.",
+      "Standing in a town, your party lines up in a row next to the town instead of all on one spot, so every name is readable.",
+    ] },
+    { id: "b317-dunchoices", build: 317, date: "25 Nov 2026", title: "Dungeon forks show what's ahead", items: [
+      "At a fork every way is now a card: a picture of the room, its name, how risky it is, what it pays, and which rooms come after it.",
+      "Risk goes from Safe to Deadly and follows how dangerous the dungeon is. A Rest room tells you when you could really use it.",
+      "In a party the same cards are the vote: each one shows how many votes it has and who picked it, the leading way lights up, and the vote says plainly that a tie goes the leader's way.",
+    ] },
+    { id: "b316-menutop", build: 316, date: "25 Nov 2026", title: "Menus open at the top", items: [
+      "On a phone, every tab and sub-tab (Character, Map, Journal, Social, Area and the rest) now opens at its top, instead of half way down an old list or on the map above it.",
+      "The compass's Area, Journal and Social links take you straight to that screen, and the full-screen Character page always starts at the top.",
+      "In Items and Magic a new category starts at the top, while picking or equipping something keeps the list where you were.",
+      "Windows like the patch notes and the guide open at their top.",
+    ] },
+    { id: "b315-hourlyupdates", build: 315, date: "25 Nov 2026", title: "Updates arrive on time", items: [
+      "New versions now reach the app reliably within about an hour of a change, instead of sometimes waiting many hours.",
+    ] },
+    { id: "b314-reportname", build: 314, date: "25 Nov 2026", title: "Reports show who sent them", items: [
+      "When you report a problem, your player name (your account name, or your hero's name if you're not signed in) now goes with it, so we know who to ask if we need more details.",
+      "The report window shows the name it's sent as, right above the Send button.",
     ] },
     { id: "b313-fightnums", build: 313, date: "25 Nov 2026", title: "Fight numbers you can read", items: [
       "Damage, heal and crit numbers in fights have a thick dark outline and grow with your screen, so they're easy to read on a phone and on a big PC monitor. Crits are big and gold.",
@@ -2093,7 +2215,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 314;
+  const NEXT_AT = 335;
   const NEXT = [
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",

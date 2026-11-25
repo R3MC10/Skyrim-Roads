@@ -54,6 +54,7 @@ I have characters on different devices and can't reach them from the others."
 | GET | `/api/characters/:id` | → `{character:{…, data}}` |
 | PUT | `/api/characters/:id` | `{data, baseVersion}` → `{version}` · `409 version_conflict {server}` |
 | DELETE | `/api/characters/:id` | → `{ok}` (soft delete, kept 30 days) |
+| GET | `/api/version` | newest build = latest GitHub release → `{build, date, source, checkedAt}` (cached 3 min, no secrets; `stale:true` when GitHub is down) · `503 no_version` |
 
 ### Game (`game/account.js`)
 - Off unless a server address is set (built-in address once Railway is live; `?server=` for testing).

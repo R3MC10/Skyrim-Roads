@@ -1,5 +1,5 @@
 /* Paper doll: your character in the middle of the Pack tab with the equipment slots around it, a picker sheet per
-   slot with stat comparisons, loadout thumbnails, and the race showcase on the character creation screen. Drawing
+   slot with stat comparisons, and the race showcase on the character creation screen. Drawing
    goes through ART/HEROART/ICONART/UIART so everything is cached. [OURS] */
 const DOLL = (() => {
   const LEFT = ["head", "chest", "hands", "feet"], RIGHT = ["weapon", "shield"], JEWEL = ["amulet", "ring", "ring2"];
@@ -54,13 +54,14 @@ const DOLL = (() => {
     return `<button class="dslot ${r ? "full" : ""}" data-act="dollslot" data-slot="${slot}" aria-label="${esc(NAMES[slot])}: ${esc(label)}">
       ${r ? ICONART.item(r.item, size, r) : emptyIcon(slot, size)}<span class="dsl">${NAMES[slot]}</span>${r && !isJewel(slot) ? `<span class="dst num">${statOf(r)}</span>` : r && it.aenchant ? `<span class="dst dench">✦</span>` : ""}</button>`;
   }
-  /* the equipment screen: slots | figure | slots, then the numbers */
+  /* the equipment screen: slots | figure | slots, then the numbers. [dollrig] both columns start level with the top of
+     the figure, so the weapon sits across from the head and the shield across from the chest */
   function screen(s, stats) {
     const eq = G.equipment(s), am = typeof AMMO !== "undefined" ? AMMO.status(s) : null;
     const ammoRow = am ? (() => { const b = am.best && s.inv.find((x) => D.ITEMS[x.item]?.name === am.best); return `<div class="dammo ${am.best ? "" : "warn"}">${b ? ICONART.item(b.item, 28, b) : emptyIcon("ammo", 28)}<span>${am.best ? `${am.n} ${esc(am.best)}s <i>(best is used)</i>` : "No ammo for your bow"}</span></div>`; })() : "";
     return `<div class="doll">
       <div class="dcol">${LEFT.map((sl) => slotBtn(s, sl, eq)).join("")}</div>
-      <div class="dfig">${HEROART.figure(s, 150, 206)}${typeof BUSTART !== "undefined" ? BUSTART.crest(s, 60) : ""}</div>
+      <div class="dfig">${HEROART.figure(s, 200, 290)}${typeof AVATAR !== "undefined" ? AVATAR.badge(s, 50) : ""}</div>
       <div class="dcol">${RIGHT.map((sl) => slotBtn(s, sl, eq)).join("")}</div>
     </div>
     <div class="djewel" aria-label="Amulet and rings">${JEWEL.map((sl) => slotBtn(s, sl, eq, 40)).join("")}</div>${ammoRow}
@@ -84,8 +85,6 @@ const DOLL = (() => {
           <span class="dcmp">${c.worn ? `<i>worn</i>` : arrow(c.cmp)}</span></button>`; }).join("") : `<p class="sub">You have nothing for this slot. Blacksmiths and the forge can help.</p>`}</div>
       <div class="evc">${worn ? `<button class="btn" data-act="dolloff" data-slot="${slot}">Take it off</button>` : ""}<button class="btn" data-act="close">Close</button></div>`;
   }
-  /* a tiny portrait of how a loadout looks */
-  const loadoutThumb = (s, name, size = 22) => HEROART.portrait({ ...s, loadout: name }, size);
 
   // ---- character creation
   const POWER_DESC = (race) => (typeof POWERS !== "undefined" && POWERS.RACE?.[race]) ? POWERS.RACE[race][1] : "";
@@ -102,5 +101,5 @@ const DOLL = (() => {
         <div class="rsk">${sk.map((k, i) => `<span class="rskill">${UIART.skill(k, 22)}<b>+${i === 0 ? 10 : 5}</b> ${esc(k)}</span>`).join("")}</div>
         <p class="rpow">${UIART.power(race, 24)}<span><b>${esc(r.power)}</b>${POWER_DESC(race) ? ` · ${esc(POWER_DESC(race))}` : ""}</span></p></div></div>`;
   }
-  return { SLOTS_LEFT: LEFT, SLOTS_RIGHT: RIGHT, SLOTS_JEWEL: JEWEL, NAMES, statOf, compare, candidates, screen, picker, loadoutThumb, racePicker, showcase, starterSave };
+  return { SLOTS_LEFT: LEFT, SLOTS_RIGHT: RIGHT, SLOTS_JEWEL: JEWEL, NAMES, statOf, compare, candidates, screen, picker, racePicker, showcase, starterSave };
 })();

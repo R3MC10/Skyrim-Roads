@@ -14,8 +14,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Restarting on the new version…": "Uruchamianie nowej wersji…",
     "Installing the new app…": "Instalowanie nowej aplikacji…",
     "Downloading the full game": "Pobieranie całej gry",
-    "Finish what you're doing first (a fight, a dungeon, a trade or a menu), then press it again.":
-      "Najpierw skończ to, co robisz (walkę, loch, handel albo menu), a potem naciśnij jeszcze raz.",
+    "Finish the fight or dungeon first, then press it again. Your progress is saved either way.":
+      "Najpierw skończ walkę albo loch, a potem naciśnij jeszcze raz. Twój postęp i tak jest zapisany.",
     "This build needs the new app: get it from the page that just opened (your saves stay).":
       "Ta wersja potrzebuje nowej aplikacji: pobierz ją ze strony, która właśnie się otworzyła (zapisy zostają).",
     // patch note
@@ -37,8 +37,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     [/^Downloading build (\d+)… (\d+)%$/, (m) => `Pobieranie wersji ${m[1]}… ${m[2]}%`],
     [/^Downloading build (\d+)…$/, (m) => `Pobieranie wersji ${m[1]}…`],
     [/^Downloading… (\d+)%$/, (m) => `Pobieranie… ${m[1]}%`],
-    [/^Build (\d+) is downloaded\. Restart to play it now, or keep playing: it switches over on the title screen or the next time you open the game\.$/,
-      (m) => `Wersja ${m[1]} jest pobrana. Uruchom grę ponownie, żeby w nią zagrać, albo graj dalej: przełączy się na ekranie tytułowym albo przy następnym uruchomieniu gry.`],
+    [/^Build (\d+) is downloaded\. Restart now to play it, or keep playing: it switches over by itself once you're back on the title screen\.$/,
+      (m) => `Wersja ${m[1]} jest pobrana. Uruchom grę ponownie, żeby w nią zagrać, albo graj dalej: przełączy się sama, gdy wrócisz do ekranu tytułowego.`],
     [/^The new app \(build (\d+)\) is downloaded\. Restart to install it: your saves stay\. It also installs by itself when you close the game\.$/,
       (m) => `Nowa aplikacja (wersja ${m[1]}) jest pobrana. Uruchom ponownie, żeby ją zainstalować: zapisy zostają. Zainstaluje się też sama, gdy zamkniesz grę.`],
     [/^Build (\d+) needs a new version of the app\. Downloading it in the background… (\d+)%$/,

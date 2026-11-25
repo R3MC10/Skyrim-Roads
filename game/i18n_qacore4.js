@@ -67,7 +67,7 @@ const I18N_QACORE4 = (() => {
     "no natural healing in here": "tu rany same się nie goją", "The entrance": "Wejście", "Which way?": "Którędy?", "The passage splits.": "Korytarz się rozwidla.",
     "Tap a glowing room on the map, or pick here:": "Stuknij świecącą komnatę na mapie albo wybierz tutaj:",
     "Head back outside": "Wyjdź na zewnątrz", "You play the fight turn by turn": "Walczysz turowo", "You play the fight turn by turn.": "Walczysz turowo.",
-    "Fighting uses": "Walkę prowadzi", "Smart AI": "Sprytna SI", your: "twoja", "tactics.": "taktyka.",
+    "Smart AI": "Sprytna SI", your: "twoja", 
     // room choices
     "Run for it (Athletics)": "Uciekaj (Atletyka)", "Just push through": "Po prostu przejdź", "Push the lid open": "Odsuń wieko", "Leave it be": "Zostaw to",
     "Search the place": "Przeszukaj to miejsce", "Search it": "Przeszukaj", Pray: "Módl się", "Ignore it": "Zignoruj", "Find a way round": "Poszukaj obejścia",

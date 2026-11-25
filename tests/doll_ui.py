@@ -46,16 +46,7 @@ async def main():
             await click("[data-act=dollslot][data-slot=shield]"); await pg.wait_for_timeout(150)
             await pg.click("#modal .evc [data-act=dolloff]"); await pg.wait_for_timeout(150)
             print(style, "shield after take off:", await pg.evaluate("!!G.equipment(window.__dbg.save()).shield"))
-        # loadouts: save as Archer, switch, thumbnails
-        await pg.evaluate("()=>{const S=window.__dbg.save(); G.saveLoadoutAs(S,'Archer'); S.loadout='Archer'; G.equip(S, S.inv.find(r=>r.item==='hunting_bow').id); S.loadout='Main';}")
-        await pg.evaluate("document.querySelector('#sky')?.remove()")
-        await pg.evaluate("window.__ui.go('tactics')"); await pg.wait_for_timeout(250)   # the Tactics screen (rules, loadouts, test fight) has no menu button since fights went turn-based; open it directly
-        print("loadout chips:", await pg.evaluate("[...document.querySelectorAll('.lochip')].map(b=>b.textContent.trim()+':'+!!b.querySelector('img')).join(' ')"))
-        await click(".lochip[data-name=Archer]"); await pg.wait_for_timeout(250)
-        print("now", await pg.evaluate("window.__dbg.save().loadout"), "weapon", await pg.evaluate("G.equipment(window.__dbg.save()).weapon?.item"))
-        ch = await pg.evaluate("(()=>{const d=document.querySelector('.lochip'); return d? d.closest('.panel').getBoundingClientRect().toJSON():null})()")
-        if ch: await pg.screenshot(path=_SHOTS + "doll_loadouts.png", clip={"x": 0, "y": max(0, ch["y"]), "width": 390, "height": 200})
         print("errors:", errs)
-        print("RESULT", "OK" if not errs and await pg.evaluate("window.__dbg.save().loadout") == "Archer" else "FAIL")
+        print("RESULT", "OK" if not errs else "FAIL")
         await b.close()
 asyncio.run(main())

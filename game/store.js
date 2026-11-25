@@ -9,6 +9,7 @@ const Store = (() => {
   const ls = {
     get(k) { try { return JSON.parse(localStorage.getItem(NS + k)); } catch { return null; } },
     set(k, v) { try { localStorage.setItem(NS + k, JSON.stringify(v)); } catch { /* storage unavailable */ } },
+    raw(k, json) { try { localStorage.setItem(NS + k, json); } catch { /* storage unavailable */ } },   // [perf] already turned into text
   };
   let db = null, uid = null, mode = "local", writable = true;
   /* ---- phone-to-phone world ("p2p"): every phone keeps a full copy of the shared world and merges with each
@@ -22,7 +23,7 @@ const Store = (() => {
   const isOn = (id) => online.has(id) || now() - (fbSeen[id] || 0) < FB_TTL;
   const onlineCount = () => { const s = new Set(online); for (const id in fbSeen) if (isOn(id)) s.add(id); s.delete(uid); return s.size; };
   const wl = {};   // watchers per collection
-  const COLS = ["players", "bags", "attacks", "parties", "chests", "news", "raids", "trades", "ladder", "chat", "hall", "hallchest", "bounty", "homes", "gifts", "duels", "clans", "clanmem", "war", "stalls", "friends", "dms", "guards", "verses", "verselikes", "runs", "econ", "halls", "pshare", "lvotes", "tbf", "wevents", "dgame", "ptrap", "lcur", "holds", "greets", "sides", "fest", "gevents", "crises", "longhouse", "joinreq"];
+  const COLS = ["players", "bags", "attacks", "parties", "chests", "news", "raids", "trades", "ladder", "chat", "hall", "hallchest", "bounty", "homes", "gifts", "duels", "clans", "clanmem", "war", "stalls", "friends", "dms", "guards", "verses", "verselikes", "runs", "econ", "halls", "pshare", "lvotes", "tbf", "wevents", "dgame", "ptrap", "lcur", "holds", "greets", "sides", "fest", "gevents", "crises", "longhouse", "joinreq", "rbeat"];
   const now = () => Date.now();
   let lastSaveJson = null, lastPubJson = null, saving = null, pendingSave = null;
   const listeners = { players: [], bags: [] };
@@ -129,7 +130,7 @@ const Store = (() => {
     const t = now(), sec = t / 1000;
     for (const col of COLS) for (const [id, d] of Object.entries(world[col] || {})) {
       const age = t - d._v;
-      if ((d._del && age > 2 * 864e5) || (col === "bags" && live(d) && d.expires < sec) || (col === "attacks" && age > 36e5) || (col === "raids" && age > 864e5) || (col === "trades" && age > 7 * 864e5) || (col === "players" && age > 30 * 864e5) || (col === "chat" && age > 864e5) || (["bounty", "war"].includes(col) && age > 15 * 864e5) || (col === "gifts" && age > 30 * 864e5) || (col === "duels" && age > 864e5) || (col === "dms" && age > 14 * 864e5) || (["verses", "verselikes"].includes(col) && age > 14 * 864e5) || (col === "guards" && age > 2 * 864e5) || (col === "econ" && age > 3 * 864e5) || (col === "pshare" && age > 864e5) || (col === "lvotes" && age > 864e5) || (col === "tbf" && age > 36e5) || (col === "dgame" && age > 36e5) || (col === "ptrap" && age > 36e5) || (col === "lcur" && age > 6e5) || (col === "joinreq" && age > 36e5) || (col === "runs" && age > 6 * 36e5) || (col === "wevents" && age > 9 * 864e5)
+      if ((d._del && age > 2 * 864e5) || (col === "bags" && live(d) && d.expires < sec) || (col === "attacks" && age > 36e5) || (col === "raids" && age > 864e5) || (col === "trades" && age > 7 * 864e5) || (col === "players" && age > 30 * 864e5) || (col === "chat" && age > 864e5) || (["bounty", "war"].includes(col) && age > 15 * 864e5) || (col === "gifts" && age > 30 * 864e5) || (col === "duels" && age > 864e5) || (col === "dms" && age > 14 * 864e5) || (["verses", "verselikes"].includes(col) && age > 14 * 864e5) || (col === "guards" && age > 2 * 864e5) || (col === "econ" && age > 3 * 864e5) || (col === "pshare" && age > 864e5) || (col === "lvotes" && age > 864e5) || (col === "tbf" && age > 36e5) || (col === "dgame" && age > 36e5) || (col === "ptrap" && age > 36e5) || (col === "lcur" && age > 6e5) || (col === "joinreq" && age > 36e5) || (col === "rbeat" && age > 36e5) || (col === "runs" && age > 6 * 36e5) || (col === "wevents" && age > 9 * 864e5)
         || (["ladder", "homes"].includes(col) && age > 60 * 864e5) || (["clanmem", "sides"].includes(col) && age > 90 * 864e5) || (col === "fest" && age > 30 * 864e5))   // players gone for months
         delete world[col][id];
     }
@@ -252,7 +253,7 @@ const Store = (() => {
     if (typeof TB !== "undefined" && TB.safeSave) state = TB.safeSave(state);   // mid turn-by-turn fight: save the game as it was before it
     const json = JSON.stringify(state);
     if (json === lastSaveJson) return;
-    if (mode === "local" || mode === "p2p") { ls.set("sk.save", state); lastSaveJson = json; if (typeof ACCOUNT !== "undefined") ACCOUNT.onSave(state, json); return; }   // [OURS] and to your account (account.js)
+    if (mode === "local" || mode === "p2p") { ls.raw("sk.save", json); lastSaveJson = json; if (typeof ACCOUNT !== "undefined") ACCOUNT.onSave(state, json); return; }   // [OURS] and to your account (account.js)
     if (!writable) return;
     pendingSave = json;
     if (saving) return;
