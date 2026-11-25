@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b182-mappolish", build: 182, date: "25 Nov 2026", title: "Map polish: a clearer close-up and tidier cards", items: [
+      "Zoomed in close, the hand-inked chart now uses the painting's own colours, so going from the painting to the chart is smooth. Plains, forests, snow and mountains each get their own calm wash on soft paper, with a gentle shade on the hills.",
+      "Sun rays, cloud shadows, mist and town glows fade as you zoom in, so the close-up stays easy to read.",
+      "On a PC the world event card, its notices (a town rebuilding, a reward waiting), the dragon raid card and the caravan card now sit in one column at the left edge instead of over the middle of the map. The card still folds into a pill. Phones keep the old layout.",
+      "Names on the map no longer pile on top of each other: a camp's or a patrol's name moves aside or waits until you zoom in, and nothing is written under the cards at the left.",
+    ] },
     { id: "b181-comingnext", build: 181, date: "25 Nov 2026", title: "A fresh Coming next list", items: [
       "The Coming next list in Patch notes is up to date: werewolf paths, follower quests, legendary hunts, festivals, deep expeditions, treasure maps and the big fight screen are all in the game now, so they're off the list.",
       "New on the list: painted fighters and blood, makeovers for the fishing, hunting, mining and lockpicking mini-games, afflictions, a longhouse for your adventuring company, Daedric bargains and more.",
