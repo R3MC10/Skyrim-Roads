@@ -103,7 +103,7 @@ const MENUS = (() => {
           <div class="panel"><h2>Help & news</h2><div class="list">
             <button class="btn" data-act="guide" style="width:100%"> Guide for new players</button>
             ${typeof PATCHNOTES !== "undefined" ? `<button class="btn" data-act="notes" style="width:100%;margin-top:8px"> Patch notes${notesNew ? ' <b class="gold">· new</b>' : ""}</button>` : ""}
-            <div class="grid2" style="margin-top:8px">${live && window.__app ? `<button class="btn" data-act="toupdate">${x.update?.newer ? " Update ready" : "Check for updates"}</button>` : ""}<button class="btn" data-act="totitle" ${live && window.__app ? "" : 'style="grid-column:1/-1"'}>Main menu</button></div></div></div>`;
+            <div class="grid2" style="margin-top:8px">${live ? `<button class="btn" data-act="toupdate">${x.update?.newer ? " Update ready" : "Check for updates"}</button>` : ""}<button class="btn" data-act="totitle" ${live ? "" : 'style="grid-column:1/-1"'}>Main menu</button></div></div></div>`;
       },
     };
   }

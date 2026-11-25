@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b324-samever", build: 324, date: "25 Nov 2026", title: "Everyone on the same version", items: [
+      "The game now looks for a new version when it starts, when you come back to it, and every 10 minutes while it's open.",
+      "New versions download in the background. On the title screen the game switches over straight away; while you play, a small Update ready card offers Restart now. It never restarts in the middle of a fight or a dungeon, and your progress is saved first.",
+      "The web version reloads itself onto the newest version the same way.",
+      "Your version now goes with you online. If someone in your party or co-op run is on a different version, the one who's behind gets an Update to play together message with an Update button, and invites between different versions say why instead of quietly not working.",
+      "The Updates page shows your version and the newest one, what's going on right now (checking, downloading, ready) and a Retry button if something went wrong. Check again really checks again.",
+      "Playing alone offline is never blocked.",
+    ] },
     { id: "b322-noaitab", build: 322, date: "25 Nov 2026", title: "One set of gear, no fight robot settings", items: [
       "Character → AI & Loadouts is gone: the fight rules editor, share codes, the AI tester and gear loadouts. You pick every move in a fight yourself, so they had nothing left to do.",
       "You wear one set of gear. If you had several loadouts, you keep the gear of the one you had on; nothing leaves your pack.",

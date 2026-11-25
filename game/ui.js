@@ -72,7 +72,7 @@
     const card = { name: S.name, race: S.race, level: S.level, x: S.x, y: S.y,
       t0: tr ? tr.lastTick : G.now(), moving: !!(tr && tr.status === "travel"), dest: tr ? tr.dest : null,
       path: tr && tr.status === "travel" ? [[S.x, S.y], ...tr.path.slice(tr.idx + 1)].slice(0, 120) : null,
-      speed: G.speed(S), loc: S.location || null, region: WORLD.regionOf([S.x, S.y]), look: HEROART.lookOf(S), ride: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, party: party?.id || null, hiding: !!S.ambush, facing: S.facing ?? null, ...(typeof SNEAKMODE !== "undefined" ? SNEAKMODE.cardBits(S) : {}), clan: myClan()?.tag || null, ...(typeof SIDES !== "undefined" ? SIDES.cardBits(S) : {}), ...MP.stats(S), coop: coopUI?.card() || null, ...(typeof PARTY !== "undefined" ? PARTY.cardBits(S, party) : {}), ...(typeof LIVING !== "undefined" ? LIVING.cardBits(S, party) : {}), ...(typeof LEVELUP !== "undefined" ? LEVELUP.cardBits(S) : {}), ...(typeof AFFL !== "undefined" ? AFFL.cardBits(S) : {}), ...(typeof FRIENDJOIN !== "undefined" ? FRIENDJOIN.bits(S, party) : {}), ...(typeof AVATAR !== "undefined" ? AVATAR.cardBits(S) : {}) };
+      speed: G.speed(S), loc: S.location || null, region: WORLD.regionOf([S.x, S.y]), look: HEROART.lookOf(S), ride: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, party: party?.id || null, hiding: !!S.ambush, facing: S.facing ?? null, ...(typeof SNEAKMODE !== "undefined" ? SNEAKMODE.cardBits(S) : {}), clan: myClan()?.tag || null, ...(typeof SIDES !== "undefined" ? SIDES.cardBits(S) : {}), ...MP.stats(S), coop: coopUI?.card() || null, ...(typeof PARTY !== "undefined" ? PARTY.cardBits(S, party) : {}), ...(typeof LIVING !== "undefined" ? LIVING.cardBits(S, party) : {}), ...(typeof LEVELUP !== "undefined" ? LEVELUP.cardBits(S) : {}), ...(typeof AFFL !== "undefined" ? AFFL.cardBits(S) : {}), ...(typeof FRIENDJOIN !== "undefined" ? FRIENDJOIN.bits(S, party) : {}), ...(typeof AVATAR !== "undefined" ? AVATAR.cardBits(S) : {}), ...(typeof SAMEVER !== "undefined" ? SAMEVER.cardBits() : {}) };
     const json = JSON.stringify({ ...card, t0: 0, cur: Math.round(card.cur / 10) });
     if (!force && json === lastCardJson) return;
     lastCardJson = json;
@@ -278,7 +278,7 @@
         ${item("new", S ? "New Character" : "Begin")}
         ${typeof ACCOUNT !== "undefined" && ACCOUNT.on() ? item("account", ACCOUNT.signedIn() ? "Account" : "Sign in", ACCOUNT.menuSub()) : ""}
         ${item("settings", "Settings")}
-        ${item("update", "Updates", "", update?.newer ? "New" : "")}
+        ${item("update", "Updates", "", updNewer() ? "New" : "")}
         ${typeof PATCHNOTES !== "undefined" ? item("notes", "Patch Notes", "", PATCHNOTES.unseen() && S ? "New" : "") : ""}
         ${item("howto", "How to Play")}
         ${item("credits", "Credits")}</nav>`;
@@ -331,6 +331,7 @@
         Store.wipe().then(() => { S = null; closeTitle(); showCreate(); }); break;
       case "update": titlePage = "update"; renderTitle(); checkUpdate(true); break;
       case "doupdate": runUpdate(); break;
+      case "sameready": SV()?.restartNow(); break;
       default: titlePage = t; renderTitle();
     }
   }
@@ -441,30 +442,45 @@
     }
   }
 
-  // ---- updates
+  // ---- updates: one newest build for everyone (samever.js holds the state: your build, the newest, downloads, errors)
   let updateHow = "";
+  const SV = () => (typeof SAMEVER !== "undefined" ? SAMEVER : null);
+  const updNewer = () => !!(update?.newer || (SV() && SV().state.latest > SV().state.mine && SV().state.mine));
   function updateHTML() {
-    if (!window.__app) return `<p>You're playing the web version, which is always up to date. The phone app downloads new versions by itself and switches over when you next open it.</p>`;
-    if (!update) return `<p class="sub">${esc(updateMsg || "Checking for a new version…")}</p>`;
-    if (window.__app.how && !updateHow) window.__app.how().then((t) => { updateHow = t; if (titlePage === "update") renderTitle(); }).catch(() => {});
-    const cur = update.current.build, lat = update.latest;
-    const when = lat.date ? new Date(lat.date).toLocaleDateString() : "";
+    const sv = SV(), st = sv ? sv.state : { mine: 0, latest: 0 }, web = !window.__app;
+    if (window.__app?.how && !updateHow) window.__app.how().then((t) => { updateHow = t; if (titlePage === "update") renderTitle(); }).catch(() => {});
+    const mine = update?.current?.build || st.mine, latest = update?.latest?.build || st.latest;
+    const row = (label, v) => `<p>${label} <b>${v ? `build ${v}` : "…"}</b></p>`;
+    const head = `<div class="upd-st" id="updst">${row(web ? "Web version:" : "Your version:", mine)}${row("Newest version:", latest)}</div>`;
     const howLine = updateHow ? `<p class="sub">${esc(updateHow)}</p>` : "";
-    if (!update.newer) return `${howLine}<p>You have the newest version: <b>build ${cur}</b>.</p>${updateMsg ? `<p class="sub">${esc(updateMsg)}</p>` : ""}<button class="btn" data-t="update">Check again</button>`;
-    return `<p>A new version is ready: <b>build ${lat.build}</b>${when ? ` (${esc(when)})` : ""}. You have build ${cur}.</p>
+    const again = `<button class="btn" data-t="update">Check again</button>`;
+    // what's happening right now
+    if (st.dl) return `${head}<p id="umsg">${st.dl.pct >= 0 ? `Updating: downloading build ${st.dl.build}… ${st.dl.pct}%` : `Updating to build ${st.dl.build}…`}</p><div class="uprog"><i id="ubar" style="width:${Math.max(3, st.dl.pct)}%"></i></div>${howLine}`;
+    if (st.ready) return `${head}<p>Build ${st.ready.build} is ready. The game switches over now (your progress is saved).</p><button class="btn pri" data-t="sameready">${st.ready.web ? "Reload now" : "Restart now"}</button>${howLine}`;
+    if (st.checking && !update) return `${head}<p class="sub">Checking for a new version…</p>`;
+    // a failed check shows its reason and Retry, even when an earlier check worked
+    const errLine = st.err ? `<p class="err">Couldn't check for a new version (${esc(st.err)}). Check your internet.</p>` : "";
+    const retry = st.err ? `<button class="btn pri" data-t="update">Retry</button>` : again;
+    if (!updNewer()) return `${head}${errLine || `<p>You have the newest version. Everyone you play with is on the same build once they've updated too.</p>`}${howLine}${retry}`;
+    if (web) return `${head}<p>A new version is out: <b>build ${latest}</b></p><p>Reload to play it: your progress is saved.</p><button class="btn pri" data-t="doupdate">Reload now</button>`;
+    const lat = update.latest, when = lat.date ? new Date(lat.date).toLocaleDateString() : "";
+    return `${head}<p>A new version is ready: <b>build ${lat.build}</b>${when ? ` (${esc(when)})` : ""}.</p>
       ${lat.notes ? `<h3>What's new</h3><div class="notes">${esc(lat.notes)}</div>` : ""}
       <p class="sub">Your character and progress stay. ${((update.size || lat.size) / 1048576).toFixed(1)} MB download${update.quick ? ", no reinstall: the game just restarts" : ""}.</p>
       ${updateMsg ? `<p id="umsg">${esc(updateMsg)}</p><div class="uprog"><i id="ubar" style="width:${Math.max(0, updatePct)}%"></i></div>` : ""}
       ${howLine}<button class="btn pri" data-t="doupdate" ${updateBusy ? "disabled" : ""}>${updateBusy ? "Updating…" : "Update now"}</button>`;
   }
+  /* "Check again" / Retry: really asks again (the app's and PC's updater skip their cache; the web asks our server) */
   async function checkUpdate(force) {
-    if (!window.__app) return;
-    if (force) { update = null; updateMsg = ""; }
-    try { update = await window.__app.check(force); }
-    catch (err) { updateMsg = `Couldn't reach GitHub (${err.message}). Check your internet and try again.`; update = null; }
-    if (titlePage === "update") renderTitle(); else if ($("#title")) renderTitle();
+    if (!SV()) return;
+    if (force) { updateMsg = ""; if (window.__app) update = null; }
+    if (titlePage === "update") renderTitle();
+    try { const r = await SV().check(force); if (window.__app) update = r; }
+    catch (err) { update = null; } // SAMEVER keeps the reason in state.err; the page shows it with Retry
+    if ($("#title")) renderTitle();
   }
   async function runUpdate() {
+    if (!window.__app) { const sv = SV(); if (sv && sv.state.latest > sv.state.mine) sv.freshReload(sv.state.latest); return; }   // web: reload on the new files
     if (!update?.newer || updateBusy) return;
     updateBusy = true; updateMsg = "Starting…"; updatePct = 0; renderTitle();
     try {
@@ -475,18 +491,35 @@
       });
       if (r === "applied") updateMsg = "Restarting on the new version…";
       else if (r === "installer") updateMsg = "Tap Install (or Update) on Android's screen. The game reopens on the new version.";
-    } catch (err) { updateMsg = `The update didn't finish: ${err.message}. Try again.`; }
+    } catch (err) { updateMsg = `The update didn't finish: ${err.message}.`; }
     updateBusy = false;
     if (titlePage === "update") renderTitle();
   }
-  function updateStaged(r) {
-    update = r;
-    toast(` Build ${r.latest.build} is downloaded. The game restarts on it at the next quiet moment (your progress is saved).`);
+  /* the app / PC downloaded a newer build: the "Update ready" card (go() switches over; quiet: the PC shows its own card) */
+  function updateStaged(r, go, quiet) {
+    if (r) update = r;
+    if (SV() && go) SV().ready(r?.latest?.build, go, { quiet: !!quiet });
+    if ($("#title")) renderTitle();
   }
+  /* background download progress (build 0 = it stopped; err says why) */
+  function updateProgress(build, pct, err) {
+    const sv = SV(); if (!sv) return;
+    if (build > 0) sv.dl(build, pct); else { sv.dlDone(); if (err) sv.set({ err: String(err).slice(0, 140) }); }
+  }
+  let updRaf = 0;
+  if (SV()) SV().onChange(() => {   // keep the Updates page and the menu's "New" badge true to what's happening
+    if (updRaf || !$("#title")) return;
+    updRaf = requestAnimationFrame(() => {
+      updRaf = 0;
+      const st = SV().state, m = $("#umsg"), bar = $("#ubar");
+      if (titlePage === "update" && st.dl && m && bar) { m.textContent = st.dl.pct >= 0 ? `Updating: downloading build ${st.dl.build}… ${st.dl.pct}%` : `Updating to build ${st.dl.build}…`; bar.style.width = `${Math.max(3, st.dl.pct)}%`; return; }
+      if (titlePage === "update" || titlePage === "menu") renderTitle();
+    });
+  });
   function updateAvailable(r) {
     update = r;
-    if ($("#title")) { if (titlePage === "menu") renderTitle(); return; }
-    toast(`A new version (build ${r.latest.build}) is ready. Open  to update.`);
+    if ($("#title")) { if (titlePage === "menu" || titlePage === "update") renderTitle(); return; }
+    toast(`A new version (build ${r.latest.build}) is ready. Open  to update.`);
   }
 
   // ---- fog and snow
@@ -583,6 +616,14 @@
       if ((coopUI?.runs || []).length) return false;
       return true;
     },
+    /* pressing Restart now / Update (samever.js): fine in a menu (it saves first), never mid-fight, dungeon, event or mini-game */
+    safeToRestart() {
+      if ($("#title") || !S) return true;
+      if (S.dungeon || S.trip?.event || S.encounter) return false;
+      if (["tbf", "tbwatch", "lockpick", "pickgame", "breach", "dwgame", "lvlpick"].some((id) => document.getElementById(id))) return false;
+      if (document.querySelector(".craftgame, .lockpick, .smithgame, .xgame, .rct-wrap, #exp-layer:not(:empty)")) return false;
+      return true;
+    },
     /* for the Tab compass (tabmenu.js) */
     openMenu: (p) => openMenu(p), closeMenu: () => closeMenu(), refresh: () => { bump(); renderPanel(true); }, fight: (r) => showFightResult(r), tbCall: (fn, done) => tbCall(fn, done),   // tbCall: event fights open the turn-by-turn screen (noautoplay.js)
     go(t) { closeMenu(); tab = t; bump(); renderTabs(); renderPanel(true); if (typeof MENUTOP !== "undefined") MENUTOP.top(); },   // a screen opens at its top
@@ -604,7 +645,8 @@
       return true;
     },
     updateAvailable: (r) => updateAvailable(r),
-    updateStaged: (r) => updateStaged(r),
+    updateStaged: (r, go, quiet) => updateStaged(r, go, quiet),
+    updateProgress: (b, pct, err) => updateProgress(b, pct, err),
     permissionBack: () => { if ($("#title") && titlePage === "update") { updateMsg = "Thanks. Tap Update now again."; renderTitle(); } },
     /* things worth a phone notification while the app is closed: arrival and the next dragon attack (times in ms) */
     upcoming() {
@@ -748,6 +790,7 @@
     }
     if (typeof INVITES !== "undefined") INVITES.mount({ list: inviteList, answer: answerInviteCard, toast, onNew: () => SOUND.fx("page"),   // Accept / Decline cards on top (invites.js)
       openSocial: () => { closeMenu(); tab = "social"; socTab = "party"; bump(); renderTabs(); renderPanel(true); } });
+    if (typeof SAMEVER !== "undefined") SAMEVER.watch({ S: () => S, party: () => party, cardOf });   // party mates on a newer build: "Update to play together" (samever.js)
     if (typeof FRIENDJOIN !== "undefined") FRIENDJOIN.mount({ S: () => S, party: () => party, cardOf, Store, toast, invite: (c) => invite(c), invites: () => invites, acceptInvite: (pid) => acceptInvite(pid),   // friends: what they're doing + Ask to join (friendjoin.js)
       fighting: () => (typeof TB !== "undefined" && TB.open) || !!S?.encounter, trading: () => tab === "town" && !!townShop && townShop !== "inn", publishCard: (f) => publishCard(f), refreshInvites: invRefresh,
       bump: () => { if (tab === "social") bump(); }, render: () => { if (tab === "social") renderPanel(true); } });
@@ -946,7 +989,7 @@
     openModal(`<h2>Settings</h2>${settingsHTML()}
       <button class="btn" data-act="guide" style="width:100%;margin-top:14px"> Guide for new players</button>
       ${typeof PATCHNOTES !== "undefined" ? `<button class="btn" data-act="notes" style="width:100%;margin-top:8px"> Patch notes</button>` : ""}
-      <div class="grid2" style="margin-top:8px">${window.__app ? `<button class="btn" data-act="toupdate">${update?.newer ? " Update ready" : "Check for updates"}</button>` : ""}<button class="btn" data-act="totitle" ${window.__app ? "" : 'style="grid-column:1/-1"'}>Main menu</button></div>
+      <div class="grid2" style="margin-top:8px"><button class="btn" data-act="toupdate">${updNewer() ? " Update ready" : "Check for updates"}</button><button class="btn" data-act="totitle">Main menu</button></div>
       <button class="btn pri" data-act="close" style="width:100%;margin-top:10px">Done</button>`);
     const m = $("#modal");
     m.addEventListener("input", onSettingsInput); m.addEventListener("change", onSettingsInput);
@@ -2910,6 +2953,8 @@
   async function invite(card) {
     if (party?.members.some((m) => m.id === card.id)) return toast(`${card.name} is already in your party.`);
     if (party && party.leader !== S.id) return toast("Only your party leader can invite.");
+    if (typeof SAMEVER !== "undefined" && SAMEVER.blockWith(cardOf(card.id) || card, card.name)) return;   // different builds can't play together: say why
+
     const cap = typeof PARTYPLAY !== "undefined" ? PARTYPLAY.MAX_PARTY : 8;
     if (party && party.members.length + (party.invites || []).length >= cap) return toast(`A party holds up to ${cap} heroes.`);
     if (party) { await Store.change("parties", party.id, (p) => ({ ...p, invites: [...new Set([...(p.invites || []), card.id])] })); }
@@ -2920,6 +2965,7 @@
     const cap = typeof PARTYPLAY !== "undefined" ? PARTYPLAY.MAX_PARTY : 8;
     const p0 = invites.find((p) => p.id === pid);
     if (!p0) { invRefresh(); return toast("That party is gone."); }
+    if (typeof SAMEVER !== "undefined" && SAMEVER.blockWith(cardOf(p0.leader), p0.leaderName)) return;   // the leader is on another build: update first
     if (p0.members.filter((m) => m.id !== S.id).length >= cap) {   // full: say so, and don't leave your own party for nothing
       await Store.change("parties", pid, (p) => ({ ...p, invites: (p.invites || []).filter((x) => x !== S.id) }));
       return toast(`That party is full (${cap} heroes at most).`);
@@ -3046,7 +3092,7 @@
     side.dataset.tab = tab; townCtx = null;
     const openD = [...side.querySelectorAll("details")].map((d) => d.open), y = scrollY;
     const twp = typeof TABMENU !== "undefined" ? { stars: () => TABMENU.stars(S), perks: () => TABMENU.perks(S) } : {};
-    const mnp = typeof MENUS !== "undefined" ? MENUS.panels({ S, ach: achPanel, settings: settingsHTML, fest: festPanel, idPanel, update }) : {};   // menus.js: tab homes
+    const mnp = typeof MENUS !== "undefined" ? MENUS.panels({ S, ach: achPanel, settings: settingsHTML, fest: festPanel, idPanel, update: updNewer() ? { ...(update || {}), newer: true } : update }) : {};   // menus.js: tab homes
     side.innerHTML = tutTip() + (typeof MENUS !== "undefined" ? MENUS.subnav(tab) : "") + screenHead() + ({ ...mnp, map: panelTravel, hero: panelHero, pack: panelPack, town: () => { const t = panelTown(); return (townCtx && typeof LOCSCREEN !== "undefined" ? LOCSCREEN.sceneBtn() : "") + (typeof ARRIVEAREA !== "undefined" ? ARRIVEAREA.gatherHTML(S) : "") + t; }, log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, follower: () => typeof FOLTAB !== "undefined" ? FOLTAB.panel(S, esc, svgI) : "", ...twp }[tab] || panelTravel)();
     if (typeof TABMENU !== "undefined") TABMENU.afterPanel(tab);
     if (typeof MENUS !== "undefined") MENUS.afterPanel(tab);
