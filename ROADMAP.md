@@ -72,6 +72,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: the longhouse visibly grows (longhousegrow; longhouse.js, lhgrow-* art, assets.js, i18n_longhouse.js, tests/test_lhgrow.js new): 15 painted room overlays (5 rooms x 3 levels) cut from ChatGPT paint-overs of longhouse-plate, the highest level per room shows, a soft crossfade after a build, tap a room on the picture to jump to its card. Branch claude/longhousegrow.
 - Claude: core-loop QA sweep (qa-core; ui.js __ui.back, onboard.js, i18n_qacore.js new, tests/test_qacore.js + qacore_ui.py): plays title, chargen, tutorial, travel, towns, crafting, inventory, followers, saves and settings on phone and PC in English and Polish; batch 1 = back button out of mini-games/barber/rune table/shops, tutorial names the Area tab, first trip + tips + set-off/arrived toasts in Polish. Branches claude/qa-core-N (b239+).
 - Claude: QA side systems (qa-side-*; longhouse.js, ui.js safeToUpdate, i18n_qaside.js new, tests/qaside_ui.py new): play minigames, company, bonds, social, events in phone/PC and EN/PL; fix what breaks. Batch 1: company double-tap guard, no update restart mid mini-game, Polish for social/jobs/fishing lines. Branch claude/qa-side-1 (b238).
 - Claude: mounted combat on for everyone (mountcombat-on; mountcombat.js flag true, patch note b237). Branch claude/mountcombat-on.
