@@ -3,10 +3,16 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b210-partyspells", build: 210, date: "25 Nov 2026", title: "Your own spells in party fights", items: [
+    { id: "b211-partyspells", build: 211, date: "25 Nov 2026", title: "Your own spells in party fights", items: [
       "Spells you made at the Rune table or combined at the College now show up properly on your friends' phones in a party fight: the right name, icon and effect in the battle scene.",
       "Only the spells you actually cast in that fight are sent, and nobody can change your spell on your phone.",
       "In a party fight, the target a foe shows is now always the one it hits, healers included.",
+    ] },
+    { id: "b210-stables", build: 210, date: "25 Nov 2026", title: "Tidier stables", items: [
+      "The stables screen is now fully in Polish: saddlebags, horseshoes, horse armor, breeds, coats, the cart and renaming your horse.",
+      "Your horse's card shows its painted picture in its own coat, in a proper frame, instead of a tiny icon. A knocked-down horse lies down in the picture.",
+      "The bond bar now says what it measures, for example 4/100 toward level 4, so a nearly empty bar right after a new level doesn't look broken.",
+      "The banners in the corner, like Quest started, Objective and Skill increased, are in Polish now too.",
     ] },
     { id: "b209-crisespolish", build: 209, date: "25 Nov 2026", title: "Crises, smoothed out", items: [
       "Deliver food now says it plainly: bring the steward 3 pieces of food per delivery, and it counts your deliveries (up to 4).",

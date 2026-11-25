@@ -13,7 +13,7 @@
                                                 o.bob lifts it, o.clip = "barrel" draws only the barrel under the saddle
         HORSEART.lying(g, coat, w)              draws the downed horse w wide, centred on x 0, feet line at y 0
         HORSEART.icon(g, coat, size, down)      the stable-card picture inside a size×size square
-        HORSEART.card(coat, w) → an <img> of the whole standing horse w wide (the stables coat preview), "" until loaded
+        HORSEART.card(coat, w, pose) → an <img> of the whole horse w wide (stand by default; the stables coat preview and header portrait), "" until loaded
         HORSEART.sig() → changes whenever a horse picture arrives (put it in sprite cache keys) */
 const HORSEART = (() => {
   const POSES = ["stand", "gallop", "rear", "down"];
@@ -116,14 +116,15 @@ const HORSEART = (() => {
     return true;
   }
   /* the whole standing horse, for the coat picker at the stables */
-  function card(coat, w = 120) {
+  function card(coat, w = 120, pose = "stand") {
     if (typeof ART === "undefined") return "";
-    const id = coatOf(coat), rec = mips(id, "stand");
-    if (!rec) return typeof ASSETS === "undefined" || ASSETS.state("horse-" + source(id, "stand").key) !== "loading" ? "" : `<span class="hcoatpic hcoatwait" data-coat="${id}" data-w="${w}"></span>`;   // filled in when the picture arrives
+    if (!POSES.includes(pose)) pose = "stand";
+    const id = coatOf(coat), rec = mips(id, pose);
+    if (!rec) return typeof ASSETS === "undefined" || ASSETS.state("horse-" + source(id, pose).key) !== "loading" ? "" : `<span class="hcoatpic hcoatwait" data-coat="${id}" data-w="${w}" data-pose="${pose}"></span>`;   // filled in when the picture arrives
     const h = Math.round(w * rec.h / rec.w);
-    return ART.html(w, h, (g) => { g.drawImage(pick(rec, h * devScale(g)), 0, 0, w, h); }, { key: `hcard:${id}:${w}:${sig()}`, cls: "hcoatpic", alt: id });
+    return ART.html(w, h, (g) => { g.drawImage(pick(rec, h * devScale(g)), 0, 0, w, h); }, { key: `hcard:${id}:${pose}:${w}:${sig()}`, cls: "hcoatpic", alt: id });
   }
-  const fill = () => { if (typeof document === "undefined") return; for (const el of document.querySelectorAll(".hcoatwait")) { const h = card(el.dataset.coat, +el.dataset.w || 120); if (h && !/hcoatwait/.test(h)) el.outerHTML = h; } };
+  const fill = () => { if (typeof document === "undefined") return; for (const el of document.querySelectorAll(".hcoatwait")) { const h = card(el.dataset.coat, +el.dataset.w || 120, el.dataset.pose || "stand"); if (h && !/hcoatwait/.test(h)) el.outerHTML = h; } };
   if (typeof ASSETS !== "undefined" && ASSETS.on) ASSETS.on(() => { sig(); fill(); });
   return { POSES, HAVE, META, TINT, coatOf, source, ok, sig, ride, lying, icon, card };
 })();
