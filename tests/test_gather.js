@@ -126,6 +126,18 @@ if (typeof PFX !== "undefined" && PERKS.BY_ID.forager) {
   const ids = s.inv.filter(r=>["ing_nirnroot","ing_deathbell"].includes(r.item)).map(r=>r.id);
   const b = TOWNS.brew(s, ids); ok(b && typeof b.text === "string", "brew with Nirnroot + Deathbell: " + b.text);
 }
+// regression (gatherfix): a save whose gathering record is missing fields still picks, forages and plants
+{
+  const n = N.find(n=>n.ing!=="ing_nirnroot");
+  for (const g of [{ seen: {}, picked: {} }, { seen: {} , picked: {}, got: null }, {}, null, "junk"]) {
+    const s = hero(); s.gather = g; s.location = null; s.x = n.pos[0]; s.y = n.pos[1];
+    let r; try { r = GATHER.act(s, "gpick", n.id); } catch (e) { r = { err: "threw " + e.message }; }
+    ok(r.ok && s.inv.some(x=>x.item===n.ing), "old save " + JSON.stringify(g) + ": Gather works: " + (r.text || r.err));
+    try { r = GATHER.act(s, "gforage"); } catch (e) { r = { err: "threw " + e.message }; }
+    ok(r.ok, "old save " + JSON.stringify(g) + ": Forage works");
+  }
+  const s = hero(); s.x = NaN; s.y = NaN; ok(GATHER.pick(s, n.id).err, "no position: can't pick from across the map");
+}
 `, c);
 console.log(fails ? `FAILED ${fails}` : "gather ok");
 process.exit(fails ? 1 : 0);

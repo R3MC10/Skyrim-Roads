@@ -1304,7 +1304,7 @@ const G = (() => {
       enemyFirst = true; lines.unshift(`A twig snaps. ${theFoe(e, true)} spots you!`);
     }
     const f = new Fight(s, e, null, t);
-    if (typeof HORSEBACK !== "undefined") HORSEBACK.engage(f, t);   // [OURS] riding? you fight from the saddle
+    if (typeof HORSEBACK !== "undefined" && (typeof MOUNTCOMBAT === "undefined" || MOUNTCOMBAT.enabled)) HORSEBACK.engage(f, t);   // [OURS] riding? you fight from the saddle (mountcombat.js: off for now, everyone fights on foot)
     f.canFlee = true;   // a "flee" tactic can break off a road fight
     f.run({ enemyFirst, t, hidden: opts.hidden ?? null });
     const skillMsgs = f.apply(t);

@@ -3,13 +3,54 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b229-riding", build: 229, date: "25 Nov 2026", title: "Better riding", items: [
-      "You can dual cast from the saddle now. It costs a fifth more magicka up there; the new Destruction perk Saddle Caster removes that and adds a little power.",
-      "In a fight, getting on your horse takes two of your moves (one with Steady Steed) and getting off takes one. You see yourself climb up or slide down, and your horse waits nearby while you fight on foot.",
-      "Riders have both legs now: the near leg over the horse's side with the foot in the stirrup, the far leg behind it. In fights, on the map, for every coat.",
-      "The rider moves with the horse instead of jerking on top of it.",
-      "The map has a ride button next to zoom: tap it to get on or off. You see the horse walk up and you climb into the saddle, or slide down. On foot your horse walks behind you.",
-      "Horses still never die: a knocked-down horse throws you off and gets back up later.",
+    { id: "b232-riding", build: 232, date: "25 Nov 2026", title: "Riding on the map", items: [
+      "The map has a ride button next to zoom: tap it to get on or off your horse. You see the horse walk up and you climb into the saddle, or slide down.",
+      "On foot your horse walks along just behind you on the map.",
+      "Riders on the map have both legs now: the near leg over the horse's side, the far leg behind it, for every coat.",
+      "The rider moves smoothly with the horse's walk and gallop instead of jerking along.",
+    ] },
+    { id: "b231-nomountfight", build: 231, date: "25 Nov 2026", title: "Horses wait at the edge of the fight", items: [
+      "Horses now wait at the edge of the fight; you always fight on foot. That goes for solo fights, parties and co-op.",
+      "Nobody goes for your horse and it never gets knocked down in a fight. If you rode in, you're back in the saddle when it's over.",
+      "Dual casting works in every fight again, since everyone is on foot.",
+    ] },
+    { id: "b230-map4k", build: 230, date: "25 Nov 2026", title: "Sharp painted map, close up", items: [
+      "The painted world map stays sharp now, even zoomed all the way in on a phone or a big 4K screen. It used to turn soft and then swap to a plain drawn chart.",
+      "Zoom in and the map loads finer pieces of the painting just for the part you look at, so it stays light on your phone. Until they arrive you see the normal painting.",
+      "Up close you can see fine brushwork: grass on the plains, snow, rock and little waves on the sea, with a faint paper grain on top.",
+      "Names, roads, fog, pins and your hero sit exactly where they did before.",
+    ] },
+    { id: "b229-gatherfix", build: 229, date: "25 Nov 2026", title: "Picking herbs fixed", items: [
+      "On a PC the Gathering card sat in the side panel, which the big map hides, so there was no way to pick plants or forage. It now floats on the left of the map whenever plants are in reach.",
+      "Some older saves made the Gather button do nothing. Those heroes pick plants, forage and plant gardens normally again.",
+      "If picking ever goes wrong, you now get a short message instead of a button that does nothing.",
+    ] },
+    { id: "b228-companyart", build: 228, date: "25 Nov 2026", title: "Painted company art", items: [
+      "The Company screen opens with a painted banner of your longhouse at dusk, with the name in clear light letters.",
+      "The Rooms tab shows your longhouse, and it changes as you build: the library lights more windows, the forge makes the doorway glow, the trophy hall hangs antlers and shields, the stables add lanterns and the planning table puts up company banners.",
+      "The Expedition Table now sits on a painted war table lit by candles. Each offer has its own painting, a clear risk colour (green, amber or red), the reward and how long it takes, with the step list under Details.",
+      "In a party vote, small portraits on each expedition card show who voted for it.",
+      "The six Daedric artifacts have painted pictures on their cards and on the contract that rewards them.",
+    ] },
+    { id: "b227-eventcards", build: 227, date: "25 Nov 2026", title: "Painted event cards", items: [
+      "Dragon attacks on towns now show a hand-painted picture instead of the flat drawing: a dragon breathing fire over the rooftops.",
+      "Great events, crises and raids on your house get paintings too: bandits with torches for sieges and outlaws, a vampire lord in the town square, a giant smashing through a farm, and a caravan lost in a blizzard for the Long Winter.",
+      "The name of the event sits under the picture, with a small coloured diamond next to it that shows how bad things are: green when it's over, yellow for trouble, orange for danger, red when it's deadly.",
+      "Cards fade in gently, and a few faint embers, wisps of red mist or snowflakes drift over them. With reduced motion on they stay still.",
+    ] },
+    { id: "b226-busts", build: 226, date: "25 Nov 2026", title: "Painted faces for every race", items: [
+      "Picking a race now shows a painted portrait of each one on a dark panel, with the race name underneath.",
+      "The Character page shows your race's painted portrait, and the Worn screen in your inventory has a small one in the corner of your paper doll.",
+      "There is one painting per race, of a man or a woman. If your hero is the other sex, the painting shows as a round race crest instead of as your face.",
+      "Fights and the paper doll still show your hero in the gear you wear.",
+    ] },
+    { id: "b225-heistart", build: 225, date: "25 Nov 2026", title: "Heists you can see", items: [
+      "Every heist now shows a painting of the house you're robbing: Battle-Born's farm, the Shatter-Shield house on the icy docks, Erikur's townhouse, the Silver-Blood stone house and Maven's manor on the canal.",
+      "On phones the heist takes the whole screen. The house sits at the top and your choices at the bottom, within thumb reach. The X in the corner closes it, and you carry on later from the town.",
+      "The picture changes mood with each step: cold and quiet while you look around, darker while you sneak, amber at the edges when people grow suspicious, and cold and grey on the way out.",
+      "When the alarm goes up, the edges glow red and pulse, and the picture gives a short jolt. Your buttons stay put.",
+      "Lanterns flicker, the lit window glows softly and a few snowflakes drift by on phones. If your phone is set to reduce motion, all of that stays still.",
+      "The heist loot and tools have new painted icons: the signet ring, gold compass, jewelled goblet, torc, ruby brooch, forged papers and the Draught of Shadows.",
     ] },
     { id: "b224-meekofix", build: 224, date: "25 Nov 2026", title: "Meeko comes back", items: [
       "Meeko the stray dog has no home town, so once he left you (Dismiss, or walking off when he got fed up) he was gone for good. Now he finds you again on the road.",
