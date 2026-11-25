@@ -1678,14 +1678,17 @@ x - 0.5, y - 0.5, bw + 1, bh + 1);
     }
     /* [OURS] a finished scene with a painted backdrop keeps its torches flickering and banners moving (12 frames a second,
        only the newest two scenes, only while on screen); with reduced motion it just redraws once the pictures arrive */
-    let idleT = 0, idleDrawn = false;
+    let idleT = 0, idleDrawn = false, seen = true, seenIO = null;
+    try { (seenIO = new IntersectionObserver((es) => { seen = es[es.length - 1].isIntersecting; })).observe(cv); } catch { /* old browsers: always drawn */ }
     function idleArt() {
       const bs = !!rec.art && typeof BSCENE !== "undefined", rigLive = !!RIG && !rm && (phase === "idle" || !won);   // [OURS] a standing foe keeps breathing (or gloating) between turns
       if (idleT || (!bs && !rigLive)) return;
       const tick = () => {
         idleT = 0;
-        if (!cv.isConnected || !IDLE.has(tick)) { IDLE.delete(tick); return; }
+        if (!cv.isConnected || !IDLE.has(tick)) { IDLE.delete(tick); seenIO?.disconnect(); return; }
         const ok = bs ? !!BSCENE.ready(rec.art) : true;
+        // [perf] a scene scrolled away or covered by a closed panel is not redrawn (it checks again a few times a second)
+        if (!seen) { idleT = setTimeout(tick, 300); return; }
         if (!MANUAL && !(typeof document !== "undefined" && document.hidden) && ok && (!rm || !idleDrawn)) { draw(performance.now()); idleDrawn = true; }
         if ((!bs || (ok && (rm || !BSCENE.animated(rec.art))) || (!ok && BSCENE.failed(rec.art))) && !rigLive) { IDLE.delete(tick); return; }
         idleT = setTimeout(tick, ok ? (rigLive ? 50 : 83) : 300);

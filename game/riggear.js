@@ -292,6 +292,113 @@ const RIGGEAR = (() => {
     g.restore();
   }
   const FK = () => (typeof FIGART !== "undefined" ? FIGART.kit : null);
-  return { weapon, shield, sprite, tone, TIP, GRIP, SPAN, BOW_H, BRACE };
+
+  // ---------------------------------------------------------------- helmets
+  /* [dollrig] there are no painted helmet pictures yet, so a worn helmet is drawn here in the same shaded way as the
+     shields: lit from the top front, a soft shadow, a thin dark edge. sk = where the painted skull is in the head's frame
+     (rig.js measures it from the head picture): fx = the forehead, ty = the top of the head, w = skull length (back to
+     front), all in the units being drawn. The shapes are the ink figure's helmets (figart.js), in a frame where the dome
+     runs from x -5.8 (back) to 4.8 (front) and from y -7.6 (crown) to the brim at about -1.5. */
+  function lit(g, path, base, box, st) {
+    const [x0, y0, x1, y1] = box, gr = g.createLinearGradient(x0, y0, x1, y1);
+    gr.addColorStop(0, tone(base, 0.32)); gr.addColorStop(0.45, base); gr.addColorStop(1, tone(base, -0.42));
+    path(); g.fillStyle = gr; g.fill(); g.save(); shadowOff(g); g.strokeStyle = OUT; g.lineWidth = 0.2; g.stroke(); g.restore();
+  }
+  const shape = (g, pts) => () => { g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); };
+  function helmet(g, sp, sk, st) {
+    const h = sp && sp.helm; if (!h || !sk || !(sk.w > 0)) return;
+    const S = h.set || {}, f = h.f || {}, k = h.k || "", c = S.c || "#8f8a84", dk = S.d || tone(c, -0.3), tr = S.trim || tone(c, 0.3);
+    const s = (sk.w / 10.6) * 1.14;   // a touch bigger than the bare skull: the helmet sits over hair and padding
+    g.save(); g.translate(sk.fx - 4.4 * s, sk.ty + 7.0 * s); g.scale(s, s);
+    shadowOn(g, null, st);
+    if (h.kind === "hood" || h.kind === "mask") {   // a cloth hood over the head and down the back of the neck
+      const hc = h.kind === "mask" ? "#2c2420" : f.hood || c;
+      const hood = () => { g.beginPath(); g.moveTo(4.6, -3.6); g.quadraticCurveTo(4.2, -8.6, -1.4, -8.4); g.quadraticCurveTo(-6.6, -7.6, -6.6, -0.4); g.quadraticCurveTo(-6.8, 4.6, -4.4, 8.2);
+        g.lineTo(-0.4, 7.6); g.quadraticCurveTo(2, 6.6, 1.4, 4.8); g.quadraticCurveTo(0.4, 1.6, 1.6, -1); g.quadraticCurveTo(2.6, -3, 4.6, -3.6); g.closePath(); };
+      lit(g, hood, hc, [3, -8, -6, 6], st);
+      g.save(); shadowOff(g); g.strokeStyle = tone(hc, -0.4); g.globalAlpha = 0.7; g.lineWidth = 0.22;
+      for (const [a, b] of [[[-2.4, -6.4], [-3.6, 6.4]], [[0.4, -7.2], [-0.6, 3.6]]]) { g.beginPath(); g.moveTo(a[0], a[1]); g.quadraticCurveTo(a[0] - 2.2, (a[1] + b[1]) / 2, b[0], b[1]); g.stroke(); }
+      g.restore();
+      if (h.kind === "mask") {
+        const m = () => { g.beginPath(); g.moveTo(3.4, -5); g.quadraticCurveTo(5.6, -3, 5.4, 0); g.lineTo(6.2, 1.8); g.lineTo(5, 2.6); g.quadraticCurveTo(5.4, 5, 3, 6); g.lineTo(2, 5.6); g.quadraticCurveTo(1, 0, 3.4, -5); g.closePath(); };
+        lit(g, m, "#b8893e", [5, -4, 2, 5], st);
+        g.save(); shadowOff(g); g.strokeStyle = "#1c1714"; g.lineWidth = 0.5; g.beginPath(); g.moveTo(3.4, -1); g.lineTo(4.8, -0.8); g.stroke(); g.restore();
+      }
+      g.restore(); return;
+    }
+    if (h.kind === "coif") {   // chain mail over the head
+      const coif = () => { g.beginPath(); g.moveTo(4.4, -3.4); g.quadraticCurveTo(4, -7.6, -1.2, -7.4); g.quadraticCurveTo(-6, -6.6, -5.8, -0.4); g.quadraticCurveTo(-5.8, 4.2, -3.8, 7); g.lineTo(1.4, 6.6); g.quadraticCurveTo(2.4, 4.6, 1.6, 2.4); g.quadraticCurveTo(1.2, -1, 2.4, -2.2); g.closePath(); };
+      lit(g, coif, c, [3, -7, -5, 5], st);
+      g.save(); shadowOff(g); coif(); g.clip(); g.fillStyle = tone(dk, -0.2); g.globalAlpha = 0.6;
+      for (let y = -7.5; y < 7; y += 0.9) for (let x = -6.2 + (Math.round(y / 0.9) % 2) * 0.45; x < 4.6; x += 0.9) { g.beginPath(); g.arc(x, y, 0.24, 0, TAU); g.fill(); }
+      g.restore(); g.restore(); return;
+    }
+    if (h.kind === "cap") {   // leather or fur cap with a band
+      const capP = () => { g.beginPath(); g.moveTo(4.4, -2.6); g.quadraticCurveTo(4, -7.8, -1, -7.6); g.quadraticCurveTo(-5.8, -7, -5.4, -1.2); g.lineTo(-5.6, 1.4); g.lineTo(-3, 1.2); g.lineTo(-1.6, -1.6); g.lineTo(4.4, -2.6); g.closePath(); };
+      lit(g, capP, c, [3, -7, -5, 0], st);
+      g.save(); shadowOff(g); g.strokeStyle = tone(c, -0.45); g.lineWidth = 0.16; g.setLineDash([0.5, 0.45]);
+      g.beginPath(); g.moveTo(1.6, -7.4); g.quadraticCurveTo(-1.6, -5.4, -2.2, -1.4); g.stroke(); g.setLineDash([]); g.restore();
+      const fur = k === "hide" || k === "fur" || k === "stormcloak", band = fur ? "#d8c8a8" : tr;
+      lit(g, () => { g.beginPath(); g.moveTo(4.8, -3.4); g.quadraticCurveTo(0, -4.6, -5.8, -1.4); g.lineTo(-5.8, 0.4); g.quadraticCurveTo(0, -2.8, 4.8, -1.6); g.closePath(); }, band, [0, -4.4, 0, 0], st);
+      if (fur) { g.save(); shadowOff(g); g.strokeStyle = tone(band, -0.35); g.lineWidth = 0.14; for (let i = 0; i < 12; i++) { const x = 4.4 - i * 0.85, y = -2.9 + i * 0.22; g.beginPath(); g.moveTo(x, y); g.lineTo(x - 0.3, y + 0.9); g.stroke(); } g.restore(); }
+      g.restore(); return;
+    }
+    // metal: a dome, a brim band with rivets, a neck guard, cheek plate / nasal / visor, horns or a crest
+    const M = { c, d: tone(c, -0.45), t: tone(c, 0.6) };
+    const horn = (x0, y0, pts, col) => {
+      g.beginPath(); g.moveTo(x0 - 1.2, y0 + 0.8);
+      const [a, b] = pts; g.quadraticCurveTo(a[0], a[1], b[0], b[1]); g.quadraticCurveTo(a[0] + 0.9, a[1] + 0.6, x0 + 1.2, y0 - 0.4); g.closePath();
+      const gr = g.createLinearGradient(x0, y0, b[0], b[1]); gr.addColorStop(0, tone(col, -0.25)); gr.addColorStop(0.6, col); gr.addColorStop(1, tone(col, 0.35));
+      g.fillStyle = gr; g.fill(); g.save(); shadowOff(g); g.strokeStyle = OUT; g.lineWidth = 0.18; g.stroke();
+      g.strokeStyle = tone(col, -0.35); g.globalAlpha = 0.6; g.lineWidth = 0.12;   // ridges round the horn
+      for (let i = 1; i < 4; i++) { const t = i / 4, x = x0 + (b[0] - x0) * t * 0.8, y = y0 + (b[1] - y0) * t * 0.8; g.beginPath(); g.moveTo(x - 0.6, y + 0.3); g.lineTo(x + 0.6, y - 0.2); g.stroke(); }
+      g.restore();
+    };
+    const hornC = k === "iron" ? "#e8dcc0" : k === "nord" ? tr : f.horns > 1 ? tr : "#e6e0cc", big = f.horns > 1 ? 1.5 : 1;
+    const horned = !!f.horns || k === "iron" || k === "nord";
+    if (horned) {   // the far horn, in shade, behind the dome
+      if (k === "nord") horn(-2, -5.4, [[-5, -9.6 * big], [-8.4, -9.2 * big]], tone(hornC, -0.3));
+      else horn(-1.4, -6, [[0, -10.6 * big], [3 * big, -12.6 * big]], tone(hornC, -0.3));
+    }
+    const dome = () => { g.beginPath(); g.moveTo(4.8, -1.2); g.quadraticCurveTo(5, -7.6, -0.8, -7.6); g.quadraticCurveTo(-6, -7.2, -5.6, -1); g.lineTo(-5.8, 3.4); g.lineTo(-2.6, 3.6); g.lineTo(-1.6, -0.2); g.quadraticCurveTo(1.6, -1.4, 4.8, -1.2); g.closePath(); };
+    const rg = g.createRadialGradient(1.6, -6.4, 0.4, 0, -3, 8.4);
+    rg.addColorStop(0, M.t); rg.addColorStop(0.35, tone(c, 0.15)); rg.addColorStop(0.75, c); rg.addColorStop(1, M.d);
+    dome(); g.fillStyle = rg; g.fill();
+    g.save(); shadowOff(g); g.strokeStyle = OUT; g.lineWidth = 0.22; g.stroke();
+    if (S.metal !== false) {   // a long highlight over the crown
+      dome(); g.clip(); g.strokeStyle = "rgba(255,255,255,0.55)"; g.lineWidth = 0.45; g.lineCap = "round";
+      g.beginPath(); g.moveTo(3.4, -4.6); g.quadraticCurveTo(2.4, -6.8, -0.6, -6.9); g.stroke();
+      if (k === "steel" || k === "imperial" || k === "iron") { g.strokeStyle = tone(c, -0.35); g.lineWidth = 0.35; g.beginPath(); g.moveTo(4.4, -3.4); g.quadraticCurveTo(3.4, -7.6, -1, -7.7); g.quadraticCurveTo(-5, -7.4, -5.6, -2.8); g.stroke(); }   // the raised ridge over the top
+    }
+    g.restore();
+    lit(g, () => { g.beginPath(); g.moveTo(5.1, -2.2); g.quadraticCurveTo(0, -3, -5.9, -0.6); g.lineTo(-5.9, 0.8); g.quadraticCurveTo(0, -1.6, 5.1, -0.8); g.closePath(); }, dk, [0, -3, 0, 1], st);   // the brim band
+    for (let i = 0; i < 5; i++) { const x = 4 - i * 2.2, y = -1.55 + i * 0.42 + i * i * 0.04; knob(g, x, y, 0.28, { c: tr, d: tone(tr, -0.5), t: tone(tr, 0.6) }); }
+    if (h.visor) {
+      lit(g, () => { g.beginPath(); g.moveTo(4.8, -1.4); g.lineTo(6.2, 1.6); g.lineTo(5.2, 3); g.quadraticCurveTo(5.2, 5.6, 2.4, 6); g.lineTo(-0.6, 5.6); g.lineTo(-1.6, -0.2); g.closePath(); }, c, [5, -1, 0, 6], st);
+      g.save(); shadowOff(g); g.strokeStyle = "#14100c"; g.lineWidth = 0.6; g.lineCap = "round"; g.beginPath(); g.moveTo(1.6, -0.6); g.lineTo(5.4, -0.4); g.stroke();
+      if (f.glow) { g.strokeStyle = f.glow; g.lineWidth = 0.4; g.shadowColor = f.glow; g.shadowBlur = 2; g.beginPath(); g.moveTo(2.4, -0.6); g.lineTo(5, -0.5); g.stroke(); }
+      g.restore();
+    } else if (k === "steel" || k === "nord" || k === "imperial" || S.w === "heavy" || f.spikes) {
+      lit(g, shape(g, [[-0.6, -0.6], [2.6, -0.8], [2.8, 4.6], [0.6, 5.2], [-1.2, 2.4]]), c, [3, 0, -1, 4], st);   // cheek plate
+      if (k === "steel" || k === "imperial") lit(g, shape(g, [[4.4, -1.4], [5.2, -1.3], [5.5, 2], [4.9, 2]]), dk, [4.4, -1, 5.5, 2], st);   // nasal guard
+    }
+    if (horned) {
+      if (k === "iron") horn(1.4, -6.2, [[3.4, -10.6], [6.6, -12]], hornC);
+      else if (k === "nord") horn(0.6, -5.8, [[-2.4, -10.4], [-6.4, -10.8]], hornC);
+      else horn(1, -6, [[3 * big, -10.6 * big], [6 * big, -12.6 * big]], hornC);
+    }
+    if (k === "dwarven") lit(g, shape(g, [[-2.4, -7.4], [2, -7.6], [1, -10.6], [-1.4, -10.4]]), tr, [0, -10.6, 0, -7.4], st);
+    if (k === "elven") lit(g, () => { g.beginPath(); g.moveTo(3, -6.4); g.quadraticCurveTo(0, -12.6, -5.4, -12.4); g.quadraticCurveTo(-2, -10, -2.2, -7); g.closePath(); }, tr, [1, -12, -4, -7], st);
+    if (f.spikes) for (let i = 0; i < (f.spikes > 1 ? 3 : 2); i++) lit(g, shape(g, [[-3.6 + i * 2.6, -7], [-3.2 + i * 2.6, -10.4 - (i === 1 ? 1 : 0)], [-1.8 + i * 2.6, -7.2]]), tr, [0, -10, 0, -7], st);
+    if (f.bone) lit(g, shape(g, [[-3.6, -7], [-1, -12], [1.4, -7.4]]), tr, [0, -12, 0, -7], st);
+    if (f.fur) {   // a ragged fur lining showing under the neck guard
+      g.save(); shadowOff(g); g.lineCap = "round";
+      for (let i = 0; i < 9; i++) { const x = -5.9 + i * 0.42, y = 2.6 + (i % 3) * 0.25; g.strokeStyle = i % 2 ? "#8a7458" : "#b39c7a"; g.lineWidth = 0.55; g.beginPath(); g.moveTo(x, y - 1.2); g.quadraticCurveTo(x - 0.2, y, x + 0.15, y + 0.9); g.stroke(); }
+      g.restore();
+    }
+    if (f.translucent) { g.globalAlpha = 0.32; g.fillStyle = "#fff"; g.beginPath(); g.ellipse(0.6, -5.4, 1, 1.8, -0.6, 0, TAU); g.fill(); g.globalAlpha = 1; }
+    g.restore();
+  }
+  return { weapon, shield, helmet, sprite, tone, TIP, GRIP, SPAN, BOW_H, BRACE };
 })();
 if (typeof module !== "undefined") module.exports = RIGGEAR;

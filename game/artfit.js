@@ -30,7 +30,11 @@ const ARTFIT = (() => {
     apply();
     if (typeof addEventListener === "function") addEventListener("resize", apply);
     // the page zoom (text size, big monitors) changes on the <html> style; density changes when the window moves screens
-    try { new MutationObserver(apply).observe(document.documentElement, { attributes: true, attributeFilter: ["style", "class"] }); } catch { /* old browsers */ }
+    /* [perf] only when the class list or the text-size variable really changed: other code re-adds the same class every
+       refresh (the travel band), and each time this used to make the browser recompute every style just to read the zoom */
+    let seen = "";
+    const changed = () => { const h = document.documentElement, a = h.className + "|" + h.style.getPropertyValue("--tz"); if (a !== seen) { seen = a; apply(); } };
+    try { new MutationObserver(changed).observe(document.documentElement, { attributes: true, attributeFilter: ["style", "class"] }); } catch { /* old browsers */ }
     try {
       const watch = () => { const mq = matchMedia(`(resolution: ${devicePixelRatio || 1}dppx)`); mq.addEventListener("change", () => { apply(); watch(); }, { once: true }); };
       watch();

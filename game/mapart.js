@@ -289,11 +289,12 @@ const MAPART = (() => {
     const dark = darkness(nowS);
     if (!["fog", "blizzard"].includes(v.weather) && dark < 0.3) {
       const cs = cloudSprite(); g.globalAlpha = (v.weather === "cloudy" || v.weather === "storm" ? 0.42 : 0.24) * (1 - 0.7 * (v.close || 0));   // fainter on the close-up chart
+      const q0 = g.imageSmoothingQuality; g.imageSmoothingQuality = "low";   // [perf] soft blurred blobs: plain smoothing looks the same, far cheaper
       for (let i = 0; i < 5; i++) {
         const sp = 6 + i * 2.5, x = ((i * 233 + t * sp) % (W + 400)) - 300, y = (i * 151 + 40) % (H - 120);
         g.drawImage(cs, x, y, 320, 180);
       }
-      g.globalAlpha = 1;
+      g.globalAlpha = 1; g.imageSmoothingQuality = q0;
     }
     // birds over the land in daytime
     if (!v.reduceMotion && dark < 0.2 && !["rain", "storm", "snow", "blizzard"].includes(v.weather)) {

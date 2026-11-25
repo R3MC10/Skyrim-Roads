@@ -7,8 +7,8 @@
      finish the animation that's playing. Reduce motion starts replays at ×2 and adds no new motion.
    - After a won road fight: if the loot made you too heavy, ask whether to keep it all or leave the heaviest new
      pieces behind (loot is picked up automatically, so "Loot all" is what already happens).
-   - "Fight again" on the practice dummy (Tactics → Test fight) and "Challenge again" after an Arena bout.
-   - Remembers the last pick in repeated prompts where it's harmless: the Arena bet and the test-fight foe.
+   - "Challenge again" after an Arena bout.
+   - Remembers the last pick in repeated prompts where it's harmless: the Arena bet.
    Nothing here changes a fight, its odds or its rewards; it only reads results and presses the game's own buttons. */
 const FASTQOL = (() => {
   const KEY = "rotn_prefs";
@@ -120,9 +120,8 @@ const FASTQOL = (() => {
   }
 
   // ---------------------------------------------------------------- Fight again
-  /* kind "test": the practice dummy in Tactics; kind "duel": challenge the same player again */
+  /* kind "duel": challenge the same player again */
   function againHTML(kind, id) {
-    if (kind === "test") return `<button class="btn fqagain" data-act="test">⟳ Fight again</button>`;
     if (kind === "duel" && id) return `<button class="btn fqagain" data-act="duelgo" data-id="${esc(id)}" data-fqclose> Challenge again</button>`;
     return "";
   }

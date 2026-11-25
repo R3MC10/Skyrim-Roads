@@ -1,5 +1,5 @@
 /* Quicker travel and fights (fastqol.js). W=/path/to/game/ node test_fast.js — prints ALL OK.
-   Recent trips and "Again"/"Back to", settings, remembered picks, the too-heavy loot ask, Fight again buttons,
+   Recent trips and "Again"/"Back to", settings, remembered picks, the too-heavy loot ask, Challenge again buttons,
    and the hooks in fightart.js / ui.js / index.html. Nothing here may change a fight. */
 const fs = require("fs"), vm = require("vm");
 const W = process.env.W || require("path").join(__dirname, "../game/");
@@ -55,8 +55,8 @@ vm.runInContext(`(() => {
   ok(!/fightSpeed/.test(sh) && /fqAutoRoad:Wait for me,\\[Carry on\\]/.test(sh), "settings rows " + sh);
   // ---- remembered picks
   ok(F.mem("arenaStake", 100) === 100, "default bet");
-  F.setMem("arenaStake", 500); F.setMem("testFoe", "Bandit");
-  ok(F.mem("arenaStake", 100) === 500 && F.mem("testFoe") === "Bandit", "remembered");
+  F.setMem("arenaStake", 500); 
+  ok(F.mem("arenaStake", 100) === 500, "remembered");
   ok(F.autoRoad() === true, "remembering doesn't touch other prefs");
   // ---- too heavy after a fight
   const s2 = G.newSave("fq2", "Mule", "nord"); s2._test = true;
@@ -88,7 +88,7 @@ vm.runInContext(`(() => {
     ok(!G.overweight(s3) && row && row.qty > 0, "kept part of the stack: " + l3 + " · kept " + (row && row.qty));
   }
   // ---- fight again
-  ok(/data-act="test"/.test(F.againHTML("test")), "Fight again reruns the test fight");
+  ok(F.againHTML("test") === "", "no Fight again: the test fight went with the AI & Loadouts tab");
   ok(/data-act="duelgo" data-id="p1"/.test(F.againHTML("duel", "p1")) && F.againHTML("duel") === "", "Challenge again");
   ok(/&lt;x&gt;/.test(F.againHTML("duel", "<x>")), "ids escaped");
 })();`, c);
@@ -96,7 +96,7 @@ vm.runInContext(`(() => {
 // ---- the hooks in shared files
 const fa = fs.readFileSync(W + "fightart.js", "utf8"), ui = fs.readFileSync(W + "ui.js", "utf8"), html = fs.readFileSync(W + "index.html", "utf8");
 ok(!/prefs\(\)\.fightSpeed/.test(fa) && !/data-fsx|data-fss|Skip to result/.test(fa) && /finishAll, playing/.test(fa), "fightart: no speed or Skip buttons, saved speed ignored, finishAll kept");
-ok(/FASTQOL\.recentHTML\(S\)/.test(ui) && /FASTQOL\.lootHTML\(S, r\)/.test(ui) && /FASTQOL\.againHTML\("test"\)/.test(ui) && /FASTQOL\.againHTML\("duel"/.test(ui) && /FASTQOL\.settingsHTML\(seg\)/.test(ui) && /FASTQOL\.pref\(k/.test(ui), "ui.js hooks");
+ok(/FASTQOL\.recentHTML\(S\)/.test(ui) && /FASTQOL\.lootHTML\(S, r\)/.test(ui) && !/FASTQOL\.againHTML\("test"\)/.test(ui) && /FASTQOL\.againHTML\("duel"/.test(ui) && /FASTQOL\.settingsHTML\(seg\)/.test(ui) && /FASTQOL\.pref\(k/.test(ui), "ui.js hooks");
 for (const m of ui.matchAll(/[^\n]*FASTQOL\.[^\n]*/g)) ok(/typeof FASTQOL !== "undefined"/.test(m[0]), "guarded: " + m[0].trim().slice(0, 80));
 const iF = html.indexOf('src="fastqol.js"'), iU = html.indexOf('src="ui.js"'), iA = html.indexOf('src="fightart.js"');
 ok(iF > 0 && iF < iU && iA < iU, "fastqol.js loads before ui.js");

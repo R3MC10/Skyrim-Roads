@@ -550,6 +550,21 @@ const WorldMap = (() => {
     g.fillText(String(n), bx, by + 0.5 * s);
     if (boxes) boxes.push([x - 20 * s, y - 25 * s, 40 * s, 29 * s]);
   }
+  /* [perf] finished layers of the map kept between frames (see draw): the ground and the fog, each the canvas's size */
+  const GC = { key: "", last: "", vkey: "", vlast: "", ground: null, veil: null, ox: 0, oy: 0 };
+  const GM = 128;   // device px of ground kept beyond each edge of the screen
+  const ids = new WeakMap(); let idN = 0;
+  const idOf = (o) => (!o ? 0 : ids.get(o) || (ids.set(o, ++idN), idN));
+  function fit(C, name, w, h) {
+    let c = C[name];
+    if (!c) c = C[name] = document.createElement("canvas");
+    if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+    return c.getContext("2d");
+  }
+  /* copy a kept layer 1:1 over the whole canvas (whatever the current transform) */
+  function blit(g, c) { g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = false; g.drawImage(c, 0, 0); g.restore(); }
+  /* the kept ground, shifted by whole pixels, onto a cleared canvas */
+  function slide(g, c, x, y, w, h) { g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h); g.imageSmoothingEnabled = false; g.drawImage(c, x, y); g.restore(); }
   function draw(canvas, v) {
     // Solstheim has its own painted map (solart.js); its places sit SOL_OY map-heights below Skyrim's
     const SV = v.region === "solstheim" && typeof SOLART !== "undefined" ? SOLART : null, OY = SV ? WORLD.SOL_OY : 0, OYH = OY * H;
@@ -563,21 +578,17 @@ const WorldMap = (() => {
     const cw = canvas.clientWidth, ch = canvas.clientHeight;
     if (canvas.width !== Math.round(cw * dpr) || canvas.height !== Math.round(ch * dpr)) { canvas.width = Math.round(cw * dpr); canvas.height = Math.round(ch * dpr); }
     const g = canvas.getContext("2d");
-    g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, canvas.width, canvas.height);
     const k = Math.max(canvas.width / W, canvas.height / H) * v.zoom;
     let ox = canvas.width / 2 - v.center[0] * W * k, oy = canvas.height / 2 - (v.center[1] - OY) * H * k;
     // zoomed out past the edges: the map sits in the middle (on a matching surround, below)
     ox = W * k <= canvas.width ? (canvas.width - W * k) / 2 : Math.min(0, Math.max(canvas.width - W * k, ox));
     oy = H * k <= canvas.height ? (canvas.height - H * k) / 2 : Math.min(0, Math.max(canvas.height - H * k, oy));
     v.transform = { k: k / dpr, ox: ox / dpr, oy: (oy - OYH * k) / dpr };   // screen <-> world (Solstheim's y included)
-    if (ox > 0 || oy > 0 || ox + W * k < canvas.width || oy + H * k < canvas.height) surround(g, canvas.width, canvas.height, ox, oy, W * k, H * k, dpr);
-    g.setTransform(k, 0, 0, k, ox, oy);
-    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
     // UI: icons and words a little bigger on big monitors (never smaller than on a phone)
     const UI = Math.max(1, Math.min(1.3, Math.min(cw, ch) / 860));
-    const s = dpr / k * UI;               // 1 CSS px in map units (× UI): keeps icons and labels the same size at any zoom
+    const s = dpr / k * UI;               // 1 CSS px in map units (x UI): keeps icons and labels the same size at any zoom
     const Pcss = k / dpr;                 // CSS px per map unit
-    // the painting is never shown bigger than PAINT_MAX × its own pixels (it would turn soft): past PAINT_FADE it fades
+    // the painting is never shown bigger than PAINT_MAX x its own pixels (it would turn soft): past PAINT_FADE it fades
     // into the close-up ink chart (inkmap.js), a wash of its own colours with crisp hand-inked detail on top
     // with the tile pyramid (maptiles.js) the painting has 8000 px across: it stays the map at every zoom, with a fine
     // painted grain past its own pixels, and the ink chart is only the fallback for builds without the tiles
@@ -585,17 +596,42 @@ const WorldMap = (() => {
     const IK = painted && !MT && typeof INKMAP !== "undefined" ? INKMAP : null;
     const pscale = painted ? (W * Pcss) / (MT ? MT.LEVELS[MT.TOP][0] : painted.naturalWidth) : 0;
     const pa = !painted ? 1 : !IK ? 1 : Math.max(0, Math.min(1, (PAINT_MAX - pscale) / (PAINT_MAX - PAINT_FADE)));
-    // how far into the close-up we are (0 at the painting's own size … 1 well into the ink chart): the sky's light shafts,
+    // how far into the close-up we are (0 at the painting's own size ... 1 well into the ink chart): the sky's light shafts,
     // cloud shadows, mist and town glows tone down with it so the chart stays clear (lightfx.js, mapart.js)
     v.close = painted ? Math.max(0, Math.min(1, (pscale - PAINT_FADE) / 1.6)) : Math.max(0, Math.min(1, (v.zoom - 1.6) / 2.4));
     stats.close = +v.close.toFixed(2);
     stats.paintScale = pa > 0 ? pscale : 0; stats.paintAlpha = painted ? pa : 0; stats.ink = IK ? 1 - pa : 0; stats.roads = ROAD_STYLE; stats.dpr = dpr;
-    if (IK && pa < 1) { g.save(); g.setTransform(1, 0, 0, 1, 0, 0); IK.draw(g, painted, k, ox, oy, canvas.width, canvas.height, dpr, 1); g.restore(); }
-    if (bimg && pa > 0) { g.globalAlpha = pa; g.drawImage(bimg, 0, 0, W, H); g.globalAlpha = 1; }   // the painting is stretched over the world bounds: world (x, y) → (x·W, y·H)
-    if (MT) { const over = MT.draw(g, k, ox, oy, canvas.width, canvas.height); const ts = MT.stats(); stats.tiles = ts.tiles; stats.tileLevel = ts.level; stats.grain = ts.grain; stats.tileOver = +over.toFixed(2); }   // sharp tiles over the base painting (same world → screen mapping)
-    else if (!bimg) { g.fillStyle = "#26404c"; g.fillRect(0, 0, W, H); }
-    if (painted) { if (PM.roads()) paintRoads(g, s / UI); paintChrome(g, s / UI); }   // roads (Settings → Graphics), compass, frame (the names come after the places)
-    const sl = SV ? null : seasonLayer(v.season ?? (typeof WEVENTS !== "undefined" ? WEVENTS.season() : null)); if (sl) g.drawImage(sl, 0, 0, W, H);   // winter snow, autumn colours, spring green
+    const season = SV ? null : v.season ?? (typeof WEVENTS !== "undefined" ? WEVENTS.season() : null), roadsOn = !!painted && PM.roads();
+    /* the ground: the painting (or the ink chart), its sharp tiles, roads, compass and frame, the season's colours */
+    const ground = (gx, cw2, ch2, ox2, oy2) => {
+      gx.setTransform(1, 0, 0, 1, 0, 0); gx.clearRect(0, 0, cw2, ch2);
+      if (ox2 > 0 || oy2 > 0 || ox2 + W * k < cw2 || oy2 + H * k < ch2) surround(gx, cw2, ch2, ox2, oy2, W * k, H * k, dpr);
+      gx.setTransform(k, 0, 0, k, ox2, oy2);
+      gx.imageSmoothingEnabled = true; gx.imageSmoothingQuality = "high";
+      if (IK && pa < 1) { gx.save(); gx.setTransform(1, 0, 0, 1, 0, 0); IK.draw(gx, painted, k, ox2, oy2, cw2, ch2, dpr, 1); gx.restore(); }
+      if (bimg && pa > 0) { gx.globalAlpha = pa; gx.drawImage(bimg, 0, 0, W, H); gx.globalAlpha = 1; }   // the painting is stretched over the world bounds: world (x, y) -> (x*W, y*H)
+      if (MT) { const over = MT.draw(gx, k, ox2, oy2, cw2, ch2); const ts = MT.stats(); stats.tiles = ts.tiles; stats.tileLevel = ts.level; stats.grain = ts.grain; stats.tileOver = +over.toFixed(2); }   // sharp tiles over the base painting (same world -> screen mapping)
+      else if (!bimg) { gx.fillStyle = "#26404c"; gx.fillRect(0, 0, W, H); }
+      if (painted) { if (roadsOn) paintRoads(gx, s / UI); paintChrome(gx, s / UI); }   // roads (Settings -> Graphics), compass, frame (the names come after the places)
+      const sl = seasonLayer(season); if (sl) gx.drawImage(sl, 0, 0, W, H);   // winter snow, autumn colours, spring green
+    };
+    /* [perf] the ground only changes when the view moves (pan, zoom, a resize), a tile arrives or the season turns, yet
+       it was most of each frame's work (several full-screen scaled pictures). Once the zoom has held still for a frame it
+       is kept as one finished picture, GM px bigger than the screen on every side, and copied in 1:1: walking or a slow pan
+       just slides it along (it is redrawn when the view has moved more than GM px). While tiles or the ink chart are still
+       loading, and while you zoom, it is drawn fresh every frame */
+    const cw0 = canvas.width, ch0 = canvas.height;
+    const gkey = [cw0, ch0, k, pa, idOf(bimg), idOf(painted), roadsOn, season, UI, dpr, MT ? MT.version() : -1, ROAD_STYLE].join("|");
+    const steady = (!MT || MT.settled()) && !(IK && pa < 1 && IK.pending()) && !(PM && PM.pending());
+    const near = Math.abs(ox - GC.ox) <= GM && Math.abs(oy - GC.oy) <= GM;
+    if (steady && gkey === GC.key && near) slide(g, GC.ground, Math.round(ox - GC.ox - GM), Math.round(oy - GC.oy - GM), cw0, ch0);
+    else if (steady && gkey === GC.last) {
+      ground(fit(GC, "ground", cw0 + 2 * GM, ch0 + 2 * GM), cw0 + 2 * GM, ch0 + 2 * GM, ox + GM, oy + GM);
+      GC.key = gkey; GC.ox = ox; GC.oy = oy; slide(g, GC.ground, -GM, -GM, cw0, ch0);
+    } else { ground(g, cw0, ch0, ox, oy); GC.key = ""; }
+    GC.last = gkey; stats.groundKept = GC.key === gkey ? 1 : 0;
+    g.setTransform(k, 0, 0, k, ox, oy);
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
     const MA = typeof MAPART !== "undefined" ? MAPART : null;
     const viewBox = [-ox / k, -oy / k, (canvas.width - ox) / k, (canvas.height - oy) / k];
     g.save(); g.beginPath(); g.rect(0, 0, W, H); g.clip();   // clouds, mist and light stay on the map itself
@@ -603,8 +639,21 @@ const WorldMap = (() => {
     const seen = [...v.explored, ...v.discovered.map((n) => WORLD.places[n])].filter((p) => p && WORLD.isSol(p) === !!SV);
     const VI = typeof VISION !== "undefined" && v.cones?.length ? VISION : null;
     const fogImg = fogFor(OY ? seen.map((p) => [p[0], p[1] - OY]) : seen, SV ? "sol" : "");
-    g.drawImage(VI ? VI.veil(fogImg, fogKey, v.cones, W, H, OYH) : fogImg, 0, 0, W, H);   // your cone of sight cuts through the fog (vision.js)
-    if (v.rulers?.length && !SV) { g.globalAlpha = 0.26; for (const r of v.rulers) g.drawImage(tintFor(r.hold, r.color), 0, 0, W, H); g.globalAlpha = 1; }   // holds ruled by a clan
+    const veilImg = VI ? VI.veil(fogImg, fogKey, v.cones, W, H, OYH) : fogImg;   // your cone of sight cuts through the fog (vision.js)
+    const rulers = v.rulers?.length && !SV ? v.rulers : null;
+    const veil = (gx) => {
+      gx.drawImage(veilImg, 0, 0, W, H);
+      if (rulers) { gx.globalAlpha = 0.26; for (const r of rulers) gx.drawImage(tintFor(r.hold, r.color), 0, 0, W, H); gx.globalAlpha = 1; }   // holds ruled by a clan
+    };
+    // [perf] the fog and the clans' colours: kept as one picture too, while the view, the fog and your cone hold still
+    const vkey = `${gkey}|${ox}|${oy}|${fogKey}|${VI ? VI.veilKey : ""}|${rulers ? rulers.map((r) => r.hold + r.color).join() : ""}`;
+    if (steady && vkey === GC.vkey) blit(g, GC.veil);
+    else if (steady && vkey === GC.vlast) {
+      const vg = fit(GC, "veil", cw0, ch0);
+      vg.setTransform(1, 0, 0, 1, 0, 0); vg.clearRect(0, 0, canvas.width, canvas.height); vg.setTransform(k, 0, 0, k, ox, oy); vg.imageSmoothingEnabled = true; vg.imageSmoothingQuality = "high";
+      veil(vg); GC.vkey = vkey; blit(g, GC.veil);
+    } else { veil(g); GC.vkey = ""; }
+    GC.vlast = vkey;
     const FX = !SV && typeof MAPFX !== "undefined" && MAPFX.on() ? MAPFX : null;
     if (FX) FX.draw(g, v, dpr / k, W, H, [-ox / k, -oy / k, (canvas.width - ox) / k, (canvas.height - oy) / k]);   // PC map: each hold's weather, chimney smoke (mapfx.js)
     g.restore();   // (the clip to the map)

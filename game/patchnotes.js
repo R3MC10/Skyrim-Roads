@@ -3,10 +3,49 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b320-phonefight", build: 320, date: "25 Nov 2026", title: "Fights fit your phone", items: [
+    { id: "b327-phonefight", build: 327, date: "25 Nov 2026", title: "Fights fit your phone", items: [
       "On a phone the fight log now shows only its newest line. Tap the small arrow next to it to see the last few lines, and again to fold it. The game remembers your choice.",
       "The foe's health shows as numbers under its bar on a phone, so you can see how close it is to falling without tapping it.",
       "Every status icon in a fight shows its number: how many stacks of burning, poison, bleeding, vulnerable, winded and the rest, or how many turns a spell has left. On the foe, on you and on your party. Hold or hover an icon for the full text.",
+    ] },
+    { id: "b326-smooth", build: 326, date: "25 Nov 2026", title: "Smoother map, travel and fights", items: [
+      "The map is much lighter to draw: the painted ground and the fog are kept ready while you look around, so the map no longer stutters and your phone stays cooler.",
+      "The first-person travel view rests between its pictures instead of waking up all the time.",
+      "Fight scenes that are scrolled away stop redrawing, and quick turns no longer pile up extra work, so fights stay smooth.",
+      "Fewer little hitches every second on every screen, and saving your game is quicker.",
+    ] },
+    { id: "b325-dundropout", build: 325, date: "25 Nov 2026", title: "When someone leaves a dungeon run", items: [
+      "If someone in a co-op dungeon run closes the game or loses their connection for about half a minute, the run now ends for everyone in it, party or not. A short network hiccup or a quick switch to another app doesn't count.",
+      "Everyone is taken safely back to the dungeon's entrance: a fight that was going on just stops (nobody dies), you keep everything you picked up, and the party's loot pile is shared out by the usual vote, gold split evenly.",
+      "A notice tells you who left, with Go back in together (a new run with the same group), Wait for them (shows when they're back online) and OK.",
+      "The one who left sees what happened when they come back, with Back to the map or Ask the group to go again. Their share of the loot waits for them.",
+    ] },
+    { id: "b324-samever", build: 324, date: "25 Nov 2026", title: "Everyone on the same version", items: [
+      "The game now looks for a new version when it starts, when you come back to it, and every 10 minutes while it's open.",
+      "New versions download in the background. On the title screen the game switches over straight away; while you play, a small Update ready card offers Restart now. It never restarts in the middle of a fight or a dungeon, and your progress is saved first.",
+      "The web version reloads itself onto the newest version the same way.",
+      "Your version now goes with you online. If someone in your party or co-op run is on a different version, the one who's behind gets an Update to play together message with an Update button, and invites between different versions say why instead of quietly not working.",
+      "The Updates page shows your version and the newest one, what's going on right now (checking, downloading, ready) and a Retry button if something went wrong. Check again really checks again.",
+      "Playing alone offline is never blocked.",
+    ] },
+    { id: "b322-noaitab", build: 322, date: "25 Nov 2026", title: "One set of gear, no fight robot settings", items: [
+      "Character → AI & Loadouts is gone: the fight rules editor, share codes, the AI tester and gear loadouts. You pick every move in a fight yourself, so they had nothing left to do.",
+      "You wear one set of gear. If you had several loadouts, you keep the gear of the one you had on; nothing leaves your pack.",
+      "Old saves load as before. Hint texts that pointed to AI & Loadouts now give a real tip instead.",
+    ] },
+    { id: "b321-dollrig", build: 321, date: "25 Nov 2026", title: "Your hero holds their gear properly", items: [
+      "On the Items screen your hero now stands calmly with the weapon gripped in the fist, the shield strapped on the arm in front of the body and the helmet on the head.",
+      "In fights your hero, party members and followers wear their helmets too, and the shield arm comes up into a guard in front of the chest instead of hanging behind the hip.",
+      "Bows hang low by the hip on the Items screen, so the string no longer cuts across the face.",
+      "The equipment slots around your hero line up in even rows (weapon across from the head, shield across from the chest), with bigger, easier to read names on phones and PCs.",
+      "The gear set name under your hero on the Items screen is gone.",
+    ] },
+    { id: "b320-avatars", build: 320, date: "25 Nov 2026", title: "Your portrait follows your sex", items: [
+      "Your round portrait now always shows someone of your hero's sex. A Breton man no longer gets the Breton woman's face: until every race has a painting of both a man and a woman, you get the closest one of your sex.",
+      "Pick your own portrait: tap it on your Character page, or choose one on the Race tab when you make a hero (or remake one). Automatic follows your race and sex.",
+      "Your Friends list shows each friend's painted portrait, the one they picked. Friends who are offline keep the portrait you last saw; someone you've never seen shows a plain outline.",
+      "The tiny figure squeezed next to each face in the Friends and travellers lists is gone, so rows are easier to read.",
+      "Party lists, party vote chips, Ask to join and party invite cards, and your face in fights all show the same portrait.",
     ] },
     { id: "b319-partyinvites", build: 319, date: "25 Nov 2026", title: "Your party goes in together", items: [
       "When your party leader starts a co-op dungeon run, everyone in the party is in it straight away: no separate invites and no Accept cards for people already in your party.",
