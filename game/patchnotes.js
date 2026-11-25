@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b313-fightnums", build: 313, date: "25 Nov 2026", title: "Fight numbers you can read", items: [
+      "Damage, heal and crit numbers in fights have a thick dark outline and grow with your screen, so they're easy to read on a phone and on a big PC monitor. Crits are big and gold.",
+      "Each kind has its own look: damage in its element's colour, heals green with a glow, magicka and stamina as small blue and green chips, and Miss, Blocked and Dodged as words.",
+      "Several hits in a row no longer pile up on each other: every number finds its own free spot next to whoever it hit, never on the foe's bar, the turn order, the log or your fight buttons, and never off the screen.",
+      "Big foes (giants, trolls, spiders, dragons) and groups always fit fully on a phone screen: no more arm or wing cut off at the right edge.",
+      "The turn order, your health orb's numbers and your party's bars are a bit bigger on a phone.",
+    ] },
     { id: "b312-mappanels", build: 312, date: "25 Nov 2026", title: "Everything on the map opens in a panel", items: [
       "Places, dungeons, caves, forts, camps, shrines, standing stones and landmarks now open in the same panel as caravans: on a PC it sits on the right and the map stays usable beside it; on a phone it slides up above the menu bar.",
       "The panel shows the place's marker, its hold, how far it is, whether you've been there, and what's going on: a quest or a rumour there, when a cleared dungeon fills up again, a crisis or your bounty in that hold.",

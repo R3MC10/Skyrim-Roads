@@ -49,6 +49,7 @@ const TBUI = (() => {
      big gold crits, blue magicka and yellow-green stamina spent */
   function popNums(el, pops) {
     if (!pops?.length) return;
+    if (typeof FIGHTNUMS !== "undefined") return FIGHTNUMS.pop(el, pops);   // [fightnums] outlined, each on its own free spot
     const host = el.querySelector(".tbin"); if (!host) return;
     const hb = host.getBoundingClientRect();
     const spot = { me: el.querySelector(".tbu.me"), foe: el.querySelector(".tbu.foe") };

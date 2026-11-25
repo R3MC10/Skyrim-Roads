@@ -5248,6 +5248,35 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 .gcard .grow .au-ic{font-size:20px;line-height:1;width:30px;text-align:center;color:var(--gold);flex:0 0 30px}
 .gcard .grow .btn{flex:0 0 auto;min-width:76px}
 .gcard .gsw.on{box-shadow:inset 0 0 0 1px rgba(226,187,100,.55)}
+/* [fightnums] fightnums.js: fight numbers you can read on a phone and a PC. A thick dark outline, colours by type (damage in
+   its element's colour, heals green with a glow, magicka / stamina as small chips, block and miss as grey-steel words),
+   big gold crits; each number on its own free spot (left / top are its top-left corner). Turn order, orb and party bars
+   a little bigger at phone size. */
+.tbpop.fn{transform:none;transform-origin:50% 60%;font:800 clamp(21px,calc(14px + .75vw),30px)/1 Cinzel,serif;letter-spacing:.02em;padding:1px 3px;
+  text-shadow:0 0 2px #000,1px 1px 0 #000,-1px 1px 0 #000,1px -1px 0 #000,-1px -1px 0 #000,2px 2px 0 #000,-2px 2px 0 #000,2px -2px 0 #000,-2px -2px 0 #000,0 3px 6px rgba(0,0,0,.85);
+  animation:fnpop 1.45s cubic-bezier(.2,.8,.3,1) both;z-index:61}
+.tbpop.fn.el-phys{color:#fff3da}.tbpop.fn.el-fire{color:#ff9a4a}.tbpop.fn.el-frost{color:#9fe0ff}.tbpop.fn.el-shock{color:#d2a8ff}.tbpop.fn.el-poison{color:#d9e84a}.tbpop.fn.el-shout{color:#eef3ff}
+.tbpop.fn.fn-heal{color:#5cf08e;text-shadow:0 0 2px #021,1px 1px 0 #021,-1px 1px 0 #021,1px -1px 0 #021,-1px -1px 0 #021,2px 2px 0 #021,-2px 2px 0 #021,2px -2px 0 #021,-2px -2px 0 #021,0 0 14px rgba(60,240,130,.65)}
+.tbpop.fn.crit{font-size:clamp(30px,calc(20px + 1.1vw),44px);color:#ffd54a;animation-name:fnpopcrit;z-index:62;
+  text-shadow:0 0 2px #2a1200,2px 2px 0 #2a1200,-2px 2px 0 #2a1200,2px -2px 0 #2a1200,-2px -2px 0 #2a1200,0 3px 0 #2a1200,0 0 18px rgba(255,170,40,.8)}
+.tbpop.fn.fn-res{font:700 clamp(13px,calc(10px + .3vw),16px)/1 "Barlow Semi Condensed",sans-serif;padding:3px 8px;border-radius:999px;background:rgba(8,10,16,.82);border:1px solid currentColor;text-shadow:0 1px 2px #000}
+.tbpop.fn.el-mp{color:#a9c4ff}.tbpop.fn.el-sp{color:#b9ef8e}
+.tbpop.fn.fn-word{font:italic 700 clamp(16px,calc(11px + .5vw),22px)/1 Cinzel,serif;letter-spacing:.06em}
+.tbpop.fn.el-miss{color:#d9d4c8}.tbpop.fn.el-block{color:#b8d6f2}
+@keyframes fnpop{0%{opacity:0;transform:translateY(8px) scale(.6)}14%{opacity:1;transform:translateY(-2px) scale(1.12)}28%{transform:translateY(-4px) scale(1)}80%{opacity:1}100%{opacity:0;transform:translateY(-26px)}}
+@keyframes fnpopcrit{0%{opacity:0;transform:translateY(6px) scale(.4) rotate(-6deg)}15%{opacity:1;transform:translateY(-4px) scale(1.35) rotate(3deg)}32%{transform:translateY(-6px) scale(1) rotate(0)}85%{opacity:1}100%{opacity:0;transform:translateY(-26px)}}
+#c2pops .c2pop{font-size:14px;text-shadow:0 0 2px #000,0 1px 2px #000}
+/* turn order, your orb and the party's bars: readable on a phone */
+#tbf.c2 .tbini{font-size:12px}
+#tbf.c2 .tbini i{font-size:11.5px;font-weight:700;opacity:.9;text-shadow:0 1px 2px #000}
+#tbf.c2 .tbini .c2pt{width:28px;height:28px}
+#tbf.c2 .c2glass small.num{font-size:11.5px;opacity:1}
+#tbf.c2 .c2mpn,#tbf.c2 .c2spn{font-size:12.5px;text-shadow:0 0 2px #000,0 1px 2px #000,0 0 5px #000}
+#tbf.c2 .tbparty .tbu.ally .nm{font-size:11.5px}
+#tbf.c2 .tbparty .tbu.ally .tbbar.mid{height:11px}#tbf.c2 .tbparty .tbu.ally .tbbar .num{font-size:10px;line-height:11px;text-shadow:0 0 2px #000,0 1px 1px #000}
+#tbf.c2.c2wide .tbini{font-size:13px}#tbf.c2.c2wide .tbini i{font-size:12.5px}
+@media (prefers-reduced-motion:reduce){.tbpop.fn,.tbpop.fn.crit{animation:fnfade 1.45s both}}
+@keyframes fnfade{0%,80%{opacity:1}100%{opacity:0}}
 /* the company's Commissions board (commissions.js): SkyUI-style order cards in a grid, one column on a phone */
 .cms-root{display:flex;flex-direction:column;gap:10px}
 .cms-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:6px 14px;padding:10px 12px;border:1px solid rgba(214,178,94,.35);border-radius:4px;background:linear-gradient(90deg,rgba(12,10,7,.9),rgba(30,25,17,.55))}
@@ -5373,6 +5402,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="shieldfx.js"></script>
 <script src="tbtips.js"></script>
 <script src="tbui.js"></script>
+<script src="fightnums.js"></script>
 <script src="fightctl.js"></script>
 <script src="hotbar.js"></script>
 <script src="fightread.js"></script>
@@ -5671,6 +5701,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="i18n_mappanels.js"></script>
 <script src="i18n_gatherarea.js"></script>
 <script src="i18n_fighttipstop.js"></script>
+<script src="i18n_fightnums.js"></script>
 <script src="i18n_weaponfx.js"></script>
 <script src="i18n_phantom.js"></script>
 <script src="i18n_pcupdate.js"></script>

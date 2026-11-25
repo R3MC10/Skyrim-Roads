@@ -823,14 +823,24 @@ const FIGHTART = (() => {
       const t = rc.height ? Math.max(0, Math.min(Hh * 0.5, ((Math.max(0, sb) - rc.top) / rc.height) * Hh)) : 0;
       return r - l > W * 0.5 ? [Math.round(l), Math.round(r), Math.round(t)] : [0, W, Math.round(t)];
     }
+    /* [fightnums] a painted foe (a giant's arm, a spider's legs, a dragon's wings) is wider than its size box: its real
+       footprint, so fightpos.js keeps it all on screen; null until the picture has loaded */
+    let fitSig = "", fitSeen = false;
+    function picFit() {
+      if (foeK === "player" || typeof ASSETS === "undefined" || typeof FIGHTNUMS === "undefined" || !FP) return null;
+      const lh = typeof LEGHUNT !== "undefined" && LEGHUNT.paintOf ? LEGHUNT.paintOf(rec.f?.e) : null;
+      const im = ASSETS.img(lh ? lh.key : ASSETS.foeKey(rec.foeName, foeK, rec.f?.e?.arch)); if (!im || !im.naturalWidth) return null;
+      return FIGHTNUMS.picFoot(im, (foeK === "dragon" ? 120 : 66) * Math.min(1.8, fSize) * (lh ? lh.scale : 1), FP.FOE[foeK] || FP.FOE.person);
+    }
     function relayout() {
       if (!FP) return false;
-      const nb = bandOf(); if (LAY && Math.abs(nb[0] - band[0]) < 3 && Math.abs(nb[1] - band[1]) < 3 && Math.abs((nb[2] || 0) - (band[2] || 0)) < 3) return false;
-      band = nb;
+      const nb = bandOf(), pf = picFit(), sig = pf ? `${pf.back.toFixed(1)},${pf.front.toFixed(1)}` : "";
+      if (LAY && sig === fitSig && Math.abs(nb[0] - band[0]) < 3 && Math.abs(nb[1] - band[1]) < 3 && Math.abs((nb[2] || 0) - (band[2] || 0)) < 3) return false;
+      band = nb; fitSig = sig;
       const MF = typeof MOUNTFIGHT !== "undefined" && typeof HORSEBACK !== "undefined" ? MOUNTFIGHT : null;
       const al = slots.map((a, i) => ({ name: "#" + i, kind: a.kind, ride: !!(MF && a.kind === "mate" && a.name && MF.allyHorse(f, a.name)) }));
       for (const a of flyers) al.push({ name: "#fly", kind: a.kind });
-      LAY = FP.layout({ W, Hh, l: band[0], r: band[1], t: band[2] || 0, groundY, ride: !!rec.horse, allies: al, foe: { kind: foeK }, waiting: nWait });
+      LAY = FP.layout({ W, Hh, l: band[0], r: band[1], t: band[2] || 0, groundY, ride: !!rec.horse, allies: al, foe: { kind: foeK, ...(pf || {}) }, waiting: nWait });
       hx0 = LAY.hero.x; fx0 = LAY.foe.x; FSC = LAY.foe.fs; foeChest = groundY - 34 * s * fSize * FSC;
       slotOf.clear();
       for (const p of LAY.allies) { const i = +p.name.slice(1); slotOf.set(i, p); p.name = slots[i]?.name || p.name; }   // the target ring finds them by name
@@ -1412,6 +1422,7 @@ const FIGHTART = (() => {
       const foePic = foePic0 && RL ? RL.graded(foePic0) : foePic0;   // [rigcohesion] in the scene's light
       if (foePic && RL && !curDragon?.air) RL.shadow(wg, foeK === "dragon" ? -10 : 2, 0.4, (foeK === "dragon" ? 60 : 20) * Math.min(1.8, fSize) * picK0(), 4.2 * Math.min(1.8, fSize), foeDown ? 0.4 : 0.75);   // its contact shadow
       const picK = picK0(); foePicOn = !!foePic;
+      if (foePic0 && !fitSeen) { fitSeen = true; try { replace(); } catch (e) { /* laid out on the next resize */ } }   // [fightnums] the picture just loaded: lay out with its real width
       if (RIG) {   // [OURS] the rig picks its clip from the beat: an attack locked to the move's timing, the fall, a gloat, a stagger...
         const R = RIGST, them = b && b.who === "them";
         R.t = rm ? 0 : tt; R.clip = null; R.u = 0; R.hitU = null; R.jitter = false; R.still = !!rm;
@@ -1487,9 +1498,13 @@ const FIGHTART = (() => {
       // floating numbers and labels (crisp, on the screen canvas)
       g.save(); g.setTransform(k, 0, 0, k, 0, 0); g.textAlign = "center";
       for (let i = 0; i < NF; i++) if (fl[i] > 0) {
-        const pop = Math.min(1, (1 - fl[i]) * 8), sz = Math.round(fsz[i] * (1 + (1 - pop) * 0.5));
+        const FN = typeof FIGHTNUMS !== "undefined" ? FIGHTNUMS : null, base = FN ? FN.sceneSize(fsz[i], vs, fsz[i] >= 20) : fsz[i];   // [fightnums] readable on a phone, not huge on a PC
+        const pop = Math.min(1, (1 - fl[i]) * 8), sz = Math.round(base * (1 + (1 - pop) * 0.5) * 10) / 10;
         g.font = `700 ${sz}px Cinzel, Georgia, serif`; g.globalAlpha = Math.max(0, Math.min(1, fl[i] * 2.5));
-        g.fillStyle = "#1c2128"; g.fillText(ftx[i], fxs[i] + 1.5, fys[i] + 1.5); g.fillStyle = fcl[i]; g.fillText(ftx[i], fxs[i], fys[i]);
+        if (FN) {   // a thick dark outline, and the whole word inside the part of the stage you can see
+          const hw = g.measureText(ftx[i]).width / 2 + sz * 0.15, x = Math.max(band[0] + hw, Math.min(band[1] - hw, fxs[i])), y = Math.max((band[2] || 0) + sz * 1.1, fys[i]);
+          g.lineJoin = "round"; g.lineWidth = Math.max(2, sz * 0.2); g.strokeStyle = "rgba(10,12,16,.92)"; g.strokeText(ftx[i], x, y); g.fillStyle = fcl[i]; g.fillText(ftx[i], x, y);
+        } else { g.fillStyle = "#1c2128"; g.fillText(ftx[i], fxs[i] + 1.5, fys[i] + 1.5); g.fillStyle = fcl[i]; g.fillText(ftx[i], fxs[i], fys[i]); }
       }
       g.globalAlpha = 1;
       for (const [nm, tx2, ty2] of mateTags) { const ts = tagSz(), tu = ts / 11; g.font = `600 ${ts.toFixed(2)}px "Barlow Semi Condensed", sans-serif`; const w = g.measureText(nm).width + 10 * tu, tx3 = Math.max(band[0] + w / 2 + 2, Math.min(band[1] - w / 2 - 2, tx2)), ty3 = Math.max(26 * tu, ty2); g.fillStyle = "rgba(14,15,18,0.72)"; g.fillRect(tx3 - w / 2, ty3 - 11 * tu, w, 15 * tu); g.fillStyle = "#c8f0c0"; g.fillText(nm, tx3, ty3 + 0.5); }   // party members' names, crisp in both styles
