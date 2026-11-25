@@ -3844,6 +3844,7 @@ html.a11y-still .hgchip{animation:none;opacity:1}
 /* a window is open: the message lane keeps to the room above it (hud2.js), newest message only */
 #hudlane.inmodal{overflow:hidden}
 #hudlane.inmodal #hudlog .hlog,#hudlane.inmodal .hl-say{display:none}
+body:has(#modal .sheet) #pbanners{top:auto!important;bottom:calc(6px + env(safe-area-inset-bottom))}   /* big banners drop to the bottom edge instead of over the window's middle */
 /* follower ranks and horse bonds (bonds.js): rank ladder on the Bond tab, horse bond and specialities at the stables */
 .bondranks{margin:8px 0 6px;padding:7px 8px;border:1px solid rgba(214,178,94,.28);background:rgba(0,0,0,.22);border-radius:4px}
 .bondrkh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;font-family:"Barlow Condensed",sans-serif;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#cbbf9f}
