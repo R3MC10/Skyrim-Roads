@@ -348,6 +348,7 @@
       <h3>Look</h3>
       ${typeof LIGHTFX !== "undefined" ? LIGHTFX.settingsHTML(seg) : ""}
       ${typeof PAINTEDMAP !== "undefined" ? PAINTEDMAP.settingsHTML(seg) : ""}
+      ${typeof LOCINTRO !== "undefined" ? LOCINTRO.settingsHTML(seg) : ""}
       ${typeof MOTION !== "undefined" ? `<div class="setrow"><span>Motion</span>${seg("motion", [["full", "Full"], ["lite", "Lite"], ["off", "Off"]], MOTION.pref())}</div>` : ""}
       ${typeof TB !== "undefined" ? `<h3>Fights</h3>${typeof GORE !== "undefined" ? GORE.settingsHTML(seg) : typeof COMBATFX !== "undefined" ? `<div class="setrow"><span>Blood</span>${seg("gore", [[true, "On"], [false, "Off"]], getPref("gore", true))}</div>` : ""}` : ""}${typeof FIGHTCTL !== "undefined" && typeof TB !== "undefined" ? FIGHTCTL.settingsHTML(seg) : ""}${typeof COMBAT2 !== "undefined" && typeof TB !== "undefined" ? COMBAT2.settingsHTML(seg) : ""}${typeof FIGHTSET !== "undefined" && typeof TB !== "undefined" ? FIGHTSET.settingsHTML(seg) : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.settingsHTML(seg) : ""}
       ${typeof ACCESS !== "undefined" ? ACCESS.settingsHTML(seg) : ""}
@@ -372,11 +373,12 @@
     if (typeof I18N !== "undefined" && I18N.pref(k, b.dataset.v)) return true;
     if (typeof ACCESS !== "undefined" && ACCESS.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }
     if (typeof ONBOARD !== "undefined" && ONBOARD.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title */ } } return true; }
-    if (typeof FIGHTSET !== "undefined" && FIGHTSET.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Fights → Fight quality, Frame rate (fightset.js)
+    if (typeof FIGHTSET !== "undefined" && FIGHTSET.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Fights → Fight quality, Fight camera, Frame rate (fightset.js)
     if (typeof GORE !== "undefined" && GORE.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Fights → Blood and gore: Off / Low / Full (gore.js)
     if (typeof FASTQOL !== "undefined" && FASTQOL.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // replay speed, carry on after road events
     if (k === "survival") { if (S) { S.survival = v; if (!v) S.coldV = 0; persist(); try { renderPanel(true); } catch { /* title */ } } SOUND.fx("click"); return true; }
     if (typeof PAINTEDMAP !== "undefined" && PAINTEDMAP.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }   // Graphics → Roads on the map (paintedmap.js)
+    if (typeof LOCINTRO !== "undefined" && LOCINTRO.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Look → Location introductions (locintro.js)
     if (typeof PCMAP !== "undefined" && PCMAP.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Map → Map quality (pcmap.js, mapfx.js)
     if (typeof LIGHTFX !== "undefined" && LIGHTFX.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }   // Graphics → Lighting
     if (k === "motion") { MOTION.setPref(b.dataset.v); SOUND.fx("click"); return true; }
@@ -578,6 +580,7 @@
       { const x = backOutOfGame(); if (x) return x; }   // [qa-core] a mini-game or the rune table: back leaves it (its own Leave / Done button)
       if ($("#title")) { if (titlePage !== "menu" && titlePage !== "press") { titlePage = "menu"; renderTitle(); return true; } return false; }
       if (!S && $("#toTitle")) { app.innerHTML = ""; showTitle("menu"); return true; }
+      if (typeof LOCINTRO !== "undefined" && LOCINTRO.close()) return true;   // the arrival picture: Back skips it
       if (typeof TB !== "undefined" && TB.open) { if ($("#modal.pm-top")) { closeModal(); return true; } return !escKey; }   // a turn-based fight is on: finish it (or Flee); Esc pauses
       if (typeof FAVWHEEL !== "undefined" && FAVWHEEL.open) { FAVWHEEL.hide(); return true; }
       if (typeof LEVELUP !== "undefined" && LEVELUP.isOpen) { LEVELUP.close(); return true; }   // the level-up pillars: decide later
@@ -739,6 +742,7 @@
     Store.watch("stalls", (docs) => onStalls(docs));
     if (typeof TB !== "undefined") {   // turn-based fights: toasts, and live turns for real players in your party
       TB.init({ toast: (t) => toast(t), remote: TB.remoteFor(Store, S.id) });   // only used while you're online with party members
+      if (typeof CHANNEL !== "undefined") CHANNEL.mount({ store: Store });   // [channel] teammates' moves being prepared (channel.js)
       if (typeof SHAREDFIGHT !== "undefined") SHAREDFIGHT.mount({ store: Store, S: () => S, persist, toast: (t) => t && toast(t), after: () => renderPanel(true) });   // the leader's fight on your own full fight screen (sharedfight.js)
       TB.watchTurns(Store, () => S?.id);
     }
@@ -908,6 +912,10 @@
     persist(true); SOUND.fx("coin"); showMessage("Caravan", " " + m);
   }
 
+  /* locintro.js: friends and party members standing at a place (for its "what's new" lines), and saving the visit */
+  function locIntroCtx() {
+    return { persist: () => persist(), players: (l) => others.filter((o) => o && o.id !== S.id && o.loc === l && !o.hiding && !o.moving).map((o) => ({ name: o.name, party: !!party?.members?.some((m) => m.id === o.id), friend: typeof SOCIAL !== "undefined" && SOCIAL.isFriend(S, o.id) })) };
+  }
   function tick() {
     if (!S) return;
     if (typeof TB !== "undefined" && TB.open) return;   // the world waits while you play out a turn-by-turn fight
@@ -946,6 +954,7 @@
       } else { Store.save(S); maybeRoadEvent(); maybeCaravan(); }
     }
     caravanEscortPay();
+    if (typeof LOCINTRO !== "undefined") LOCINTRO.tick(S, locIntroCtx());   // locintro.js: every arrival fills the screen with the place for a moment
     followParty(); ppUI?.tick(); checkAmbush(); renderRaid(); soundTick();
     if (S.tut?.step > 0 && TUT[S.tut.step]?.done()) bump();
     if (Math.floor(t) % 5 === 0) { checkAch(); bloodTick(); }
@@ -1001,7 +1010,7 @@
     const where = S.location || (S.trip?.boat ? `at sea on ${S.trip.ship || "the ship"}` : `the wilds of ${G.holdAt(livePos())}`);
     $("#sub").textContent = typeof HUD !== "undefined" ? `${D.RACES[S.race].name} · ${where}` : `Level ${S.level} ${D.RACES[S.race].name} · ${where}`;
     const lb = $("#lvlb"); if (typeof MOTION !== "undefined") MOTION.count(lb, S.level, "", { pop: false }); else if (lb && lb.textContent !== String(S.level)) lb.textContent = S.level;
-    if (typeof MOTION !== "undefined") { MOTION.xp($(".top"), S.charXp / F.charXpNeeded(S.level), S.level); MOTION.place(S.location, !!(S.location && WORLD.places[S.location] && ["city", "town"].includes(WORLD.places[S.location][2]))); }
+    if (typeof MOTION !== "undefined") { MOTION.xp($(".top"), S.charXp / F.charXpNeeded(S.level), S.level); }   // arriving somewhere: locintro.js shows the place
     const wx = WEVENTS.weather(livePos()), dt = WEVENTS.date();
     const clk = $("#clock"), when = `${dt.day} ${dt.month}, ${G.clockText().split(", ")[1]}`;
     if (typeof SKY !== "undefined") {   // a small drawn sky: sun or moon phase, clouds, rain, snow
@@ -1174,10 +1183,10 @@
       cones, foe: S.trip?.status === "encounter" && !S.trip.encounter?.prey ? S.trip.encounter?.name : null,
       region: WORLD.regionOf(pos),
       raid: raidNow ? raidView(raidNow) : null, fx: fxNow,
-      player: pos, me: S.id, party: party ? { leader: party.leader, ids: party.members.map((m) => m.id) } : null, name: S.name, look: myLook(), side: typeof SIDES !== "undefined" ? SIDES.mine(S) : null, moving: S.trip?.status === "travel", trail: S.trip?.trail, dest: S.trip ? { pos: S.trip.dest, name: S.trip.destName, roam: !!S.trip.roam } : null, spot: selected === "__spot" ? roamSpot : null,
+      player: pos, me: S.id, party: party ? { leader: party.leader, ids: party.members.map((m) => m.id) } : null, name: S.name, look: myLook(), side: typeof SIDES !== "undefined" ? SIDES.mine(S) : null, moving: S.trip?.status === "travel", pace: S.trip?.status === "travel" ? (G.speed(S) / G.BASE_WALK) * Terrain.speedAt(pos) : 0, trail: S.trip?.trail, dest: S.trip ? { pos: S.trip.dest, name: S.trip.destName, roam: !!S.trip.roam } : null, spot: selected === "__spot" ? roamSpot : null,
       route: S.trip && !S.trip.boat ? (S.trip.status === "travel" ? S.trip.path.slice(S.trip.idx + 1) : [S.trip.dest]) : null,
       sight: typeof SNEAKMODE !== "undefined" && !S.location && !S.dungeon ? SNEAKMODE.SIGHT_PX : 0, sneakRing: typeof SNEAKMODE !== "undefined" && S.sneak ? SNEAKMODE.myRange(S) : 0,
-      discovered: S.discovered, explored: [...S.explored, pos], atPlace: !!S.location, others: others.filter((o) => sameMap(o) && seesHero(o)).map((o) => ({ name: typeof GREET !== "undefined" ? GREET.label(S, o, party) : (o.clan ? `[${o.clan}] ` : "") + o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), stranger: typeof GREET !== "undefined" && !GREET.knows(S, o.id, party), atPlace: !!o.loc, pos: otherPos(o), trail: party?.members.some((m) => m.id === o.id) ? otherTrail(o) : null, look: o.look, race: o.race, id: o.id, moving: !!o.moving, horse: typeof o.ride === "string" ? o.ride : null, side: typeof SIDES !== "undefined" ? SIDES.of(o.id) : null, party: !!party?.members.some((m) => m.id === o.id) })),
+      discovered: S.discovered, explored: [...S.explored, pos], atPlace: !!S.location, others: others.filter((o) => sameMap(o) && seesHero(o)).map((o) => ({ name: typeof GREET !== "undefined" ? GREET.label(S, o, party) : (o.clan ? `[${o.clan}] ` : "") + o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), stranger: typeof GREET !== "undefined" && !GREET.knows(S, o.id, party), atPlace: !!o.loc, pos: otherPos(o), trail: party?.members.some((m) => m.id === o.id) ? otherTrail(o) : null, look: o.look, race: o.race, id: o.id, moving: !!o.moving, pace: o.moving ? (typeof o.ride === "string" ? 1.8 : 1) * Terrain.speedAt(otherPos(o)) : 0, horse: typeof o.ride === "string" ? o.ride : null, side: typeof SIDES !== "undefined" ? SIDES.of(o.id) : null, party: !!party?.members.some((m) => m.id === o.id) })),
       rulers: Object.entries(WARS.rulers(S)).map(([hold, c]) => ({ hold, color: c.colors[0] })),
       banners: CLANS.banners(homeDocs, S, VISITS.record(S)).filter((b) => WORLD.places[b.town]).map((b) => ({ ...b, pos: WORLD.places[b.town].slice(0, 2) })),
       cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), mask: typeof PRIESTS !== "undefined" ? PRIESTS.marker(S)?.pos : null, tmaps: typeof EXPLORE !== "undefined" ? EXPLORE.marks(S) : [], rumours: typeof RUMOURS !== "undefined" ? RUMOURS.marks(S) : [], herbs: typeof GATHER !== "undefined" ? GATHER.marks(S) : [], herbRange: typeof HARVEST !== "undefined" && !S.dungeon && HARVEST.nearPrompt(S) ? { pos: [S.x, S.y], r: GATHER.REACH_PX / 1000 } : null, pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
@@ -3101,7 +3110,7 @@
     const openD = [...side.querySelectorAll("details")].map((d) => d.open), y = scrollY;
     const twp = typeof TABMENU !== "undefined" ? { stars: () => TABMENU.stars(S), perks: () => TABMENU.perks(S) } : {};
     const mnp = typeof MENUS !== "undefined" ? MENUS.panels({ S, ach: achPanel, settings: settingsHTML, fest: festPanel, idPanel, update: updNewer() ? { ...(update || {}), newer: true } : update }) : {};   // menus.js: tab homes
-    side.innerHTML = tutTip() + (typeof MENUS !== "undefined" ? MENUS.subnav(tab) : "") + screenHead() + ({ ...mnp, map: panelTravel, hero: panelHero, pack: panelPack, town: () => { const t = panelTown(); return (townCtx && typeof LOCSCREEN !== "undefined" ? LOCSCREEN.sceneBtn() : "") + (typeof ARRIVEAREA !== "undefined" ? ARRIVEAREA.gatherHTML(S) : "") + t; }, log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, follower: () => typeof FOLTAB !== "undefined" ? FOLTAB.panel(S, esc, svgI) : "", ...twp }[tab] || panelTravel)();
+    side.innerHTML = tutTip() + (typeof MENUS !== "undefined" ? MENUS.subnav(tab) : "") + screenHead() + ({ ...mnp, map: panelTravel, hero: panelHero, pack: panelPack, town: () => { const t = panelTown(); return (townCtx && typeof LOCSCREEN !== "undefined" ? LOCSCREEN.sceneBtn() : "") + (typeof LOCINTRO !== "undefined" && LOCINTRO.placeOf(S) ? LOCINTRO.viewBtn(true) : "") + (typeof ARRIVEAREA !== "undefined" ? ARRIVEAREA.gatherHTML(S) : "") + t; }, log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, follower: () => typeof FOLTAB !== "undefined" ? FOLTAB.panel(S, esc, svgI) : "", ...twp }[tab] || panelTravel)();
     if (typeof TABMENU !== "undefined") TABMENU.afterPanel(tab);
     if (typeof MENUS !== "undefined") MENUS.afterPanel(tab);
     if (typeof MENUS2 !== "undefined") MENUS2.afterPanel(tab, side);   // menus2.js: Find a quest
@@ -3790,6 +3799,7 @@
     if (!b || b.disabled) return;
     const a = b.dataset.act, L = G.loadout(S);
     if (a.startsWith("coop") && coopUI) return void coopUI.act(b);
+    if (a === "locview" && typeof LOCINTRO !== "undefined") { SOUND.fx("click"); return void LOCINTRO.view(S, locIntroCtx()); }   // Area tab: the place's picture again (never counts as arriving)
     if (/^loc(sheet|mode|leave)$/.test(a) && typeof LOCSCREEN !== "undefined") { SOUND.fx("click"); return void LOCSCREEN.act(b, { S, refresh: () => { townShop = ""; renderPanel(true); }, leave: () => { tab = "map"; bump(); renderTabs(); renderPanel(true); } }); }
     if ((a === "lvpick" || a === "lvsend") && lvUI) return void lvUI.act(b);
     if (/^pp(ready|go|cancel|kick|catch|vote|vhide)$/.test(a) && ppUI) return void ppUI.act(b);

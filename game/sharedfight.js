@@ -47,6 +47,7 @@ const SHAREDFIGHT = (() => {
       const f = this.f, me = this.me;
       if (!d || this.done) return;
       if (typeof PARTYSPELLS !== "undefined") PARTYSPELLS.learn(d.spells, f.s);   // the crafted spells cast in this fight (partyspells.js)
+      if (typeof CHANNEL !== "undefined") CHANNEL.fromHost(this, d);   // [channel] teammates preparing a move: their bars and poses, results from the leader's phone
       if (d.t !== this.lastT) { this.lastT = d.t; this.heard = Date.now(); }
       this.host = d.owner; this.hostName = d.ownerName || "Your leader";
       const myName = f.s.name || "You";

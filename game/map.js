@@ -680,9 +680,11 @@ const WorldMap = (() => {
       const walkers = [{ id: meId, pos: [px, py], atPlace: !!v.atPlace, moving: !!v.moving }, ...v.others.filter((o) => o.party && o.id && o.pos).map((o) => ({ id: o.id, pos: P(o.pos), atPlace: !!o.atPlace, moving: !!o.moving, trail: o.trail }))];
       const lead = walkers.find((w) => w.id === v.party.leader) || walkers[0];
       const behind = (lead.id === meId ? [...(v.trail || [])] : [...(lead.trail || [])]).map(P).reverse();
-      return PARTYTRAIN.place(walkers, { party: v.party, me: meId, behind, gap: 40 * s, tall: 1.35, near: Math.max(8, 40 * s), first: 18 * s });
+      return PARTYTRAIN.place(walkers, { party: v.party, me: meId, behind, gap: (v.horse || v.others.some((o) => o.party && o.horse) ? 54 : 40) * s, tall: 1.35, near: Math.max(8, 40 * s), first: 18 * s });
     })() : new Map();
     stats.train = train.size;
+    // [maprider] a long line (5+): simpler figures, and only your name and the leader's over it
+    const crowded = train.size > 4, leaderId = v.party?.leader;
     for (const o of v.others || []) { const t = train.get(o.id); if (t) { o.drawX = t[0] / W; o.drawY = t[1] / H; } }   // spell glows (fxart.js) find them there too
     const mySpot = train.get(meId), trainAt = new Map([...train.keys()].map((id, i) => [id, i]));
     // where a name goes in the line: a line running across the map has every other name under the feet; a line
@@ -847,7 +849,7 @@ const WorldMap = (() => {
       let [x, y] = train.get(o.id) || P(o.pos);
       if (HF && o.atPlace && !o.moving && !train.has(o.id)) { const key = Math.round(x) + "," + Math.round(y), n = (townSlot[key] = (townSlot[key] || 0) + 1) - 1; x -= (18 + n * 14) * s; }
       o.drawX = x / W; o.drawY = y / H;   // where the figure really stands (greet.js finds clicks on it)
-      if (HF) { const r = HF.draw(g, x, y, s, { id: "o:" + (o.id || o.name), look: o.look || { r: o.race || "nord", id: o.name, eq: {}, gl: {} }, horse: o.horse || null, moving: !!o.moving, gallop: !!o.horse && !!o.moving, t: v.t, reduce: v.reduceMotion, scale: 0.82, ring: o.party ? "#8fe08a" : "#6f9fe8" }); otherHeads.push(r.head); otherTops[v.others.indexOf(o)] = r.top; continue; }
+      if (HF) { const r = HF.draw(g, x, y, s, { id: "o:" + (o.id || o.name), look: o.look || { r: o.race || "nord", id: o.name, eq: {}, gl: {} }, horse: o.horse || null, moving: !!o.moving, gallop: !!o.horse && !!o.moving, pace: o.pace, simple: crowded && train.has(o.id), t: v.t, reduce: v.reduceMotion, scale: 0.82, ring: o.party ? "#8fe08a" : "#6f9fe8" }); otherHeads.push(r.head); otherTops[v.others.indexOf(o)] = r.top; continue; }
       if (MA) MA.token(g, x, y, s, o.look || { r: o.race || "nord", id: o.name, eq: {}, gl: {} }, o.party ? "#8fe08a" : "#6f9fe8", 10);
       else { g.fillStyle = "#2f62a8"; g.strokeStyle = "#e6f0ff"; g.lineWidth = 2 * s; g.beginPath(); g.arc(x, y, 6.5 * s, 0, 7); g.fill(); g.stroke(); }
       if (o.side && typeof SIDES !== "undefined") SIDES.drawEmblem(g, o.side, x + 10 * s, y - 9 * s, 4.5 * s);   // sides.js: their side, even on a stranger
@@ -860,6 +862,7 @@ const WorldMap = (() => {
     // other heroes' names are drawn last (below), over town flags, banners and caravans
     const otherLabels = () => v.others.forEach((o, i) => {
       const y = (o.drawY ?? o.pos[1]) * H, x = (o.drawX ?? o.pos[0]) * W, color = o.stranger ? "#e8dcc0" : o.party && HF ? "#c8f0c0" : "#cde0ff";
+      if (HF && crowded && train.has(o.id) && o.id !== leaderId) return;   // [maprider] a crowded line: names only for you and the leader
       if (HF && train.has(o.id) && otherTops[i] != null) {   // in the party's line: the name sits right over the head (or under the feet), on its own figure
         const md = nameMode(o.id), ly = md === "below" ? y + 12 * s : md === "side" ? y - 20 * s : otherTops[i] - 6 * s, lx = md === "side" ? x + 12 * s : x;
         g.font = FONT(13 * s, 700, ""); const w = g.measureText(o.name).width; boxes.push([md === "side" ? lx : x - w / 2, ly - 8 * s, w, 16 * s]);
@@ -1006,7 +1009,7 @@ const WorldMap = (() => {
     for (const b of partyRes) { const i = boxes.indexOf(b); if (i >= 0) boxes.splice(i, 1); }   // party members' names take their reserved room
     otherLabels();
     if (HF) {   // you: walking, standing, or in the saddle, facing the way you travel
-      const r = HF.draw(g, hx, hy, s, { id: "me", look: v.look, horse: v.horse, led: v.led || null, moving: v.moving, gallop: !!v.gallop, t: v.t, reduce: v.reduceMotion, heading: v.moving ? heading.a : null, ring: "#6ec8ff" });
+      const r = HF.draw(g, hx, hy, s, { id: "me", look: v.look, horse: v.horse, led: v.led || null, moving: v.moving, gallop: !!v.gallop, pace: v.pace, t: v.t, reduce: v.reduceMotion, heading: v.moving ? heading.a : null, ring: "#6ec8ff" });
       if (v.fx && typeof FXART !== "undefined") FXART.mapOver(g, v.fx, P, s, hx, r.head, v.t, v.reduceMotion);
       label(g, v.name, myMode === "side" ? hx + 13 * s : hx, myMode === "below" || myMode === "side" ? myNameY : Math.min(myTop, r.top - 7 * s), s, 14, "#d8f0ff", 700, false, myMode === "side" ? "left" : "center");
       arrow(hx, hy - 2 * s, (v.horse ? 30 : 20) * s);
