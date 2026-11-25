@@ -136,6 +136,42 @@ async def items(pg, cdp, tag):
     await cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []}); await pg.wait_for_timeout(300)
     ok(not await pg.evaluate("document.getElementById('tip')?.classList.contains('on')"), f"{tag} tooltip: a tap elsewhere closes the sheet")
 
+async def pc_stack(b):
+    """PC map: the floating Gathering card (#gpop) and a tall world event card in the left column stack, never overlap"""
+    for w, h in ((1920, 1080), (1366, 700)):
+        tag = f"pc {w}x{h}"
+        ctx = await b.new_context(viewport={"width": w, "height": h})
+        pg = await ctx.new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e)[:160]))
+        for _ in range(3):
+            await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=plpc{w}{int(time.time()) % 10000}")
+            try: await pg.wait_for_selector(".press", timeout=10000); break
+            except Exception: print("title screen didn't come up, reloading")
+        await pg.wait_for_timeout(500)
+        await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Herba"); await pg.click("#begin")
+        await pg.wait_for_function("window.__dbg && window.__dbg.save()", timeout=20000); await pg.wait_for_timeout(1000)
+        await pg.evaluate("setInterval(()=>document.querySelectorAll('#modal,.toast,.pbanner,#banner').forEach(m=>m.remove()),150)")
+        await pg.evaluate("""()=>{const S=window.__dbg.save(); const n=GATHER.nodes().find(n=>n.ing==='ing_juniper'); S.location=null; S.trip=null; S.x=n.pos[0]; S.y=n.pos[1];
+           for (const m of GATHER.around([S.x,S.y],120)) GATHER.st(S).seen[m.id]=1;}""")
+        await pg.evaluate("document.querySelector('[data-tab=log]')?.click()"); await pg.wait_for_timeout(300)
+        await pg.evaluate("document.querySelector('[data-tab=map]')?.click()"); await pg.wait_for_timeout(1200)
+        # a tall world event card at the top of the left column, with its Go button at the very bottom
+        await pg.evaluate("""()=>{const t=document.getElementById('topcards'); const c=document.createElement('div'); c.id='pltall';
+           c.style.cssText='height:900px;display:flex;flex-direction:column;justify-content:flex-end;background:#222';
+           c.innerHTML='<button id="plgo" style="height:44px">Go</button>'; t.prepend(c);}""")
+        await pg.wait_for_timeout(1300)
+        gp = await pg.evaluate("(()=>{const g=document.getElementById('gpop'); return !!g && g.getClientRects().length>0})()")
+        ok(gp, f"{tag}: the Gathering card floats on the map")
+        ov = await pg.evaluate("MAPDOCK.overlaps()")
+        ok(gp and ov == [], f"{tag}: the left column and the Gathering card don't overlap {ov}")
+        await pg.evaluate("document.getElementById('plgo').scrollIntoView({block:'nearest'})"); await pg.wait_for_timeout(300)
+        hit = await pg.evaluate("""(()=>{const r=document.getElementById('plgo').getBoundingClientRect(); const e=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2); return !!e && e.id==='plgo'})()""")
+        ok(hit, f"{tag}: the event card's Go button can be reached and nothing covers it")
+        ov = await pg.evaluate("MAPDOCK.overlaps()")
+        ok(ov == [], f"{tag}: still no overlap after scrolling the column {ov}")
+        await pg.screenshot(path=os.path.join(OUT, f"pc_stack_{w}.png"))
+        ok(not errs, f"{tag}: no page errors {errs[:2]}")
+        await ctx.close()
+
 async def main():
     srv = None
     if ARG == "0":   # our own server, with a deep accept queue (http.server's default of 5 refuses some of the ~1000 files on Windows)
@@ -159,6 +195,7 @@ async def main():
                     await items(pg, cdp, tag)
                     ok(not errs, f"{tag}: no page errors {errs[:2]}")
                     await ctx.close()
+            await pc_stack(b)
             await b.close()
     finally:
         if srv: srv.shutdown()
