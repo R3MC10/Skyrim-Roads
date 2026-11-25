@@ -38,6 +38,7 @@ const FIGHTART = (() => {
     const list = (f?.allies || []).map(toSlot);
     for (const a of f?._downed || []) if (a && a.name && !list.some((x) => x.name === a.name)) list.push(toSlot(a));   // [OURS] knocked down, not gone: they lie there until they get back up (allyanim.js)
     if (f?.followerDown && !list.some((x) => x.name === f.followerDown)) { const fid = s?.follower?.id; list.push({ kind: "follower", name: f.followerDown, look: fid && fid !== "meeko" && typeof PARTY !== "undefined" ? PARTY.followerLook(fid) : null }); }
+    if (f?.petDown && !list.some((x) => x.name === f.petDown)) list.push({ kind: (typeof PETS !== "undefined" && PETS.LIST[s?.pet?.id]?.kind) || "dog", name: f.petDown });   // a knocked-down pet stays in the line (pets.js)
     if (s?.thrall && !(f?.allies || []).some((a) => a.thrall)) list.push({ kind: "zombie", name: s.thrall.name });
     let gearO = null; try { if (typeof GEARLOOK !== "undefined" && typeof HEROART !== "undefined" && s?.loadouts) gearO = GEARLOOK.person(HEROART.lookOf(s)); } catch { /* bare save */ }
     const off = f?.off && f?.eq?.offhand ? (G.wtype ? G.wtype(f.eq.offhand.item) : "sword") : null;   // dual wielding
@@ -636,7 +637,7 @@ const FIGHTART = (() => {
           b.status = /paralyz|frozen/.test(them) ? "para" : /stagger/.test(them) ? "stagger" : /can't find/.test(them) ? "lost" : "fear";
         } else if ((pr = foePrep(them))) {   // [phantom] its turn went into something else than a blow: no swing, a label says what
           b.prep = true; b.tag = pr[0];
-        } else if (fo || (/goes for|knocks .* to their knees| hits (?!\d)[a-z]/.test(them) && ((f.allies || []).length || f.followerDown))) {
+        } else if (fo || (/goes for|knocks .* to their knees| hits (?!\d)[a-z]/.test(them) && ((f.allies || []).length || f.followerDown || f.petDown))) {
           Object.assign(b, { move: FOE_MOVE[kind] || "sword", ally: true, allyActs: fo ? [fo] : [] });
         } else if (/(^| )(misses|attacks, but you dodge)/.test(them)) {
           const aw0 = typeof FOEGROUPS !== "undefined" ? FOEGROUPS.look(f.e)?.wt : null, shoots = bolter || archer || aw0 === "bow";   // [arrowfx] an archer's miss still flies

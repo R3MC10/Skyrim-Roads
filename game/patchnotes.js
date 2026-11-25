@@ -3,11 +3,19 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b300-remakeonce", build: 300, date: "25 Nov 2026", title: "Everyone gets to remake their hero once", items: [
+    { id: "b301-remakeonce", build: 301, date: "25 Nov 2026", title: "Everyone gets to remake their hero once", items: [
       "Everyone gets to remake their hero once: pick race, sex and look again.",
       "When you next step onto the map, the character creator opens once for every hero made before this update. Your name, level, trained skills, perks, gear and quests all stay.",
       "Change race and only the race's starting skill boost moves: what you trained yourself is kept, and you get the new race's power and gifts.",
       "Happy with your hero? Tap Keep as is. It never pops up in a fight, a dungeon or a party vote: it waits until you're back on the map.",
+    ] },
+    { id: "b300-pets", build: 300, date: "25 Nov 2026", title: "Pets: Meeko walks with your follower", items: [
+      "Meeko is a pet now, not a follower. You can have a follower and a pet with you at the same time.",
+      "The Follower tab has two parts, Follower and Pet, and each one has its own Dismiss.",
+      "Pets don't wear gear. If Meeko was holding anything, it's back in your pack. His loyalty, his quest and his Pounce stay.",
+      "In fights Meeko has his own turn and his own health bar next to your follower. He's a bit weaker than a follower, gets knocked down and never dies, and carries a little for you.",
+      "New Etiquette perk, Pack Leader: your pet bites harder, takes less and gets up stronger.",
+      "Your party sees your pet and it fights beside them too. Pets never count toward the 8 players.",
     ] },
     { id: "b299-netfix", build: 299, date: "25 Nov 2026", title: "Players can see each other again", items: [
       "Players can see each other again. Since accounts came in, players who signed in and players who didn't were in two separate worlds, so friends vanished from each other's map, Social tab and parties.",
