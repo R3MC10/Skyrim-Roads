@@ -3,11 +3,44 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b194-horsecoats", build: 194, date: "25 Nov 2026", title: "Black and chestnut horses", items: [
+    { id: "b199-horsecoats", build: 199, date: "25 Nov 2026", title: "Black and chestnut horses", items: [
       "Black and chestnut horses are painted too: a glossy black with a white star, and a copper chestnut with a light mane, a white blaze and white socks. They stand, gallop and lie down like the grey.",
       "Chestnut is a new coat at the stables. The stables now show the whole horse in the coat you pick before you buy.",
       "Wild horses by the road can be chestnut too.",
     ] },
+    { id: "b198-mgfishing", build: 198, date: "25 Nov 2026", title: "Fishing gets a makeover", items: [
+      "Fishing now happens on a painted lake at dusk: the water moves and glints, fish rise here and there, and mist drifts along the far shore. Night, rain, snow and fog show on it too.",
+      "Your rod is painted and really bends: it flexes back when you aim, whips forward on the cast and bows deeper the tighter the line gets. The line arcs out with the float.",
+      "The float bobs with little rings, twitches on nibbles and goes under with a splash on the real bite.",
+      "While you reel, you see the fish's shadow dart under the water, and on a hard run it may leap right out.",
+      "A landed fish shows on a catch card with its painting, marked when it's rare or the first of its kind. Same fish, same rules: only the look is new.",
+    ] },
+    { id: "b197-mghunt", build: 197, date: "25 Nov 2026", title: "Painted hunting", items: [
+      "Hunting is now a painted scene: a misty clearing at sunrise, with trees, ferns and heather that slide apart as you creep closer, and the animal grows as you close in.",
+      "Deer, elk, foxes, snow foxes and hares are painted and move: they graze with their head down, look up when they hear you, flick their ears and tail, and bolt away in a real run. Other animals keep their drawing.",
+      "The wind shows in the grass, with leaves and seeds drifting the way it blows.",
+      "You see your bow come up and draw, and the arrow flies in a real arc. A hit makes the animal flinch or drop; blood follows the Gore setting (Off, Reduced, Full).",
+      "Skinning shows the hide stretched on a frame, and what you got pops up below.",
+    ] },
+    { id: "b196-mgmining", build: 196, date: "25 Nov 2026", title: "Mining looks and feels new", items: [
+      "The mining game now happens in a painted cave. The rock face is real stone cut from the painting, and you can see chunks of ore poking out of the veins.",
+      "Tap a stone and your pickaxe swings in and lands on it: the rock cracks, chips and dust fly, ore glints and sparks, and the pieces you break out jump into your haul.",
+      "A Perfect blow shakes the screen a little. When you're done, a haul card shows everything you dug, with how many Perfect blows you landed.",
+      "Works on small phones and big PC screens, in both the ink and pixel styles. Quick dig still skips straight to the result.",
+    ] },
+    { id: "b195-afflart", build: 195, date: "25 Nov 2026", title: "Painted affliction scenes", items: [
+      "The black shrine by the road is now a painting: an obsidian altar in a ring of standing stones under the moon, glowing purple.",
+      "Catching the Draugr Curse shows a frozen barrow altar, and catching the Dwemer Resonance (or the humming pipe on the road) shows a glowing Dwemer pipe in a ruined hall.",
+      "The priests' rites at a temple (lifting the curse, or the Vow of Cleansing) now open with a candlelit temple of Arkay.",
+      "Werewolf moments (the Change and the silver-trap hunters) show a werewolf howling at the full moon.",
+    ] },
+    { id: "b194-lockgame", build: 194, date: "25 Nov 2026", title: "Painted lockpicking", items: [
+      "Picking a lock is now a painted close-up: a real lock on a chest, your pick and the tension wrench. Drag on the lock to aim the pick (it points at your finger), then hold Turn.",
+      "The lock shakes harder the further you are from the sweet spot. Keep forcing it and the pick bends, glows and snaps, with bits of metal flying. Turn it all the way and the shackle clicks open in a little burst of light.",
+      "Every place has its own lock: Nordic knotwork in barrows and temples, Dwemer brass in the ruins, gilded locks in rich places and on master locks, steel on harder chests and plain iron elsewhere.",
+      "Your Lockpicking skill and perks still make the sweet spot wider, just like they made the old roll easier. New perk: Steady Pick (Lockpicking) makes it wider still and your picks last longer.",
+      "Works with a finger on phones, and with the mouse or the keyboard on PC (A/D or the arrows to aim, Space to turn). Rather roll the dice? Settings → Crafting → When you pick a lock → Quick pick.",
+    ]},
     { id: "b193-rigpolish", build: 193, date: "25 Nov 2026", title: "Painted weapons and better swings", items: [
       "Fighters swing like they mean it: a sword goes up and back over the shoulder, then comes down and forward in one arc, the body turning into the blow and the weight stepping onto the front foot. No more blade sliding through your own head.",
       "Bows are drawn properly: the bow arm straight, the string hand pulled back to the cheek, then the hand flies back as the arrow goes.",

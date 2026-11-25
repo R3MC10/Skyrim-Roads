@@ -323,7 +323,7 @@
       ${typeof ACCESS !== "undefined" ? ACCESS.settingsHTML(seg) : ""}
       ${typeof ONBOARD !== "undefined" ? ONBOARD.settingsHTML(seg) : ""}
       ${typeof BUGREPORT !== "undefined" ? BUGREPORT.settingsHTML() : ""}
-      <h3>Crafting</h3><div class="setrow"><span>When you craft</span>${seg("craftGame", [[true, "Mini-games"], [false, "Quick craft"]], getPref("craftGame", true))}</div>
+      <h3>Crafting</h3><div class="setrow"><span>When you craft</span>${seg("craftGame", [[true, "Mini-games"], [false, "Quick craft"]], getPref("craftGame", true))}</div>${typeof LOCKGAME !== "undefined" ? `<div class="setrow"><span>When you pick a lock</span>${seg("lockGame", [[true, "Mini-game"], [false, "Quick pick"]], getPref("lockGame", true))}</div>` : ""}
       ${S && typeof WFX !== "undefined" ? `<h3>Survival</h3><div class="setrow"><span>Cold meter</span>${seg("survival", [[true, "On (gentle)"], [false, "Off"]], S.survival !== false)}</div>` : ""}
       <h3>Map</h3><div class="setrow"><span>Map opens</span>${seg("zoomFar", [[false, "Close up"], [true, "All Skyrim"]], getPref("zoomFar", false))}</div>${typeof PCMAP !== "undefined" ? PCMAP.settingsHTML(seg) : ""}
       ${APP ? `<h3>Phone</h3><div class="setrow"><span>Notifications</span>${seg("notify", [[true, "On"], [false, "Off"]], getPref("notify", true))}</div>${typeof REMIND !== "undefined" ? REMIND.settingsHTML(seg) : ""}
@@ -1433,7 +1433,7 @@
     const hp = G.curHealth(S), mh = G.maxHealth(S), r = d.room;
     const total = d.rows.length, step = Math.max(0, d.row + 1);
     const chestOpen = dunNote?.roomType === "treasure" && /click|inside|salvage/i.test(dunNote.text || "");
-    const res = dunNote ? `<div class="card res ${dunNote.roomType === "rest" ? "rest" : ""}">${dunNote.roomType === "treasure" ? DUNART.chestHTML(chestOpen) : ""}<p>${esc(dunNote.text)}</p>${dunNote.fight ? fightLog(dunNote.fight) : ""}
+    const res = dunNote ? `<div class="card res ${dunNote.roomType === "rest" ? "rest" : ""}">${typeof AFFL !== "undefined" && AFFL.scene ? AFFL.scene(dunNote.text) : ""}${dunNote.roomType === "treasure" ? DUNART.chestHTML(chestOpen) : ""}<p>${esc(dunNote.text)}</p>${dunNote.fight ? fightLog(dunNote.fight) : ""}
       ${dunNote.stripLoot?.length || dunNote.stripGold ? DUNART.lootStrip(dunNote.stripGold, dunNote.stripLoot) : ""}${dunNote.loot?.length || dunNote.gold ? `<p class="sub" style="margin:2px 0 0">Loot: ${[dunNote.gold ? dunNote.gold + " gold" : "", ...(dunNote.loot || [])].filter(Boolean).map(esc).join(", ")}</p>` : ""}${skillLine(dunNote)}</div>` : "";
     let main;
     if (d.done) main = `<div class="card"><h3> ${esc(d.place)} is cleared</h3>${DUNART.lootStrip(d.gold, d.found)}<p class="sub">Found so far: ${d.gold} gold${d.found.length ? ", " + d.found.map(esc).join(", ") : ""}.</p><button class="btn pri" data-act="dleave" style="width:100%">Head back outside</button></div>`;
@@ -3642,7 +3642,7 @@
     if (/^pp(ready|go|cancel|kick|catch|vote|vhide)$/.test(a) && ppUI) return void ppUI.act(b);
     if (a.startsWith("cq") && CQ) return void CQ.act(S, b, { toast, openModal, closeModal, persist, renderPanel, tally, sound: (n) => SOUND.fx(n), guide: (k) => GUIDE.mark(S, k), selectMix: (ids) => { alchSel = ids; renderPanel(true); }, alchSel: () => alchSel });   // crafting shortcuts (craftqol.js)
     const say = (m) => { toast(m); persist(); renderPanel(true); if ($("#sky")) renderMenu(); };
-    if (a && a.startsWith("affl") && typeof AFFL !== "undefined") return void AFFL.act(S, b, { say });   // afflictions: cures and favours (afflictions.js)
+    if (a && a.startsWith("affl") && typeof AFFL !== "undefined") return void AFFL.act(S, b, { say, show: (t, m) => { persist(); renderPanel(true); showMessage(t, m); } });   // afflictions: cures and favours; the temple rites get a popup (afflictions.js)
     if (typeof INVQOL !== "undefined" && INVQOL.onClick(b, S, { say, openModal, closeModal, stall: (id) => stalls.find((d) => d.id === id),   // inventory helpers: Keep, junk, undo sale, confirms (invqol.js)
       render: () => { persist(); renderPanel(true); if ($("#sky")) renderMenu(); }, again: (ds) => { const x = document.createElement("button"); Object.assign(x.dataset, ds); onPanelClick({ target: x }); },
       sellMode: () => { shopMode = "sell"; renderPanel(true); }, heavyPack: () => { delete S.invSort; sky = { ...sky, page: "items", cat: "all", q: "", sel: null, sort: "weight", dir: 1 }; renderMenu(); } })) return;
