@@ -2,7 +2,8 @@ const __GAME = process.env.W || require("path").join(__dirname, "../game/");
 // mounted combat (horseback.js)
 const fs=require("fs"),vm=require("vm");
 const W=process.env.W||__GAME + "";
-const c={console,Math,Date,JSON,Float64Array,Float32Array,Uint8Array,Int32Array,Uint16Array,Int16Array,Object,Array,Set,Map,Proxy,Number,String};vm.createContext(c);
+let sd=+(process.env.SEED||7)>>>0; const SMATH=Object.create(Math); SMATH.random=()=>{ sd=(sd+0x6D2B79F5)>>>0; let t=sd; t=Math.imul(t^(t>>>15),t|1); t^=t+Math.imul(t^(t>>>7),t|61); return ((t^(t>>>14))>>>0)/4294967296; };   // seeded dice: the balance check below is the same every run (SEED=n to try others)
+const c={console,Math:SMATH,Date,JSON,Float64Array,Float32Array,Uint8Array,Int32Array,Uint16Array,Int16Array,Object,Array,Set,Map,Proxy,Number,String};vm.createContext(c);
 for(const f of ["data.js","world.js","terrain.js","formulas.js","perks.js","powers.js","engine.js","events.js","dungeons.js","towns.js","wevents.js","enchanting.js","quests.js","horses.js","horseback.js","mountfight.js","hall.js","bounty.js","mp.js","ammo.js"])
   if(fs.existsSync(W+f)) vm.runInContext(fs.readFileSync(W+f,"utf8").replace(/^const (\w+) =/m,"var $1 ="),c);
 vm.runInContext(`
