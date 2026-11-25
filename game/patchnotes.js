@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b343-rarity", build: 343, date: "26 Nov 2026", title: "Item rarity", items: [
+      "Every item now has a rarity: Common, Fine, Rare, Epic or Legendary. You see it as a colour and as a word, in your Items, on the paper doll, in tooltips, shops, loot, dungeon loot votes and trades.",
+      "Rarity tells you how special an item is. It never changes its numbers: a Rare sword hits just as hard as it did yesterday.",
+      "Plain gear is Common or Fine (better metals and tempered gear are Fine). Enchanted gear is Fine, Rare or Epic, by how strong its enchantment is. Legendary is kept for true artifacts, like Daedric artifacts and dragon priest masks.",
+      "One-of-a-kind items also say Unique, apart from their rarity.",
+      "Tougher foes and bosses drop rarer things. Items can be sorted by Rarity.",
+      "Item icons get a thin frame in their rarity colour.",
+    ] },
     { id: "b341-first30", build: 341, date: "25 Nov 2026", title: "A guided start for new heroes", items: [
       "New characters no longer get a welcome popup and a pile of tips. Instead there's one short quest line, Before the Storm, with one goal at a time and one button that does it.",
       "Your first fight starts a minute after you make your hero: a bandit at Riverwood's mill. While you fight, one short hint at a time shows you how to attack, how to read what the foe does next, and how to guard when it winds up a huge blow.",
