@@ -151,7 +151,7 @@ const FOLTAB = (() => {
     const need = (id) => id === "lydia" ? "Becomes yours when you're made Thane of Whiterun (bring Farengar the Dragonstone)." : F && F.NEEDS[id] ? (F.NEEDS[id] === "college" ? "Join the College of Winterhold first." : "Join the Companions first.") : "";
     const row = ([id, r]) => `<div class="item ft-hire">${typeof NPCART !== "undefined" ? NPCART.follower(id, 36) : ""}<div class="t">${esc(r[0])} <span class="num">${r[2] ? `${r[2]} gold` : "Free"}</span><span>${esc(r[1])} · ${esc(r[5] || "")}${need(id) ? ` ${esc(need(id))}` : ""}</span></div></div>`;
     return `<div class="panel ft-empty"><h2>Follower</h2>
-      <p class="ft-lead">You're travelling alone for now.</p>
+      <p class="ft-lead">You're travelling alone for now.</p>${typeof MEEKO !== "undefined" && MEEKO.tabLine(s) ? `<p class="sub ft-meeko">${esc(MEEKO.tabLine(s))}</p>` : ""}
       <p class="sub">A follower fights beside you, carries some of your things, levels up with you and picks their own perks. They never die: when a fight goes badly they're knocked down and get back up after.</p>
       ${here.length ? `<div class="ft-here"><b>Here in ${esc(s.location)}:</b><div class="list">${here.map(row).join("")}</div><button class="btn sm pri" data-act="uxtab" data-id="town">Go to the inn (Area)</button></div>` : ""}
       <h3>Where to find one</h3><p class="sub">Look in the inn or hall of these towns, then hire them from the Area tab.</p>

@@ -446,10 +446,32 @@ const GREATEV = (() => {
   const fairTent = () => sprite("fairtent", 34, 30, (g) => { g.fillStyle = "#e9dcc0"; g.strokeStyle = "#3b2c1e"; g.lineWidth = 1.2; g.beginPath(); g.moveTo(3, 28); g.lineTo(17, 4); g.lineTo(31, 28); g.closePath(); g.fill(); g.stroke(); g.fillStyle = "#c4572e"; for (const x of [10, 17, 24]) { g.beginPath(); g.moveTo(x - 2, 28); g.lineTo(17, 4); g.lineTo(x + 2, 28); g.fill(); } g.fillStyle = "#d6b25e"; g.beginPath(); g.moveTo(17, 4); g.lineTo(17, 0); g.lineTo(24, 2); g.fill(); });
   const scaffold = () => sprite("scaffold", 30, 24, (g) => { g.strokeStyle = "#8f6a42"; g.lineWidth = 2; for (const x of [5, 15, 25]) { g.beginPath(); g.moveTo(x, 24); g.lineTo(x, 4); g.stroke(); } for (const y of [8, 16]) { g.beginPath(); g.moveTo(3, y); g.lineTo(27, y); g.stroke(); } g.beginPath(); g.moveTo(5, 22); g.lineTo(25, 6); g.stroke(); });
   const dragonSprite = (f) => sprite("gdrg" + f, 40, 40, (g) => { if (typeof RAIDART !== "undefined") RAIDART.drawDragon(g, 40, 40, f); });
-  function label(g, text, x, y, s, col = "#ffe6a0") { g.font = `700 ${Math.round(9 * s)}px GameIcons, sans-serif`; g.textAlign = "center"; g.lineWidth = 3 * s; g.strokeStyle = "rgba(20,14,8,.88)"; g.strokeText(text, x, y); g.fillStyle = col; g.fillText(text, x, y); }
+  const LFONT = (s) => `700 ${Math.round(9 * s)}px GameIcons, sans-serif`;
+  function label(g, text, x, y, s, col = "#ffe6a0", align = "center") { g.save(); g.font = LFONT(s); g.textAlign = align; g.textBaseline = "middle"; g.lineJoin = "round"; g.lineWidth = 3 * s; g.strokeStyle = "rgba(20,14,8,.88)"; g.strokeText(text, x, y); g.fillStyle = col; g.fillText(text, x, y); g.restore(); }
   let tallyCache = { k: "", v: null };
   function tallyCached(ev, s) { const k = ev.id + ":" + ver + ":" + (s?.gev?.[ev.id]?.p || 0); if (tallyCache.k !== k) tallyCache = { k, v: tally(ev, s) }; return tallyCache.v; }
-  function drawMap(g, P, s, t, rm) {
+  const rebuildText = (a) => T("Rebuilding {pct}%", { pct: Math.round(a.rebuilt * 100) });
+  function mainText(ev, S, now) { const cd = countdown(ev, now), tl = ev.kind === "fair" ? null : tallyCached(ev, S); return tl && tl.done ? `${ICON[ev.kind]} ${T("Victory!")}` : `${ICON[ev.kind]} ${cd.label} ${cd.txt}`; }
+  /* [smallpolish] map.js asks where the labels may go before it paints the hold names: spot(text, font, px, tries, must)
+     returns the first free try (or null), so "Rebuilding 97%" no longer sits on a hold's name or a town's */
+  function plan(g, P, s, t, spot) {
+    const S = me(); if (!S || typeof WORLD === "undefined" || !spot) return null;
+    const now = nowS(), out = { rebuild: {}, main: null }, px = Math.round(9 * s), h = px * 1.3;
+    let ev = null, after = [];
+    try { ev = current(now); after = aftermath(S, now); } catch (e) { return null; }
+    for (const a of after) {
+      if (a.kind !== "dragon") continue;
+      const p = WORLD.places[a.place]; if (!p) continue;
+      const [x, y] = P(p);
+      out.rebuild[a.place] = spot(rebuildText(a), LFONT(s), px, [[x, y + 26 * s], [x, y + 26 * s + h], [x + 16 * s, y + 4 * s, "left"], [x - 30 * s, y + 4 * s, "right"], [x, y - 30 * s]], false);
+    }
+    if (ev) {
+      const p = WORLD.places[ev.place];
+      if (p) { const [x, y] = P(p); out.main = spot(mainText(ev, S, now), LFONT(s), px, [[x, y - 50 * s], [x, y - 50 * s - h], [x + 22 * s, y - 42 * s, "left"], [x - 22 * s, y - 42 * s, "right"]], true); }
+    }
+    return out;
+  }
+  function drawMap(g, P, s, t, rm, pl) {
     const S = me(); if (!S || typeof WORLD === "undefined") return;
     const now = nowS(), tt = rm ? 0 : t || 0;
     let ev = null, after = [];
@@ -461,7 +483,8 @@ const GREATEV = (() => {
         g.fillStyle = `rgba(30,22,18,${0.25 + 0.35 * a.left})`; g.beginPath(); g.arc(x, y, 18 * s, 0, 7); g.fill();
         if (!rm) for (let i = 0; i < 4; i++) { const k = (tt * 0.6 + i * 0.25) % 1; g.fillStyle = `rgba(90,85,80,${0.45 * (1 - k)})`; g.beginPath(); g.arc(x + (i - 1.5) * 6 * s, y - 10 * s - k * 22 * s, (3 + k * 5) * s, 0, 7); g.fill(); }
         const sp = scaffold(); if (sp) g.drawImage(sp, x - 26 * s, y - 14 * s, 20 * s, 16 * s);
-        label(g, T("Rebuilding {pct}%", { pct: Math.round(a.rebuilt * 100) }), x, y + 26 * s, s, "#e8c48a");
+        const at = pl ? pl.rebuild[a.place] : { x, y: y + 26 * s, align: "center" };
+        if (at) label(g, rebuildText(a), at.x, at.y, s, "#e8c48a", at.align);
       } else if (a.kind === "rift") {
         g.strokeStyle = `rgba(150,40,90,${0.3 + 0.5 * a.left})`; g.lineWidth = 2 * s; g.beginPath(); g.moveTo(x - 10 * s, y + 6 * s); g.lineTo(x - 2 * s, y - 2 * s); g.lineTo(x + 3 * s, y + 4 * s); g.lineTo(x + 11 * s, y - 6 * s); g.stroke();
       } else if (a.kind === "siege" && a.out === "lost") {
@@ -484,7 +507,8 @@ const GREATEV = (() => {
       const sp = fairTent(); if (sp) g.drawImage(sp, x + 10 * s, y - 22 * s, 22 * s, 20 * s);
     }
     if (tl && st === "on") { const bw = 34 * s, by = y - 44 * s; g.fillStyle = "rgba(20,14,8,.85)"; g.fillRect(x - bw / 2 - s, by - s, bw + 2 * s, 6 * s); g.fillStyle = tl.done ? "#8fbf6a" : "#e8642a"; g.fillRect(x - bw / 2, by, bw * tl.frac, 4 * s); for (const q of [0.35, 0.7]) { g.fillStyle = "#140b07"; g.fillRect(x - bw / 2 + bw * q, by, s, 4 * s); } }
-    label(g, tl && tl.done ? `${ICON[ev.kind]} ${T("Victory!")}` : `${ICON[ev.kind]} ${cd.label} ${cd.txt}`, x, y - 50 * s, s, st === "warn" ? "#ffe6a0" : "#ffb38a");
+    const at = pl?.main || { x, y: y - 50 * s, align: "center" };
+    label(g, mainText(ev, S, now), at.x, at.y, s, st === "warn" ? "#ffe6a0" : "#ffb38a", at.align);
   }
 
   // ---- the banner on the map screen, the detail sheet
@@ -636,5 +660,5 @@ const GREATEV = (() => {
 
   return { BLOCK, WARN, LEN, KINDS, PHASES, SPLIT, GAMES, PRIZES, TRIES, REWARD, ROUND_PTS, ROUND_CD, ROUND_TURNS, SOLO_ROUNDS, PER_ROUNDS, ALLY_ADD, FAIR_OFF, AFTER,
     kindAt, eventIn, current, stage, upcoming, recent, byId, needFor, setDocs, record, rows, tally, credit, share, outcome, phaseFoe, round, play, prize,
-    claimable, claim, aftermath, aftermathLine, priceMult, countdown, clock, bannerHTML, detailHTML, drawMap, mount };
+    claimable, claim, aftermath, aftermathLine, priceMult, countdown, clock, bannerHTML, detailHTML, drawMap, plan, mount };
 })();

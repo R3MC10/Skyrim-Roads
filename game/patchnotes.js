@@ -3,11 +3,26 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b223-eventcards", build: 223, date: "25 Nov 2026", title: "Painted event cards", items: [
+    { id: "b225-eventcards", build: 225, date: "25 Nov 2026", title: "Painted event cards", items: [
       "Dragon attacks on towns now show a hand-painted picture instead of the flat drawing: a dragon breathing fire over the rooftops.",
       "Great events, crises and raids on your house get paintings too: bandits with torches for sieges and outlaws, a vampire lord in the town square, a giant smashing through a farm, and a caravan lost in a blizzard for the Long Winter.",
       "The name of the event sits under the picture, with a small coloured diamond next to it that shows how bad things are: green when it's over, yellow for trouble, orange for danger, red when it's deadly.",
       "Cards fade in gently, and a few faint embers, wisps of red mist or snowflakes drift over them. With reduced motion on they stay still.",
+    ] },
+    { id: "b224-meekofix", build: 224, date: "25 Nov 2026", title: "Meeko comes back", items: [
+      "Meeko the stray dog has no home town, so once he left you (Dismiss, or walking off when he got fed up) he was gone for good. Now he finds you again on the road.",
+      "Lost him already? He's out there looking for you. Travel without a follower and he'll come bounding up, with his old level and gear. Your journal and the Follower tab say so.",
+      "If he walked off because he was unhappy, give him three days first, like any other follower.",
+      "In fights Meeko is a dog again, not a person with his name. A friend's Meeko too.",
+    ] },
+    { id: "b223-smallpolish", build: 223, date: "25 Nov 2026", title: "Small polish", items: [
+      "The title screen's emblem is now the game's own helm under the northern star, inked in gold. The \"Web version · looking for friends\" line moved into Settings.",
+      "Creating a character on a phone: all the tabs fit or slide into view, the open tab stays in sight, and the bottom bar is slimmer so the race card isn't hidden.",
+      "Magic menu: all the tier buttons fit on a phone (Master included), and the bottom line shows your magicka and how much comes back each round instead of armor and damage.",
+      "Racial powers like Battle Cry get a proper medallion icon that matches the spells.",
+      "Map: labels like \"Rebuilding 97%\" and festival names find a free spot instead of sitting on a hold's or a town's name. On big PC screens the cards and the quest tracker beside the map are a bit larger.",
+      "Company: Rooms, Expeditions, Treasury and Members on one row; Plan, Trophies and Log sit in a small More row under them.",
+      "A new objective waits until you close menus and windows instead of popping up over them.",
     ] },
     { id: "b222-overlays", build: 222, date: "25 Nov 2026", title: "One thing on screen at a time", items: [
       "The first-fight tip no longer sits on top of the VICTORY card. Results always come first, then windows that ask you something, then tips, then messages.",
