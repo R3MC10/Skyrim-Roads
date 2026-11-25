@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b180-fightlength", build: 180, date: "25 Nov 2026", title: "Fights last long enough again", items: [
+      "Since a turn holds up to four moves, strong heroes were ending fights in three or four rounds, even against bosses and legendary beasts. A foe's health now follows what you can really do in a turn with your stamina and magicka (a power attack and a few blows, or a few spells and a summon), so fights at higher levels last as long as they should.",
+      "Bosses and legendary beasts take about 15 rounds again, and knowing a beast's weakness still makes the hunt a good bit shorter. Ordinary road fights stay short.",
+      "Heroes at low levels meet about the same fights as before.",
+    ] },
     { id: "b179-leghuntpolish", build: 179, date: "25 Nov 2026", title: "Legendary hunts: painted beasts and fairer fights", items: [
       "The Jarl's posters, your hunt card and the bestiary now show each legendary beast as a proper painting in a gold frame, in its own colours: the White Ghost is snow white, Grimfang and Ashtusk are black as soot, Bloodmoon has a blood-red tint.",
       "In the fight the beast is that same painting too, a little bigger than its ordinary kin and in its legendary colours.",
@@ -1258,7 +1263,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 176;
+  const NEXT_AT = 180;
   const NEXT = [
     "Dragon Shouts learned from word walls",
     "Werewolf and vampire paths",
