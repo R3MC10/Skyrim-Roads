@@ -40,20 +40,28 @@ const MINIGAME = (() => {
     if (k === "scroll" && typeof D !== "undefined") return D.SPELLS[D.ITEMS[arg]?.spell] || null;
     return null;
   };
-  /* which game a move gets (null: none, e.g. potions, shouts, Breathe, End turn) */
+  /* a staff in your hand casts its spell instead of swinging (magic.js staffAttack): it draws that spell's rune */
+  const staffSpell = (f) => (f && f.weapon && f.weapon.staff && !f.bound && typeof D !== "undefined" ? D.SPELLS[f.weapon.staff.spell] || null : null);
+  /* which game a move gets (null: none, e.g. potions, poisons, shouts, Breathe, End turn) */
   function kindFor(f, a) {
     if (!f || !a) return null;
+    if (a === "attack" || a === "power_attack") {   // [itemgames] a staff: the rune of its spell's school
+      const st = staffSpell(f);
+      if (st && st.kind !== "utility") return { kind: "rune", school: SCHOOLS[st.school] ? st.school : "Destruction", spell: st, staff: true, label: f.weapon.name };
+    }
+    if (a === "bash") return { kind: "parry", shove: true, label: "Shield bash" };   // [itemgames] your shield meets the foe
+    if (a === "rx:oil") return { kind: "strike", toss: true, label: "Oil flask" };   // [itemgames] throw it true: the foe stays soaked longer
     if (a === "attack" || a === "beast:claw" || a === "lord:claw") return isBow(f) && a === "attack" ? { kind: "aim" } : { kind: "strike" };
     if (a === "power_attack" || a === "beast:maul") return isBow(f) && a === "power_attack" ? { kind: "aim", hard: true } : { kind: "power" };
-    if (a === "block" || a === "bash") return { kind: "parry" };
+    if (a === "block") return { kind: "parry" };
     const sp = spellOf(a);
     if (sp && sp.kind !== "utility") return { kind: "rune", school: SCHOOLS[sp.school] ? sp.school : "Destruction", spell: sp };
     return null;
   }
   /* how wide the sweet spot is: skill and "timing" perks (perkfx.js) widen it */
   function width(f, a, g) {
-    const s = f.s, sk = (n) => (typeof G !== "undefined" && G.skill && s ? G.skill(s, n) : 15);
-    const skill = g.kind === "rune" ? sk(g.school) : a === "block" || a === "bash" ? sk("Block") : sk(f.weapon?.skill || (isBow(f) ? "Archery" : "One-Handed"));
+    const s = f.s, sk = (n) => { try { const v = typeof G !== "undefined" && G.skill && s ? G.skill(s, n) : 15; return Number.isFinite(v) ? v : 15; } catch (e) { return 15; } };   // an unknown skill name must never break the game (hotfix: "Block" used to throw, so guards and shield bashes never got one)
+    const skill = g.kind === "rune" ? sk(g.school) : a === "block" || a === "bash" ? sk("Blocking") : a === "rx:oil" ? sk("Archery") : sk(f.weapon?.skill || (isBow(f) ? "Archery" : "One-Handed"));
     const perk = typeof PFX !== "undefined" && s ? PFX.num(s, "timing") : 0;
     return Math.min(1.9, (1 + Math.max(0, skill - 15) / 100) * (1 + (perk || 0)));
   }
@@ -74,6 +82,7 @@ const MINIGAME = (() => {
     const g = kindFor(f, a); if (!g) return "";
     const tr = (t) => (typeof I18N !== "undefined" && I18N.tr && I18N.lang?.() === "pl" ? I18N.tr(t) ?? t : t);
     const say = (n, what) => ` · ${tr("Perfect")}: +${n} ${tr(what)}`;
+    if (g.toss) return "";   // the oil flask: itemFx below
     if (g.kind === "parry") { STACKS.add(f, "me", "might", 1); STACKS.add(f, "me", "haste", 1); return say(1, "Might, +1 Haste"); }
     if (g.kind === "rune") {
       const sp = g.spell, el = sp.element;
@@ -89,6 +98,16 @@ const MINIGAME = (() => {
     if (isBow(f)) { STACKS.add(f, "foe", "vuln", n, { src: "me" }); return say(n, "Vulnerable"); }
     if (BLADE.has(f.wt) || a.startsWith("beast:") || a.startsWith("lord:")) { STACKS.add(f, "foe", "bleed", n, { src: "me" }); return say(n, "Bleed"); }
     STACKS.add(f, "foe", "sunder", n, { src: "me" }); return say(n, "Sunder");
+  }
+
+  /* [itemgames] what the grade does to a move that comes from an item, beyond its damage (tbfight.js act). Returns text.
+     Oil flask: Perfect soaks the foe a round longer, a Miss splashes most of it on the ground (a round shorter). */
+  function itemFx(f, a, gr) {
+    if (!f || !gr || a !== "rx:oil") return "";
+    const o = f.rx && f.rx.oil; if (!o) return "";
+    if (gr.cls === "perfect") { o.until += 1; return ` · ${tr("Perfect")}: ${tr("soaked a round longer")}`; }
+    if (gr.cls === "poor") { o.until -= 1; return ` · ${tr("Miss")}: ${tr("most of it splashes on the ground")}`; }
+    return "";
   }
 
   // ------------------------------------------------------------------ the games (each returns a Promise of a grade)
@@ -124,7 +143,7 @@ const MINIGAME = (() => {
       const inner = parry
         ? `<svg class="mg-parry" viewBox="0 0 100 100" aria-hidden="true"><circle class="mg-shield" cx="50" cy="50" r="${(14 + zone * 30).toFixed(1)}"/><circle class="mg-blow" cx="50" cy="50" r="46"/></svg>`
         : `<div class="mg-bar" aria-hidden="true"><i class="mg-zone" style="left:${((centre - zone / 2) * 100).toFixed(1)}%;width:${(zone * 100).toFixed(1)}%"></i><i class="mg-pz" style="left:${((centre - zone / 6) * 100).toFixed(1)}%;width:${(zone / 3 * 100).toFixed(1)}%"></i><i class="mg-mark"></i></div>`;
-      const el = shell(host, g, o, inner, parry ? "Press as the blow meets your shield" : "Tap in the bright zone");
+      const el = shell(host, g, o, inner, g.shove ? "Slam as your shield meets the foe" : parry ? "Press as the blow meets your shield" : g.toss ? "Throw in the bright zone" : "Tap in the bright zone");
       const mark = el.querySelector(".mg-mark"), blow = el.querySelector(".mg-blow"), shieldR = 14 + zone * 30;
       const t0 = now(); let raf = 0;
       const pos = () => { const p = ((now() - t0) % (2 * period)) / period; return p <= 1 ? p : 2 - p; };   // back and forth
@@ -230,6 +249,6 @@ const MINIGAME = (() => {
     if (typeof seg !== "function") return "";
     return `<div class="setrow"><span>${tr("Minigames")}</span>${seg("tbGames", [[true, tr("On")], [false, tr("Off")]], prefs().tbGames !== false)}</div>`;
   }
-  return { on, kindFor, width, grade, simGrade, perfect, play, settingsHTML, GRADES, SCHOOLS };
+  return { on, kindFor, width, grade, simGrade, perfect, itemFx, play, settingsHTML, GRADES, SCHOOLS };
 })();
 if (typeof module !== "undefined") module.exports = MINIGAME;
