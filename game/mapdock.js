@@ -13,11 +13,33 @@ const MAPDOCK = (() => {
     const wev = document.getElementById("wev");
     if (wev && wev.parentElement !== top) top.append(wev);   // worldevents.js may have made it before #topcards existed
     if (!pc()) { if (last) { top.style.removeProperty("--dock-top"); top.style.removeProperty("--dock-max"); last = ""; } return; }
-    const party = document.querySelector(".pcparty.on"), vit = document.getElementById("vitals");
+    const party = document.querySelector(".pcparty.on"), vit = document.getElementById("vitals"), gp = document.getElementById("gpop");
     const t = Math.round(shown(party) ? party.getBoundingClientRect().bottom + 10 : 12);
-    const b = Math.round(shown(vit) ? vit.getBoundingClientRect().top - 12 : innerHeight - 150);
-    const key = t + "|" + b; if (key === last) return; last = key;
-    top.style.setProperty("--dock-top", t + "px"); top.style.setProperty("--dock-max", Math.max(120, b - t) + "px");
+    let b = Math.round(shown(vit) ? vit.getBoundingClientRect().top - 12 : innerHeight - 150);
+    /* [phonelayout] the floating Gathering card (#gpop, ui.js) sits at the bottom of the same column: the cards stop above it
+       (and scroll) instead of running under it, and it never grows into the last 130px the cards need */
+    /* screen px -> CSS px: the text-size setting zooms the whole page, big screens zoom the column again */
+    const zh = parseFloat(getComputedStyle(document.documentElement).zoom) || 1, zt = parseFloat(getComputedStyle(top).zoom) || 1;
+    if (shown(gp)) {
+      gp.style.boxSizing = "border-box";
+      gp.style.maxHeight = Math.round(Math.max(90, Math.min(innerHeight * 0.52, b - t - 130)) / zh) + "px";
+      b = Math.round(gp.getBoundingClientRect().top - 10);
+    } else if (gp && gp.style.maxHeight) gp.style.maxHeight = "";
+    const key = t + "|" + b + "|" + zh + "|" + zt;
+    if (key !== last) {
+      last = key;
+      top.style.setProperty("--dock-top", Math.round(t / (zh * zt)) + "px");
+      top.style.setProperty("--dock-max", Math.floor(Math.max(120, b - t) / zh) + "px");
+    }
+    /* big screens zoom the column (index.html), which also scales its top offset and padding: if it still reaches past
+       the bottom line, trim it by what sticks out (only when it really reaches that far, so the check runs every tick) */
+    if (shown(gp)) {
+      const r = top.getBoundingClientRect();
+      if (r.height > 2 && r.bottom > b + 0.5) {
+        const cur = parseFloat(top.style.getPropertyValue("--dock-max")) || (b - t);
+        top.style.setProperty("--dock-max", Math.max(60, Math.floor(cur - (r.bottom - b) - 1)) + "px");
+      }
+    }
   }
   /* screen rects (CSS px) the map should keep clear of names */
   function rects() {
@@ -36,5 +58,14 @@ const MAPDOCK = (() => {
     return r;
   }
   if (typeof window !== "undefined" && typeof document !== "undefined") { setInterval(tick, 400); addEventListener("resize", tick); }
-  return { tick, rects, right };
+  /* for tests: how far any visible part of the docked cards reaches into the Gathering card ([] = no overlap) */
+  function overlaps() {
+    const box = document.getElementById("topcards"), gp = document.getElementById("gpop");
+    if (!shown(gp) || !shown(box)) return [];
+    const g = gp.getBoundingClientRect(), clip = box.getBoundingClientRect();
+    return [...box.children].filter(shown).map((e) => e.getBoundingClientRect())
+      .filter((r) => Math.min(r.bottom, clip.bottom) > g.top + 1 && Math.max(r.top, clip.top) < g.bottom && r.right > g.left && r.left < g.right)
+      .map((r) => Math.round(Math.min(r.bottom, clip.bottom) - g.top));
+  }
+  return { tick, rects, right, overlaps };
 })();

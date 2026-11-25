@@ -117,6 +117,11 @@ const SKILLUP = (() => {
     if (!live) return;
     if (document.querySelector("#tbf, #tbwatch") && waited < 8000) { waited += 300; waitT = setTimeout(next, 300); return; }
     waited = 0;
+    const nx = queue[0];   // [notify] one banner at a time across the game: wait for our turn
+    if (nx && typeof NOTIFY !== "undefined" && !NOTIFY.lease(nx.kind === "level" ? "level" : "skill", nx.kind === "level" ? `Level ${nx.lvl}` : `${nx.name} ${nx.lvl}`, dur(nx) + 400, nx.name, nx.lvl - Math.max(1, crossings(nx)), nx.lvl)) {
+      if (cur) { cur = null; const h = host(); if (h) { h.classList.remove("on"); h.innerHTML = ""; } }
+      waitT = setTimeout(next, 250); return;
+    }
     const el = host(); cur = queue.shift() || null;
     if (!el) return;
     if (!cur) { el.classList.remove("on"); el.innerHTML = ""; place(); return; }
@@ -217,11 +222,18 @@ const SKILLUP = (() => {
   install();
   /* polish.js asks before it shows its old banner: skill-ups and level-ups are ours. Ones we already showed are dropped;
      ones from elsewhere (a skill book, a trainer) get a toast here with the bar from the save. */
+  /* [notify-2] is this banner a character level-up or a skill rise (ours), or something else that only shares the kind
+     (a side's "Promoted: ..." rank, "+5 rank XP")? Others go back to polish.js and show as normal banners. Pure. */
+  function ours(kind, big) {
+    if (kind === "level") return /\blevel (\d+)\b/i.test(String(big)) || /^\s*\d+\s*$/.test(String(big));
+    if (kind === "skill") return String(big).split(" · ").some((p) => /^[A-Z][A-Za-z'\- ]*? \d+$/.test(p.trim()));
+    return false;
+  }
   function claim(kind, big) {
-    if (!live || (kind !== "skill" && kind !== "level")) return false;
+    if (!live || !ours(kind, big)) return false;
     const S = window.__dbg?.save?.();
     if (kind === "level") {
-      const lvl = +(String(big).match(/(\d+)/) || [])[1]; if (!lvl) return true;
+      const lvl = +(String(big).match(/(\d+)/) || [])[1]; if (!lvl) return false;
       if (!fresh(`level|${lvl}`)) add([{ kind: "level", name: "level", lvl, segs: [{ a: 0, b: S && S.level === lvl ? frac(0, S.charXp || 0, charNeed(lvl), Infinity) : 0, lvl, cross: false }], minor: false }]);
       return true;
     }
@@ -234,5 +246,5 @@ const SKILLUP = (() => {
     return true;
   }
 
-  return { frac, run, dur, merge, enqueue, skillItem, pickCreeps, others, spot, diff, claim, dock, add, skip, install, PL, get queue() { return queue; }, get current() { return cur; } };
+  return { frac, run, dur, merge, enqueue, skillItem, pickCreeps, others, spot, diff, ours, claim, dock, add, skip, install, PL, get queue() { return queue; }, get current() { return cur; } };
 })();

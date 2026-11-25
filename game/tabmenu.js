@@ -101,7 +101,7 @@ const TABMENU = (() => {
       <div class="tw-skt"><span class="tw-skn">${typeof UIART !== "undefined" ? UIART.skill(sk, 30) : ""}<b>${esc(sk)}</b> <span class="num">${s.lvl}</span></span><span class="sub num">${Math.round(s.xp)}/${Math.round(need)}</span></div>
       <div class="bar"><i style="width:${Math.round(Math.min(1, s.xp / need) * 100)}%;background:var(--frost)"></i></div>
       ${info ? `<p class="sub">${esc(info)}</p>` : ""}</div>
-      ${tree.length && typeof SKYUI !== "undefined" ? `<div class="tw-bigw"><div class="skc tw-big">${SKYUI.svg(sk, S)}</div></div>` : ""}
+      ${tree.length && typeof SKYUI !== "undefined" ? `<div class="tw-bigw"><div class="skc tw-big">${SKYUI.svg(sk, S, { sel: starPick })}</div></div>` : ""}
       <div class="tw-sdet">${detail}</div></div>`;   // tw-sleft / tw-sdet: plain blocks on a phone, the left column beside the stars on a PC (pcfit)
   }
   /* the werewolf's or the Vampire Lord's own sky, chosen from the same row of cards */
