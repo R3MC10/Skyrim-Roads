@@ -14,8 +14,10 @@ async def run(b, w, h, phone, bad, old=False):
     ok = lambda c, m: (print(("ok   " if c else "FAIL ") + tag + " " + m), None if c else bad.append(tag + " " + m))
     ctx = await b.new_context(viewport={"width": w, "height": h}, has_touch=phone, is_mobile=phone)
     pg = await ctx.new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e)))
-    await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=gfx{w}{int(old)}"); await pg.wait_for_timeout(1800)
-    await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Herba"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
+    for _ in range(3):   # a busy local server sometimes drops a script: load again
+        errs.clear(); await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=gfx{w}{int(old)}"); await pg.wait_for_timeout(1800)
+        if not errs and await pg.evaluate("typeof GATHER!=='undefined'"): break
+    await pg.click(".press"); await pg.wait_for_timeout(400); await pg.click(".mi[data-t=new]"); await pg.wait_for_selector("#nm"); await pg.fill("#nm", "Herba"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
     await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
     await pg.evaluate("""(old)=>{const S=window.__dbg.save(); const n=GATHER.nodes().find(n=>n.ing==='ing_juniper'); S.location=null; S.x=n.pos[0]; S.y=n.pos[1];
        if (old) S.gather={seen:{},picked:{}};
@@ -40,6 +42,9 @@ async def run(b, w, h, phone, bad, old=False):
         if phone: await pg.touchscreen.tap(x, y)
         else: await pg.mouse.click(x, y)
         await pg.wait_for_timeout(600)
+        if await pg.evaluate("!!document.querySelector('#hgame')"):   # Gather opens the hand-harvest mini-game (harvest_ui.py plays it)
+            await pg.evaluate("HARVESTGAME._finish('good')"); await pg.wait_for_timeout(900)
+            await pg.evaluate("document.querySelector('#hgame .hg-done')?.click()"); await pg.wait_for_timeout(300)
         n1 = await pg.evaluate(CNT)
         ok(n1 > n0 or (act == "gforage" and await pg.evaluate("window.__dbg.save().gather.forage>0")), f"{act} gives ingredients ({n0} -> {n1})")
     ok(not errs, f"no page errors {errs[:2]}")

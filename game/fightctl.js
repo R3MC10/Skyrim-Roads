@@ -275,7 +275,14 @@ const FIGHTCTL = (() => {
     r.querySelectorAll(`[data-tbzone~="${z}"]`).forEach((e) => { if (e.classList.contains("tbu")) e.classList.add("drop-ok", "fc-tgt"); });
     b.classList.add("fc-armed");
     const bar = document.createElement("div"); bar.className = "fc-aimbar"; bar.setAttribute("role", "status");
-    bar.innerHTML = `<span>Who gets <b>${esc(b.closest(".tbsp")?.querySelector(".fc-nm")?.firstChild?.textContent || b.querySelector("b")?.textContent || "it")}</b>? Tap a portrait${z === "self" ? " (or this button again for yourself)" : ""}.</span><button class="fc-cancel" data-fcx="cancel" aria-label="Cancel">✕</button>`;
+    /* one button per target right in the bar: on phones an open menu (Magic, Items) covers the portraits */
+    const T = (t) => (typeof I18N !== "undefined" && I18N.tr && I18N.lang?.() === "pl" ? I18N.tr(t) ?? t : t);
+    const who = [...r.querySelectorAll(".tbu.fc-tgt")].map((e) => {
+      const me = e.classList.contains("me"), nm = me ? T("You") : (e.querySelector(".nm")?.firstChild?.textContent || "").replace(/^[-\s]+/, "").trim();
+      return `<button class="fc-who fc-tgt${me ? " me" : ""}"${me ? "" : ` data-ally="${esc(e.dataset.ally)}"`}>${esc(nm || "?")}</button>`;
+    }).join("");
+    const what = esc(b.closest(".tbsp")?.querySelector(".fc-nm")?.firstChild?.textContent || b.querySelector("b")?.textContent || "");
+    bar.innerHTML = `<span>${what ? `<b>${what}</b> ` : ""}<em>${esc(T(who ? "Who gets it? Tap a name or a portrait." : "Who gets it? Tap a portrait."))}</em></span><button class="fc-cancel" data-fcx="cancel" aria-label="Cancel">✕</button>${who ? `<div class="fc-whos">${who}</div>` : ""}`;
     r.appendChild(bar); aim.bar = bar;
     buzz(10);
   }

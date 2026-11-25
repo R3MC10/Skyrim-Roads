@@ -305,7 +305,8 @@ const TB = (() => {
       if (/^potion:/.test(a)) this.pots++;
     }
     act(a, tgt, mult, grade) {   // mult: how the minigame went (minigame.js), 1 = normal; grade.cls "perfect" adds a stack
-      if (this.cur?.id !== "me" || this.over) return null;
+      if (this.cur?.id !== "me") return null;
+      if (this.over) { this.apSet = false; this.idx++; return { turn: "next" }; }   // the foe fell outside your moves (a tick, a teammate): any tap wraps the fight up instead of doing nothing
       const f = this.f;
       const al = tgt != null && tgt !== "" ? (+tgt >= 1000 ? (f._downed || [])[+tgt - 1000] : f.allies[+tgt]) : null;
       if (a === "end") return this.endTurn();
@@ -923,7 +924,14 @@ const TB = (() => {
     render(r || { turn: ui.sess.done ? "done" : ui.sess.cur?.id === "me" ? "me" : "auto" });
   }
   function onClick(ev) {
-    if (!ui || ui.timing) return;   // the timing ring is up
+    if (!ui) return;
+    if (ui.timing) {   // the timing ring / minigame is up: it owns the clicks...
+      // ...unless it is stuck (hotfix build 232): nothing on screen any more, or up far longer than any minigame lasts.
+      // A stuck flag used to swallow every click for the rest of the fight ("I press Attack and nothing happens").
+      const live = document.querySelector("#tbf .tbtime:not(.hit)");
+      if (live && Date.now() - (ui.timingAt || 0) < 12000) return;
+      ui.timing = false; ui.timingTok = (ui.timingTok || 0) + 1; live?.remove();   // the old game's result is dropped
+    }
     const b = ev.target.closest("button"); if (!b || b.disabled) return;
     const sess = ui.sess;
     if (b.dataset.tbx === "wheel") { TBRADIAL.toggle(); return step(); }
@@ -941,7 +949,9 @@ const TB = (() => {
       const go = (g) => {
         if (!ui || ui.sess !== sess) return;
         const was = { sp: f.sp, mp: f.mp, hp: f.hp };
-        let r = sess.act(a, tgt, g ? g.mult : 1, g);
+        let r;
+        try { r = sess.act(a, tgt, g ? g.mult : 1, g); }
+        catch (e) { console.error("fight move", a, e); if (hooks.toast) hooks.toast("That move didn't work, try another"); return step(); }   // never leave the screen dead
         if (r?.err) { if (hooks.toast) hooks.toast(r.err); return; }
         const d = { sp: was.sp - f.sp, mp: was.mp - f.mp, hp: f.hp - was.hp };
         if (r?.turn === "next") r = sess.advance();
@@ -952,14 +962,18 @@ const TB = (() => {
       // the minigames (minigame.js): every blow, guard and spell you make yourself; Auto never plays them
       if (typeof MINIGAME !== "undefined" && MINIGAME.on() && MINIGAME.kindFor(f, a) && sess.canAfford(a)) {
         const sp = spellOf(a);
-        ui.timing = true;
-        return MINIGAME.play(root, f, a, { icon: iconOf(f, a), label: sp ? sp.name : a === "power_attack" ? "Power attack" : a === "bash" ? "Shield bash" : a === "block" ? "Guard" : f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack" })
-          .then((g) => { if (ui) ui.timing = false; go(g); }, () => { if (ui) ui.timing = false; go(null); });
+        ui.timing = true; ui.timingAt = Date.now();
+        let game;
+        try { game = MINIGAME.play(root, f, a, { icon: iconOf(f, a), label: sp ? sp.name : a === "power_attack" ? "Power attack" : a === "bash" ? "Shield bash" : a === "block" ? "Guard" : f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack" }); }
+        catch (e) { console.error("minigame", a, e); game = null; }   // a broken minigame must not lock the fight: the move goes in as a normal hit
+        if (!game || typeof game.then !== "function") { ui.timing = false; return go(null); }
+        const tok = ui.timingTok;
+        return game.then((g) => { if (!ui || ui.timingTok !== tok) return; ui.timing = false; go(g); }, () => { if (!ui || ui.timingTok !== tok) return; ui.timing = false; go(null); });
       }
       // the old timing ring (wheel only, when the minigames are off)
       if (typeof TBRADIAL !== "undefined" && TBRADIAL.on() && !fast() && TBRADIAL.timed(a, zoneOf(a)) && sess.canAfford(a) && typeof MINIGAME === "undefined") {
         const sp = spellOf(a), perk = typeof PFX !== "undefined" ? PFX.num(f.s, "timing") : 0;
-        ui.timing = true;
+        ui.timing = true; ui.timingAt = Date.now();
         return TBRADIAL.ring(root, { z: TBRADIAL.zone(TBRADIAL.skillFor(f, a, sp), perk), icon: iconOf(f, a), label: sp ? sp.name : a === "power_attack" ? "Power attack" : a === "bash" ? "Shield bash" : f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack" })
           .then((g) => { if (ui) ui.timing = false; go(g); });
       }
