@@ -32,7 +32,7 @@ const I18N_GPTQA = (() => {
     "One-handed weapon": "Broń jednoręczna", "Two-handed weapon": "Broń dwuręczna", "Two-handed bow": "Łuk", "One-handed bow": "Łuk",
     // the foe's later moves in the turn order (tbfight.js)
     "2nd": "2.", "3rd": "3.", "4th": "4.", "5th": "5.",
-    // patch note b240
+    // patch note b243
     "Dungeon rooms and small fixes": "Komnaty lochów i drobne poprawki",
     "Fixed: foes in dungeons were met with road lines, like webs stretched \"across the road\" deep in a barrow. Bandits, wolves, spiders, draugr and the rest now get their own lines for caves, mines, forts, barrows and other places.":
       "Naprawione: wrogów w lochach witały teksty z drogi, na przykład pajęczyny „w poprzek drogi” głęboko w kurhanie. Bandyci, wilki, pająki, draugi i reszta mają teraz własne teksty do jaskiń, kopalń, fortów, kurhanów i innych miejsc.",

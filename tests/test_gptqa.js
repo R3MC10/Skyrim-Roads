@@ -68,7 +68,7 @@ ok(/dungeons\.js/.test(src("index.html")) && src("index.html").indexOf("dunlines
     ok(/rusza się znowu: to jego 2\. ruch/.test(I18N.tr("Bandit outlaw acts again: its 2nd move this round.") || ""), "the tip in Polish: " + I18N.tr("Bandit outlaw acts again: its 2nd move this round."));
     const PN = vm.runInContext(src("patchnotes.js").replace(/^const PATCHNOTES =/m, "var PATCHNOTES =") + ";PATCHNOTES", vm.createContext({}));
     const top = (PN.LIST || PN.list || [])[0];
-    if (top && top.id === "b240-gptqa") { ok(I18N.tr(top.title) !== top.title, "patch note title in Polish"); for (const it of top.items) ok(I18N.tr(it) && I18N.tr(it) !== it, "patch note line in Polish: " + it.slice(0, 50)); }
+    if (top && top.id === "b243-gptqa") { ok(I18N.tr(top.title) !== top.title, "patch note title in Polish"); for (const it of top.items) ok(I18N.tr(it) && I18N.tr(it) !== it, "patch note line in Polish: " + it.slice(0, 50)); }
   } }
 
 console.log(`rooms built: ${rooms}`);
