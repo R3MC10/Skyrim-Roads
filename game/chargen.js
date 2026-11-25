@@ -162,12 +162,12 @@ const CHARGEN = (() => {
         <div class="cgtabs" role="tablist" aria-label="${esc(L("Character creation"))}"></div>
         <div class="cgpanel" role="tabpanel" tabindex="-1"></div>
         <div class="cgfoot">
-          ${create ? `<div class="cgnm"><label class="sub" for="nm">Your name</label><input id="nm" maxlength="24" autocomplete="off" placeholder="e.g. Remigiusz" value="${esc(st.name || "")}"></div>` : ""}
+          ${create ? `<div class="cgnm"><label class="sub" for="nm">Your name</label><input id="nm" maxlength="24" autocomplete="off" placeholder="Your name, e.g. Remigiusz" value="${esc(st.name || "")}"></div>` : ""}
           <div class="cgbar">
             <button class="btn" data-cg="rand" title="${esc(L("Randomise"))}"><span aria-hidden="true"></span> <span>${esc(L("Randomise"))}</span></button>
             <button class="btn" data-cg="undo" title="${esc(L("Undo"))}"><span aria-hidden="true">↶</span> <span>${esc(L("Undo"))}</span></button>
-            <button class="btn" data-cg="back">‹ ${esc(L("Back"))}</button>
-            <button class="btn" data-cg="next">${esc(L("Next"))} ›</button>
+            <button class="btn" data-cg="back" title="${esc(L("Back"))}"><span aria-hidden="true">‹</span> <span>${esc(L("Back"))}</span></button>
+            <button class="btn" data-cg="next" title="${esc(L("Next"))}"><span>${esc(L("Next"))}</span> <span aria-hidden="true">›</span></button>
           </div>
           ${create ? `<button class="btn pri cgbegin" id="begin">Begin in ${esc(D.START_LOCATION)}</button>`
             : `<div class="cgbar cgdone"><button class="btn" data-cg="cancel">${esc(L("Cancel"))}</button><button class="btn pri" data-cg="done">${esc(cost ? L("Done · {g} gold", { g: cost }) : L("Done"))}</button></div>`}
@@ -180,6 +180,7 @@ const CHARGEN = (() => {
     // keep keyboard focus on the same control after the panel is redrawn
     const a = document.activeElement, keep = a && R.contains(a) && a.closest(".cgpanel,.cgtabs") ? [a.dataset.cg, a.dataset.k, a.dataset.v, a.dataset.race, a.dataset.stone, a.dataset.tab].join("|") : null;
     R.querySelector(".cgtabs").innerHTML = T.map(([id, t], j) => `<button class="cgtab ${id === st.tab ? "on" : ""}" role="tab" id="cgt-${id}" data-cg="tab" data-tab="${id}" aria-selected="${id === st.tab}" tabindex="${id === st.tab ? 0 : -1}"><span class="cgtn">${j + 1}</span> ${esc(L(t))}</button>`).join("");
+    { const tb = R.querySelector(".cgtabs"), on = tb.querySelector(".cgtab.on"); if (on && tb.scrollWidth > tb.clientWidth) tb.scrollLeft = Math.max(0, on.offsetLeft - (tb.clientWidth - on.offsetWidth) / 2); }   // [smallpolish] the open tab stays in sight on a phone
     const pane = R.querySelector(".cgpanel");
     pane.setAttribute("aria-labelledby", "cgt-" + st.tab);
     pane.innerHTML = PANES[st.tab]();

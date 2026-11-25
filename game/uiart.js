@@ -295,6 +295,25 @@ const UIART = (() => {
     };
   }
 
+  /* [smallpolish] racial powers as medallions in the spell-icon style (the Magic list used the hero's portrait) */
+  const RACEPOW = {
+    nord: (g) => { glow(g, 20, 20, 15, "#ffd27a", 0.45);   // Battle Cry: a horned helm and the roar
+      poly(g, [[13, 21], [7, 11], [6, 7], [10, 10], [15, 17]], "#efe4cc", INK, 1);
+      poly(g, [[27, 21], [33, 11], [34, 7], [30, 10], [25, 17]], "#efe4cc", INK, 1);
+      g.beginPath(); g.moveTo(12, 27); g.quadraticCurveTo(12, 12, 20, 12); g.quadraticCurveTo(28, 12, 28, 27); g.lineTo(23, 28); g.lineTo(22, 23); g.lineTo(18, 23); g.lineTo(17, 28); g.closePath();
+      g.fillStyle = "#b8bec2"; g.fill(); g.strokeStyle = INK; g.lineWidth = 1.1; g.stroke();
+      line(g, [[20, 13], [20, 23]], INK, 1.4); line(g, [[13, 19], [27, 19]], INK, 1);
+      for (const r of [4, 7.5]) { g.strokeStyle = "#ffd27a"; g.lineWidth = 1.4; g.beginPath(); g.arc(20, 29, r, Math.PI * 0.2, Math.PI * 0.8); g.stroke(); } },
+    imperial: (g) => G_.hand(g, "#f4dc96"),
+    breton: (g) => G_.ward(g, "#c9b6ff"),
+    redguard: (g) => G_.bolt(g, ["#9fe0a0", "#3f8f4a", "#ffffff"]),
+    altmer: (g) => G_.gem(g, "#8cc4ff"),
+    bosmer: (g) => G_.wolf(g, "#b8d89a"),
+    dunmer: (g) => G_.flame(g),
+    orc: (g) => G_.axe(g, "#e8735a"),
+    khajiit: (g) => G_.eye(g, "#d6a23e"),
+    argonian: (g) => G_.ward(g, "#7fae6a"),
+  };
   // ---- public: <img> HTML, cached per style
   const box = (size, key, draw, alt = "", cls = "uico") => ART.html(size, size, (g, H, w) => { g.scale(w / 40, w / 40); draw(g, H); }, { key, cls: "ico " + cls, alt });
   if (typeof QUESTS !== "undefined") for (const [id, d] of Object.entries(QUESTS.L)) if (!QUEST[id] && d.emblem) QUEST[id] = d.emblem;   // emblems drawn by the quest modules (civilwar.js, daedric.js)
@@ -305,6 +324,7 @@ const UIART = (() => {
     skill: (sk, size = 28) => box(size, "sk:" + sk, drawSkill(sk), sk, "skico"),
     stone: (id, size = 32) => box(size, "st:" + id, drawStone(id), "", "sico"),
     shout: (id, size = 32) => box(size, "sh:" + id, drawShout(id), "", "sico"),
+    racePower: (race, size = 32) => box(size, "rp:" + race, (g) => { medal(g, "#d6b25e"); (RACEPOW[race] || RACEPOW.nord)(g); }, "", "sico"),
     power: (race, size = 32) => (typeof HEROART !== "undefined" ? HEROART.portrait({ race, id: "power-" + race }, size) : box(size, "pw", (g) => { medal(g, "#d6b25e"); star(g, 20, 20, 10); })),
     quest: (line, size = 32) => box(size, "q:" + line, (g) => { tile(g); (QUEST[line] || QUEST.bounty)(g); }, "", "qico"),
     ach: (id, size = 32, done = true) => box(size, "a:" + id + (done ? "" : ":x"), (g) => { medal(g, done ? "#d6b25e" : "#8a7a6a", "#f1e6cc"); g.save(); g.beginPath(); g.arc(20, 20, 15, 0, 7); g.clip(); (ACH[id] || ACH.legend)(g); g.restore(); if (!done) { g.globalAlpha = 0.55; circ(g, 20, 20, 16.4, "#cdb98f", null); g.globalAlpha = 1; } }, "", "aico"),
