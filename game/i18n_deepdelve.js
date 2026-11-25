@@ -7,6 +7,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
   const cap = (x) => x.charAt(0).toUpperCase() + x.slice(1);
   /* a foe or item name, also when the sentence wrote it in lower case */
   const NM = (x) => { const r = T(x); if (r !== x) return r; const c = T(cap(x)); return c !== cap(x) ? (x[0] === x[0].toLowerCase() ? c.charAt(0).toLowerCase() + c.slice(1) : c) : x; };
+  /* known to the translation (a name can be the same in Polish: Skeever, Falmer) */
+  const KNOWN = (x) => typeof I18N !== "undefined" && (I18N.tr(x) != null || I18N.tr(cap(x)) != null);
   const list = (x) => x.split(", ").map(NM).join(", ");
   const LVL = { "Entrance guardians": "Strażnicy wejścia", "Traps and elites": "Pułapki i elita", "The ancient vault": "Starożytny skarbiec",
     "The cursed sanctuary": "Przeklęte sanktuarium", "The legendary lair": "Legendarne leże" };
@@ -132,10 +134,10 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     [/^A (.+) found you before you could sit down\. Once it's dead, you bind your wounds \((\d+) → (\d+) health\)\.$/,
       (m) => `${cap(NM(m[1]))} znalazł cię, zanim zdążyłeś usiąść. Gdy już nie żyje, opatrujesz rany (${m[2]} → ${m[3]} zdrowia).`],
     // the major fights' names and openings
-    [/^(.+) guardian$/, (m) => { const b = NM(m[1]); return b !== m[1] ? `${b}, strażnik schodów` : null; }],
+    [/^(.+) guardian$/, (m) => { const b = NM(m[1]); return b !== m[1] || KNOWN(m[1]) ? `${b}, strażnik schodów` : null; }],
     [/^(.+), warden of the vault$/, (m) => `${NM(m[1])}, strażnik skarbca`],
-    [/^Cursed (.+)$/, (m) => { const b = NM(m[1]); return b !== m[1] ? `${cap(b)} (przeklęty)` : null; }],
-    [/^Legendary (.+)$/, (m) => { const b = NM(m[1]); return b !== m[1] ? `${cap(b)} (legendarny)` : null; }],
+    [/^Cursed (.+)$/, (m) => { const b = NM(m[1]); return b !== m[1] || KNOWN(m[1]) ? `${cap(b)} (przeklęty)` : null; }],
+    [/^Legendary (.+)$/, (m) => { const b = NM(m[1]); return b !== m[1] || KNOWN(m[1]) ? `${cap(b)} (legendarny)` : null; }],
     [/^Two braziers flare\. The (.+) that guards the stairs steps out to meet you\.$/, (m) => `Dwa paleniska buchają ogniem. ${cap(NM(m[1]))}, który strzeże schodów, wychodzi ci naprzeciw.`],
     [/^Past the last trap, the (.+) waits with its back to a sealed door\.$/, (m) => `Za ostatnią pułapką czeka ${NM(m[1])}, plecami do zapieczętowanych drzwi.`],
     [/^The vault door stands open\. Its warden, an ancient (.+), rises from the gold\.$/, (m) => `Drzwi skarbca stoją otworem. Jego strażnik, pradawny ${NM(m[1])}, podnosi się ze złota.`],

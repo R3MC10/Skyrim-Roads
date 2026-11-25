@@ -89,7 +89,7 @@ const want2 = {
   " Pay (90 gold)": " Zapłać (90 złota)", " Fight": " Walcz", " Something by the road": " Coś przy drodze",
   " A dragon is circling Markarth!": " Smok krąży nad: Markarth!", "(you 100 · foe 52)": "(ty 100 · wróg 52)", "Fight log (8 turns)": "Przebieg walki (tury: 8)",
   "Flames (dual)": "Płomienie (podwójnie)", "Rare wares, one of each · 58 min left": "Rzadkie towary, po jednej sztuce · zostało 58 min",
-  " Defeated the Bandit toll gang (+50 gold)": " Pokonano: Bandit toll gang (+50 złota)", "Falkreath (from level 10)": "Falkreath (od poziomu 10)",
+  " Defeated the Bandit toll gang (+50 gold)": " Pokonano: Bandyci od myta (+50 złota)", "Falkreath (from level 10)": "Falkreath (od poziomu 10)",
 };
 for (const [en, pl] of Object.entries(want2)) { ok(t(en) === pl, `sweep2: "${en}" → "${t(en)}" (want "${pl}")`); n++; }
 // the English lines still exist in the game (so the Polish isn't stale)

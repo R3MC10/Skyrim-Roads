@@ -268,8 +268,6 @@ const I18N_QACORE = (() => {
         `Bard siedzi na kamieniu milowym z lutnią w dłoni. „${{ "Ragnar the Red, perhaps?": "Może Ragnar Rudy?", "The Age of Aggression?": "Wiek Agresji?", "Tale of the Tongues?": "Opowieść o Językach?",
           "The Dragonborn Comes, if you're brave enough": "Nadchodzi Smocze Dziecię, jeśli starczy ci odwagi" }[m[1]]}”`],
       [/^(\d+)% there$/, (m) => `${m[1]}% postępu`],
-      [/^(In the ruins of a wayside shrine sits an iron-banded chest\.) The lock looks (novice|apprentice|adept|expert|master)\.$/, (m) =>
-        `${T1(m[1])} Zamek wygląda na ${{ novice: "prosty", apprentice: "niezbyt trudny", adept: "średnio trudny", expert: "trudny", master: "mistrzowski" }[m[2]]}.`],
       [/^You buy (\d+) (.+)\.$/, (m) => `Kupujesz: ${m[1]}× ${T1(m[2])}.`],
       [/^You buy the (.+)\.$/, (m) => `Kupujesz: ${T1(m[1])}.`],
       [/^You walk together a while\. At the crossroads, they insist you take (\d+) gold\.$/, (m) => `Idziecie razem kawałek. Na rozstaju nalegają, żebyś wziął ${m[1]} złota.`],

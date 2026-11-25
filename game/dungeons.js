@@ -207,7 +207,7 @@ const DUNGEONS = (() => {
       return { type, enemy: e, text: d.boss ? tx : `${tx} This is the master of ${d.place}.` };
     }
     if (type === "trap") { const trap = pick(T.traps); return { type, trap, text: `The way ahead is guarded by ${trap}.` }; }
-    if (type === "treasure") { const tier = clamp(d.tier - 1 + rint(0, 2), 0, 4); return { type, tier, tries: 3, text: `A heavy chest sits in an alcove. The lock looks ${LOCK_TIERS[tier][0].toLowerCase()}.` }; }
+    if (type === "treasure") { const tier = clamp(d.tier - 1 + rint(0, 2), 0, 4); return { type, tier, tries: 3, text: `A heavy chest sits in an alcove. ${lockLooks(tier)}` }; }
     if (type === "rest") return { type, text: d.theme === "barrow" || d.theme === "temple" ? "A quiet side chamber with a smouldering brazier and a row of burial urns." : "A quiet nook with an old bedroll and a few crates." };
     if (type === "puzzle") {
       const order = [...ANIMALS].sort(() => Math.random() - 0.5).slice(0, 3);

@@ -156,6 +156,7 @@ const I18N = (() => {
       p.names.forEach((n, i) => { const v = m[i + 1]; out = out.split(n).join(fillList(v, s, d)); });
       return out;
     }
+    if (d < 3) { const pp = pat(s); if (pp != null) return pp; }   // a sentence with a name or number in it ("The draugr falls.")
     const ic = s.match(/^([^\p{L}\p{N}\s"“„«(]{1,4}\s+)(.+)$/su);   // an icon in front: translate the rest
     if (ic && d < 3) { const r = sentence(ic[2], d + 1); if (r != null) return ic[1] + r; }
     const q = s.match(QUOTE);   // a sentence that opens or closes a quote: translate what's inside
