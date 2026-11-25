@@ -3,8 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b248-testsgreen", build: 248, date: "25 Nov 2026", title: "Coming next, tidied", items: [
+    { id: "b249-testsgreen", build: 249, date: "25 Nov 2026", title: "Coming next, tidied", items: [
       "Picking herbs by hand is out now, so it left the Coming next list.",
+    ] },
+    { id: "b248-chargenrig", build: 248, date: "25 Nov 2026", title: "Character creation shows your real fighter", items: [
+      "Character creation now shows the same painted hero you fight with: armour, weapon and all. Stand, Walk and Fight show how you'll really look on the road and in battle.",
+      "Picking a race swaps the painted head (Dunmer, Khajiit and Argonian have their own) and skin colour; everything else you chose stays.",
+      "Face zooms right in on your hero's head. On the Head, Face, Hair and Scars tabs a small close-up shows the details you pick.",
+      "The race card shows the painted bust of the race instead of the little drawn figure.",
     ] },
     { id: "b247-movefx1", build: 247, date: "25 Nov 2026", title: "Real arrows and spell effects", items: [
       "Bows and crossbows shoot a real arrow or bolt now: it leaves the string, arcs over (a bolt flies flatter and faster), and sticks in, breaks on a shield, or sails past on a miss and lands in the ground behind.",
@@ -1705,7 +1711,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 248;
+  const NEXT_AT = 249;
   const NEXT = [
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",
