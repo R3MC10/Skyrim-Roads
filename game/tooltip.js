@@ -50,7 +50,8 @@ const TIP = (() => {
     const D_ = g("D"), G_ = g("G"); const it = D_?.ITEMS?.[itemId]; if (!it) return null;
     const CC_ = g("CC"), tier = CC_ ? CC_.tier(itemId, r) : "common";
     const name = (r?.tq && g("TOWNS")?.QUALITY ? g("TOWNS").QUALITY[r.tq] + " " : "") + it.name + (r?.nm ? ` “${r.nm}”` : "");
-    const kind = it.slot === "weapon" ? `${it.hands === 2 ? "Two-handed" : "One-handed"} ${it.skill === "Archery" ? "bow" : "weapon"} · ${it.skill}`
+    const hd = it.hands === 2 ? "Two-handed" : "One-handed";   // the skill only when it says something new ("One-handed weapon", not "· One-Handed" again)
+    const kind = it.slot === "weapon" ? `${hd} ${it.skill === "Archery" ? "bow" : "weapon"}${it.skill && String(it.skill).toLowerCase() !== hd.toLowerCase() ? ` · ${it.skill}` : ""}`
       : (G_?.ARMOR_SLOTS || []).includes(it.slot) ? `${it.type ? it.type[0].toUpperCase() + it.type.slice(1) + " " : ""}${it.slot === "chest" ? "body armor" : it.slot}`
       : { potion: "Potion", poison: "Poison", food: "Food", ingredient: "Ingredient", tome: "Spell tome", scroll: "Scroll", soulgem: "Soul gem", ammo: "Ammo", material: "Crafting material", valuable: "Valuable", trophy: "Trophy", recipe: "Forge recipe", misc: "Item" }[it.slot] || "Item";
     const q = r?.qty || 1;
