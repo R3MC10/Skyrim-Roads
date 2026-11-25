@@ -213,7 +213,7 @@ const HARVEST = (() => {
     return n ? { id: n.id, ing: n.ing, kind: kindOf(n.ing), name: name(n.ing), d: n.d, quick: canQuick(s, n.ing), riding: !!(tr && tr.status === "travel") } : null;
   }
   function cardFoot(s) {
-    return `<p class="sub hg-foot">${esc(T("Tap Gather to pick by hand: better hands, bigger yield. Picked a plant {n} times? Quick skips the mini-game. In a party everyone picks their own share of each patch.", { n: quickAt(s) }))}</p>`;
+    return `<p class="sub hg-foot">${esc(T("Tap Gather to pick by hand: better hands, bigger yield. Picked a plant {n} times? Quick pick skips the mini-game. In a party everyone picks their own share of each patch.", { n: quickAt(s) }))}</p>`;
   }
   function progress(s, id) { return { done: handPicked(s, id), need: quickAt(s), quick: canQuick(s, id), single: single(id) }; }
 

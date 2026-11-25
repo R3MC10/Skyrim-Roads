@@ -22,7 +22,7 @@ for (const id of Object.keys(D.ITEMS)) {
   const e = effect(h);
   ok(e.length >= 8 && e !== it.name, `${id} (${it.slot}): says what it does, got "${e}"`);
   bySlot[it.slot] = (bySlot[it.slot] || 0) + 1;
-  if ((it.slot === "potion" && it.restore) || (it.slot === "scroll" && D.SPELLS[it.spell])) ok(/In a fight <b>\d AP/.test(h), `${id}: its AP cost in a fight`);
+  if ((it.slot === "potion" && it.restore) || (it.slot === "scroll" && D.SPELLS[it.spell])) ok(/In a fight <b>1 move, free/.test(h) && !/AP/.test(h), `${id}: its cost in a fight (one move, no AP)`);
   if (it.slot === "scroll" && D.SPELLS[it.spell]) ok(/\d/.test(e), `${id}: the scroll's numbers`);
 }
 // names on icon-only buttons turn into the full item tooltip

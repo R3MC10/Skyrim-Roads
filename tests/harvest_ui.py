@@ -79,12 +79,38 @@ async def run(b, w, h, phone, bad):
     ok(not errs, f"no page errors {errs[:2]}")
     await ctx.close()
 
+async def polish(b, w, h, phone, bad):
+    """In Polish the Gathering card and the road prompt read in Polish (distance, weight, how to pick)."""
+    tag = f"[pl {'phone' if phone else 'pc'}]"
+    ok = lambda c, m: (print(("ok   " if c else "FAIL ") + tag + " " + m), None if c else bad.append(tag + " " + m))
+    ctx = await b.new_context(viewport={"width": w, "height": h}, has_touch=phone, is_mobile=phone, locale="pl-PL")
+    pg = await ctx.new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e)))
+    for _ in range(3):
+        errs.clear(); await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=hvpl{w}"); await pg.wait_for_timeout(2000)
+        if not errs and await pg.evaluate("typeof HARVESTGAME!=='undefined' && typeof GATHER!=='undefined'"): break
+    await pg.wait_for_selector(".press", timeout=60000); await pg.click(".press"); await pg.wait_for_timeout(500); await pg.click(".mi[data-t=new]"); await pg.wait_for_selector("#nm"); await pg.fill("#nm", "Herba"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
+    await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
+    await pg.evaluate(GO, "berry")
+    await pg.evaluate("document.querySelector('[data-tab=log]')?.click()"); await pg.wait_for_timeout(300)
+    await pg.evaluate("document.querySelector('[data-tab=map]')?.click()"); await pg.wait_for_timeout(1800)
+    await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
+    card = await pg.evaluate("()=>[...document.querySelectorAll('.gcard')].map(c=>c.innerText).join(' | ')")
+    near = await pg.evaluate("()=>document.querySelector('#gnear')?.innerText||''")
+    ok("kroków stąd" in card and "wagi za sztukę" in card, f"the Gathering card is in Polish ({card[:90]!r})")
+    ok("paces away" not in card and "wt each" not in card, "no English distance or weight left on the card")
+    ok("w zasięgu" in near and "gather" not in near.lower(), f"the road prompt is in Polish ({near[:60]!r})")
+    await pg.screenshot(path=os.path.join(OUT, f"harvest_pl_{'phone' if phone else 'pc'}.png"))
+    ok(not errs, f"no page errors {errs[:2]}")
+    await ctx.close()
+
 async def main():
     async with async_playwright() as p:
         b = await (p.chromium.launch(executable_path=CHROME, args=["--no-sandbox"]) if os.path.exists(CHROME) else p.chromium.launch())
         bad = []
         await run(b, 390, 844, True, bad)
         await run(b, 1600, 900, False, bad)
+        await polish(b, 390, 844, True, bad)
+        await polish(b, 1600, 900, False, bad)
         print("RESULT OK" if not bad else "RESULT FAIL " + "; ".join(bad))
         await b.close()
 asyncio.run(main())

@@ -500,11 +500,22 @@
   /* phone back button: close what's on top, step back to the map, and only then leave the app */
   /* opts.esc: the PC's Esc key (desktop.js). It walks the same steps, except that the compass isn't "home" on a PC and
      a fight isn't left alone: false then means "nothing left to close", and Esc opens the pause menu (pausemenu.js) */
+  /* [qa-core] full-screen mini-games sit over everything, so the phone's back button used to reach the screens under them
+     (and at last minimised the app) while the game stayed open. Press the game's own way out instead, as a player would */
+  const GAME_EXITS = ["#fishgame #fhdone", "#huntgame #hglow", "#huntgame #hgfin", "#huntgame #hgdone", "#minegame #mgok", "#minegame #mgdone",
+    "#lockpick #lpleave", "#pickgame #ppleave", "#smithgame #sgquick", "#craftgame #cgquick", "#xgame [data-act=close]"];
+  function backOutOfGame() {
+    for (const sel of GAME_EXITS) { const b = document.querySelector(sel); if (b && !b.disabled && b.offsetParent !== null) { b.click(); return true; } }
+    const rc = $("#rct"); if (rc) { rc.click(); return true; }   // runecraft.js closes when its backdrop is tapped
+    return false;
+  }
   window.__ui = {
     back(opts) {
       const escKey = !!(opts && opts.esc);
       if (typeof PAUSEM !== "undefined" && PAUSEM.isOpen()) { PAUSEM.close(); return true; }   // the Esc menu is the very top
       if (typeof BUGREPORT !== "undefined" && BUGREPORT.isOpen()) { BUGREPORT.close(); return true; }   // the report window sits on top of everything
+      if (S && typeof CHARGEN !== "undefined" && document.querySelector(".cg-over")) { CHARGEN.close(false); return true; }   // [qa-core] the barber / mirror: back = Cancel, never something hidden under it
+      { const x = backOutOfGame(); if (x) return x; }   // [qa-core] a mini-game or the rune table: back leaves it (its own Leave / Done button)
       if ($("#title")) { if (titlePage !== "menu" && titlePage !== "press") { titlePage = "menu"; renderTitle(); return true; } return false; }
       if (!S && $("#toTitle")) { app.innerHTML = ""; showTitle("menu"); return true; }
       if (typeof TB !== "undefined" && TB.open) { if ($("#modal.pm-top")) { closeModal(); return true; } return !escKey; }   // a turn-based fight is on: finish it (or Flee); Esc pauses
@@ -518,6 +529,7 @@
       if (selected) { selected = null; renderPicked(); return true; }
       if (S && (tab === "stats" || tab === "diary") && !document.body.classList.contains("tw-char")) { tab = "hero"; renderTabs(); renderPanel(true); return true; }   // [journal] Character sub-pages
       if (S && tab === "places") { tab = "map"; renderTabs(); renderPanel(true); return true; }
+      if (S && tab === "town" && townShop && $("#side .au-back")) { townShop = ""; renderPanel(true); return true; }   // [qa-core] in a shop or the inn: back goes to the town's board first, like its ‹ button
       if (typeof TABMENU !== "undefined") { const r = TABMENU.back(opts); if (r !== null) return r; }   // the compass is home (tabmenu.js); on a PC the map is
       if (S && tab !== "map") { tab = "map"; bump(); renderTabs(); renderPanel(true); return true; }
       return false;
@@ -536,6 +548,8 @@
       if ($("#title")) return true;
       if (!S || S.dungeon || S.trip?.event || S.encounter) return false;
       if (["modal", "tbf", "tbwatch", "lockpick", "pickgame", "sky", "tw", "nickbox", "breach", "dwgame", "bugrep", "lvlpick"].some((id) => document.getElementById(id))) return false;
+      // any mini-game on screen (fishing, mining, hunting, the forge, brewing, rune table, tourney games, dungeon locks...): a restart would lose the catch
+      if (document.querySelector(".craftgame, .lockpick, .smithgame, .xgame, .rct-wrap, #exp-layer:not(:empty)")) return false;
       if ((coopUI?.runs || []).length) return false;
       return true;
     },
@@ -1964,12 +1978,15 @@
   // ------------------------------------------------------------ the Jarl's bounty board
   let lastDragons = null;
   // ------------------------------------------------------------ tutorial: a guided first trip, then one tip per tab
+  /* [qa-core] tutorial lines are translated whole (i18n_qacore.js): the on-screen swap can't reach sentences split by <b> */
+  const LT = (en, v) => typeof I18N !== "undefined" && I18N.t ? I18N.t(en, v) : en.replace(/\{(\w+)\}/g, (m, k) => (v && k in v ? String(v[k]) : m));
+  if (typeof I18N !== "undefined" && I18N.add && typeof I18N_QACORE !== "undefined") I18N.add(I18N_QACORE.tpl);
   const TUT = [
     null,
-    { title: "Your first trip", text: () => ppUI && party && !ppUI.canDecide() ? `Welcome to Skyrim, ${S.name}. You're in a party: the leader picks where to go and you travel with them. Watch the map; the next step starts when you set off.` : `Welcome to Skyrim, ${S.name}. Everything happens in real time. Tap <b>Whiterun</b> on the map and press <b>Travel</b>, or press <b>Go</b> next to it in the list below.${party ? " Your party comes along." : ""}`, done: () => !!S.trip || S.location === "Whiterun" },
-    { title: "On the road", text: () => `You're walking. Trips keep going even when the app is closed, and something may happen by the road${typeof TB !== "undefined" && TB.enabled() ? ": if it's a fight, you play it turn by turn (or press Auto)" : ""}. You can ride a horse later, or take a carriage between cities.`, done: () => !S.trip },
-    { title: "You've arrived", text: () => `Open the <b>Town</b> tab. In towns and cities it has shops, the inn, trainers, the forge, jobs and more${S.location && TOWNS.isTown(S.location) ? "" : " (this spot is out in the wilds, so it shows what you can do here)"}.`, done: () => tab === "town" },
-    { title: "Quests", text: () => "Now open the <b>Journal</b>. Your quests are there, and the gold diamond on the map shows where to go next. Chat and other players are under <b>Social</b>.", done: () => tab === "log" },
+    { title: "Your first trip", text: () => ppUI && party && !ppUI.canDecide() ? LT("Welcome to Skyrim, {name}. You're in a party: the leader picks where to go and you travel with them. Watch the map; the next step starts when you set off.", { name: esc(S.name) }) : LT("Welcome to Skyrim, {name}. Everything happens in real time. Tap <b>Whiterun</b> on the map and press <b>Travel</b>, or press <b>Go</b> next to it in the list below.", { name: esc(S.name) }) + (party ? " " + LT("Your party comes along.") : ""), done: () => !!S.trip || S.location === "Whiterun" },
+    { title: "On the road", text: () => typeof TB !== "undefined" && TB.enabled() ? LT("You're walking. Trips keep going even when the app is closed, and something may happen by the road: if it's a fight, you play it turn by turn (or press Auto). You can ride a horse later, or take a carriage between cities.") : LT("You're walking. Trips keep going even when the app is closed, and something may happen by the road. You can ride a horse later, or take a carriage between cities."), done: () => !S.trip },
+    { title: "You've arrived", text: () => S.location && TOWNS.isTown(S.location) ? LT("Open the <b>Area</b> tab. In towns and cities it has shops, the inn, trainers, the forge, jobs and more.") : LT("Open the <b>Area</b> tab. This spot is out in the wilds, so it shows what you can do here."), done: () => tab === "town" },   // [qa-core] the tab is called Area now
+    { title: "Quests", text: () => LT("Now open the <b>Journal</b>. Your quests are there, and the gold diamond on the map shows where to go next. Chat and other players are under <b>Social</b>."), done: () => tab === "log" },
   ];
   const TAB_TIPS = {
     map: "Start with the “What to do next” card. Press Go to travel; tap any place on the map to see how far it is.",
@@ -1987,7 +2004,7 @@
     if (t.step > 0 && t.step < TUT.length) {
       while (t.step < TUT.length && TUT[t.step].done()) t.step++;
       if (t.step >= TUT.length) { t.step = 0; S.gold += 100; Store.save(S); setTimeout(() => { SOUND.fx("quest"); toast("Tutorial done. Riverwood's steward sends you 100 gold for the road."); }, 300); }
-      else { const st = TUT[t.step]; return `<div class="tut"><div class="tut-h"><b>${esc(st.title)}</b><span class="sub">${t.step} of ${TUT.length - 1}</span></div><p>${st.text()}</p><button class="linkbtn" data-act="tutskip">Skip the tutorial</button></div>`; }
+      else { const st = TUT[t.step]; return `<div class="tut"><div class="tut-h"><b>${esc(LT(st.title))}</b><span class="sub">${esc(LT("{n} of {m}", { n: t.step, m: TUT.length - 1 }))}</span></div><p>${st.text()}</p><button class="linkbtn" data-act="tutskip">${esc(LT("Skip the tutorial"))}</button></div>`; }
     }
     if (guideOffer()) return guideOffer();
     if (TAB_TIPS[tab] && !t.seen?.[tab]) return `<div class="tut"><p> ${TAB_TIPS[tab]}</p><button class="btn sm" data-act="tutseen">Got it</button></div>`;

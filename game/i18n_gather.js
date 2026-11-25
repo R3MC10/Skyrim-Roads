@@ -40,7 +40,7 @@ const I18N_GATHER = (() => {
     "Too many green ones.": "Za dużo zielonych.",
     "Time's up.": "Koniec czasu.",
     "Too slow: you grab what you can.": "Za wolno: łapiesz, co się da.",
-    Harvest: "Zbiór", Gather: "Zbierz", Stop: "Przerwij", Quick: "Szybko", Done: "Gotowe", Deliver: "Oddaj",
+    Harvest: "Zbiór", Gather: "Zbierz", Stop: "Przerwij", "Quick pick": "Szybko zbierz", "Herbalist's notes": "Notatki zielarza", Done: "Gotowe", Deliver: "Oddaj",
     "Perfect harvest": "Idealny zbiór", "Good harvest": "Dobry zbiór", "Rough harvest": "Niezgrabny zbiór",
     "Green Thumb": "Zielony Palec", doubled: "podwójnie", "Nothing gathered.": "Nic nie zebrano.",
     "You can Quick Gather this one now.": "Tę roślinę możesz już zbierać szybko.",
@@ -77,8 +77,8 @@ const I18N_GATHER = (() => {
     "Picking herbs by hand": "Zbieranie ziół własnymi rękami",
     "Gathering is now a short hands-on mini-game: snip flowers at the stem, dig roots up slowly, scrape fungus in one stroke, pick only the ripe berries, lift eggs gently and ease a fragile Nirnroot out of the mud. Do it well and you get more; even a clumsy try gives you something.":
       "Zbieranie to teraz krótka minigra: ucinasz kwiaty przy łodydze, powoli wykopujesz korzenie, zeskrobujesz grzyby jednym ruchem, zrywasz tylko dojrzałe jagody, delikatnie podnosisz jaja i ostrożnie wyciągasz kruchy nirnkorzeń z błota. Im lepiej ci pójdzie, tym więcej zbierzesz; nawet niezgrabna próba coś daje.",
-    "Picked a plant three times by hand? A Quick button lets you skip the mini-game for a slightly smaller handful.":
-      "Zebrałeś roślinę trzy razy ręcznie? Przycisk Szybko pozwala pominąć minigrę za nieco mniejszą garść.",
+    "Picked a plant three times by hand? A Quick pick button lets you skip the mini-game for a slightly smaller handful.":
+      "Zebrałeś roślinę trzy razy ręcznie? Przycisk Szybko zbierz pozwala pominąć minigrę za nieco mniejszą garść.",
     "Herbs nearby are easy to spot: painted markers on the map, a ring that shows how far you can reach, and a Gather button that pops up on the road, even while you ride past.":
       "Zioła w pobliżu łatwo wypatrzyć: malowane znaczniki na mapie, krąg pokazujący twój zasięg i przycisk Zbierz, który wyskakuje w drodze, nawet gdy przejeżdżasz konno.",
     "Now and then you find a perfect or a glowing plant. The next potion you brew with it is 15% or 25% stronger.":
@@ -87,10 +87,12 @@ const I18N_GATHER = (() => {
       "Alchemik w każdym mieście co dzień wystawia zamówienie na zioła, które dobrze płaci, a jeszcze lepiej, gdy kraina ma kłopoty. Tego dnia to zioło sprzedaje się tam też drożej.",
     "New recipes: Snowberry and Juniper Berry crostatas at the cooking fire, and Tundra Cotton twists into leather strips at the tanning rack.":
       "Nowe przepisy: crostaty ze śnieżnymi jagodami i z jałowcem przy ognisku, a bawełnę tundrową skręcisz w paski skóry na stojaku garbarskim.",
-    "Four new Alchemy perks: Herbalist's Eye (more rare finds), Sure Hands (easier mini-game, Quick sooner), Anatomist (extra parts from beasts) and Master Gardener (more from every garden bed).":
-      "Cztery nowe atuty alchemii: Oko zielarza (więcej rzadkich znalezisk), Pewne ręce (łatwiejsza minigra, Szybko wcześniej), Anatom (dodatkowe części z bestii) i Mistrz ogrodnik (więcej z każdej grządki).",
+    "Four new Alchemy perks: Herbalist's Eye (more rare finds), Sure Hands (easier mini-game, Quick pick sooner), Anatomist (extra parts from beasts) and Master Gardener (more from every garden bed).":
+      "Cztery nowe atuty alchemii: Oko zielarza (więcej rzadkich znalezisk), Pewne ręce (łatwiejsza minigra, Szybko zbierz wcześniej), Anatom (dodatkowe części z bestii) i Mistrz ogrodnik (więcej z każdej grządki).",
     "In a party everyone picks their own share of each patch, so there's nothing to fight over.":
       "W drużynie każdy zbiera swoją część z każdej kępy, więc nie ma się o co kłócić.",
+    "In Polish the Gathering card is fully translated now: distance, weight, regrowth time and the garden.":
+      "Po polsku karta Zbieranie jest teraz w pełni przetłumaczona: odległość, waga, czas odrastania i ogródek.",
   };
   /* lines with {markers}: HARVEST.T fills them in */
   const TPL = {
@@ -105,8 +107,8 @@ const I18N_GATHER = (() => {
     "Pays {g} gold · you have {n}": "Płaci {g} złota · masz {n}",
     "Pays {g} gold (hard times in the hold: they pay extra) · you have {n}": "Płaci {g} złota (ciężkie czasy w krainie: płacą więcej) · masz {n}",
     "{item} is wanted here today, so it also sells for more in this town.": "Tu dziś szukają: {item}, więc w tym mieście sprzedaje się to też drożej.",
-    "Tap Gather to pick by hand: better hands, bigger yield. Picked a plant {n} times? Quick skips the mini-game. In a party everyone picks their own share of each patch.":
-      "Stuknij Zbierz, by zbierać ręcznie: zręczniejsze ręce, większy zbiór. Zebrałeś roślinę {n} razy? Szybko pomija minigrę. W drużynie każdy zbiera swoją część z każdej kępy.",
+    "Tap Gather to pick by hand: better hands, bigger yield. Picked a plant {n} times? Quick pick skips the mini-game. In a party everyone picks their own share of each patch.":
+      "Stuknij Zbieraj, by zbierać ręcznie: zręczniejsze ręce, większy zbiór. Zebrałeś roślinę {n} razy? Szybko zbierz pomija minigrę. W drużynie każdy zbiera swoją część z każdej kępy.",
     "Quick Gather unlocked for {item}.": "Szybkie zbieranie odblokowane: {item}.",
     "Hand-picked {n} of {m}: then Quick Gather opens.": "Zebrane ręcznie {n} z {m}: potem otworzy się szybkie zbieranie.",
   };

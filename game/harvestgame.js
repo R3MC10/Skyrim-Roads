@@ -348,7 +348,7 @@ const HARVESTGAME = (() => {
   function nearHTML(s) {
     const n = HARVEST.nearPrompt(s); if (!n) return "";
     if (n.kind !== "clam" && typeof ASSETS !== "undefined") ASSETS.img("harvest-" + n.kind);   // start loading the painting before Gather is tapped
-    return `<div class="gnear">${typeof ICONART !== "undefined" ? ICONART.item(n.ing, 28) : ""}<span class="gn-t"><b>${esc(n.name)}</b><small>${n.riding ? "in reach as you pass" : "in reach"} · ${esc(HARVEST.howTo(n.ing))}</small></span>${n.quick ? `<button class="btn sm" data-act="gquick" data-id="${esc(n.id)}">Quick</button>` : ""}<button class="btn sm pri" data-act="gpick" data-id="${esc(n.id)}">Gather</button></div>`;
+    return `<div class="gnear">${typeof ICONART !== "undefined" ? ICONART.item(n.ing, 28) : ""}<span class="gn-t"><b>${esc(n.name)}</b><small>${n.riding ? "in reach as you pass" : "in reach"} · ${esc(HARVEST.howTo(n.ing))}</small></span>${n.quick ? `<button class="btn sm" data-act="gquick" data-id="${esc(n.id)}">Quick pick</button>` : ""}<button class="btn sm pri" data-act="gpick" data-id="${esc(n.id)}">Gather</button></div>`;
   }
 
   return { ok, open, close, isOpen, nearHTML, TIME, TIP, get cur() { return cur; }, _finish: (grade) => cur && finish(cur, grade) };
