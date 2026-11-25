@@ -252,7 +252,8 @@ const CHARGEN = (() => {
     const sp = FIGART.specOf(Lk), cs = Math.cos(st.angle), sx = (cs < 0 ? -1 : 1) * Math.max(0.18, Math.abs(cs));
     // [chargenrig] the painted fight figure (chargenrig.js) once its parts load; the ink figure below until then
     const chips = st.root?.querySelector(".cgposes")?.getBoundingClientRect(), floor = chips && chips.height ? (chips.top - r.top - 6) * dpr : 0;   // the feet stand just above the pose chips
-    const painted = typeof CGRIG !== "undefined" && CGRIG.paint(g, W, H, Lk, { pose, face, t: anim ? now : 0, sx, floor });
+    const ctl = st.root?.querySelector(".cgctl")?.getBoundingClientRect(), top = ctl && ctl.height ? (ctl.bottom - r.top + 6) * dpr : 0;   // [raceheads] and the head stays below the rotate / Face buttons
+    const painted = typeof CGRIG !== "undefined" && CGRIG.paint(g, W, H, Lk, { pose, face, t: anim ? now : 0, sx, floor, top });
     if (st.root) st.root.classList.toggle("cg-painted", !!painted);
     if (painted) { g.setTransform(1, 0, 0, 1, 0, 0); return; }
     try {

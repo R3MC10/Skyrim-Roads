@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b263-raceheads", build: 263, date: "25 Nov 2026", title: "Every race has its own painted face", items: [
+      "Imperials, Bretons, Redguards, Altmer, Bosmer and Orcs now have their own painted heads, for men and women, in fights and in character creation. Every race in the game has one now.",
+      "Switching race in character creation no longer flashes a Nord head for a moment: the hero appears once the right face is ready.",
+      "On a phone, your hero's head and a raised sword stay below the turn and Face buttons instead of hiding behind them.",
+    ] },
     { id: "b262-phonelayout", build: 262, date: "25 Nov 2026", title: "Tidier screens on phones", items: [
       "On a phone, the Area tab lists places in full-width rows: icon, name and whether it's open. Open places come first; shut ones fold away under \"Closed\". Two columns only when every name fits.",
       "On a phone, the Company tab shows your longhouse right under the Party / Company / Friends / Realm row. Messages, trades and chat fold away under More.",
