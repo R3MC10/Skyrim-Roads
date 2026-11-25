@@ -87,6 +87,7 @@ const QUESTS = (() => {
   function target(st) { const o = st.obj; return o.go || o.clear || o.talk || o.at || (o.flag === "thaneWhiterun" ? "Whiterun" : o.flag === "greybeards" ? "High Hrothgar" : null); }
   function met(s, id, st, v) {
     const o = st.obj;
+    if (typeof o.test === "function") { try { return !!o.test(s, v); } catch { return false; } }   // introquests.js: "work the forge", "hire a follower"...
     if (o.masks) return typeof PRIESTS !== "undefined" && PRIESTS.count(s) >= o.masks;
     if (o.go) return s.location === o.go;
     if ((o.or && s[o.or]) || (o.orItem && (s.inv || []).some((r) => r.item === o.orItem))) return true;

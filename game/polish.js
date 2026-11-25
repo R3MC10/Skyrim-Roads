@@ -1,5 +1,5 @@
 /* Polish: the little Skyrim-style moments around the interface. Banners that slide in when a skill rises
-   ("ONE-HANDED INCREASED TO 26"), a quest is done, a place is discovered, an achievement is earned or you level up;
+   ("ONE-HANDED INCREASED TO 26"), a quest is done, a place is discovered, or an achievement is earned (level-ups: levelup.js and rewards.js);
    floating "+N gold" by your purse; a tiny icon on toasts; a fade when you switch tabs; a dark paper texture
    for panels drawn once with ART. Everything here is decoration: it never blocks taps (pointer-events: none)
    and does nothing when the player prefers reduced motion beyond showing the banner without movement. [OURS] */
@@ -110,11 +110,6 @@ const POLISH = (() => {
     const h = PLACEART.scene(name);
     return h.replace('class="art scene"', 'class="art pmini"');
   }
-  function levelUp(level) {
-    const ic = has("UIART") ? UIART.ach("level", 40) : "";
-    banner("level", "Level up", `You reached level ${level}`, ic);
-    burst();
-  }
   function burst() {
     if (reduce || typeof document === "undefined") return;
     const el = document.createElement("div"); el.className = "pburst";
@@ -163,5 +158,5 @@ const POLISH = (() => {
     el.classList.remove("pswap"); void el.offsetWidth; el.classList.add("pswap");
   }
 
-  return { banner, raw, fromText, levelUp, gold, toast, swap, texture, burst };
+  return { banner, raw, fromText, gold, toast, swap, texture, burst };
 })();

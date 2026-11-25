@@ -1,6 +1,6 @@
 /* Motion: the movement of the interface. Menus slide in from the side you opened them, lists ripple in,
    buttons give under your thumb, tab underlines glide, gold and level count up, the XP bar fills with a
-   shimmer, a constellation lights up on level-up, things you buy or make fly to your pack, toasts bounce in,
+   shimmer, a constellation lights up for a big reward (rewards.js), things you buy or make fly to your pack, toasts bounce in,
    popups pop over a soft blur, pins drop on the map, the route draws itself, fog wipes away from new places,
    the title breathes with mist and embers, and arriving in a town fades its name in.
    Rules: only transform and opacity move (so phones stay at 60 fps), everything is decoration that never blocks
@@ -319,9 +319,15 @@ const MOTION = (() => {
   function wrapPolish() {
     if (typeof POLISH === "undefined" || POLISH._mo) return;
     POLISH._mo = true;
-    const t = POLISH.toast, lv = POLISH.levelUp;
+    const t = POLISH.toast;
     POLISH.toast = (el, text) => { t(el, text); onToast(text); };
-    POLISH.levelUp = (level) => { lv(level); constellation(); const lb = document.getElementById("lvlb"); if (lb) restart(lb, "mo-lvl"); };
+  }
+  /* rewards.js: a big reward scene lights the constellation and bumps the level badge (nothing with motion off) */
+  function celebrate() {
+    if (!on()) return null;
+    constellation();
+    const lb = document.getElementById("lvlb"); if (lb) restart(lb, "mo-lvl");
+    return document.querySelector("body > .mo-const:last-of-type");
   }
 
   function init() {
@@ -335,7 +341,7 @@ const MOTION = (() => {
   }
   if (DOM) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else setTimeout(init, 0); }
 
-  return { DUR, EASE, ease, spring, tween, on, lite, pref: () => pref, setPref, apply, count, xp, underline, tabs, stagger, menu, panel, fly, constellation, place,
+  return { DUR, EASE, ease, spring, tween, on, lite, pref: () => pref, setPref, apply, count, xp, underline, tabs, stagger, menu, panel, fly, constellation, celebrate, place,
     routeT, cutPath, pinDrop, trackDiscoveries, fogLift, mapBusy, titleAmbient, _onToast: onToast };
 })();
 if (typeof module !== "undefined") module.exports = MOTION;
