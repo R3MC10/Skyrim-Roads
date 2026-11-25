@@ -58,8 +58,8 @@ const COMBAT2 = (() => {
     const chips = el.querySelectorAll(".tbtop .tbord .tbini");
     chips.forEach((c, i) => {
       const o = sess.order[i]; if (!o) return;
-      const ini = c.querySelector("i")?.textContent || "";
-      c.innerHTML = `<span class="c2pt" aria-hidden="true">${portraitOf(o, sess.f)}</span><span class="c2nm">${esc(String(o.name || "").split(" ")[0])}</span><i>${esc(ini)}</i>`;
+      const ini = c.querySelector("i")?.textContent || "", ag = c.querySelector(".tbag")?.textContent || "";   // the same foe's 2nd/3rd move this round (tbfight.js)
+      c.innerHTML = `<span class="c2pt" aria-hidden="true">${portraitOf(o, sess.f)}</span><span class="c2nm">${esc(String(o.name || "").split(" ")[0])}</span>${ag ? `<b class="tbag">${esc(ag)}</b>` : ""}<i>${esc(ini)}</i>`;
     });
     const rb = el.querySelector(".tbtop > b");
     if (rb && !rb.classList.contains("c2rd")) { rb.classList.add("c2rd"); rb.innerHTML = `<small>${esc(T("Round"))}</small>${esc(String(sess.round))}`; }

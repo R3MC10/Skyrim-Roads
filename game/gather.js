@@ -205,15 +205,19 @@ const GATHER = (() => {
     return around([s.x, s.y], REACH_PX).filter((n) => st(s).seen[n.id] || pxd([s.x, s.y], n.pos) <= SPOT_PX)
       .map((n) => ({ ...n, ripe: ripe(s, n, t), d: pxd([s.x, s.y], n.pos) })).sort((a, b) => a.d - b.d).slice(0, 8);
   }
-  function pick(s, id, t = G.now(), passing = false) {
+  /* opt.grade: how a hand harvest went (harvestgame.js): "fail" | "good" | "perfect"; none = a quick pick (Gather all, auto-pick, Quick) */
+  function pick(s, id, t = G.now(), passing = false, opt = {}) {
     const n = byId(id);
     if (!n) return { err: "Nothing grows there." };
     if (!passing && !(pxd([s.x, s.y], n.pos) <= REACH_PX + 1)) return { err: "That patch is too far away. Walk closer." };
     if (!ripe(s, n, t)) return { err: `Already picked. It grows back in about ${Math.ceil(growsIn(s, n, t) / 300)} in-game hours.` };
-    const k = (n.ing === "ing_nirnroot" || /pearl/.test(n.ing) ? 1 : rint(1, 3)) * thumb(s);   // [Skyrim] Nirnroot and clams give one; [OURS] other plants 1–3
+    const grade = opt && /^(fail|good|perfect)$/.test(opt.grade) ? opt.grade : "quick";
+    const H = typeof HARVEST !== "undefined" ? HARVEST : null;
+    const k = (H ? H.amount(s, n.ing, grade) : n.ing === "ing_nirnroot" || /pearl/.test(n.ing) ? 1 : rint(1, 3)) * thumb(s);   // [Skyrim] Nirnroot and clams give one; [OURS] harvest.js
     st(s).seen[n.id] = 1; st(s).picked[n.id] = t;
     giveIng(s, n.ing, k);
-    return { ok: true, text: `You gather ${name(n.ing)} ×${k}${thumb(s) > 1 ? " (Green Thumb)" : ""}.`, item: n.ing, n: k };
+    const rare = H ? H.afterPick(s, n.ing, grade, t) : null;   // a perfect or glowing specimen, and how often you've picked this by hand
+    return { ok: true, text: `You gather ${name(n.ing)} ×${k}${thumb(s) > 1 ? " (Green Thumb)" : ""}.${rare ? ` One is ${rare.word.toLowerCase()}!` : ""}`, item: n.ing, n: k, grade, rare };
   }
   function pickAll(s, t = G.now()) {
     const got = nearby(s, t).filter((n) => n.ripe).map((n) => pick(s, n.id, t)).filter((r) => r.ok);
@@ -258,7 +262,9 @@ const GATHER = (() => {
   function creatureParts(s, e) {
     if (!e || e.fled) return [];
     const got = [], nm = e.name || "";
-    for (const [re, id, ch] of PARTS) if (re.test(nm) && D.ITEMS[id] && Math.random() < ch) { const k = thumb(s); giveIng(s, id, k); got.push(name(id) + (k > 1 ? ` ×${k}` : "")); }
+    let first = null;
+    for (const [re, id, ch] of PARTS) if (re.test(nm) && D.ITEMS[id] && Math.random() < ch) { const k = thumb(s); giveIng(s, id, k); got.push(name(id) + (k > 1 ? ` ×${k}` : "")); first = first || id; }
+    if (first && Math.random() < Math.min(0.6, pnum(s, "hparts"))) { giveIng(s, first, 1); got.push(`${name(first)} (Anatomist)`); }   // Anatomist: one more part
     return got;
   }
 
@@ -282,7 +288,8 @@ const GATHER = (() => {
       if (choice === "gatherherb" && r?.herb) {
         const id = r.herb, k = rint(1, 3) * thumb(s); r.herb = null;
         giveIng(s, id, k); s.dungeon.found.push(`${name(id)}${k > 1 ? ` ×${k}` : ""}`);
-        return { text: `You scrape ${name(id)} ×${k} off the damp stone.`, stay: true };
+        const rare = typeof HARVEST !== "undefined" ? HARVEST.afterPick(s, id, "good", t) : null;
+        return { text: `You scrape ${name(id)} ×${k} off the damp stone.${rare ? ` One is ${rare.word.toLowerCase()}!` : ""}`, stay: true };
       }
       return act0(s, choice, t);
     };
@@ -290,6 +297,7 @@ const GATHER = (() => {
 
   /* home gardens: three beds you choose */
   const BED_MAX = 3;
+  const bedYield = (s) => 2 + Math.min(1, pnum(s, "hgarden"));   // Master Gardener: one more per bed
   function plantable(s) { return [...new Set(s.inv.filter((r) => D.ITEMS[r.item]?.slot === "ingredient" && plantOk(r.item)).map((r) => r.item))]; }
   const plantOk = (id) => Object.values(BIOME).some((l) => l.some(([x]) => x === id)) || Object.values(HOLD_EXTRA).some((l) => l.some(([x]) => x === id)) || WATER.some(([x]) => x === id) || CAVE.some(([x]) => x === id) || ["ing_garlic", "ing_wheat"].includes(id);
   function beds(s, town = s.location) { return (st(s).beds[town] = st(s).beds[town] || []); }
@@ -313,7 +321,7 @@ const GATHER = (() => {
       const b = beds(s);
       if (!b.length || !TOWNS.gardenReady(s, t)) return harvest0(s, t);
       TOWNS.home(s).garden = t;
-      const sum = {}; for (const id of b) sum[id] = (sum[id] || 0) + 2 * thumb(s);
+      const sum = {}; for (const id of b) sum[id] = (sum[id] || 0) + bedYield(s) * thumb(s);
       for (const [id, n] of Object.entries(sum)) giveIng(s, id, n);
       return `You harvest the garden: ${Object.entries(sum).map(([id, n]) => `${name(id)} ×${n}`).join(", ")}.`;
     };
@@ -321,7 +329,7 @@ const GATHER = (() => {
   function gardenHTML(s) {
     if (typeof TOWNS === "undefined" || !TOWNS.home?.(s)) return "";
     const b = beds(s), can = plantable(s);
-    return `<div class="gbeds"><div class="sub">Garden beds (${b.length}/${BED_MAX}): each harvest gives 2 of every planted ingredient.</div>
+    return `<div class="gbeds"><div class="sub">Garden beds (${b.length}/${BED_MAX}): each harvest gives ${bedYield(s)} of every planted ingredient.</div>
       ${b.map((id, i) => `<span class="gbed">${ICONART.item(id, 22)} ${esc(name(id))} <button class="btn sm" data-act="gunplant" data-id="${i}" aria-label="Clear bed">✕</button></span>`).join("")}
       ${b.length < BED_MAX && can.length ? `<div class="gplant">${can.slice(0, 12).map((id) => `<button class="btn sm" data-act="gplant" data-id="${id}"> ${esc(name(id))}</button>`).join("")}</div>` : b.length < BED_MAX ? '<div class="sub">Carry a wild ingredient (flowers, berries, mushrooms) to plant it.</div>' : ""}</div>`;
   }
@@ -338,7 +346,8 @@ const GATHER = (() => {
     if (!Number.isFinite(s.x) || s.dungeon) return "";
     const list = nearby(s, t), f = canForage(s, t);
     if (!list.length && !f.ok && !f.left) return "";
-    const rows = list.map((n) => `<div class="item gnode ${n.ripe ? "" : "gdone"}">${ICONART.item(n.ing, 30)}<div class="t">${esc(name(n.ing))}<span>${n.ripe ? `${Math.round(n.d)} paces away · ${D.ITEMS[n.ing].weight} wt each` : `Picked · grows back in ~${Math.ceil(growsIn(s, n, t) / 300)} in-game h`}</span></div>${n.ripe ? `<button class="btn sm" data-act="gpick" data-id="${n.id}">Gather</button>` : ""}</div>`).join("");
+    const H = typeof HARVEST !== "undefined" ? HARVEST : null;
+    const rows = list.map((n) => `<div class="item gnode ${n.ripe ? "" : "gdone"}">${ICONART.item(n.ing, 30)}<div class="t">${esc(name(n.ing))}<span>${n.ripe ? `${Math.round(n.d)} paces away · ${D.ITEMS[n.ing].weight} wt each${H ? ` · ${esc(H.howTo(n.ing))}` : ""}` : `Picked · grows back in ~${Math.ceil(growsIn(s, n, t) / 300)} in-game h`}</span></div>${n.ripe ? `${H && H.canQuick(s, n.ing) ? `<button class="btn sm" data-act="gquick" data-id="${n.id}" title="Quick Gather: no mini-game, a little less">Quick pick</button>` : ""}<button class="btn sm pri" data-act="gpick" data-id="${n.id}">Gather</button>` : ""}</div>`).join("");
     const ripeN = list.filter((n) => n.ripe).length;
     return `<div class="panel gcard"><h2> Gathering</h2>
       ${rows || '<p class="sub">No plants spotted right here. Patches you pass on the road show on the map as leaves.</p>'}
@@ -346,7 +355,7 @@ const GATHER = (() => {
       <button class="btn" data-act="gforage" ${f.ok ? "" : "disabled"} title="${esc(f.why || "Search the ground for whatever grows here")}"> Forage here</button>
       <button class="btn" data-act="gnotes"> Herbalist's notes</button></div>
       <div class="gauto"><button class="btn ${st(s).auto ? "pri" : ""}" data-act="gauto" aria-pressed="${st(s).auto}">${st(s).auto ? "Auto-pick: On" : "Auto-pick: Off"}</button></div>
-      ${!f.ok && f.why ? `<p class="sub">${esc(f.why)}</p>` : ""}</div>`;
+      ${!f.ok && f.why ? `<p class="sub">${esc(f.why)}</p>` : ""}${H ? H.cardFoot(s) : ""}</div>`;
   }
 
   /* Herbalist's notes: every ingredient, how many you've got, where it grows, what you know */
@@ -364,12 +373,14 @@ const GATHER = (() => {
   function marks(s, t = G.now()) {
     if (!s.gather) return [];
     const g = st(s), here = [s.x, s.y], out = [];
-    for (const id of Object.keys(g.seen)) { const n = byId(id); if (n && WORLD.same(n.pos, here)) out.push({ pos: n.pos, ripe: ripe(s, n, t), ing: n.ing, label: name(n.ing) }); }
+    for (const id of Object.keys(g.seen)) { const n = byId(id); if (n && WORLD.same(n.pos, here)) out.push({ pos: n.pos, ripe: ripe(s, n, t), ing: n.ing, label: name(n.ing), kind: typeof HARVEST !== "undefined" ? HARVEST.kindOf(n.ing) : "flower" }); }
     return out;
   }
 
-  function act(s, what, id, t = G.now()) {
-    if (what === "gpick") return pick(s, id, t);
+  function act(s, what, id, t = G.now(), opt = {}) {
+    if (what === "gpick") return pick(s, id, t, !!opt.passing, opt);
+    if (what === "gquick") return pick(s, id, t);
+    if (what === "hdeliver" && typeof HARVEST !== "undefined") return HARVEST.deliver(s, t);
     if (what === "gpickall") return pickAll(s, t);
     if (what === "gforage") return forage(s, t);
     if (what === "gauto") { st(s).auto = !st(s).auto; return { ok: true, text: st(s).auto ? "You'll pick ripe plants as you pass them." : "You'll only pick plants when you choose to." }; }
@@ -380,6 +391,6 @@ const GATHER = (() => {
   }
 
   dungeonHooks(); gardenHooks();
-  return { NEW_ING, BIOME, HOLD_EXTRA, CAVE, WHERE, RESPAWN, SPOT_PX, REACH_PX, FORAGE_COOLDOWN, nodes, around, plantsAt, onStep, nearby, pick, pickAll, canForage, forage,
+  return { NEW_ING, BIOME, HOLD_EXTRA, CAVE, WATER, COAST, WHERE, RESPAWN, SPOT_PX, REACH_PX, FORAGE_COOLDOWN, nodes, byId, around, plantsAt, pxd, onStep, nearby, pick, pickAll, canForage, forage,
     creatureParts, plant, unplant, beds, plantable, gardenHTML, fxHTML, card, notesHTML, marks, act, st, ripe };
 })();

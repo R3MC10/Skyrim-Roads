@@ -3,6 +3,56 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b251-perklayout", build: 251, date: "25 Nov 2026", title: "Tidier perk stars", items: [
+      "Perk names in the star trees never sit on top of each other any more, and long names are never cut short with \"…\": they wrap onto a second line instead.",
+      "Each perk now sits right above the perks it needs, with the first ones at the bottom, so the trees read from the ground up.",
+      "On a phone, pinch the stars to zoom in or out and drag to look around. Zoomed far out, only the perks you can take keep their names.",
+      "On a phone, tapping a star shows the perk in a panel at the bottom of the screen instead of a pop-up over the stars.",
+    ] },
+    { id: "b250-qafight", build: 250, date: "25 Nov 2026", title: "Fight fixes", items: [
+      "Fixed: on phones, casting a heal with a follower along asked you to tap a portrait, but the Magic menu covered every portrait. The bar at the top now has a button for each person you can heal.",
+      "Fixed: if the last foe fell between your moves, End turn and every other button could do nothing and the fight never ended. Any tap now finishes the fight.",
+      "Fixed: more of the fight screen is in Polish (choosing who gets a heal, Your turn, Dual, the Magic and Items hints).",
+    ] },
+    { id: "b249-testsgreen", build: 249, date: "25 Nov 2026", title: "Coming next, tidied", items: [
+      "Picking herbs by hand is out now, so it left the Coming next list.",
+    ] },
+    { id: "b248-chargenrig", build: 248, date: "25 Nov 2026", title: "Character creation shows your real fighter", items: [
+      "Character creation now shows the same painted hero you fight with: armour, weapon and all. Stand, Walk and Fight show how you'll really look on the road and in battle.",
+      "Picking a race swaps the painted head (Dunmer, Khajiit and Argonian have their own) and skin colour; everything else you chose stays.",
+      "Face zooms right in on your hero's head. On the Head, Face, Hair and Scars tabs a small close-up shows the details you pick.",
+      "The race card shows the painted bust of the race instead of the little drawn figure.",
+    ] },
+    { id: "b247-movefx1", build: 247, date: "25 Nov 2026", title: "Real arrows and spell effects", items: [
+      "Bows and crossbows shoot a real arrow or bolt now: it leaves the string, arcs over (a bolt flies flatter and faster), and sticks in, breaks on a shield, or sails past on a miss and lands in the ground behind.",
+      "Archer foes, crossbowmen and the Dwarven ballista shoot too, and your followers and party members loose their own arrows. Shots leave from the saddle when you ride.",
+      "Fire, frost, shock, poison and life-drain arrows leave a coloured trail; power shots and sneak shots are bigger.",
+      "Every spell now has its own look: Flames is a jet, Firebolt a comet, Fireball a lob that bursts, Ice Spike a shard, Icy Spear a big spear, Lightning Bolt a jagged arc, Chain Lightning forks from foe to foe, and so on through healing, wards, flesh spells, summons, illusions and the rest. Dual casting looks bigger, from both hands.",
+    ] },
+    { id: "b246-gathering", build: 246, date: "25 Nov 2026", title: "Picking herbs by hand", items: [
+      "Gathering is now a short hands-on mini-game: snip flowers at the stem, dig roots up slowly, scrape fungus in one stroke, pick only the ripe berries, lift eggs gently and ease a fragile Nirnroot out of the mud. Do it well and you get more; even a clumsy try gives you something.",
+      "Picked a plant three times by hand? A Quick pick button lets you skip the mini-game for a slightly smaller handful.",
+      "Herbs nearby are easy to spot: painted markers on the map, a ring that shows how far you can reach, and a Gather button that pops up on the road, even while you ride past.",
+      "Now and then you find a perfect or a glowing plant. The next potion you brew with it is 15% or 25% stronger.",
+      "Each town's alchemist posts a daily herb order that pays well, and more when the hold is in trouble. That herb also sells for more there that day.",
+      "New recipes: Snowberry and Juniper Berry crostatas at the cooking fire, and Tundra Cotton twists into leather strips at the tanning rack.",
+      "Four new Alchemy perks: Herbalist's Eye (more rare finds), Sure Hands (easier mini-game, Quick pick sooner), Anatomist (extra parts from beasts) and Master Gardener (more from every garden bed).",
+      "In a party everyone picks their own share of each patch, so there's nothing to fight over.",
+      "In Polish the Gathering card is fully translated now: distance, weight, regrowth time and the garden.",
+    ] },
+    { id: "b245-lhgrow", build: 245, date: "25 Nov 2026", title: "The longhouse grows", items: [
+      "Every room you build now shows on the longhouse picture: a smithy at the side, trophies on the gable, a war table inside the doors, lit library windows and a stable with horses.",
+      "Each room looks bigger and richer at levels 2 and 3, and a new level fades in right after you build it.",
+      "Tap a room on the picture to jump to its card.",
+    ] },
+    { id: "b244-fighthotfix", build: 244, date: "25 Nov 2026", title: "Fight fix", items: [
+      "Fixed: in some fights your attacks did nothing. If the little timing game after a move gets stuck or vanishes, your next press goes through as a normal hit.",
+    ] },
+    { id: "b243-gptqa", build: 243, date: "25 Nov 2026", title: "Dungeon rooms and small fixes", items: [
+      "Fixed: foes in dungeons were met with road lines, like webs stretched \"across the road\" deep in a barrow. Bandits, wolves, spiders, draugr and the rest now get their own lines for caves, mines, forts, barrows and other places.",
+      "Fixed: a weapon's details said \"One-handed weapon · One-Handed\". Now it just says \"One-handed weapon\".",
+      "Fixed: the turn order at the top of a fight could show three bandits when only one was there. A foe that moves 2 or 3 times a round still has a mark for each move, but the later ones now say 2nd and 3rd and look smaller, so you can see it's the same foe.",
+    ] },
     { id: "b242-noap", build: 242, date: "25 Nov 2026", title: "No more AP", items: [
       "A plain attack takes just 1 of your 4 moves and some stamina. There are no action points any more, anywhere.",
       "Potion and scroll tooltips in your pack still said they cost AP in a fight. They now say: 1 move, free.",
@@ -1672,9 +1722,8 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 240;
+  const NEXT_AT = 249;
   const NEXT = [
-    "Hands-on gathering: a little harvest game for every kind of plant",
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",
   ];
