@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b188-blood3", build: 188, date: "25 Nov 2026", title: "Cleaner blood", items: [
+      "No more grey circles floating over a fallen foe: the dust when a body hits the ground is a low, soft puff that settles fast.",
+      "A critical hit now throws thin streams of blood that break into drops of all sizes, plus a quick fine spray. No more red pills or pale sticks.",
+      "Sparks only fly when a blade hits metal (plate armour or a machine), and they're small, bright and quick.",
+      "The pool under a fallen foe (or under you when you're knocked down) spreads wider over two seconds, with a soft, uneven edge, a darker middle and a wet shine.",
+    ] },
     { id: "b187-fightlength", build: 187, date: "25 Nov 2026", title: "Fights last long enough again", items: [
       "Since a turn holds up to four moves, strong heroes were ending fights in three or four rounds, even against bosses and legendary beasts. A foe's health now follows what you can really do in a turn with your stamina and magicka (a power attack and a few blows, or a few spells and a summon), so fights at higher levels last as long as they should.",
       "Bosses and legendary beasts take about 15 rounds again, and knowing a beast's weakness still makes the hunt a good bit shorter. Ordinary road fights stay short.",
