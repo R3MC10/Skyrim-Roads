@@ -34,5 +34,10 @@ for (const a of ["end", "attack", "block"]) {
 // a normal fight still plays normally
 { const t = myTurn(false); const r = t && t.ss.act("attack");
   ok(r && (r.turn === "me" || r.turn === "next") && !r.err, "a normal Attack still works: " + JSON.stringify(r)); }
+// party dungeon: a member's waiting screen and toast must match party votes (no "only the leader decides")
+{ const src = ["lootvote.js", "ui.js"].map((f) => fs.readFileSync(W + f, "utf8")).join("\n");
+  ok(!/only the leader decides/i.test(src), "no player text says only the leader decides in a dungeon");
+  const pl = fs.readFileSync(W + "i18n_qafight.js", "utf8");
+  ok(pl.includes("Waiting for the next party vote") && pl.includes("Wait for the vote to open on your screen"), "the vote-waiting lines have Polish"); }
 console.log(fails ? `FAILED ${fails}` : "qafight ok");
 process.exit(fails ? 1 : 0);
