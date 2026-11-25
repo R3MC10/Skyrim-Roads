@@ -5,6 +5,7 @@
   "main": "main.js",
   "author": "R3MC10",
   "private": true,
+  "rotnShell": 1,
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder --win portable nsis --publish never"
@@ -18,6 +19,8 @@
     "productName": "Roads of the North",
     "files": [
       "main.js",
+      "preload.js",
+      "gameupdate.js",
       "www/**/*",
       "icon.png"
     ],

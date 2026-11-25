@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b303-pcupdates", build: 303, date: "25 Nov 2026", title: "The PC game updates itself", items: [
+      "On Windows the game now updates by itself in the background, the installed and the portable version alike: no more downloading a new setup for every build.",
+      "Usually only the files that changed get downloaded, so an update is often just a few megabytes. A card in the corner shows how far along it is.",
+      "When it's ready the card says Restart to update. On the title screen it switches over by itself, and otherwise the new version starts the next time you open the game. Your saves stay.",
+      "If a new version ever fails to start, the game goes back to the one before by itself and skips the broken one.",
+      "The title screen's Update page now works on PC too. The whole app only downloads again when the app itself changes.",
+      "Older PC copies need the new version once (from the GitHub page); after that they keep themselves up to date.",
+    ] },
     { id: "b302-hotbardnd", build: 302, date: "25 Nov 2026", title: "Drag and drop on the hotbar, single or dual cast", items: [
       "In Edit hotbar you can now drag moves, spells, potions and poisons from the list onto a slot, drag one slot onto another to swap them, or drag a slot off the bar to empty it. With a mouse just drag; on a phone hold a row for a moment until it lifts, then drag. Tapping still works too.",
       "Every spell slot has a small 1× / 2× switch: 1× casts with one hand, 2× casts with both hands (stronger, costs more, with your dual casting perks). The same spell can sit in two slots, once each way, and the key or a tap uses the slot's way. The rune game plays for both.",

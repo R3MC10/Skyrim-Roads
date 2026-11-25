@@ -1,7 +1,8 @@
 // latest.json for phones: a small release file the app reads (no GitHub API rate limit) to see the newest build,
 // which files it has, their sizes and SHA-256 checksums (the app checks the game zip before unpacking it).
-//   node scripts/latestjson.mjs BUILD SHELL [DIR] > latest.json      (release notes come from $CHANGES)
-// {build, shell, date, notes, game:{name,size,sha256}, deltas:{from:{name,size,sha256}}, apk:{name,size}}
+// The Windows app reads it too (desktop/gameupdate.js): pcshell is the PC app's "rotnShell" these game files need.
+//   node scripts/latestjson.mjs BUILD SHELL [DIR] > latest.json      (release notes come from $CHANGES, PC shell from desktop/package.json)
+// {build, shell, pcshell, date, notes, game:{name,size,sha256}, deltas:{from:{name,size,sha256}}, apk:{name,size}}
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -13,7 +14,7 @@ const fileInfo = (dir, name, hash = true) => {
   return out;
 };
 
-export function makeManifest(dir, build, shell, notes = "", date = new Date().toISOString()) {
+export function makeManifest(dir, build, shell, notes = "", date = new Date().toISOString(), pcshell = 1) {
   const files = fs.readdirSync(dir);
   const full = `game-shell${shell}.zip`;
   if (!files.includes(full)) throw new Error(`${full} is missing`);
@@ -24,7 +25,7 @@ export function makeManifest(dir, build, shell, notes = "", date = new Date().to
     const m = new RegExp(`^game-shell${shell}-from(\\d+)\\.zip$`).exec(f);
     if (m) deltas[m[1]] = fileInfo(dir, f);
   }
-  return { build: +build, shell: +shell, date, notes: String(notes || "").trim(), game: fileInfo(dir, full), deltas, apk: fileInfo(dir, apk, false) };
+  return { build: +build, shell: +shell, pcshell: +pcshell || 1, date, notes: String(notes || "").trim(), game: fileInfo(dir, full), deltas, apk: fileInfo(dir, apk, false) };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
