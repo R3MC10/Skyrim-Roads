@@ -40,7 +40,7 @@ async def main():
         print("intro shown:", await pg.evaluate("!!document.querySelector('.intro')"))
         await pg.screenshot(path=f"{OUT}ta_intro_1.png"); await pg.wait_for_timeout(2000); await pg.screenshot(path=f"{OUT}ta_intro_2.png")
         await pg.wait_for_timeout(4500)
-        print("intro gone by 6 s:", await pg.evaluate("!document.querySelector('.intro')"), "game up:", await pg.evaluate("!!document.querySelector('[data-tab=map]')"))
+        print("intro gone by 6 s:", await pg.evaluate("!document.querySelector('.intro')"), "game up:", await pg.evaluate("!!document.querySelector('[data-tab=world]')"))
         await pg.context.close()
         # tap to skip
         pg = await page("taskip", q="?net=bc&intro=1")

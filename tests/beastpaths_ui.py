@@ -142,7 +142,7 @@ async def run(p, w, h, touch, lang=None):
         await finish(pg)
         # ---------------- the vampire panel on the Hero tab
         await pg.evaluate("()=>{ const S=window.__dbg.save(); S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; S.trip=null; }")
-        await pg.evaluate("document.querySelector('[data-tab=map]')?.click()"); await pg.wait_for_timeout(200)
+        await pg.evaluate("document.querySelector('[data-tab=world]')?.click()"); await pg.wait_for_timeout(200)
         await pg.evaluate("document.querySelector('[data-tab=hero]')?.click()"); await pg.wait_for_timeout(600)
         side = await pg.evaluate("(document.querySelector('#side')||document.body).innerText")
         ok("Sun Ward" in side or "Blood Magic" in side or "Magia krwi" in side or await pg.evaluate("!!document.querySelector(\"[data-id='lord:blood_magic']\")"), f"{tag}: the new Lord stars show on the Hero tab")

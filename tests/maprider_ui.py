@@ -55,7 +55,7 @@ STRIP = """async ([cw, race, kit, name])=>{
 
 PLACE = """(t)=>{ const S=__dbg.save(); S.location=null; [S.x,S.y]=WORLD.places[t]; for(const n of Object.keys(WORLD.places)) if(!S.discovered.includes(n)) S.discovered.push(n); __ui.go('map'); }"""
 HORSE = "()=>{ const S=__dbg.save(); S.horse={name:'Shadow', breed:'bay', coat:'black', armor:'none', shoes:'none', bags:0, hp:200, hpT:G.now(), mounted:true}; }"
-TRIP = "(to)=>{ const S=__dbg.save(); G.startTrip(S, to, WORLD.places[to].slice(0,2)); }"
+TRIP = "(to)=>{ const S=__dbg.save(); return G.startTrip(S, to, WORLD.places[to].slice(0,2)) || null; }"
 STOP = "()=>{ const S=__dbg.save(); S.trip=null; }"
 HERE = """()=>{ const st=__dbg.mapStats ? __dbg.mapStats() : null; const v=__dbg.view(), t=v.transform, r=document.getElementById('map').getBoundingClientRect();
   return [r.left + v.player[0]*WorldMap.W*t.k + t.ox, r.top + v.player[1]*WorldMap.H*t.k + t.oy]; }"""
@@ -79,7 +79,7 @@ async def main():
             ctx = await b.new_context(viewport={"width": vw, "height": vh}, device_scale_factor=dsf)
             pg = await ctx.new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e)))
             await pg.goto(f"http://localhost:{PORT}/index.html?assets&notut&p=mr{tag}"); await pg.wait_for_timeout(1500)
-            await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "R3MC10"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
+            await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "R3MC10"); await pg.click("#begin"); await pg.wait_for_function("!!(window.__dbg && window.__dbg.save())", timeout=15000); await pg.wait_for_timeout(300)
             await pg.evaluate(CLEAR)
             ok = await pg.evaluate(GEAR, ["steel_armor", "steel_helmet", "steel_sword", "steel_shield", "steel_boots", "steel_gauntlets"])
             if not ok: fails.append(f"{tag}: the painted hero never loaded")
@@ -112,12 +112,20 @@ async def main():
                 await pg.screenshot(path=os.path.join(OUT, f"{tag}_{name}_close.png"), clip={"x": max(0, x - w / 2 - (120 if wide else 0)), "y": max(0, y - h * 0.7), "width": w, "height": h})
 
             await pg.evaluate(HORSE); await pg.evaluate("()=>__ui.go('map')"); await pg.wait_for_timeout(1500); await shot("idle")
-            await pg.evaluate(TRIP, "Riverwood"); await pg.evaluate("()=>__ui.go('map')"); await pg.wait_for_timeout(1500)
+            err = await pg.evaluate(TRIP, "Riverwood")
+            if isinstance(err, str): fails.append(f"{tag}: the trip didn't start: {err}")
+            await pg.evaluate("()=>__ui.go('map')"); await pg.evaluate(CLEAR);   # go('map') opens the panel at its top: bring the map (which only redraws on screen) back into view
+            await pg.wait_for_timeout(1500)
             for gait, pace in [("walk", 0.8), ("trot", 1.5), ("gallop", 2.4)]:
                 await pg.evaluate("(p)=>{ window.__pace = p; }", pace)
-                await pg.wait_for_timeout(900); await shot(gait)
+                # wait for the map's own gait machine to settle (blends + hysteresis), not a fixed sleep: slow frames made this flaky
+                try: await pg.wait_for_function("(g)=>MAPHERO.gait('me')===g", arg=gait, timeout=10000)
+                except Exception: pass
                 seen = await pg.evaluate("()=>MAPHERO.gait('me')")
-                if seen != gait: fails.append(f"{tag}: map shows {seen} at pace {pace}, wanted {gait}")
+                if seen != gait:
+                    why = await pg.evaluate("()=>{ const S=__dbg.save(), v=__dbg.view(); return JSON.stringify({trip: S.trip && S.trip.status, enc: S.trip && S.trip.encounter && S.trip.encounter.name, moving: v && v.moving, loc: S.location}); }")
+                    fails.append(f"{tag}: map shows {seen} at pace {pace}, wanted {gait} ({why})")
+                await shot(gait)
             await pg.evaluate("()=>{ window.__pace = null; }")
             for n in (4, 8):
                 await pg.evaluate(PARTY, n); await pg.wait_for_timeout(900); await shot(f"party{n}", True)

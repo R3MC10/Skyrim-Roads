@@ -39,7 +39,7 @@ async def main():
                 S.rested=G.now()+999; S.restBonus=0.1;
                 return out.map(x=>x.slice(0,40)); }""")
             print(style, "cast:", r)
-            await pg.evaluate(clear); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(200)
+            await pg.evaluate(clear); await pg.click("[data-tab=world]"); await pg.wait_for_timeout(200)
             await pg.evaluate("()=>{ FXART.cast('clairvoyance',{to:WORLD.places.Riverwood.slice(0,2)}); FXART.cast('transmute'); }")
             await pg.wait_for_timeout(700); await pg.evaluate(clear)
             el = await pg.query_selector("#mapwrap"); await el.screenshot(path=OUT + f"map_fx_{style}.png")
@@ -54,7 +54,7 @@ async def main():
         # 3. travel vignette
         for style in ["ink"]:
             await pg.evaluate("()=>{ const S=window.__dbg.save(); S.vampire=null; S.werewolf=false; S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; S.trip=null; const e=G.startTrip(S,'Riverwood',WORLD.places.Riverwood.slice(0,2)); return e; }")
-            await pg.evaluate(clear); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(1500); await pg.evaluate(clear)
+            await pg.evaluate(clear); await pg.click("[data-tab=world]"); await pg.wait_for_timeout(1500); await pg.evaluate(clear)
             has = await pg.evaluate("!!document.querySelector('#fpt .fpt-view canvas')")
             el = await pg.query_selector("#fpt")
             if el: await el.screenshot(path=OUT + f"trip_{style}_a.png")

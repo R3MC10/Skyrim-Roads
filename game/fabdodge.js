@@ -1,4 +1,4 @@
-/* fabdodge.js: the round star and compass buttons float over the page.
+/* fabdodge.js: the round star button floats over the page (the compass button went in the five-tabs update).
    While the page scrolls they fade out of the way, so nothing stays hidden under them. */
 (function () {
   if (typeof addEventListener !== "function" || typeof document === "undefined") return;

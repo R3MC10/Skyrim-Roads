@@ -158,7 +158,7 @@ const MOTION = (() => {
     pendingFly = { at: performance.now(), r, src: icon && icon.tagName === "IMG" ? icon.src : null };
   }
   function packTarget() {
-    const t = document.querySelector('#tabs [data-tab="pack"]') || document.querySelector("#tabs") || null;
+    const t = document.querySelector('#tabs [data-tab="hero"]') || document.querySelector("#tabs") || null;
     if (t) { const r = t.getBoundingClientRect(); if (r.width) return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }
     return { x: innerWidth - 40, y: innerHeight - 40 };
   }
@@ -177,7 +177,7 @@ const MOTION = (() => {
       el.style.transform = `translate(${x}px,${y}px) scale(${s})`; el.style.opacity = String(p > 0.85 ? (1 - p) / 0.15 : 1);
     }, ease.inOut, () => {
       el.remove();
-      const t = document.querySelector('#tabs [data-tab="pack"]'); if (t) restart(t, "mo-catch");
+      const t = document.querySelector('#tabs [data-tab="hero"]'); if (t) restart(t, "mo-catch");
     });
   }
   function onToast(text) {

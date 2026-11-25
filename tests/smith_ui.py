@@ -22,7 +22,7 @@ async def main():
             print("modal:", await pg.evaluate("document.querySelector('#modal')?.innerText?.slice(0,160)")); await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())"); await pg.wait_for_timeout(700)
         for _ in range(4):
             if await pg.query_selector("#modal [data-act=close]"): await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())"); await pg.wait_for_timeout(200)
-        await click(pg, "[data-tab=map]"); await click(pg, "[data-tab=town]"); await pg.wait_for_timeout(300); await click(pg, "[data-id=forge]"); await pg.wait_for_timeout(300)
+        await click(pg, "[data-tab=world]"); await click(pg, "[data-tab=town]"); await pg.wait_for_timeout(300); await click(pg, "[data-id=forge]"); await pg.wait_for_timeout(300)
         el = await pg.query_selector("#side"); await el.screenshot(path="smith_make.png")
         await click(pg, "[data-act=smake][data-id=iron_sword]"); await pg.wait_for_timeout(400)
         print("made:", await pg.evaluate("[SMITH.count(window.__dbg.save(),'iron_sword'), SMITH.count(window.__dbg.save(),'mat_iron'), SMITH.count(window.__dbg.save(),'mat_strips')]"))

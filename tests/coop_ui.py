@@ -25,11 +25,11 @@ async def main():
         ida = await A.evaluate("window.__dbg.save().id"); idb = await B.evaluate("window.__dbg.save().id")
         await A.evaluate(f"() => SOCIAL.add(window.__dbg.save(), {{id: '{idb}', name: 'Beta'}})")
         await B.evaluate(f"() => SOCIAL.add(window.__dbg.save(), {{id: '{ida}', name: 'Alfa'}})")
-        await tab(A, "log"); await tab(A, "map"); await tab(B, "log"); await tab(B, "map")
+        await tab(A, "log"); await tab(A, "world"); await tab(B, "log"); await tab(B, "world")
         await A.wait_for_timeout(800)
         assert await A.locator("[data-act=coopnew]").count() == 1, "lobby button"
         await A.click("[data-act=coopnew]"); await A.wait_for_timeout(700)
-        await tab(A, "log"); await tab(A, "map")
+        await tab(A, "log"); await tab(A, "world")
         await A.locator(".coop").first.scroll_into_view_if_needed()
         await A.screenshot(path=SHOT + "lobby_A.png", full_page=True)
         n = await A.locator(f"[data-act=coopinv][data-id='{idb}']").count()
@@ -39,7 +39,7 @@ async def main():
         assert await B.locator("[data-act=coopjoin]").count() >= 1, "B sees invite in Friends → Party"
         await B.locator("#j-coop").scroll_into_view_if_needed(); await B.screenshot(path=SHOT + "invite_B.png")
         await B.locator("[data-act=coopjoin]").first.click(); await B.wait_for_timeout(900)
-        await tab(A, "log"); await tab(A, "map")
+        await tab(A, "log"); await tab(A, "world")
         await A.click("[data-act=coopgo]"); await A.wait_for_timeout(1500)
         await clean(B)
         inB = await B.evaluate("() => window.__dbg.save().dungeon?.run || null")

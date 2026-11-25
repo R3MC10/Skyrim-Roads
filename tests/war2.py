@@ -16,7 +16,7 @@ async def main():
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", name); await pg.click("#begin"); await pg.wait_for_timeout(4000)
             await clear(pg); return pg
         async def log(pg):
-            await clear(pg); await pg.click("[data-tab=map]"); await clear(pg); await pg.evaluate("()=>window.__ui.go('social')"); await pg.wait_for_timeout(200); await pg.click("[data-act=soctab][data-id=realm]"); await pg.wait_for_timeout(300); await clear(pg)   # clans and holds: \ue106 Friends → Realm
+            await clear(pg); await pg.click("[data-tab=world]"); await clear(pg); await pg.evaluate("()=>window.__ui.go('social')"); await pg.wait_for_timeout(200); await pg.click("[data-act=soctab][data-id=realm]"); await pg.wait_for_timeout(300); await clear(pg)   # clans and holds: \ue106 Friends → Realm
         A = await phone("wa", "Alfa"); B = await phone("wb", "Beta")
         for pg, nm, tg in ((A, "Red Hand", "RED"), (B, "Blue Wolves", "BLU")):
             await log(pg); await pg.fill("#clanname", nm); await pg.fill("#clantag", tg)
@@ -34,7 +34,7 @@ async def main():
         t = await A.inner_text("#j-holds"); print("A holds:", " | ".join(l for l in t.split("\n") if "Ruled" in l)[:300])
         print("A sees rulers:", await A.evaluate("JSON.stringify(Object.fromEntries(Object.entries(WARS.rulers(window.__dbg.save())).map(([h,c])=>[h,c.tag])))"))
         print("B sees rulers:", await B.evaluate("JSON.stringify(Object.fromEntries(Object.entries(WARS.rulers(window.__dbg.save())).map(([h,c])=>[h,c.tag])))"))
-        await clear(A); await A.click("[data-tab=map]"); await A.click("#zoomBtn"); await A.evaluate("scrollTo(0,0)"); await A.wait_for_timeout(1000)
+        await clear(A); await A.click("[data-tab=world]"); await A.click("#zoomBtn"); await A.evaluate("scrollTo(0,0)"); await A.wait_for_timeout(1000)
         await A.screenshot(path="holds_map.png", clip={"x":0,"y":100,"width":390,"height":500})
         print("errors:", errs)
         await b.close()

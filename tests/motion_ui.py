@@ -45,7 +45,7 @@ async def run(b, style, reduce=False, plain=False):
     await pg.wait_for_timeout(1500)
     res["ghost_gone"] = await pg.evaluate("!document.querySelector('.mo-ghost')")
     # menu enter + page slide
-    res["menu_enter"] = await pg.evaluate("(()=>{document.querySelector('#tabs [data-tab=pack]').click(); return !!document.querySelector('#sky')?.classList.contains('mo-enter')})()")
+    res["menu_enter"] = await pg.evaluate("(()=>{__ui.go('items'); return !!document.querySelector('#sky')?.classList.contains('mo-enter')})()")
     await pg.wait_for_timeout(150)
     if not reduce and not plain: await pg.screenshot(path=f"mo_menu_{tag}.png")
     res["page_slide"] = await pg.evaluate("(()=>{document.querySelector('[data-act=skytab][data-id=magic]').click(); return [...document.querySelectorAll('#sky .mo-page-r, #sky .mo-page-l')].length})()")

@@ -44,8 +44,8 @@ c = PCMAP.clampCenter([0.5, 2.5], 2, 1920, 1080, 2);
 ok(c[1] > 2 && c[1] < 3, "Solstheim keeps its own map space");
 
 // which screen goes where
-ok(PCMAP.modeOf("map") === "home" && PCMAP.modeOf("places") === "home", "the map is home");
-ok(PCMAP.modeOf("town") === "side", "the Area opens in a side panel");
+ok(PCMAP.modeOf("map") === "home", "the map is home");
+ok(["town", "places", "world"].every((t) => PCMAP.modeOf(t) === "side"), "the Area, Places and World news open in a side panel beside the map");
 ok(["log", "hero", "social", "skills"].every((t) => PCMAP.modeOf(t) === "full"), "the rest go full-screen over the map");
 
 // fog of war lifts as you travel (uses where you've been and found)

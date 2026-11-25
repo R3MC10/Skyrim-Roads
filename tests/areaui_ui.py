@@ -80,12 +80,12 @@ async def main():
                     # a new town opens on its own board, not on the shop you had open in the last one
                     await js("document.querySelector('#side .au-tile[data-id=general]').click()")
                     await pg.evaluate("()=>{const S=window.__dbg.save(); S.location='Riverwood'; [S.x,S.y]=WORLD.places.Riverwood;}")
-                    await tab("map"); await tab("town")
+                    await tab("world"); await tab("town")
                     check(await pg.evaluate("document.querySelectorAll('#side .au-tile').length") > 3 and not await pg.query_selector("#side .au-head"), f"{tag}: a new town opens on its board")
                     await pg.evaluate("()=>{const S=window.__dbg.save(); S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun;}")
 
                     # ---- Map: one card, no repeats
-                    await tab("map"); await js("window.__ui.refresh()")
+                    await tab("world"); await js("window.__ui.refresh()")
                     check(await pg.evaluate("document.querySelectorAll('#side #rmd-card').length") == 1 and await pg.evaluate("document.querySelectorAll('#side .nextcard').length") == 1, f"{tag}: one What to do next card (Today merged in)")
                     txt = await pg.evaluate("[...document.querySelectorAll('#rmd-card .item .t')].map(e=>e.firstChild.textContent.trim())")
                     check(len(txt) == len(set(txt)), f"{tag}: no repeated rows {txt}")

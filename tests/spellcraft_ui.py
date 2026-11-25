@@ -20,7 +20,7 @@ async def main():
           for(const k of ['Destruction','Restoration','Alteration','Illusion']) S.skills[k].lvl=60;
           for(const x of ['firebolt','ice_spike','healing','lesser_ward','flame_cloak','paralyze']) if(D.SPELLS[x] && !S.spells.includes(x)) S.spells.push(x);}""")
         for style in ["ink"]:
-            await click("[data-tab=map]"); await click("[data-tab=town]"); await pg.wait_for_timeout(300)
+            await click("[data-tab=world]"); await click("[data-tab=town]"); await pg.wait_for_timeout(300)
             await click("[data-act=shop][data-id=craft]"); await pg.wait_for_timeout(300)
             await pg.select_option("#cfA", "damage:fire"); await pg.wait_for_timeout(300)
             await pg.select_option("#cfB", "damage:frost" if style == "ink" else "heal"); await pg.wait_for_timeout(300)
@@ -33,7 +33,7 @@ async def main():
             await click("[data-act=craftgo]"); await pg.wait_for_timeout(400)
             print(style, "crafted:", await pg.evaluate("JSON.stringify((window.__dbg.save().customSpells||[]).map(c=>[c.name,c.school,c.level]))"), "gold", g0, "->", await pg.evaluate("window.__dbg.save().gold"))
         # magic menu shows it with an icon
-        await clear(); await pg.evaluate("document.querySelector('[data-tab=pack]').click()"); await pg.wait_for_timeout(400)
+        await clear(); await pg.evaluate("__ui.go('items')"); await pg.wait_for_timeout(400)
         await pg.evaluate("document.querySelector('[data-act=skytab][data-id=magic]')?.click()"); await pg.wait_for_timeout(400)
         txt = await pg.evaluate("document.querySelector('#sky')?.innerText||''")
         print("magic menu lists it:", "Fire and Ice" in txt, "Burning Mend" in txt)

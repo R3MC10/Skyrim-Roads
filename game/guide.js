@@ -5,7 +5,7 @@ const GUIDE = (() => {
   function mark(s, k) { if (!s || flag(s, k)) return false; s.guide = { ...(s.guide || {}), [k]: 1 }; return true; }
   //  id, title, what to do (plain words), done(s), where "Show me" goes: {tab, shop?, soc?}
   const STEPS = [
-    ["travel", "Travel to a town", "Open Travel, tap a town on the map or press Go in the list. You keep walking even when the app is closed.", (s) => s.discovered.length > D.START_DISCOVERED.length, { tab: "map" }],
+    ["travel", "Travel to a town", "On the World tab, tap a town on the map or pick one under Where to?. You keep walking even when the app is closed.", (s) => s.discovered.length > D.START_DISCOVERED.length, { tab: "map" }],
     ["trade", "Buy and sell", "In a town, open Area → General goods. Switch between Buy and Sell at the top. Your most valuable things are listed first.", (s) => flag(s, "trade"), { tab: "town", shop: "general" }],
     ["dungeon", "Clear a dungeon", "Travel to a dungeon (the list shows how far) and press Go inside. Pick your way room by room down to the boss. You can leave between rooms.", (s) => Object.keys(s.cleared || {}).length > 0, { tab: "map" }],
     ["level", "Level up and pick a perk", "Skills grow as you use them. When you level up, a dot appears on Hero: choose Health, Magicka or Stamina, then spend your perk point.", (s) => s.level >= 2 && Object.keys(s.perks || {}).length > 0, { tab: "hero" }],
@@ -24,6 +24,7 @@ const GUIDE = (() => {
     ["How do I get to Solstheim?", "Go to Windhelm and open Area →  Docks. The Northern Maiden sails to Raven Rock for 250 gold (about 10 in-game hours at sea, safe). The map switches to the island while you're there, and you only see other players on the same map. The boat back leaves from the Raven Rock docks."],
     ["Do my bows need arrows?", "Yes. Bows shoot arrows and crossbows shoot bolts; the best ones you carry are used automatically. Buy them at blacksmiths and general stores, or make them at the forge."],
     ["Where do I learn new spells?", "Read spell tomes. Every court wizard sells Novice and some Apprentice tomes (and staffs); each court wizard has a few rarer ones (Farengar in Whiterun, Wuunferth in Windhelm, Calcelmo in Markarth…); the College in Winterhold has them all, up to Master, which it only teaches once your skill in that school is 90. Spells above your level cost more magicka and sometimes fizzle. Utility spells like Candlelight, Transmute and Clairvoyance are cast from the Magic menu, outside fights."],
+    ["Fights are too hard (or too easy). Can I change that?", "Yes: Settings → Fights → Difficulty. Story makes foes softer, Hard makes them tougher and smarter. XP, gold and loot stay the same on all three. In a party, the leader's setting counts."],   // difficulty.js
   ];
   /* steps whose feature hasn't opened yet (unlocks.js, 6th field) stay out of the guide until it does */
   const avail = (s) => STEPS.filter((st) => !st[5] || typeof UNLOCKS === "undefined" || !s || UNLOCKS.open(s, st[5]));

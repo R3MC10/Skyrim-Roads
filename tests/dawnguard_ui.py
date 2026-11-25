@@ -71,7 +71,7 @@ async def main():
             # 5. the places in the Area tab
             await tab("town"); await shot(f"{name}_castle_volkihar.png")
             await pg.evaluate("() => { const S = window.__dbg.save(); S.location = 'Fort Dawnguard'; [S.x, S.y] = WORLD.places['Fort Dawnguard']; window.__dbg.publish(); }")
-            await tab("map"); await tab("town"); await shot(f"{name}_fort_dawnguard.png")
+            await tab("world"); await tab("town"); await shot(f"{name}_fort_dawnguard.png")
             over = await pg.evaluate("() => document.documentElement.scrollWidth - window.innerWidth")
             ok(over <= 1, f"{name}: no sideways scroll ({over})")
             await ctx.close()

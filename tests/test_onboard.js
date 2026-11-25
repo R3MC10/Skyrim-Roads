@@ -7,7 +7,7 @@ const store = {};
 const c = { console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String, URLSearchParams,
   localStorage: { getItem: (k) => store[k] ?? null, setItem: (k, v) => (store[k] = String(v)), removeItem: (k) => delete store[k] } };
 vm.createContext(c);
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "guilds.js", "immerse.js", "rumours.js", "horses.js", "homestead.js", "guide.js", "onboard.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "first30.js", "guilds.js", "immerse.js", "rumours.js", "horses.js", "homestead.js", "guide.js", "onboard.js"])
   vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 vm.runInContext(`
 let n = 0; const ok = (cnd, m) => { n++; if (!cnd) throw new Error("FAIL " + m); };
@@ -15,7 +15,7 @@ const mk = (town = "Riverwood") => { const s = G.newSave("ob" + Math.random(), "
 const ctx = { eta: () => "2 min", known: () => true };
 const ids = (s, x = {}) => ONBOARD.ideas(s, { ...ctx, ...x }).map((i) => i.id);
 
-// 1. a brand-new character: road fights near Whiterun first; nothing during the guided first trip
+// 1. a brand-new character: road fights near Whiterun first; nothing during the opening quest line (first30.js)
 {
   const s = mk();
   const a = ids(s);
@@ -23,9 +23,9 @@ const ids = (s, x = {}) => ONBOARD.ideas(s, { ...ctx, ...x }).map((i) => i.id);
   ok(a[0] === "road", "low level: road fights first: " + a);
   const road = ONBOARD.ideas(s, ctx)[0];
   ok(road.btn && road.btn.act === "go" && G.holdAt(WORLD.places[/data-place="([^"]+)"/.exec(road.btn.attrs)[1]]) === "Whiterun", "road idea goes somewhere in Whiterun hold");
-  s.tut = { step: 2, seen: {} };
-  ok(ids(s).length === 0, "no ideas during the guided first trip");
-  s.tut = { step: 0, seen: {} };
+  FIRST30.start(s);
+  ok(ids(s).length === 0, "no ideas during the opening quest line");
+  FIRST30.skip(s);
   ok(!ids(s).includes("dungeon") && !ids(s).includes("horse"), "no dungeon or horse at level 1 with 100 gold");
 }
 // 2. state-driven picks
@@ -72,14 +72,22 @@ const ids = (s, x = {}) => ONBOARD.ideas(s, { ...ctx, ...x }).map((i) => i.id);
   s.pendingLevels = 1;
   ok(ONBOARD.pickTip(s, { fightOpen: false, invites: 0 }).id === "level", "first level-up tip");
   ok(ONBOARD.pickTip(s, { fightOpen: true, invites: 0 }) === null, "no tip card over a fight (its hints are pinned to the controls)");
-  ok(!ONBOARD.TIPS.some((t) => t[0] === "tbfight") && ONBOARD.HINTS.map((h) => h[0]).join() === "order,moves,end", "the fight tip became three pinned hints");
+  ok(!ONBOARD.TIPS.some((t) => t[0] === "tbfight" || t[0] === "welcome") && ONBOARD.HINTS.map((h) => h[0]).join() === "attack,intent,guard,end", "no welcome popup; four pinned fight hints");
+  { const o = mk(); o.pendingLevels = 1; FIRST30.start(o); ok(ONBOARD.pickTip(o, { fightOpen: false, invites: 0 }) === null, "no level-up tip while the opening quest walks you through it"); }
+  const hf = (seen, x) => ONBOARD.hintsFor(seen, { open: true, mine: true, acts: 0, ints: true, ...x }).join();
+  ok(hf({}) === "attack", "one hint at a time: Attack first");
+  ok(hf({ "tbf-attack": 1 }, { acts: 1 }) === "intent", "then what the foe does next");
+  ok(hf({ "tbf-attack": 1, "tbf-intent": 1 }, { acts: 1 }) === "end", "then End turn");
+  ok(hf({}, { windup: true }) === "attack" && hf({}, { windup: true, acts: 1 }) === "guard" && hf({ "tbf-attack": 1, "tbf-intent": 1, "tbf-end": 1 }, { windup: true }) === "guard", "guard the moment a foe winds up a big blow (after the first Attack)");
+  ok(hf({ "tbf-guard": 1 }, { windup: true }) === "attack", "guard is learnt once");
+  ok(hf({}, { mine: false }) === "" && hf({ tbfight: 1 }, { windup: true }) === "", "nothing on the foe's turn, nothing once learnt");
   ok(ONBOARD.HINTS.every((h) => h[3].length <= 80), "fight hints are one short line each");
   ONBOARD.markSeen(s, "level"); ok(ONBOARD.pickTip(s, { fightOpen: false, invites: 0 }) === null, "a seen tip doesn't come back");
   ok(ONBOARD.pickTip(s, { fightOpen: false, invites: 1 }).id === "invite", "party invite tip");
   G.give(s, "mat_iron", 600); ok(ONBOARD.pickTip(s, { fightOpen: false }).id === "heavy", "over-encumbered tip");
   const v = mk(); v.level = 30; v.pendingLevels = 1; G.give(v, "mat_iron", 900);
   ok(ONBOARD.pickTip(v, { fightOpen: false, invites: 1 }) === null, "veterans: no basic tips");
-  ok(ONBOARD.hintsFor({}, { open: true, mine: true, acts: 0 }).length === 2, "but the fight hints are for everyone");
+  ok(ONBOARD.hintsFor({}, { open: true, mine: true, acts: 0 }).length === 1, "but the fight hints are for everyone");
   ONBOARD.pref("obTips", "false"); ok(ONBOARD.pickTip(s, { fightOpen: false }) === null, "Don't show tips");
   ONBOARD.pref("obTips", "true");
   const d = mk(); d.dungeon = { place: "Bleak Falls Barrow" }; ok(ONBOARD.pickTip(d, { fightOpen: false }).id === "dungeon", "first dungeon tip");

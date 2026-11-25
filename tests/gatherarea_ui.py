@@ -22,7 +22,7 @@ async def run(b, w, h, bad):
        let i=0; for (const m of GATHER.around([S.x,S.y],42)){GATHER.st(S).seen[m.id]=1; if(i++%2) GATHER.st(S).picked[m.id]=G.now();}}""")
     async def clean(): await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
     async def tab(t): await clean(); await pg.evaluate(f"document.querySelector('[data-tab={t}]')?.click()"); await pg.wait_for_timeout(600)
-    await tab("map"); await pg.wait_for_timeout(600)
+    await tab("world"); await pg.wait_for_timeout(600)
     ok(await pg.evaluate("!document.getElementById('gpop') && ![...document.querySelectorAll('.gcard')].some(c=>c.getClientRects().length)"), "no Gathering card floating on the map")
     await tab("town")
     info = await pg.evaluate("""()=>{const c=document.querySelector('#side #au-gather'); if(!c) return null; c.scrollIntoView();

@@ -23,7 +23,7 @@ async def main():
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Twin"); await pg.click("#begin"); await pg.wait_for_timeout(3000)
         await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
         rid = await pg.evaluate("()=>{ const S=window.__dbg.save(); const id=G.give(S,'steel_sword'); G.equip(S,id); return G.give(S,'iron_war_axe'); }")
-        await pg.click("[data-tab=pack]"); await pg.wait_for_timeout(400)
+        await pg.evaluate("__ui.go('items')"); await pg.wait_for_timeout(400)
         await pg.evaluate("document.querySelector('[data-act=skycat][data-id=all]')?.click()"); await pg.wait_for_timeout(300)
         await pg.evaluate(f"document.querySelector(\"[data-act=skysel][data-id='{rid}']\")?.click()"); await pg.wait_for_timeout(300)
         btn = await pg.query_selector("[data-act=eqoff]")

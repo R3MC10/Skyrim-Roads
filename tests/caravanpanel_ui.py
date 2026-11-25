@@ -66,8 +66,8 @@ async def start(b, vp, tag, errs):
     await pg.add_style_tag(content=".pban{display:none!important}")
     await pg.wait_for_function("typeof G !== 'undefined' && !!window.__dbg && !!window.__dbg.save()")
     await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
-    if await pg.evaluate("!!document.querySelector('[data-tab=map]')"):
-        try: await pg.click("[data-tab=map]", timeout=3000)
+    if await pg.evaluate("!!document.querySelector('[data-tab=world]')"):
+        try: await pg.click("[data-tab=world]", timeout=3000)
         except Exception: pass
     return pg
 

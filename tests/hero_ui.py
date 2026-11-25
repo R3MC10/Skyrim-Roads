@@ -28,10 +28,10 @@ async def main():
         for st in ["ink"]:
             row = []
             for r in RACES:
-                await pg.click(f"[data-race={r}]"); await pg.wait_for_timeout(80)
+                await pg.click(f".rpick[data-race={r}]"); await pg.wait_for_timeout(80)
                 row.append(img_of(await pg.get_attribute(".heroprev img", "src")))
             sheets["races_" + st] = row
-        await pg.fill("#nm", "Hero"); await pg.click("[data-race=nord]"); await pg.fill("#nm", "Hero"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
+        await pg.fill("#nm", "Hjalmar"); await pg.click(".rpick[data-race=nord]"); await pg.fill("#nm", "Hjalmar"); await pg.click("#begin"); await pg.wait_for_function("!!(window.__dbg && window.__dbg.save())", timeout=15000)   # "Hero" is a refused generic nickname (nickname.js)
         for st in ["ink"]:
             row = []
             for i, (name, items) in enumerate(SETS.items()):
@@ -41,7 +41,7 @@ async def main():
                 await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(150)
                 row.append(img_of(await pg.get_attribute(".herobox img", "src")))
             sheets["gear_" + st] = row
-        await pg.evaluate("()=>{const S=window.__dbg.save(); S.vampire={since:1,fedAt:1};}"); await pg.click("[data-tab=map]"); await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(150)
+        await pg.evaluate("()=>{const S=window.__dbg.save(); S.vampire={since:1,fedAt:1};}"); await pg.click("[data-tab=world]"); await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(150)
         sheets["vamp"] = [img_of(await pg.get_attribute(".herobox img", "src"))]
         el = await pg.query_selector(".herobox"); await el.screenshot(path="hero_tab.png")
         for k, row in sheets.items():

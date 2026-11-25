@@ -839,9 +839,6 @@ input:focus,select:focus{outline:none;border-bottom-color:#fff;background:rgba(2
 .tw-st{display:flex;align-items:center;gap:4px;font-family:var(--sk-ui);font-size:15px;color:#ddd6c6;white-space:nowrap}.tw-st.over{color:var(--ember)}
 .tw-st .tw-i{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7}
 .tw-st.gold{color:var(--gold)}
-.twbtn{position:fixed;right:12px;bottom:calc(70px + env(safe-area-inset-bottom));z-index:6;width:50px;height:50px;border-radius:50%;background:radial-gradient(circle at 50% 40%,#2a2c30,#0b0c0e);border:1.5px solid rgba(226,187,100,.7);box-shadow:0 4px 14px rgba(0,0,0,.6),0 0 10px rgba(226,187,100,.2);display:grid;place-items:center;cursor:pointer;padding:0}
-.twbtn svg{width:30px;height:30px;stroke:#e9dcb8;fill:none;stroke-width:1.3}.twbtn svg .f{fill:#e2bb64;stroke:none}
-body.tw-on .twbtn,body.tw-char .twbtn{display:none}
 /* the Skills page: the side panel full screen under its own header */
 body.tw-char #side{position:fixed;inset:0;z-index:7;overflow-y:auto;overscroll-behavior:contain;padding:calc(58px + env(safe-area-inset-top)) 10px calc(24px + env(safe-area-inset-bottom));background:radial-gradient(120% 60% at 50% 0%,#141c2b 0%,#07090d 60%,#040506 100%);touch-action:pan-y;margin:0;max-width:none}
 body.tw-char #side>*{max-width:720px;margin-left:auto;margin-right:auto}
@@ -1099,7 +1096,7 @@ h2{letter-spacing:.06em;text-shadow:0 1px 0 #000,0 0 18px rgba(226,187,100,.12)}
 body:has(#sky) #pbanners{opacity:0;transition:opacity .25s}
 body:has(#sky) .toast{top:auto!important;bottom:calc(58px + env(safe-area-inset-bottom))!important}
 /* floating buttons: glass discs that don't shout over the page */
-.favbtn,.twbtn{backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);background:rgba(10,11,13,.62)!important;box-shadow:0 0 0 1px rgba(226,187,100,.45),0 6px 16px rgba(0,0,0,.5)!important}
+.favbtn{backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);background:rgba(10,11,13,.62)!important;box-shadow:0 0 0 1px rgba(226,187,100,.45),0 6px 16px rgba(0,0,0,.5)!important}
 /* loading skeletons and empty states */
 .skel{position:relative;overflow:hidden;background:rgba(255,255,255,.05);border-radius:2px;min-height:14px}
 .skel::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);animation:skel 1.3s infinite}
@@ -1333,7 +1330,7 @@ html.a11y-1h .top .snd{right:66px;bottom:calc(124px + env(safe-area-inset-bottom
 html.a11y-1h .top .soc{right:66px;bottom:calc(70px + env(safe-area-inset-bottom))}
 html.a11y-1h .mapbtns{top:auto;bottom:8px}
 html.a11y-1h .mapwrap:has(.picked:not(.hide)) .mapbtns{bottom:72px}
-html.a11y-1h-left :is(.twbtn,.favbtn){right:auto;left:12px}
+html.a11y-1h-left .favbtn{right:auto;left:12px}
 html.a11y-1h-left .top :is(.soc,.snd){right:auto;left:66px}
 html.a11y-1h-left .mapbtns{right:auto;left:8px}
 /* [access] colour is never the only signal: with a colour-blind mode on, bars get a pattern and a symbol, danger words a shape, effects an arrow */
@@ -1400,7 +1397,7 @@ html.a11y-hc i.iq-up{color:var(--buff,#6fd36a)!important}html.a11y-hc i.iq-dn{co
 @media (prefers-reduced-motion:reduce){.obtip{animation:none}}
 html.a11y-still .obtip{animation:none}
 /* [tabs] menu tabs (menus.js): seven bottom tabs, a SkyUI sub-tab strip on top of each screen */
-.tabs.mn-bar{grid-template-columns:repeat(7,minmax(0,1fr))}
+.tabs.mn-bar{grid-template-columns:repeat(5,minmax(0,1fr))}
 .mn-bar .tab{padding:8px 0 10px;min-width:0;letter-spacing:.04em;font-size:9.5px}
 .mn-bar .tab .mn-l{display:block;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:clip}
 .mn-bar .tab .dot{right:calc(50% - 15px)}
@@ -1481,9 +1478,9 @@ body:has(#sky) .obtip:not(.infight){top:auto!important;bottom:calc(72px + env(sa
 /* pillar puzzle: the clue is shown inside the turn-the-pillars window */
 .xgame .xg-clue{margin:0 0 10px;padding:8px 10px;border-left:3px solid var(--gold,#c9a45a);background:rgba(255,255,255,.04);color:#e8dfc8;font-size:.95em;line-height:1.45;font-style:italic}
 /* round buttons step aside while scrolling, and the page ends clear of them (fabdodge.js) */
-body.fab-away .favbtn,body.fab-away .twbtn{opacity:0;pointer-events:none;transform:scale(.8)}
-.favbtn,.twbtn{transition:opacity .2s,transform .2s}
-body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(safe-area-inset-bottom))}
+body.fab-away .favbtn{opacity:0;pointer-events:none;transform:scale(.8)}
+.favbtn{transition:opacity .2s,transform .2s}
+body:has(#favBtn) .app{padding-bottom:calc(190px + env(safe-area-inset-bottom))}
 .nickbox{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.82)}.nickin{width:min(420px,100%);padding:18px;border-radius:12px;background:#121417;border:1px solid var(--gold,#d6b25e)}.nickin h2{margin:0 0 6px}.nickin input{width:100%;margin:10px 0 4px;font-size:18px}.nickerr{min-height:1.2em;margin:0 0 8px;color:#e07a6a;font-size:.9em}#nm.nm-bad{outline:2px solid #e07a6a}
 .tbwatch{position:fixed;inset:0;z-index:74;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);padding:10px 8px calc(10px + env(safe-area-inset-bottom))}
 .tbw-in{width:min(560px,100%);max-height:88vh;overflow:auto;padding:12px;border-radius:12px;background:rgba(14,15,18,.97);border:1px solid var(--gold,#d6b25e);box-shadow:0 8px 30px rgba(0,0,0,.6)}
@@ -2289,15 +2286,11 @@ body:has(> #tbf) #tw *,body:has(> #sky) #tw *{animation-play-state:paused!import
 .top #favTop .hico{width:19px;height:19px;fill:rgba(241,205,114,.18)}
 body:not(.fav-docked) #favTop,body.fav-docked #favBtn{display:none!important}
 @media (max-width:374px){.top .iconbtn .ibl{display:none}.top{column-gap:6px}}
-/* the one floating button: smaller, and it moves (hud2.js sets right/bottom) */
-.twbtn{width:46px;height:46px;transition:opacity .2s,transform .2s,bottom .25s ease,right .25s ease}
-.twbtn svg{width:27px;height:27px}
-body:has(#twBtn) .app{padding-bottom:calc(140px + env(safe-area-inset-bottom))}
 /* the bottom bar: names fit (hud2.js shrinks long ones), no keyboard letters on small screens */
 .mn-bar .tab .mn-l{text-overflow:ellipsis}
 @media (max-width:600px){.tab .hk{display:none!important}}
 @media (max-width:440px){.mn-bar .tab{letter-spacing:0}.mn-bar .tab .mn-l{text-transform:none;font-size:10.5px;letter-spacing:.01em}}
-@media (prefers-reduced-motion:reduce){#hudlane,.twbtn,.hb.full{transition:none}.hudobj.flash .ho-d{animation:none}}
+@media (prefers-reduced-motion:reduce){#hudlane,.hb.full{transition:none}.hudobj.flash .ho-d{animation:none}}
 /* patch notes: a header that stays put while the list scrolls (‹ Back on the title page, ✕ in the popup) */
 .pnbar{position:sticky;z-index:5;display:flex;align-items:center;gap:8px;min-height:52px;background:linear-gradient(180deg,#0e0f12,#0a0b0d);border-bottom:1px solid rgba(214,178,94,.3);box-shadow:0 6px 14px rgba(0,0,0,.45)}
 .pnbar h2{flex:1;margin:0!important;text-align:center;letter-spacing:.12em;text-transform:uppercase;font-size:17px}
@@ -2970,7 +2963,7 @@ img.hr-keep{display:block;width:100%;max-width:420px;height:auto;border-radius:8
 .pcbar,.pcparty,.pcquest,.pcqtab,.pcclose{display:none}
 html.pcmap,html.pcmap body{overflow:hidden;height:100%}
 html.pcmap .app{max-width:none;padding:0;margin:0}
-html.pcmap .top,html.pcmap #tabs,html.pcmap .twbtn,html.pcmap .hudobj{display:none!important}
+html.pcmap .top,html.pcmap #tabs,html.pcmap .hudobj{display:none!important}
 html.pcmap .layout{display:block}
 html.pcmap #mapwrap{position:fixed;inset:0;z-index:0;border-radius:0;aspect-ratio:auto;box-shadow:none;background:#0d0f12}
 html.pcmap div:has(> #mapwrap){position:fixed;top:50px;left:0;right:0;height:0;z-index:3;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
@@ -5454,6 +5447,58 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
 }
 /* ==== features that open by level (unlocks.js): a locked dungeon door ==== */
 .ul-dunlock{border-left:3px solid var(--gold,#d8b25a);padding-left:8px;margin-top:8px}
+/* [tabs5] five bottom tabs: World, Area, Hero, Journal, Social (menus.js). <html data-t5> names the open tab */
+.mn-bar .tab{min-height:50px;font-size:11px}
+@media (max-width:440px){.mn-bar .tab .mn-l{font-size:11.5px}}
+/* World → Travel: one goal, then one big "Where to?" button for the full place list */
+.t5-where{display:grid;gap:8px}
+.t5-where .list:empty{display:none}
+.btn.t5-places{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:3px;width:100%;min-height:56px;padding:10px 14px;text-align:left}
+.btn.t5-places span{font:700 16px/1.1 var(--sk-ui,inherit);letter-spacing:.08em}
+.btn.t5-places small{font:500 12.5px/1.25 "Barlow Semi Condensed",sans-serif;letter-spacing:.02em;text-transform:none;color:var(--sk-mute,#a29c8e)}
+/* under the map: the World screen keeps only the goal and the way there. The news drawer and the event strips
+   live on World → World news (under the map there too); nothing at all while world events aren't open yet */
+html[data-t5]:not(.t5-news) #wev,html[data-t5]:not(.t5-news) #gev .gevs-news,html[data-t5]:not(.t5-news) #gev .gevs-drawer{display:none!important}
+html.t5-wlock #wev,html.t5-wlock #gev{display:none!important}
+html[data-t5="world"]:not(.pcmap) #vitals .wxchip{display:none}
+html[data-t5="hero"] #gnear,html[data-t5="log"] #gnear,html[data-t5="social"] #gnear{display:none!important}
+/* PC: the open tab lights up in the bottom bar; World's other screens sit under the quest tracker */
+.pcb-btn.on{background:rgba(226,187,100,.15);border-color:rgba(226,187,100,.55);color:#f6e4ad}
+html.pcmap .pcb-btn[data-pc]{height:44px}   /* every bottom tab is a thumb tall on PC too (the bar is 46px) */
+.pcq-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;padding-top:8px;border-top:1px solid rgba(226,187,100,.18)}
+.pcq-links button{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:3px;background:rgba(226,187,100,.08);border:1px solid rgba(226,187,100,.35);color:#f1dca0;font:600 13px "Barlow Semi Condensed",sans-serif;cursor:pointer}
+.pcq-links button:hover,.pcq-links button:focus-visible{background:rgba(226,187,100,.18)}
+.pcq-links kbd{font:700 10px/1 "Barlow Condensed",sans-serif;padding:2px 4px;border:1px solid rgba(226,187,100,.45);border-radius:2px}
+html.pcmap.pc-side:not([data-t5="town"]) .mn-sub{position:sticky;top:-12px;z-index:2;margin:-12px -12px 10px}
+/* PC full screens (Hero, Journal, Social): use the width. The sub-tabs become a SkyUI-style list down the left,
+   the screen's cards flow in two columns beside it (folding cards side by side; the hero card, long lists and the title take both) */
+@media (min-width:1280px) and (min-height:620px){
+  html.pcmap.pc-full #side{display:grid;grid-template-columns:210px minmax(0,1fr) minmax(0,1fr);gap:0 16px;align-content:start;align-items:start;padding:56px max(24px,calc(50vw - 780px)) 24px}
+  html.pcmap.pc-full #side>*{grid-column:2 / -1;margin:0 0 12px;min-width:0}
+  html.pcmap.pc-full #side>.mn-sub{grid-column:1;grid-row:1 / span 60;position:sticky;top:0;align-self:start;margin:0;flex-direction:column;overflow:visible;border:0;border-left:1px solid var(--sk-line,#3a3226);background:linear-gradient(90deg,rgba(10,11,13,.75),rgba(10,11,13,.35))}
+  html.pcmap.pc-full #side>.mn-sub button{flex:none;text-align:left;padding:13px 16px;border-bottom:0;border-left:2px solid transparent;margin-left:-1px}
+  html.pcmap.pc-full #side>.mn-sub button.on{border-left-color:#e2bb64}
+  html.pcmap.pc-full #side:not(:has(>.mn-sub)){grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  html.pcmap.pc-full #side:not(:has(>.mn-sub))>*{grid-column:1 / -1}
+  html.pcmap.pc-full #side>details.panel{grid-column:auto}
+}
+/* the last sub-tab (Journal: Diary) can still scroll clear of the strip's faded edge */
+.mn-sub::before,.mn-sub::after{content:"";flex:0 0 18px}
+html.pcmap.pc-full #side>.mn-sub::before,html.pcmap.pc-full #side>.mn-sub::after{display:none}
+/* [tabs5:end] */
+/* [first30] the opening quest's goal card (first30.js): one goal, one button, Skip */
+.f30card{margin:10px 0 12px}
+.f30card .f30b{display:flex;align-items:center;gap:12px;width:100%;flex-wrap:wrap;margin-top:4px}
+.f30card .f30b .btn{margin-left:0;min-height:44px;padding:0 18px}
+.f30card .f30b .linkbtn{margin-left:auto;font-size:13px;opacity:.8;min-height:44px}
+.f30card .f30eta{color:#cdb98a;font-size:13px}
+/* [first30] the opening quest's goal inside the PC quest tracker (first30.js pcHTML) */
+.f30pc{display:grid;gap:6px}
+.f30pc .f30step{font:700 11px "Barlow Condensed",sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#a9a294}
+.f30pc p{margin:0;font-size:13.5px;line-height:1.4;color:#d6cfbd}
+.f30pc .f30b{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.f30pc .f30b .btn{min-height:36px;padding:0 14px;margin:0}
+.f30pc .f30b .linkbtn{margin-left:auto;font-size:12.5px;opacity:.8}
 /* [rewards] big and milestone reward scenes (rewards.js): full screen, a light burst and rays drawn in CSS, one at a time */
 .modal.rw-scene{z-index:60;place-items:center;background:radial-gradient(70% 55% at 50% 42%,rgba(60,46,18,.55),rgba(0,0,0,.9) 70%)}
 .modal.rw-scene .sheet.rw-sheet{position:relative;overflow:hidden;width:min(440px,calc(100vw - 32px));max-height:calc(100vh - 32px);padding:34px 22px 22px;text-align:center;border:1px solid rgba(226,187,100,.45);box-shadow:0 0 0 1px rgba(0,0,0,.6),0 18px 60px rgba(0,0,0,.7),inset 0 0 40px rgba(226,187,100,.08);animation:rwin .5s cubic-bezier(.2,.9,.25,1.15)}
@@ -5562,6 +5607,22 @@ html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),
 #tbf .chb.r-cancel .chb-fl{background:#6d6a66}
 #tbf .chb.still,#tbf .chb.still .chb-fl{animation:none!important;transition:none!important}
 @media (prefers-reduced-motion:reduce){#tbf .chb,#tbf .chb .chb-fl{animation:none!important;transition:none!important}}
+/* [difficulty] Story / Normal / Hard (difficulty.js): the chip on the fight screen and the party panel, the Settings note, the picker in hero creation */
+.diffchip{display:inline-flex;align-items:center;flex:none;height:20px;padding:0 7px;border-radius:10px;font:600 11px/1 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;border:1px solid rgba(226,187,100,.55);color:#e9d7a6;background:rgba(10,10,12,.6)}
+.diffchip.d-story{border-color:rgba(143,208,138,.6);color:#b9e3b4}
+.diffchip.d-hard{border-color:rgba(224,122,106,.75);color:#f0a89a;background:rgba(60,14,10,.55)}
+.tbtop .diffchip{margin-left:2px}
+.diffnote{margin:2px 0 8px;font-size:13px}.diffparty{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 6px}
+.cgdiffs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cgdiff{display:flex;flex-direction:column;gap:3px;text-align:left;min-height:64px;padding:8px;border-radius:4px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:inherit}
+.cgdiff b{font-size:.9rem}.cgdiff span{font-size:.76rem;color:var(--mute)}
+.cgdiff.on{border-color:var(--gold);background:rgba(226,187,100,.1)}
+@media (max-width:520px){.cgdiffs{grid-template-columns:1fr}.cgdiff{min-height:0}}
+/* perk reset at a shrine or temple (perkreset.js) */
+.prs-dlg .item b.num{text-align:right;max-width:52%;white-space:normal;line-height:1.25}
+.prs-sheet .scene{margin:4px 0 8px}
+.prs-sheet .grid2 .btn{min-height:44px}
+.prs-hint .sub{margin:0}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -5580,7 +5641,7 @@ html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),
 <script src="formulas.js"></script>
 <script src="i18n_perkdesc.js"></script>
 <script src="perks.js"></script>
-<script src="respec.js"></script>
+<script src="perkreset.js"></script>
 <script src="perkfx.js"></script>
 <script src="appear.js"></script>
 <script src="racefx.js"></script>
@@ -5603,6 +5664,7 @@ html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),
 <script src="weatherfx.js"></script>
 <script src="enchanting.js"></script>
 <script src="quests.js"></script>
+<script src="first30.js"></script>
 <script src="guilds.js"></script>
 <script src="priests.js"></script>
 <script src="civilwar.js"></script>
@@ -5641,6 +5703,7 @@ html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),
 <script src="combatai.js"></script>
 <script src="sneak2.js"></script>
 <script src="aiset.js"></script>
+<script src="difficulty.js"></script>
 <script src="minigame.js"></script>
 <script src="tbradial.js"></script>
 <script src="tbfight.js"></script>
@@ -5997,10 +6060,12 @@ html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),
 <script src="i18n_samever.js"></script>
 <script src="i18n_smooth.js"></script>
 <script src="i18n_partyfoeturns.js"></script>
-/* ==== features that open by level (unlocks.js): a locked dungeon door ==== */
-.ul-dunlock{border-left:3px solid var(--gold,#d8b25a);padding-left:8px;margin-top:8px}
+<script src="i18n_tabs5.js"></script>
+<script src="i18n_first30.js"></script>
 <script src="i18n_rewards.js"></script>
 <script src="i18n_dollrig2.js"></script>
+<script src="i18n_difficulty.js"></script>
+<script src="i18n_perkreset.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

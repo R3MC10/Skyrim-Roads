@@ -3,11 +3,47 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b341-unlocks", build: 341, date: "25 Nov 2026", title: "New things open as you level up", items: [
+    { id: "b346-unlocks", build: 346, date: "26 Nov 2026", title: "New things open as you level up", items: [
       "A new hero no longer gets every system at once. The big ones open one by one as you level up: perks at level 2, gathering and cooking at 3, the forge at 4, followers and alchemy at 5, horses at 6, hard dungeons at 7, clans and houses at 8, and so on up to legendary hunts at 20.",
       "Your old characters keep everything they already used: if you have a horse, a house or a follower, they stay.",
       "Friends, chat, parties and playing together are open from the start. In a party, a friend who hasn't reached a hard dungeon yet comes along as your guest, and the leader gets a heads-up first.",
       "A new character on an account that already got far skips the first tips and the guided first trip.",
+    ] },
+    { id: "b345-difficulty", build: 345, date: "26 Nov 2026", title: "Pick your difficulty: Story, Normal or Hard", items: [
+      "Choose how tough fights are: Story, Normal or Hard. Pick it when you make a new hero, or change it any time in Settings → Fights → Difficulty.",
+      "Story: foes hit softer, fall a bit sooner and fight plainly, and the timing games in fights are easier. Hard: foes hit harder, have a bit more health, use their tricks more and go for whoever is hurt; timing is tighter. Normal stays as it was.",
+      "XP, gold and loot are the same on every difficulty. Hard is about danger, not longer fights.",
+      "In a party the leader's setting counts for everyone. The Party panel shows which one you're on.",
+      "A fight keeps the difficulty it started with: changing it in the middle of a fight changes the next one. A small tag on the fight screen shows which one is on.",
+      "World events, world bosses and fights against other players are the same for everyone (Normal).",
+    ] },
+    { id: "b344-tabs5", build: 344, date: "26 Nov 2026", title: "Five tabs instead of seven", items: [
+      "The bar at the bottom now has five tabs: World, Area, Hero, Journal and Social.",
+      "World is the map: under it you see the one thing to do next and a big Where to? button for every place you know. World news has its own page there once world events are open for you.",
+      "Hero holds everything about your hero in one place: your gear, items, magic, skills, perks, stats, your follower and Settings, in the strip on top.",
+      "Journal holds your quests, discoveries, achievements and diary. Social holds your friends, party and clan.",
+      "Under the map there's less clutter: the World news drawer and event cards wait on the World news page, and the weather shows only in the line at the top.",
+      "Back works the same as before: from a page inside a tab it goes to that tab's first page, then to the map.",
+      "On a PC: the bottom bar has the same five tabs, the open one lights up, and keys 1 to 5 open them (or M, A, C, J, O; I and P still open Items and Magic, L opens Where to?). Hover a tab to see its keys.",
+      "On a PC, Hero, Journal and Social use the whole screen: the pages of a tab are listed down the left and the cards sit in two columns. Places and World news open beside the map so you can still see it.",
+    ] },
+    { id: "b343-perkreset", build: 343, date: "26 Nov 2026", title: "Reset your perks at a shrine", items: [
+      "Want a different build? Kneel at any wayside shrine, or visit the temple in Whiterun, Riften, Solitude, Markarth, Windhelm or Falkreath (Area tab → Services), and reset your perks.",
+      "Every perk point comes back, and so does every Health, Magicka or Stamina choice. Your skills and level stay.",
+      "Your first reset is free. After that it costs gold from level 5: about one or two jobs' pay, more at higher levels, and a little more each time you reset in the same week (it settles down again after a week).",
+      "The window tells you the price, what you get back and what the next reset will cost before anything happens. Not during fights, dungeons or heists.",
+      "The old 10,000 gold Respec button on the Character screen is gone; it now points you to the shrines.",
+    ] },
+    { id: "b342-redtests", build: 342, date: "26 Nov 2026", title: "A fresh Coming next", items: [
+      "The Coming next list in Patch notes shows what's really being built now: a clearer turn order, parts of the game that open up as you level, and simpler menus.",
+    ] },
+    { id: "b341-first30", build: 341, date: "25 Nov 2026", title: "A guided start for new heroes", items: [
+      "New characters no longer get a welcome popup and a pile of tips. Instead there's one short quest line, Before the Storm, with one goal at a time and one button that does it.",
+      "Your first fight starts a minute after you make your hero: a bandit at Riverwood's mill. While you fight, one short hint at a time shows you how to attack, how to read what the foe does next, and how to guard when it winds up a huge blow.",
+      "Then you put on the armour he drops, walk to Whiterun, meet the Jarl, reach level 2, pick your first perk, and face a tougher bandit chief. The last step pays well and tells you what comes next.",
+      "Losing one of these fights costs nothing: you get back up at full health and try again.",
+      "On a PC the goal, its button and Skip sit in the quest tracker at the top right of the map.",
+      "Don't need it? Tap Skip the tutorial on the goal card and the main quest carries on as before. Heroes you already have aren't affected.",
     ] },
     { id: "b340-rewards", build: 340, date: "25 Nov 2026", title: "Rewards that feel like rewards", items: [
       "Loot, gold and skill practice now share one quiet line at the top, like \"+24 gold · +15 One-Handed · Iron Dagger ×2\". What comes together is added up, and during a fight it waits and comes out as one line after.",
@@ -2261,10 +2297,11 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 338;
+  const NEXT_AT = 342;
   const NEXT = [
-    "Mentoring: play side by side with friends of any level",
-    "Shrines of your own: build a Daedric altar at your longhouse",
+    "A turn order you can read at a glance: who acts next, and in what order",
+    "Parts of the game open up step by step as you level, so there's less to take in at the start",
+    "The menus in five simple tabs",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];
