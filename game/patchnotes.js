@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b264-qacore3", build: 264, date: "25 Nov 2026", title: "Crafting in Polish", items: [
+      "Fixed: in Polish, the arcane enchanter, parts of the alchemy lab and one cooking recipe were still in English.",
+      "Fixed: in Polish, the messages after brewing, cooking, eating a meal and improving gear were half in English.",
+      "Fixed: in Polish, road events (titles, choices and outcomes) were partly in English.",
+      "Fixed: in Polish, getting on and off your horse showed a half-English message.",
+      "Fixed: the ride button on the map now shows up right after you buy a horse.",
+      "Fixed: the game no longer asks for item pictures that don't exist yet (fewer errors, faster loading).",
+    ] },
     { id: "b263-raceheads", build: 263, date: "25 Nov 2026", title: "Every race has its own painted face", items: [
       "Imperials, Bretons, Redguards, Altmer, Bosmer and Orcs now have their own painted heads, for men and women, in fights and in character creation. Every race in the game has one now.",
       "Switching race in character creation no longer flashes a Nord head for a moment: the hero appears once the right face is ready.",

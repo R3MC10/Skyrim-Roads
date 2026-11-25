@@ -181,7 +181,7 @@ const I18N_QACORE = (() => {
     // "are you sure?" before selling or breaking something worth keeping (invqol.js)
     "Break it": "Rozbij", "Sell it": "Sprzedaj",
     "Rough work, but it holds.":"Toporna robota, ale się trzyma.", "Great work.": "Świetna robota.", "Masterful work!": "Mistrzowska robota!", "Perfect work!": "Perfekcyjna robota!",
-    // patch note b257
+    // patch note b264
     "Crafting in Polish": "Rzemiosło po polsku",
     "Fixed: in Polish, the arcane enchanter, parts of the alchemy lab and one cooking recipe were still in English.":
       "Naprawione: po polsku stół zaklinacza, część pracowni alchemicznej i jeden przepis kucharski były jeszcze po angielsku.",

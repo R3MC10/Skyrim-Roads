@@ -149,7 +149,9 @@ const ASSETS = (() => {
   /* Pictures the game only guesses at: a painted icon for any item (icon-<item-id>) and the close-zoom map. Asking for
      every one of those made hundreds of failed downloads (3 tries each), so only the files listed here are fetched.
      When you drop in a new icon-*.webp (or map-world-2x.webp), add its name here; tests/test_qacore.js checks the list. */
-  const PAINTED = new Set(["icon-hs-brooch", "icon-hs-compass", "icon-hs-draught", "icon-hs-goblet", "icon-hs-papers", "icon-hs-signet", "icon-hs-torc"]);
+  const PAINTED = new Set(["icon-hs-brooch", "icon-hs-compass", "icon-hs-draught", "icon-hs-goblet", "icon-hs-papers", "icon-hs-signet", "icon-hs-torc",
+    "icon-ing-blue-flower", "icon-ing-fire-salts", "icon-ing-garlic", "icon-ing-lavender", "icon-ing-salt", "icon-ing-wheat",
+    "icon-mat-dwarven", "icon-mat-firewood", "icon-mat-iron", "icon-mat-leather", "icon-mat-moonstone", "icon-mat-steel"]);
   const guessed = (key) => /^icon-/.test(key) || key === "map-world-2x";
   const wantHi = () => { try { return innerWidth >= 1100 || (devicePixelRatio || 1) > 1.5; } catch { return false; } };
   const state = new Map();   // key -> { st: "loading"|"ok"|"none", img, url }
