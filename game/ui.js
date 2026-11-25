@@ -175,6 +175,19 @@
       } });
   }
 
+  /* [remake] a hero made before women heroes and the new looks: "Make your hero anew" once, at a quiet moment on the map
+     (not in a fight, a dungeon, a party run or vote, a trade or a mini-game); remake.js does the race swap */
+  let remakeOpen = false;
+  function remakeCheck() {
+    if (remakeOpen || !S || typeof REMAKE === "undefined" || !REMAKE.pending(S) || !gameStarted || document.querySelector(".cg-over")) return;
+    if (!REMAKE.quiet({ S, title: !!$("#title"), voting: () => !!(pvUI && pvUI.showing && pvUI.showing()), safe: () => window.__ui.safeToUpdate() })) return;
+    remakeOpen = true;
+    const done = (text) => { remakeOpen = false; lookCache.k = ""; persist(true); publishCard(true); try { renderTop(); } catch { /* top bar redraws later */ } renderPanel(true); toast(text); };
+    CHARGEN.open({ mode: "remake", save: S, toast,
+      onDone: (o) => { const was = S.race; REMAKE.finish(S, o); done(was !== S.race ? `You are ${S.name} the ${D.RACES[S.race].name} now. Your race's skill boost moved with you; everything you trained stays.` : `You are ${S.name}, made anew.`); },
+      onKeep: () => { REMAKE.keep(S); done("Your hero stays as they are. The barber or your mirror can change your look later."); } });
+  }
+
   // ------------------------------------------------------------ title screen (main menu)
   const PREFS_KEY = "rotn_prefs";
   const getPref = (k, d) => { try { const v = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}")[k]; return v === undefined ? d : v; } catch { return d; } };
@@ -840,6 +853,7 @@
     const t = G.now();
     { const cm = CARAVANS.tick(S, t); if (cm) { persist(true); toast(cm); if (S.caravanJob === null) Store.change("guards", `${lastJobId}-${S.id}`, (d) => (d && d.status === "signed" ? { ...d, status: "left" } : d)); bump(); } lastJobId = S.caravanJob?.id || lastJobId; }
     tickTimers(t); hallTick(t); discoveryToast(); if (lvUI && Math.floor(t) % 3 === 0) lvUI.tick(); if (pvUI) pvUI.tick(); if (Math.floor(t) % 5 === 0) courierCheck();
+    if (S.remake) remakeCheck();   // [remake] once per old hero
     if (typeof LIVING !== "undefined") { const lm = LIVING.tick(S, t); if (lm) { toast(lm); bump(); } }   // deeds remembered, whispers come true, the party leader's world (livingworld.js)
     if (typeof IMM !== "undefined") { IMM.tick(S); if (S.lastSeen && t - S.lastSeen > 3600 && !S.trip?.status) IMM.loading("Welcome back to Skyrim"); S.lastSeen = t; }
     if (S.trip?.status === "travel") {

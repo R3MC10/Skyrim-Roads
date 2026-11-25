@@ -145,7 +145,7 @@ const AITEST = (() => {
     const out = typeof document !== "undefined" && document.getElementById("aitout");
     if (out && lastS) out.innerHTML = resultHTML(lastS, lastEsc);
   }
-  if (typeof document !== "undefined") {
+  if (typeof document !== "undefined" && typeof document.addEventListener === "function") {   // node tests use a stand-in document
     document.addEventListener("input", (ev) => {
       const t = ev.target; if (!t || !t.classList || !t.classList.contains("aitslide")) return;
       const k = t.dataset.k; sit[k] = +t.value;
