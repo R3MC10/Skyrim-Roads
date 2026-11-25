@@ -281,7 +281,7 @@ const TABMENU = (() => {
       if (id === "settings") { document.getElementById("sndBtn")?.click(); return; }
       if (id === "search") { if (typeof SEARCH !== "undefined") SEARCH.open(); return; }
       if (id === "tactics") { enterChar("tactics"); fromHub = true; return; }
-      ui().go?.(id); window.scrollTo(0, 0); return;
+      ui().go?.(id); return;   // go() shows the screen's top (menutop.js)
     }
     const t = e.target.closest("[data-twa=task]");
     if (t) {
@@ -289,7 +289,7 @@ const TABMENU = (() => {
       if (k === "dun") return document.querySelector("[data-act=dun]")?.click();
       if (k === "enc") return document.querySelector("[data-act=openenc]")?.click();
       if (k === "ev") return document.querySelector("[data-act=openev]")?.click();
-      if (k === "quest" || k === "idle") { ui().go?.("log"); window.scrollTo(0, 0); return; }
+      if (k === "quest" || k === "idle") { ui().go?.("log"); return; }
       ui().go?.("map"); window.scrollTo(0, 0);
     }
   }

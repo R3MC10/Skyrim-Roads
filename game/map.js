@@ -441,7 +441,7 @@ const WorldMap = (() => {
     g.strokeText(text, x, y); g.fillText(text, x, y);
   }
 
-  /* v = {player, name, trail, route, dest:{pos,name}, discovered, explored, others, bags, selected, t, zoom, center, reduceMotion} */
+  /* v = {player, name, trail, route, dest:{pos,name}, discovered, explored, others, bags, me (your id), party {leader, ids} (the line on the road: partytrain.js), selected, t, zoom, center, reduceMotion} */
   /* a soft tint over one hold, in a ruling clan's colour (built once at low resolution, then cached) */
   const tintCache = {};
   let regionGrid = null;
@@ -674,13 +674,33 @@ const WorldMap = (() => {
     } catch { /* no layout to ask: draw names as before */ }
     // tier 1: your own name and figure, so nothing covers them
     const HF = typeof MAPHERO !== "undefined" && MAPHERO.ok() ? MAPHERO : null;   // heroes as little figures (maphero.js)
-    const myTop = py - (v.horse ? 46 : 39) * s - 7 * s;
+    // [partytrain] a party travelling together walks in a line: the leader in front, the rest behind along the road
+    // they came by, each a readable distance apart; in a town they stand in a row right of its icon (partytrain.js)
+    const meId = v.me || "me", train = typeof PARTYTRAIN !== "undefined" && v.party && v.others?.some((o) => o.party) ? (() => {
+      const walkers = [{ id: meId, pos: [px, py], atPlace: !!v.atPlace, moving: !!v.moving }, ...v.others.filter((o) => o.party && o.id && o.pos).map((o) => ({ id: o.id, pos: P(o.pos), atPlace: !!o.atPlace, moving: !!o.moving, trail: o.trail }))];
+      const lead = walkers.find((w) => w.id === v.party.leader) || walkers[0];
+      const behind = (lead.id === meId ? [...(v.trail || [])] : [...(lead.trail || [])]).map(P).reverse();
+      return PARTYTRAIN.place(walkers, { party: v.party, me: meId, behind, gap: 40 * s, tall: 1.35, near: Math.max(8, 40 * s), first: 18 * s });
+    })() : new Map();
+    stats.train = train.size;
+    for (const o of v.others || []) { const t = train.get(o.id); if (t) { o.drawX = t[0] / W; o.drawY = t[1] / H; } }   // spell glows (fxart.js) find them there too
+    const mySpot = train.get(meId), trainAt = new Map([...train.keys()].map((id, i) => [id, i]));
+    // where a name goes in the line: a line running across the map has every other name under the feet; a line
+    // running up or down the map has the names beside the figures (over the head they'd sit on the one in front)
+    const trainIds = [...train.keys()], nameMode = (id) => {
+      const i = trainAt.get(id); if (!HF || i == null) return null;
+      const a = train.get(id), b = train.get(trainIds[i ? i - 1 : 1]);
+      return b && Math.abs(b[1] - a[1]) > Math.abs(b[0] - a[0]) ? "side" : i % 2 ? "below" : "above";
+    };
+    const nameBelow = (id) => nameMode(id) === "below";
     // standing in a town, heroes step aside so the town's own icon stays in sight: you to its right, others to its left
-    const hx = HF && v.atPlace && !v.moving ? px + 18 * s : px, townSlot = {};
-    g.font = FONT(14 * s, 700, ""); { const w = g.measureText(v.name).width; boxes.push(HF ? [hx - w / 2, myTop - 9 * s, w, 18 * s] : [px + 12 * s, py - 13 * s - 9 * s, w, 18 * s]); if (HF) boxes.push([hx - 12 * s, myTop + 9 * s, 24 * s, py - myTop - 9 * s]); }   // and your figure, so names never sit on it
+    const hx = mySpot ? mySpot[0] : HF && v.atPlace && !v.moving ? px + 18 * s : px, hy = mySpot ? mySpot[1] : py, townSlot = {};
+    stats.meAt = [hx / W, hy / H];   // where your own figure is drawn (tests)
+    const myTop = hy - (v.horse ? 46 : 39) * s - 7 * s, myMode = nameMode(meId), myNameY = myMode === "below" ? hy + 14 * s : myMode === "side" ? hy - 22 * s : myTop;
+    g.font = FONT(14 * s, 700, ""); { const w = g.measureText(v.name).width; boxes.push(HF ? [myMode === "side" ? hx + 13 * s : hx - w / 2, myNameY - 9 * s, w, 18 * s] : [hx + 12 * s, hy - 13 * s - 9 * s, w, 18 * s]); if (HF) boxes.push([hx - 12 * s, myTop + 9 * s, 24 * s, hy - myTop - 9 * s]); }   // and your figure, so names never sit on it
     // ... and your party members: room for their figure and name (given back just before their names are placed)
     const partyRes = [];
-    for (const o of v.others || []) if (o.party && o.pos) { const [ox2, oy2] = P(o.pos), b = [ox2 - 36 * s, oy2 - 44 * s, 100 * s, 48 * s]; partyRes.push(b); boxes.push(b); }
+    for (const o of v.others || []) if (o.party && o.pos) { const [ox2, oy2] = train.get(o.id) || P(o.pos), b = [ox2 - 36 * s, oy2 - 44 * s, 100 * s, (nameBelow(o.id) ? 66 : 48) * s]; partyRes.push(b); boxes.push(b); }
     // tier 2: the objective (the quest's gold diamond; the name of where you're heading is added where it's drawn)
     if (v.quest) { const [qx, qy] = P(v.quest); boxes.push([qx - 13 * s, qy - 13 * s, 26 * s, 26 * s]); }
     stats.tiers = { party: 1 + partyRes.length, objective: v.quest ? 1 : 0 };
@@ -822,12 +842,12 @@ const WorldMap = (() => {
       label(g2, text, x, at, s2, size, color, weight, italic);
     }
     stats.labelsSkipped = 0;
-    const otherHeads = [];
+    const otherHeads = [], otherTops = [];
     for (const o of v.others) {
-      let [x, y] = P(o.pos);
-      if (HF && o.atPlace && !o.moving) { const key = Math.round(x) + "," + Math.round(y), n = (townSlot[key] = (townSlot[key] || 0) + 1) - 1; x -= (18 + n * 14) * s; }
-      o.drawX = x / W;   // where the figure really stands (greet.js finds clicks on it)
-      if (HF) { const r = HF.draw(g, x, y, s, { id: "o:" + (o.id || o.name), look: o.look || { r: o.race || "nord", id: o.name, eq: {}, gl: {} }, horse: o.horse || null, moving: !!o.moving, gallop: !!o.horse && !!o.moving, t: v.t, reduce: v.reduceMotion, scale: 0.82, ring: o.party ? "#8fe08a" : "#6f9fe8" }); otherHeads.push(r.head); continue; }
+      let [x, y] = train.get(o.id) || P(o.pos);
+      if (HF && o.atPlace && !o.moving && !train.has(o.id)) { const key = Math.round(x) + "," + Math.round(y), n = (townSlot[key] = (townSlot[key] || 0) + 1) - 1; x -= (18 + n * 14) * s; }
+      o.drawX = x / W; o.drawY = y / H;   // where the figure really stands (greet.js finds clicks on it)
+      if (HF) { const r = HF.draw(g, x, y, s, { id: "o:" + (o.id || o.name), look: o.look || { r: o.race || "nord", id: o.name, eq: {}, gl: {} }, horse: o.horse || null, moving: !!o.moving, gallop: !!o.horse && !!o.moving, t: v.t, reduce: v.reduceMotion, scale: 0.82, ring: o.party ? "#8fe08a" : "#6f9fe8" }); otherHeads.push(r.head); otherTops[v.others.indexOf(o)] = r.top; continue; }
       if (MA) MA.token(g, x, y, s, o.look || { r: o.race || "nord", id: o.name, eq: {}, gl: {} }, o.party ? "#8fe08a" : "#6f9fe8", 10);
       else { g.fillStyle = "#2f62a8"; g.strokeStyle = "#e6f0ff"; g.lineWidth = 2 * s; g.beginPath(); g.arc(x, y, 6.5 * s, 0, 7); g.fill(); g.stroke(); }
       if (o.side && typeof SIDES !== "undefined") SIDES.drawEmblem(g, o.side, x + 10 * s, y - 9 * s, 4.5 * s);   // sides.js: their side, even on a stranger
@@ -838,7 +858,15 @@ const WorldMap = (() => {
       g.fillStyle = "#ffe6d2"; g.fillRect(x - 1.5 * s, y - 5 * s, 3 * s, 10 * s); g.fillRect(x - 5 * s, y - 1.5 * s, 10 * s, 3 * s);
     }
     // other heroes' names are drawn last (below), over town flags, banners and caravans
-    const otherLabels = () => v.others.forEach((o, i) => { const y = P(o.pos)[1]; smartLabel(o.name, (o.drawX ?? o.pos[0]) * W, otherHeads[i] ?? y, 13, o.stranger ? "#e8dcc0" : o.party && HF ? "#c8f0c0" : "#cde0ff", true); });
+    const otherLabels = () => v.others.forEach((o, i) => {
+      const y = (o.drawY ?? o.pos[1]) * H, x = (o.drawX ?? o.pos[0]) * W, color = o.stranger ? "#e8dcc0" : o.party && HF ? "#c8f0c0" : "#cde0ff";
+      if (HF && train.has(o.id) && otherTops[i] != null) {   // in the party's line: the name sits right over the head (or under the feet), on its own figure
+        const md = nameMode(o.id), ly = md === "below" ? y + 12 * s : md === "side" ? y - 20 * s : otherTops[i] - 6 * s, lx = md === "side" ? x + 12 * s : x;
+        g.font = FONT(13 * s, 700, ""); const w = g.measureText(o.name).width; boxes.push([md === "side" ? lx : x - w / 2, ly - 8 * s, w, 16 * s]);
+        label(g, o.name, lx, ly, s, 13, color, 700, false, md === "side" ? "left" : "center"); return;
+      }
+      smartLabel(o.name, x, nameBelow(o.id) ? y + 12 * s : otherHeads[i] ?? y, 13, color, true);
+    });
     for (const b of v.bags) { const [x, y] = P(b.pos); smartLabel(b.label, x, y, 13, "#ffc8b4", true); }
     if (v.foe && VI && !v.cones[0].faint) VI.foe(g, v.cones[0].c, s, v.foe, v.t, v.reduceMotion, (n, x, y) => smartLabel(n, x, y - 9 * s, 12, "#ffc0b0"));   // what blocks your road, ahead in your cone
     const perTown = {};
@@ -963,10 +991,10 @@ const WorldMap = (() => {
     if (typeof CRISES !== "undefined") CRISES.drawMap(g, P, s, v.t, v.reduceMotion, dockBoxes, crSigns);   // a hold in crisis: sign and stage pips by its capital, kept clear of the docked cards (crises.js)
     if (typeof LEGHUNT !== "undefined" && !SV) LEGHUNT.drawMap(g, P, s, null, v.t, v.reduceMotion);   // legendary hunts: rough search areas, never exact (leghunt.js)   // dragon assaults, rifts, sieges, fairs and what they leave behind (greatevents.js)
     if (typeof TOURNEYUI !== "undefined") TOURNEYUI.drawMap(g, P, s, v.t, v.reduceMotion, tnPlan);   // a festival banner over the host town (tourneyui.js)
-    if (v.cart && typeof CARAVANS !== "undefined") { const sp = CARAVANS.sprite(false, false); if (sp) { const back = HF && MAPHERO.flipped("me") ? 16 : -50; g.drawImage(sp, px + back * s, py - 16 * s, 34 * s, 24 * s); } }
-    if (v.fx && typeof FXART !== "undefined") FXART.mapUnder(g, v.fx, P, s, px, py, v.t, v.reduceMotion, v);   // spells and shouts around you (fxart.js)
+    if (v.cart && typeof CARAVANS !== "undefined") { const sp = CARAVANS.sprite(false, false); if (sp) { const back = HF && MAPHERO.flipped("me") ? 16 : -50; g.drawImage(sp, hx + back * s, hy - 16 * s, 34 * s, 24 * s); } }
+    if (v.fx && typeof FXART !== "undefined") FXART.mapUnder(g, v.fx, P, s, hx, hy, v.t, v.reduceMotion, v);   // spells and shouts around you (fxart.js)
     const pulse = v.reduceMotion ? 0.5 : (Math.sin(v.t * 3) + 1) / 2;
-    if (!HF) { g.fillStyle = `rgba(110,200,255,${0.18 + 0.12 * pulse})`; g.beginPath(); g.arc(px, py, (15 + 6 * pulse) * s, 0, 7); g.fill(); }
+    if (!HF) { g.fillStyle = `rgba(110,200,255,${0.18 + 0.12 * pulse})`; g.beginPath(); g.arc(hx, hy, (15 + 6 * pulse) * s, 0, 7); g.fill(); }
     const arrow = (cx, cy, rr) => {   // the direction arrow, just outside your marker, pointing the way you're going
       if (!v.moving || heading.a == null) return;
       const a = heading.a, z = 7 * s;
@@ -978,30 +1006,30 @@ const WorldMap = (() => {
     for (const b of partyRes) { const i = boxes.indexOf(b); if (i >= 0) boxes.splice(i, 1); }   // party members' names take their reserved room
     otherLabels();
     if (HF) {   // you: walking, standing, or in the saddle, facing the way you travel
-      const r = HF.draw(g, hx, py, s, { id: "me", look: v.look, horse: v.horse, led: v.led || null, moving: v.moving, gallop: !!v.gallop, t: v.t, reduce: v.reduceMotion, heading: v.moving ? heading.a : null, ring: "#6ec8ff" });
+      const r = HF.draw(g, hx, hy, s, { id: "me", look: v.look, horse: v.horse, led: v.led || null, moving: v.moving, gallop: !!v.gallop, t: v.t, reduce: v.reduceMotion, heading: v.moving ? heading.a : null, ring: "#6ec8ff" });
       if (v.fx && typeof FXART !== "undefined") FXART.mapOver(g, v.fx, P, s, hx, r.head, v.t, v.reduceMotion);
-      label(g, v.name, hx, Math.min(myTop, r.top - 7 * s), s, 14, "#d8f0ff", 700, false, "center");
-      arrow(hx, py - 2 * s, (v.horse ? 30 : 20) * s);
+      label(g, v.name, myMode === "side" ? hx + 13 * s : hx, myMode === "below" || myMode === "side" ? myNameY : Math.min(myTop, r.top - 7 * s), s, 14, "#d8f0ff", 700, false, myMode === "side" ? "left" : "center");
+      arrow(hx, hy - 2 * s, (v.horse ? 30 : 20) * s);
       return;
     }
     if (MA) {
       const lift = v.horse ? 15 * s : 0;
-      if (v.horse && typeof HORSEART !== "undefined" && HORSEART.ok(v.horse, v.moving ? "gallop" : "stand")) { g.save(); g.translate(px, py + 23 * s - bob * 0.5); g.scale(s, s); HORSEART.ride(g, v.horse, v.moving ? "gallop" : "stand", 27); g.restore(); }   // [OURS] the painted horse (horseart.js)
-      else if (v.horse) g.drawImage(MA.horse(v.horse), px - 27 * s, py - 12 * s - bob * 0.5, 54 * s, 35 * s);   // the horse under you, then you in the saddle
-      MA.token(g, px + (v.horse ? 3 * s : 0), py - lift - bob, s, v.look, "#8fd3ff", v.horse ? 11 : 13);
-      if (v.side && typeof SIDES !== "undefined") SIDES.drawEmblem(g, v.side, px + (v.horse ? 3 * s : 0) + 12 * s, py - lift - bob - 11 * s, 5 * s);   // your side (sides.js)
-      if (v.fx && typeof FXART !== "undefined") FXART.mapOver(g, v.fx, P, s, px + (v.horse ? 3 * s : 0), py - lift - bob, v.t, v.reduceMotion);
-      label(g, v.name, px + 16 * s, py - 16 * s - lift, s, 14, "#d8f0ff", 700, false, "left");
-      arrow(px + (v.horse ? 3 * s : 0), py - lift - bob, (v.horse ? 18 : 21) * s);
+      if (v.horse && typeof HORSEART !== "undefined" && HORSEART.ok(v.horse, v.moving ? "gallop" : "stand")) { g.save(); g.translate(hx, hy + 23 * s - bob * 0.5); g.scale(s, s); HORSEART.ride(g, v.horse, v.moving ? "gallop" : "stand", 27); g.restore(); }   // [OURS] the painted horse (horseart.js)
+      else if (v.horse) g.drawImage(MA.horse(v.horse), hx - 27 * s, hy - 12 * s - bob * 0.5, 54 * s, 35 * s);   // the horse under you, then you in the saddle
+      MA.token(g, hx + (v.horse ? 3 * s : 0), hy - lift - bob, s, v.look, "#8fd3ff", v.horse ? 11 : 13);
+      if (v.side && typeof SIDES !== "undefined") SIDES.drawEmblem(g, v.side, hx + (v.horse ? 3 * s : 0) + 12 * s, hy - lift - bob - 11 * s, 5 * s);   // your side (sides.js)
+      if (v.fx && typeof FXART !== "undefined") FXART.mapOver(g, v.fx, P, s, hx + (v.horse ? 3 * s : 0), hy - lift - bob, v.t, v.reduceMotion);
+      label(g, v.name, hx + 16 * s, hy - 16 * s - lift, s, 14, "#d8f0ff", 700, false, "left");
+      arrow(hx + (v.horse ? 3 * s : 0), hy - lift - bob, (v.horse ? 18 : 21) * s);
       return;
     }
     if (v.horse) {   // riding: a horseshoe in your horse's coat colour around your marker
-      g.lineCap = "round"; g.strokeStyle = "#0b2233"; g.lineWidth = 5.5 * s; g.beginPath(); g.arc(px, py, 11.5 * s, 0.72 * Math.PI, 2.28 * Math.PI); g.stroke();
-      g.strokeStyle = v.horse; g.lineWidth = 3.2 * s; g.beginPath(); g.arc(px, py, 11.5 * s, 0.72 * Math.PI, 2.28 * Math.PI); g.stroke(); g.lineCap = "butt";
+      g.lineCap = "round"; g.strokeStyle = "#0b2233"; g.lineWidth = 5.5 * s; g.beginPath(); g.arc(hx, hy, 11.5 * s, 0.72 * Math.PI, 2.28 * Math.PI); g.stroke();
+      g.strokeStyle = v.horse; g.lineWidth = 3.2 * s; g.beginPath(); g.arc(hx, hy, 11.5 * s, 0.72 * Math.PI, 2.28 * Math.PI); g.stroke(); g.lineCap = "butt";
     }
-    g.fillStyle = "#8fd3ff"; g.strokeStyle = "#0b2233"; g.lineWidth = 2.4 * s; g.beginPath(); g.arc(px, py, 7.5 * s, 0, 7); g.fill(); g.stroke();
-    label(g, v.name, px + 12 * s, py - 13 * s, s, 14, "#d8f0ff", 700, false, "left");
-    arrow(px, py, 15 * s);
+    g.fillStyle = "#8fd3ff"; g.strokeStyle = "#0b2233"; g.lineWidth = 2.4 * s; g.beginPath(); g.arc(hx, hy, 7.5 * s, 0, 7); g.fill(); g.stroke();
+    label(g, v.name, hx + 12 * s, hy - 13 * s, s, 14, "#d8f0ff", 700, false, "left");
+    arrow(hx, hy, 15 * s);
   }
 
   /* screen point → nearest place you know (within a finger's reach) */

@@ -8,6 +8,7 @@
 const fs = require("fs"), vm = require("vm"), path = require("path"), http = require("http");
 const W = process.env.W || path.join(__dirname, "../game/");
 let n = 0, fails = 0;
+const NL = String.fromCharCode(10), BS = String.fromCharCode(92);
 const OK = (v, m) => { n++; if (!v) { fails++; console.log("FAIL", m); } };
 
 // ------------------------------------------------------------------ a tiny page for the game file
@@ -76,6 +77,14 @@ async function client() {
   const p = B.payload({ title: "  Can't sell the sword ", text: "Sold it, gold stayed the same.", category: "balance" }, { appBuild: 143 });
   OK(p.title === "Can't sell the sword" && p.text === "Sold it, gold stayed the same." && p.category === "balance", "title, text and kind");
   OK(p.character === "Ysolda Tester", "the hero's name comes along");
+  OK(p.player === "Ysolda Tester", "not signed in: the player name falls back to the hero's name");
+  c.ACCOUNT = { server: () => "https://srv.test", signedIn: () => true, user: () => ({ username: "Remi_77", id: "u1" }) };
+  OK(B.payload({ title: "abc" }).player === "Remi_77" && B.payload({ title: "abc" }).character === "Ysolda Tester", "signed in: the account name is the player, the hero stays");
+  OK(/Sent as Remi_77/.test(B.html()), "the window says who it's sent as");
+  c.ACCOUNT = { server: () => "https://srv.test", signedIn: () => false, user: () => ({ username: "OldAcct" }) };
+  OK(B.payload({ title: "abc" }).player === "Ysolda Tester", "signed out: the old account name isn't used");
+  c.ACCOUNT = { server: () => "https://srv.test" };
+  OK(!/Sent as/.test(B.html(null)) && /Sent as &lt;b&gt;/.test(B.html("<b>")), "no name → no line; names are escaped");
   OK(p.info.build === c.PATCHNOTES.latest().build && p.info.notes === c.PATCHNOTES.latest().id && p.info.appBuild === 143, "game build and app build");
   OK(p.info.platform === "phone browser" && p.info.screen === "412x915@2.63" && p.info.artStyle === "ink", "platform, screen size, art style: " + JSON.stringify(p.info));
   OK(p.info.level === 17 && p.info.location === "Whiterun" && p.info.view === "map", "level, location and current screen");
@@ -84,7 +93,7 @@ async function client() {
   const blob = JSON.stringify(p);
   OK(!/secret@example|tok-123/.test(blob), "nothing personal beyond the hero's name");
   OK(B.payload({ title: "t".repeat(500), text: "y".repeat(9000), category: "nonsense" }).title.length === 100 && B.payload({ title: "x", category: "nonsense" }).category === "bug", "client limits and unknown kinds → bug");
-  OK(B.payload({ title: "abc" }, { S: null }).character === null && B.payload({ title: "abc" }, { S: null }).state.character === null, "works on the title screen too");
+  OK(B.payload({ title: "abc" }, { S: null }).character === null && B.payload({ title: "abc" }, { S: null }).state.character === null && B.payload({ title: "abc" }, { S: null }).player === null, "works on the title screen too");
 
   // ---- sending, the offline queue and the retry
   const posts = [];
@@ -145,7 +154,8 @@ async function client() {
   B.close();
   OK(/data-brep="open"/.test(B.settingsHTML()) && /Report a problem/.test(B.settingsHTML()), "Settings has a Report a problem button (the phone's way in)");
   OK(c.I18N_EXTRA.words["Report sent, thanks!"] && c.I18N_EXTRA.words["Report a problem from inside the game"], "Polish lines for the window and the patch note");
-  OK(c.PATCHNOTES.LIST.some((x) => x.id === "b144-bugreport" && x.build === 144), "patch note is there");   // several features ship together; the note slides down as newer ones land
+  OK(c.PATCHNOTES.LIST.some((x) => x.id === "b144-bugreport" && x.build === 144), "patch note is there");
+  OK(c.PATCHNOTES.LIST.some((x) => /reportname$/.test(x.id)) && c.I18N_EXTRA.words["Reports show who sent them"] && c.I18N_EXTRA.pat.some(([re]) => re.test("Sent as Remi")), "the name patch note and its Polish");   // several features ship together; the note slides down as newer ones land
 }
 
 // ------------------------------------------------------------------ the server route
@@ -183,15 +193,32 @@ async function server() {
   OK(JSON.stringify(call.body.labels) === '["player-report","balance"]', "labels: player-report and the kind");
   OK(call.body.title === "[Report] Can't sell the sword", "title has [Report]");
   const body = call.body.body;
-  OK(body.startsWith("Sold it to Belethor") && /<details><summary>/.test(body) && /\*\*platform\*\*: Android app/.test(body) && /\*\*character\*\*: Ysolda/.test(body), "description first, the rest folded in <details>");
+  OK(body.startsWith("**From:** hero Ysolda" + NL + NL + "Sold it to Belethor") && /<details><summary>/.test(body) && /\*\*platform\*\*: Android app/.test(body) && /\*\*character\*\*: Ysolda/.test(body), "description first, the rest folded in <details>");
   OK(!/@someone/.test(body) && /@​someone/.test(body), "player text never pings anyone");
   OK((body.match(/```/g) || []).length === 4, "the log can't break out of its code block");
   OK(!logs.join("\n").includes("ghp_TESTTOKEN123") && !JSON.stringify(r).includes("ghp_"), "the token is never logged or sent back");
   OK((await store.listReports()).length === 0, "nothing kept when GitHub took it");
 
+  // the player's name: in the title and on the first line, cleaned; old clients without it still work
+  await post({ ...rep, player: "Remi_77" }, "10.1.0.7");
+  let nb = gh[gh.length - 1].body;
+  OK(nb.title === "[Report] Can't sell the sword — Remi_77", "title ends with the player's name: " + nb.title);
+  const line1 = (b) => b.body.split(NL)[0];
+  OK(line1(nb) === "**From:** Remi" + BS + "_77 (hero: Ysolda)" && nb.body.includes("- **player**: Remi_77"), "first line says who sent it: " + line1(nb));
+  await post({ ...rep, player: "@octocat" + NL + "<details>" + String.fromCharCode(7) + "x".repeat(80) }, "10.1.0.8");
+  nb = gh[gh.length - 1].body;
+  OK(!nb.title.includes("@octocat") && !nb.body.includes("@octocat") && ![...nb.title].some((ch) => ch.charCodeAt(0) < 32) && nb.title.length <= "[Report] Can't sell the sword — ".length + 41, "player name: no pings, no control characters, 40 at most: " + JSON.stringify(nb.title));
+  OK(!line1(nb).includes("<details>") && line1(nb).includes("&lt;details&gt;"), "a player name can't add HTML to the issue");
+  await post({ ...rep, player: "Kacper", character: undefined }, "10.1.0.9");
+  OK(line1(gh[gh.length - 1].body) === "**From:** Kacper", "player without a hero");
+  await post({ ...rep, player: { evil: 1 } }, "10.1.0.10");
+  OK(gh[gh.length - 1].body.title === "[Report] Can't sell the sword", "a non-text player is ignored");
+  await post({ ...rep, player: "   " }, "10.1.0.11");
+  OK(gh[gh.length - 1].body.title === "[Report] Can't sell the sword", "a blank player is ignored");
+
   // unknown kind → bug
   await post({ ...rep, category: "hack" }, "10.1.0.2");
-  OK(JSON.stringify(gh[1].body.labels) === '["player-report","bug"]', "unknown kind → bug");
+  OK(JSON.stringify(gh[gh.length - 1].body.labels) === '["player-report","bug"]', "unknown kind → bug");
 
   // limits
   OK((await post({ title: "", text: "" }, "10.1.0.3")).status === 400, "empty report refused");
@@ -224,6 +251,9 @@ async function server() {
   OK(r.status === 200 && r.ok === true && r.issue === null && gh.length === ghBefore, "no token → no GitHub call, still ok");
   OK((await store.listReports())[0].report.title === "No token here" && logs.includes("report stored (no token)"), "stored and logged \"report stored (no token)\"");
   OK((await store.listReports())[0].report.character === "Ysolda" && (await store.listReports())[0].report.log.length === 1, "the stored report keeps its details");
+  OK((await store.listReports())[0].report.player === null, "an old client's report has player null");
+  await post({ ...rep, title: "With a name", player: "Remi" }, "10.3.0.2");
+  OK((await store.listReports())[0].report.player === "Remi", "the stored report keeps the player's name");
   srv.close();
 }
 

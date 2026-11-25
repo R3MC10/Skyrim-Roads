@@ -161,7 +161,7 @@ const FXART = (() => {
     if (fx.rested) softGlow(g, px, py, (26 + Math.sin(tt * 2) * 2) * s, "rgba(255,215,120,1)");
     if (fx.detect) {
       for (let k = 0; k < 3; k++) { const ph = ((tt * 0.5 + k / 3) % 1); g.strokeStyle = `rgba(230,90,90,${0.55 * (1 - ph)})`; g.lineWidth = 1.6 * s; g.beginPath(); g.arc(px, py, (14 + ph * 60) * s, 0, Math.PI * 2); g.stroke(); }
-      for (const o of v?.others || []) { const [ox, oy] = P(o.pos); if (Math.hypot(ox - px, oy - py) < 120 * s) softGlow(g, ox, oy, 10 * s, "rgba(255,90,90,1)"); }
+      for (const o of v?.others || []) { const [ox, oy] = o.drawX != null ? [o.drawX * 1000, o.drawY * 700] : P(o.pos); if (Math.hypot(ox - px, oy - py) < 120 * s) softGlow(g, ox, oy, 10 * s, "rgba(255,90,90,1)"); }
       const r = ART.seeded("life|" + Math.floor(px / 40) + "|" + Math.floor(py / 40));   // a few unseen creatures nearby, just for show
       for (let i = 0; i < 5; i++) { const a = r() * 6.28, d = (25 + r() * 60) * s; softGlow(g, px + Math.cos(a) * d, py + Math.sin(a) * d, 6 * s, i % 2 ? "rgba(120,170,255,1)" : "rgba(255,120,120,1)"); }
     }
