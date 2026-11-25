@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b310-friendjoin", build: 310, date: "25 Nov 2026", title: "See what your friends are up to", items: [
+      "Your Friends list now shows what each friend online is doing: where they are (a town, a dungeon or on the road), whether they're fighting, trading or taking it easy, and their level.",
+      "It also shows whether they're in a party and how full it is (up to 8 players; followers don't count).",
+      "New Ask to join button: it asks their party leader (or your friend, if they're alone). The leader gets a card with Accept and Decline, and if they accept you join the party straight away.",
+      "You can't ask while their party is full or they're inside a dungeon run; ask again when they're out. A request with no answer runs out after a minute.",
+    ] },
     { id: "b309-fptravel", build: 309, date: "25 Nov 2026", title: "Through your own eyes", items: [
       "On the road you now look down the road through your own eyes, in a band at the top of the map. The compass runs along its top edge, and the place you're heading for rises under its marker and grows as you get closer.",
       "The road bends with your route, and the land is the region you're crossing: tundra, pine forest, the Rift's birches, marsh, snow, ash wastes, rocky hills, river fords, bridges, and the open sea on a ship.",
