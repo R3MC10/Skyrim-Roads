@@ -146,6 +146,13 @@ const ASSETS = (() => {
   /* [artfit] pictures that also come as a bigger <name>@2x.webp (twice the size above): PCs and sharp screens load it.
      Add a name here when its @2x file is dropped in the game folder. */
   const HI = new Set([]);
+  /* Pictures the game only guesses at: a painted icon for any item (icon-<item-id>) and the close-zoom map. Asking for
+     every one of those made hundreds of failed downloads (3 tries each), so only the files listed here are fetched.
+     When you drop in a new icon-*.webp (or map-world-2x.webp), add its name here; tests/test_qacore.js checks the list. */
+  const PAINTED = new Set(["icon-hs-brooch", "icon-hs-compass", "icon-hs-draught", "icon-hs-goblet", "icon-hs-papers", "icon-hs-signet", "icon-hs-torc",
+    "icon-ing-blue-flower", "icon-ing-fire-salts", "icon-ing-garlic", "icon-ing-lavender", "icon-ing-salt", "icon-ing-wheat",
+    "icon-mat-dwarven", "icon-mat-firewood", "icon-mat-iron", "icon-mat-leather", "icon-mat-moonstone", "icon-mat-steel"]);
+  const guessed = (key) => /^icon-/.test(key) || key === "map-world-2x";
   const wantHi = () => { try { return innerWidth >= 1100 || (devicePixelRatio || 1) > 1.5; } catch { return false; } };
   const state = new Map();   // key -> { st: "loading"|"ok"|"none", img, url }
   const subs = [];
@@ -170,6 +177,7 @@ const ASSETS = (() => {
     const rec = { st: "none", img: null, url: "" };
     state.set(key, rec);
     if (!auto || missing[key] || typeof Image === "undefined") return rec;   // no pictures outside a browser (node tests)
+    if (guessed(key) && !PAINTED.has(key)) return rec;   // not painted yet: keep the drawn one, don't ask the server
     rec.st = "loading"; pending++;
     const hi = HI.has(key) && wantHi();
     const tryExt = (i) => {
@@ -287,5 +295,5 @@ const ASSETS = (() => {
 
   const loading = (i) => img(`bg-loading-${1 + (Math.abs(i | 0) % 4)}`);
   const status = () => [...state].map(([k, r]) => [k, r.st]);
-  return { HI, img, url, state: stateOf, stateOf, provide, on, enable, placeKey, biomeKey, foeKey, cover, loading, status, slug, CSS_KEYS, get pending() { return pending; } };
+  return { HI, PAINTED, img, url, state: stateOf, stateOf, provide, on, enable, placeKey, biomeKey, foeKey, cover, loading, status, slug, CSS_KEYS, get pending() { return pending; } };
 })();
