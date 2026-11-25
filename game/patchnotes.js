@@ -3,9 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b260-notify2", build: 260, date: "25 Nov 2026", title: "Promotions and tips back in their place", items: [
+    { id: "b261-notify2", build: 261, date: "25 Nov 2026", title: "Promotions and tips back in their place", items: [
       "When you're promoted on a side, the banner shows again (it was quietly swallowed before).",
       "The tips for new players no longer sit on top of the dungeon's route buttons: they move below them, or wait until there's room.",
+    ] },
+    { id: "b260-crafticons", build: 260, date: "25 Nov 2026", title: "Painted crafting icons", items: [
+      "Iron, steel and dwarven ingots, leather, firewood and refined moonstone have painted icons in your pack and at the forge.",
+      "So do six alchemy and cooking ingredients: blue mountain flower, lavender, wheat, salt, garlic and fire salts.",
     ] },
     { id: "b259-movefx2", build: 259, date: "25 Nov 2026", title: "Every blow and shout has its own look", items: [
       "Every weapon swings its own way now: a sword leaves a diagonal slash, a greatsword a wide sweep, axes and warhammers chop down from above, maces and clubs crack in with a dust ring, daggers stab twice and spears drive straight through.",
