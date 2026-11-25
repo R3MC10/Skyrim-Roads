@@ -164,7 +164,7 @@ const LOCKGAME = (() => {
       <div class="lgstage"><canvas id="lpc" aria-hidden="true"></canvas><span class="lgpicks" id="lppicks"></span></div>
       <div class="lgfoot">
         <input id="lpang" type="range" min="0" max="180" step="0.5" value="90" aria-label="Pick angle">
-        <p class="lphint" id="lphint">Drag on the lock to aim the pick, then hold <b>Turn</b>. If it shakes, let go before the pick snaps.</p>
+        <p class="lphint" id="lphint">${esc(LX("Drag on the lock to aim the pick, then hold Turn. If it shakes, let go before the pick snaps."))}</p>
         <div class="lprow"><button class="btn" id="lpleave">Leave it</button><button class="btn pri" id="lpturn">Hold to turn</button></div>
       </div></div>`;
     document.body.appendChild(el);
