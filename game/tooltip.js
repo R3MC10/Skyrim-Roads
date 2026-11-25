@@ -21,6 +21,7 @@ const TIP = (() => {
     CHARGE: () => (typeof CHARGE !== "undefined" ? CHARGE : undefined),   // chargebar.js: the charge bar of enchanted weapons and staffs
     COOK: () => (typeof COOK !== "undefined" ? COOK : undefined),
     POTFX: () => (typeof POTFX !== "undefined" ? POTFX : undefined),   // potionfx.js: potions work over a few rounds
+    ITEMCMP: () => (typeof ITEMCMP !== "undefined" ? ITEMCMP : undefined),   // itemcmp.js: against what you wear (also the Items side panel)
   };
   const g = (n) => { try { return MODS[n] ? MODS[n]() : undefined; } catch { return undefined; } };
   const has = (n) => g(n) !== undefined;
@@ -108,7 +109,8 @@ const TIP = (() => {
     if (r?.stolen) L.push("\uE15E Stolen. Only a fence will buy it.");
     // better or worse than what you wear (the same sums as the ▲/▼ marks in lists)
     let cmp = "";
-    if (s && G_?.equipment && (G_.SLOTS || []).includes(it.slot)) {
+    if (s && g("ITEMCMP")) cmp = g("ITEMCMP").html(s, r || { id: null, item: itemId }, "tt-cmp");   // [itemdetail] Damage 7 → 8 (+1), Weight, Value
+    else if (s && G_?.equipment && (G_.SLOTS || []).includes(it.slot)) {
       const w = G_.equipment(s)[it.slot], wit = w && D_.ITEMS[w.item];
       const stat = (x, rr) => (x.slot === "weapon" ? x.damage : x.armor || 0) + (rr?.temper || 0);
       if (w && r && w.id === r.id) cmp = `<p class="tt-eq">◆ You're wearing this</p>`;
@@ -399,7 +401,8 @@ const TIP = (() => {
   function over(e) {
     if (isTouch(e) || press) return;
     lastKey = false; lastXY = [e.clientX, e.clientY];
-    const h = find(e.target);
+    let h = find(e.target);
+    if (h && g("ITEMCMP")?.ownsHover?.(h.el)) h = null;   // [itemdetail] PC Items rows: the side panel shows the item instead
     if (h && cur && h.el === cur.el) return;
     clearTimeout(showT);
     if (!h) { if (cur && !cur.rect) hideT = setTimeout(hide, 80); return; }
