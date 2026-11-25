@@ -3,12 +3,18 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b196-mghunt", build: 196, date: "25 Nov 2026", title: "Painted hunting", items: [
+    { id: "b197-mghunt", build: 197, date: "25 Nov 2026", title: "Painted hunting", items: [
       "Hunting is now a painted scene: a misty clearing at sunrise, with trees, ferns and heather that slide apart as you creep closer, and the animal grows as you close in.",
       "Deer, elk, foxes, snow foxes and hares are painted and move: they graze with their head down, look up when they hear you, flick their ears and tail, and bolt away in a real run. Other animals keep their drawing.",
       "The wind shows in the grass, with leaves and seeds drifting the way it blows.",
       "You see your bow come up and draw, and the arrow flies in a real arc. A hit makes the animal flinch or drop; blood follows the Gore setting (Off, Reduced, Full).",
       "Skinning shows the hide stretched on a frame, and what you got pops up below.",
+    ] },
+    { id: "b196-mgmining", build: 196, date: "25 Nov 2026", title: "Mining looks and feels new", items: [
+      "The mining game now happens in a painted cave. The rock face is real stone cut from the painting, and you can see chunks of ore poking out of the veins.",
+      "Tap a stone and your pickaxe swings in and lands on it: the rock cracks, chips and dust fly, ore glints and sparks, and the pieces you break out jump into your haul.",
+      "A Perfect blow shakes the screen a little. When you're done, a haul card shows everything you dug, with how many Perfect blows you landed.",
+      "Works on small phones and big PC screens, in both the ink and pixel styles. Quick dig still skips straight to the result.",
     ] },
     { id: "b195-afflart", build: 195, date: "25 Nov 2026", title: "Painted affliction scenes", items: [
       "The black shrine by the road is now a painting: an obsidian altar in a ring of standing stones under the moon, glowing purple.",
