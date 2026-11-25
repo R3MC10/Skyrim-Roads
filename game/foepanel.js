@@ -6,6 +6,8 @@
      the bar, its next move as one small chip. Numbers and the rest of its moves show on hover (PC) or a tap on the plate
      (phonefight.js: on a phone the health numbers always show; on every screen its status icons carry their stack count).
      A boss already has its name and bar at the top of the screen, so its plate keeps only the icons and the next move.
+   - [fightscreen] On the zoned fight screen (fightzones.js, the default) the plate and the log have fixed places (top of
+     the screen on a phone, the right column on a PC); this module's place() is then skipped and only its look is used.
    - The plate floats ABOVE the foe's head with a gap and never sits on a fighter: when there is no room above (a tall
      foe under the boss bar) it moves beside the foe, into the gap toward you, or behind it.
    - The fight log holds the whole fight: scroll it with a finger or the mouse wheel. It sticks to the newest line unless
