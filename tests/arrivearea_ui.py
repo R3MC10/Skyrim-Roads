@@ -27,7 +27,7 @@ async def main():
             await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&p=arr{tag}&notut"); await pg.wait_for_timeout(1500)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Remi"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
             await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
-            await pg.evaluate("document.querySelector('[data-tab=map]').click()"); await pg.wait_for_timeout(300)
+            await pg.evaluate("document.querySelector('[data-tab=world]').click()"); await pg.wait_for_timeout(300)
 
             # 1. a plain arrival: Area opens by itself
             err = await pg.evaluate(TRIP, "Riverwood")
@@ -46,7 +46,7 @@ async def main():
             await pg.screenshot(path=f"{OUT}/arrive_{tag}.png")
 
             # 2. a window open on arrival: the switch waits for it
-            await pg.evaluate("document.querySelector('[data-tab=map]').click()"); await pg.wait_for_timeout(300)
+            await pg.evaluate("document.querySelector('[data-tab=world]').click()"); await pg.wait_for_timeout(300)
             await pg.evaluate(TRIP, "Whiterun")
             await pg.evaluate("()=>window.__dbg.message('Test', 'A window that is open while you arrive.')")
             for _ in range(60):
@@ -61,7 +61,7 @@ async def main():
             check(await pg.evaluate(ON) == "town", f"{tag}: once the window closes, Area opens")
 
             # 3. a roam spot: stay on the map
-            await pg.evaluate("document.querySelector('[data-tab=map]').click()"); await pg.wait_for_timeout(300)
+            await pg.evaluate("document.querySelector('[data-tab=world]').click()"); await pg.wait_for_timeout(300)
             spot = await pg.evaluate("()=>{const p=WORLD.places.Whiterun; return [p[0]+0.03, p[1]+0.03]}")
             await pg.evaluate(TRIP, spot)
             for _ in range(40):

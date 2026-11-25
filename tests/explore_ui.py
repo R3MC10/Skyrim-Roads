@@ -17,7 +17,7 @@ async def main():
         await closeModals(pg)
         # 1) a hidden secret: search it
         await pg.evaluate("""()=>{const S=window.__dbg.save(); S.location="Embershard Mine"; [S.x,S.y]=WORLD.places["Embershard Mine"]; S.skills.Sneak.lvl=30; if(!S.discovered.includes("Embershard Mine")) S.discovered.push("Embershard Mine");}""")
-        await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(500)
+        await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200); await pg.click("[data-tab=world]"); await pg.wait_for_timeout(500)
         card = await pg.query_selector(".xcard")
         print("search card:", bool(card))
         if card: await card.screenshot(path="ex_search_card.png")
@@ -30,7 +30,7 @@ async def main():
         await closeModals(pg)
         # 2) treasure map: carry it, see the X, walk there, dig
         pos = await pg.evaluate("""()=>{const S=window.__dbg.save(); G.give(S,"map_tm1"); const m=EXPLORE.marks(S)[0]; S.location=null; [S.x,S.y]=m.pos; return m.pos;}""")
-        await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(900)
+        await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200); await pg.click("[data-tab=world]"); await pg.wait_for_timeout(900)
         await pg.screenshot(path="ex_map_x.png")
         dig = await pg.query_selector("[data-act=xdig]"); print("dig button:", bool(dig))
         if dig:
@@ -45,7 +45,7 @@ async def main():
         # 4) a claw door with the ring mini-game
         await pg.evaluate("""()=>{const S=window.__dbg.save(); S.level=14; S.hpBonus=4000; for(const sk of Object.values(S.skills)) sk.lvl=Math.max(sk.lvl,50); G.setHealth(S,G.maxHealth(S)); for(let i=0;i<8;i++) G.give(S,"potion_health");
            S.location="Bleak Falls Barrow"; [S.x,S.y]=WORLD.places["Bleak Falls Barrow"]; if(!S.discovered.includes("Bleak Falls Barrow")) S.discovered.push("Bleak Falls Barrow"); S.cleared={};}""")
-        await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(500)
+        await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200); await pg.click("[data-tab=world]"); await pg.wait_for_timeout(500)
         await pg.click("[data-act=enter]"); await pg.wait_for_timeout(500)
         await closeModals(pg)
         saw = False

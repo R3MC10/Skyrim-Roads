@@ -27,8 +27,8 @@ const I18N_QACORE = (() => {
     // first-time tips (onboard.js)
     "The gold card under the map (<b>Your first trip</b>) shows you what to do, one step at a time. Tips like this one pop up the first time something new happens.":
       "Złota karta pod mapą (<b>Twoja pierwsza podróż</b>) pokazuje, co robić, krok po kroku. Takie wskazówki wyskakują, gdy pierwszy raz dzieje się coś nowego.",
-    "Open <b>Character</b>: pick Health, Magicka or Stamina, then spend your perk point on a skill you use. Skills rise by using them.":
-      "Otwórz <b>Postać</b>: wybierz Zdrowie, Magię albo Wytrzymałość, potem wydaj punkt atutu na umiejętność, której używasz. Umiejętności rosną, gdy ich używasz.",
+    "Open <b>Hero</b>: pick Health, Magicka or Stamina, then spend your perk point on a skill you use. Skills rise by using them.":
+      "Otwórz <b>Bohatera</b>: wybierz Zdrowie, Magię albo Wytrzymałość, potem wydaj punkt atutu na umiejętność, której używasz. Umiejętności rosną, gdy ich używasz.",
     "You're carrying more than you can, so you walk slowly. Sell loot in a town, keep things in a house chest, or let a horse or follower carry them.":
       "Niesiesz więcej, niż dasz radę, więc idziesz wolno. Sprzedaj łupy w mieście, zostaw rzeczy w skrzyni w domu albo daj je nieść koniowi lub towarzyszowi.",
     "Go room by room. Each room may hold foes, a trap or loot; you can leave between rooms and come back later. The boss and the best chest wait at the end.":
@@ -52,7 +52,7 @@ const I18N_QACORE = (() => {
       "Naprawione: samouczek pierwszej podróży kazał otworzyć zakładkę Miasto; teraz nazywa się Okolica.",
     "Fixed: in Polish, the first-trip guide, the first-time tips and the \"you set off\" and \"you arrived\" messages were still in English.":
       "Naprawione: po polsku samouczek pierwszej podróży, wskazówki na start i komunikaty o wyruszeniu i dotarciu były jeszcze po angielsku.",
-    "You've got a lead": "Masz trop", "Open Character": "Otwórz Postać", "Got it": "Rozumiem", "Don't show tips": "Nie pokazuj wskazówek", "Close tip": "Zamknij wskazówkę",
+    "You've got a lead": "Masz trop", "Open Hero": "Otwórz Bohatera", "Got it": "Rozumiem", "Don't show tips": "Nie pokazuj wskazówek", "Close tip": "Zamknij wskazówkę",
     // tab tips (ui.js TAB_TIPS)
     "Start with the “What to do next” card. Press Go to travel; tap any place on the map to see how far it is.": "Zacznij od karty „Co dalej”. Naciśnij Idź, żeby ruszyć; dotknij dowolnego miejsca na mapie, żeby zobaczyć, jak daleko jest.",
     "Your level, skills and perks. A dot on this tab means you can level up or spend a perk point.": "Twój poziom, umiejętności i atuty. Kropka na tej zakładce znaczy, że możesz awansować albo wydać punkt atutu.",

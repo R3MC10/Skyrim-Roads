@@ -1,17 +1,17 @@
 /* pcmap.js: on a PC or any wide window, the world map is the home screen. [OURS]
    The painted map fills the window; everything else floats over it:
-   - a slim bar along the bottom: level and XP, gold, carry weight, time and weather, and buttons for the menus
+   - a slim bar along the bottom: level and XP, gold, carry weight, time and weather, and the five tabs (World, Area, Hero, Journal, Social) and the Esc menu
    - party cards in a column on the left (their heroes walk the map too)
    - the quest tracker top-right: the quest you follow and where to go; Q or its ‹ button slides it off the edge and
      leaves a small tab there that slides it back
    - clicking the town you stand in opens its places (inn, shops, Jarl, jobs) in a side panel on the right
-   - Journal, Character, Social... open full-screen over a blurred map; Items and Magic too; Tab's compass over a dimmed map
+   - Hero, Journal, Social... open full-screen over a blurred map; Items and Magic too; Tab's compass over a dimmed map
    Mouse: drag to pan (any zoom), wheel to zoom smoothly toward the cursor (from all of Skyrim to close up),
    click a place to pick it, double-click to set off. Keys: W A S D / arrows pan (the compass takes them while it's open),
-   Space back to your hero, J journal, I items, K skills, M magic, Q quest tracker. Nothing fires while typing,
+   Space back to your hero, M world, L places, 1-5 the five tabs, C hero, J journal, I items, K skills, P magic, Q quest tracker. Nothing fires while typing,
    in fights or mini-games.
    Phones keep their layout: all of this switches on only for a fine pointer (mouse) and a window ≥ 1100 × 620.
-   Settings → Map → Map quality (Low / Medium / High) sets how alive the map is (mapfx.js). */
+   Hero → Settings → Map → Map quality (Low / Medium / High) sets how alive the map is (mapfx.js). */
 const PCMAP = (() => {
   const live = typeof document !== "undefined" && typeof document.createElement === "function";
   const W = 1000, H = 700, MAXZ = 8;
@@ -52,8 +52,8 @@ const PCMAP = (() => {
     return d <= 22 ? 0 : d >= 72 ? 1 : (d - 22) / 50;
   }
   const fogged = (pt, seen) => fogAt(pt, seen) > 0.5;
-  /* which overlay class goes on <html> for a tab: the map is home, the Area opens beside it, the rest full-screen */
-  const modeOf = (tab) => (tab === "map" || tab === "places" ? "home" : tab === "town" ? "side" : "full");
+  /* which overlay class goes on <html> for a tab: the map is home; the Area, Places and World news open beside it (the map stays in view); the rest full-screen */
+  const modeOf = (tab) => (tab === "map" ? "home" : tab === "town" || tab === "places" || tab === "world" ? "side" : "full");
 
   // ------------------------------------------------------------ in the game
   let ctx = null, isOn = false, timer = 0, lastBar = "", lastQuest = "", lastParty = "";
@@ -111,7 +111,8 @@ const PCMAP = (() => {
   function paintBar(S) {
     const b = typeof TABMENU !== "undefined" && TABMENU.bar ? TABMENU.bar(S) : { level: S.level, xp: 0, need: 1, pct: 0, gold: S.gold, w: 0, cap: 0, over: false, perks: 0 };
     const clock = ($("#clock")?.textContent || "").trim();
-    const btn = (act, key, label, icon) => `<button class="pcb-btn" data-pc="${act}" title="${esc(L(label))}${key ? ` (${key})` : ""}" aria-label="${esc(L(label))}">${icon}<span>${esc(L(label))}</span>${key ? `<kbd>${key}</kbd>` : ""}</button>`;
+    const grp = typeof MENUS !== "undefined" ? MENUS.activeGroup(ctx.tab(), $("#sky") ? ctx.skyPage?.() : null) : "";   // the open tab lights up
+    const btn = (act, key, label, icon, n) => `<button class="pcb-btn${act === grp ? " on" : ""}" data-pc="${act}"${act === grp ? ` aria-current="page"` : ""} title="${esc(L(label))}${key ? ` (${key}${n ? ` · ${n}` : ""})` : ""}" aria-label="${esc(L(label))}">${icon}<span>${esc(L(label))}</span>${key ? `<kbd>${key}</kbd>` : ""}</button>`;
     const I = {
       log: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18H6z M9 8h6M9 12h6M9 16h4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
       items: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.5 12h-11zM9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
@@ -120,7 +121,8 @@ const PCMAP = (() => {
       town: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V10l9-6 9 6v11M9 21v-6h6v6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
       social: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3 20c.6-3.6 3-5.5 6-5.5s5.4 1.9 6 5.5M16 5.5a3 3 0 0 1 0 5.6M18 14.8c1.6.7 2.6 2.4 3 5.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
       menu: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" stroke="currentColor" stroke-width="1.6"/></svg>',
-      compass: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 3.5l2.2 8.5L12 20.5 9.8 12z" fill="currentColor" opacity=".8"/></svg>',
+      world: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14M15 6v14" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
+      hero: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7" r="3.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 21c.8-4.6 3.5-7 7-7s6.2 2.4 7 7" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
     };
     const out = `<div class="pcb-who"><span class="pcb-lv num" aria-label="${esc(L("Level"))}">${b.level}</span><div class="pcb-nm"><b>${esc(S.name)}</b>
         <div class="pcb-xp" title="${esc(L("Experience"))} ${b.xp}/${b.need}"><i style="width:${b.pct}%"></i></div></div>${b.perks ? `<span class="pcb-perk" title="${esc(L("Perk points to spend"))}">+${b.perks}</span>` : ""}</div>
@@ -128,7 +130,7 @@ const PCMAP = (() => {
       <span class="pcb-stat num${b.over ? " over" : ""}" title="${esc(L("Carry weight"))}"> ${b.w}/${b.cap}</span>
       ${clock ? `<span class="pcb-stat pcb-clock">${esc(clock)}</span>` : ""}
       <span class="pcb-sp"></span>
-      ${btn("log", "J", "Journal", I.log)}${btn("items", "I", "Items", I.items)}${btn("skills", "K", "Skills", I.skills)}${btn("magic", "M", "Magic", I.magic)}${btn("town", "", "Area", I.town)}${btn("social", "", "Friends", I.social)}${btn("hub", "Tab", "Compass", I.compass)}${btn("menu", "", "Menu", I.menu)}`;
+      ${btn("world", "M", "World", I.world, 1)}${btn("town", "A", "Area", I.town, 2)}${btn("hero", "C", "Hero", I.hero, 3)}${btn("log", "J", "Journal", I.log, 4)}${btn("social", "O", "Social", I.social, 5)}${btn("menu", "", "Menu", I.menu)}`;
     if (out === lastBar) return;
     lastBar = out; $("#pcbar").innerHTML = out;
   }
@@ -141,6 +143,8 @@ const PCMAP = (() => {
     if (a === "hub") { if (typeof TABMENU !== "undefined") { $("#tw") ? TABMENU.closeHub() : TABMENU.openHub(); } return; }
     if (typeof TABMENU !== "undefined" && TABMENU.closeHub && $("#tw")) TABMENU.closeHub();
     if (a === "items" || a === "magic") { if ($("#sky") && ctx.skyPage?.() === a) { ctx.closeMenu(); return; } ctx.openMenu(a); return; }
+    if (a === "world") { ctx.closeMenu(); ctx.go("map"); refresh(); return; }   // five tabs (tabs5): World is the map home
+    if (a === "hero") { const M = typeof MENUS !== "undefined" ? MENUS : null; ctx.closeMenu(); ctx.go(M && M.groupOf(ctx.tab()) === "hero" ? "map" : M ? M.pick("hero") : "hero"); refresh(); return; }
     if (a === "skills") { if (typeof TABMENU !== "undefined" && TABMENU.go) TABMENU.go("char", false); else ctx.go("hero"); return; }
     if (a === "social") { $("#socBtn")?.click(); return; }
     if (a === "menu") { $("#sndBtn")?.click(); return; }
@@ -158,14 +162,18 @@ const PCMAP = (() => {
         ${qa.st?.title ? `<div class="pcq-obj"><span class="pcq-dot" aria-hidden="true">◆</span><span>${esc(qa.st.title)}</span></div>` : ""}
         ${target && WORLD.places[target] && target !== S.location ? `<button class="pcq-go" data-q="map" data-place="${esc(target)}">➜ ${esc(target)}</button>` : target === S.location ? `<div class="pcq-here">${esc(L("You're there."))}</div>` : ""}`
       : `<div class="pcq-h"><span>${esc(L("Quest"))}</span><button class="iconbtn pcq-x" data-q="hide" aria-label="${esc(L("Hide the quest tracker"))}" title="${esc(L("Hide"))} (Q)">›</button></div><div class="pcq-none">${esc(L("No quest followed. Open the Journal (J) to pick one."))}</div>`;
-    if (out === lastQuest) return;
-    lastQuest = out; el.innerHTML = out;
+    /* the World tab's other screens, one click from the map (tabs5): Places (L) and World news once it's open */
+    const subs = typeof MENUS !== "undefined" ? MENUS.subsOf("world", S).filter(([id]) => id !== "map") : [];
+    const links = subs.length ? `<div class="pcq-links">${subs.map(([id, lab]) => `<button data-q="tab" data-id="${esc(id)}">${esc(L(id === "places" ? "Where to?" : lab))}${id === "places" ? " <kbd>L</kbd>" : ""}</button>`).join("")}</div>` : "";
+    if (out + links === lastQuest) return;
+    lastQuest = out + links; el.innerHTML = out + links;
   }
   function onQuestClick(e) {
     const b = e.target.closest("[data-q]"); if (!b) return;
     if (b.dataset.q === "hide") return toggleQuest(false);
     if (b.dataset.q === "log") return act("log");
     if (b.dataset.q === "map") ctx.jump({ place: b.dataset.place });
+    if (b.dataset.q === "tab") act(b.dataset.id);
   }
   function toggleQuest(open) {
     const want = open === undefined ? html().classList.contains("pcq-off") : !!open;
@@ -257,8 +265,8 @@ const PCMAP = (() => {
     }
     if (e.repeat) return;
     if (k === " " || k === "spacebar") { if (tw || sky || modal) return; e.preventDefault(); e.stopPropagation(); ctx.recentre(); return; }
-    if (modal || tw && !["j", "i", "k", "m"].includes(k)) return;
-    const map = { j: "log", i: "items", k: "skills", m: "magic" };
+    const map = { m: "world", c: "hero", j: "log", i: "items", k: "skills", p: "magic", l: "places" };   // A (Area) and O (Social): desktop.js; A also pans the map
+    if (modal || tw && !map[k]) return;
     if (map[k]) { e.preventDefault(); e.stopPropagation(); act(map[k]); return; }
     if (k === "q" && !sky) { e.preventDefault(); e.stopPropagation(); toggleQuest(); }
   }

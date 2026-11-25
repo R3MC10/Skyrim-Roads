@@ -22,7 +22,7 @@ async def main():
         await pg.click(".perk-sum [data-act=skinfo]"); await pg.wait_for_timeout(300)
         print("perk link opens card for:", await pg.evaluate("document.querySelector('button.skill.on')?.dataset.id"))
         # skills menu
-        await pg.click("[data-tab=pack]"); await pg.wait_for_timeout(500); await clear()
+        await pg.evaluate("__ui.go('items')"); await pg.wait_for_timeout(500); await clear()
         await pg.click("[data-act=skytab][data-id=skills]"); await pg.wait_for_timeout(300)
         await pg.click("[data-act=skysel][data-id='Lockpicking']"); await pg.wait_for_timeout(300)
         d = await pg.inner_text(".sky-detail"); print("menu detail:", d[:260].replace("\n", " | "))

@@ -15,7 +15,7 @@ async def main():
         for style in ["ink"]:
             for town, sec in SHOTS:
                 await pg.evaluate("(t)=>{const S=window.__dbg.save(); S.location=t; [S.x,S.y]=WORLD.places[t]; if(!S.discovered.includes(t)) S.discovered.push(t); S.gold=5000;}", town)
-                await clear(); await pg.click("[data-tab=map]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200)
+                await clear(); await pg.click("[data-tab=world]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200)
                 await clear()
                 if not await pg.query_selector(f"[data-act=shop][data-id={sec}]"): print("no section", town, sec); continue
                 for _ in range(5):
@@ -33,7 +33,7 @@ async def main():
                     print(style, town, sec, "|", (await card.inner_text()).replace("\n", " | ")[:120])
                 else: print(style, town, sec, "NO CARD")
         await pg.evaluate("()=>{const S=window.__dbg.save(); S.location='High Hrothgar'; [S.x,S.y]=WORLD.places['High Hrothgar'];}")
-        await clear(); await pg.click("[data-tab=town]"); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(300)
+        await clear(); await pg.click("[data-tab=town]"); await pg.click("[data-tab=world]"); await pg.wait_for_timeout(300)
         print("greybeard:", await pg.evaluate("document.querySelector('.npctalk')?.innerText?.replace(/\\n/g,' | ')"))
         print("errors:", errs)
         await b.close()

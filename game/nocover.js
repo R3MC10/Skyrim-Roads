@@ -13,7 +13,7 @@
    The geometry (area, pick, gap) is plain functions so node tests can check it (tests/test_nocover.js). */
 const NOCOVER = (() => {
   const DOM = typeof document !== "undefined" && typeof window !== "undefined";
-  const FLOAT = "#hudlane, #pbanners, #gnear, #twBtn, #nfhist";
+  const FLOAT = "#hudlane, #pbanners, #gnear, #nfhist";
   const CTRL = "button, [role=button], [role=tab], .tab, .dnode, a[href], input, select, textarea";
   // full-screen things the history button stays away from
   const AWAY = "#sky, .cg, #lockpick, #craftgame, #dgame, #dwgame, #fishgame, #hgame, #huntgame, #minegame, #pickgame, #smithgame, #xgame";

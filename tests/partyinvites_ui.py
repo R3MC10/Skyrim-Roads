@@ -55,9 +55,9 @@ async def main():
         await B.screenshot(path=os.path.join(OUT, TAG + "friends_phone.png"))
 
         # Alfa starts a co-op run: Beta is in it straight away, only Xan can be invited
-        await tab(A, "log"); await tab(A, "map"); await A.wait_for_timeout(800)
+        await tab(A, "log"); await tab(A, "world"); await A.wait_for_timeout(800)
         await A.click("[data-act=coopnew]"); await A.wait_for_timeout(900)
-        await tab(A, "log"); await tab(A, "map"); await A.wait_for_timeout(600)
+        await tab(A, "log"); await tab(A, "world"); await A.wait_for_timeout(600)
         ok(await until(A, f"() => !!document.querySelector('.coop.on') && document.querySelector('.coop.on').innerText.includes('Beta')", 60), "Beta is listed in the run")
         ok(await A.locator(f"[data-act=coopinv][data-id='{idb}']").count() == 0, "no Invite button for Beta")
         ok(await A.locator(f"[data-act=coopinv][data-id='{idx}']").count() == 1, "Xan (outside the party) can be invited")
@@ -65,7 +65,7 @@ async def main():
         await A.screenshot(path=os.path.join(OUT, TAG + "lobby_phone.png"))
         await B.wait_for_timeout(1200)
         ok(await B.evaluate("() => document.querySelectorAll('#invbar .invcard[data-kind=coop]').length") == 0, "no co-op invite card for Beta")
-        await tab(B, "log"); await tab(B, "map"); await B.wait_for_timeout(600)
+        await tab(B, "log"); await tab(B, "world"); await B.wait_for_timeout(600)
         ok(await until(B, "() => !!document.querySelector('.coop.on')", 40), "Beta's lobby shows the run she's in")
         ok(await B.locator("[data-act=coopjoin]").count() == 0 and await B.locator("[data-act=coopnew]").count() == 0, "Beta has nothing to accept and doesn't start her own run")
         await B.locator(".coop").first.scroll_into_view_if_needed()
@@ -76,7 +76,7 @@ async def main():
             ok(await until(X, "() => document.querySelectorAll('#invbar .invcard[data-kind=coop]').length === 1", 80), "Xan gets an invite card")
         # PC
         for pg in (A, B): await pg.set_viewport_size({"width": 1920, "height": 1080})
-        await A.wait_for_timeout(600); await tab(A, "log"); await tab(A, "map"); await A.wait_for_timeout(600)
+        await A.wait_for_timeout(600); await tab(A, "log"); await tab(A, "world"); await A.wait_for_timeout(600)
         await A.screenshot(path=os.path.join(OUT, TAG + "lobby_pc.png"))
         await tab(B, "social"); await B.click("[data-act=soctab][data-id=friends]"); await B.wait_for_timeout(600)
         await B.screenshot(path=os.path.join(OUT, TAG + "friends_pc.png"))

@@ -30,7 +30,7 @@ async def run(b, w, h, phone, bad):
     for kind in ("berry", "flower"):
         ing = await pg.evaluate(GO, kind)
         await pg.evaluate("document.querySelector('[data-tab=log]')?.click()"); await pg.wait_for_timeout(300)
-        await pg.evaluate("document.querySelector('[data-tab=map]')?.click()"); await pg.wait_for_timeout(1800)
+        await pg.evaluate("document.querySelector('[data-tab=world]')?.click()"); await pg.wait_for_timeout(1800)
         await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
         sel = "#gnear [data-act=gpick]"
         near = await pg.evaluate(f"()=>{{const c=document.querySelector('{sel}'); return !!c && c.getBoundingClientRect().height>0}}")
@@ -92,7 +92,7 @@ async def polish(b, w, h, phone, bad):
     await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
     await pg.evaluate(GO, "berry")
     await pg.evaluate("document.querySelector('[data-tab=log]')?.click()"); await pg.wait_for_timeout(300)
-    await pg.evaluate("document.querySelector('[data-tab=map]')?.click()"); await pg.wait_for_timeout(1800)
+    await pg.evaluate("document.querySelector('[data-tab=world]')?.click()"); await pg.wait_for_timeout(1800)
     await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
     near = await pg.evaluate("()=>document.querySelector('#gnear')?.innerText||''")
     await pg.evaluate("document.querySelector('[data-tab=town]')?.click()"); await pg.wait_for_timeout(1200)   # [gatherarea] the card lives in the Area tab

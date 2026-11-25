@@ -52,9 +52,9 @@ async def main():
             await pg.wait_for_timeout(2500); await clear()
             check(await pg.evaluate("document.querySelectorAll('#wev .wev-strip').length") >= 3, "strips under the map")
             check("Daedric" in (await pg.evaluate("JSON.stringify(window.__dbg.save().log || [])")) or "Oblivion" in (await pg.evaluate("JSON.stringify(window.__dbg.save())")), "journal note about the invasion")
-            await clear(); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(600); await clear()
+            await clear(); await pg.click("[data-tab=world]"); await pg.wait_for_timeout(600); await clear()
             for st in ["ink"]:
-                await clear(); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(1500); await clear()
+                await clear(); await pg.click("[data-tab=world]"); await pg.wait_for_timeout(1500); await clear()
                 await pg.evaluate("scrollTo(0, 0)"); await pg.wait_for_timeout(1200); await pg.screenshot(path=os.path.join(OUT, f"wev_maptop_{st}.png"))
                 el = await pg.query_selector("#wev")
                 if el: await el.scroll_into_view_if_needed()

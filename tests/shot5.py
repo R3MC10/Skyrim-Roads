@@ -58,7 +58,7 @@ async def main():
         await click("[data-tab=town]"); await click("[data-act=shop][data-id=streets]"); await click("[data-act=guardopen]"); await shot("guard")
         await click("[data-act=guard][data-c=pay]"); await click("[data-act=close]")
         # pack: drink brewed + eat
-        await click("[data-tab=pack]"); await shot("pack")
+        await pg.evaluate("__ui.go('items')"); await shot("pack")
         st = await pg.evaluate(f"() => JSON.stringify({{gold:{S}.gold, bounty:{S}.bounty, perks:{S}.perks, jobs:({S}.jobs||[]).length, news: [...window.__fakedb.store.keys()].filter(k=>k.startsWith('news')).length}})")
         print(st)
         print("errors:", errs[:10])

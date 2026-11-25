@@ -1,5 +1,6 @@
 /* The Tab menu, like Skyrim's: a four-way compass over a blurred view of where you are. Swipe or tap a direction:
-   left = Magic, right = Items, up = Skills (constellations, character sheet, perks, stats), down = Map.
+   left = Magic, right = Items, up = Skills (constellations, hero sheet, perks, stats), down = World (the map).
+   [tabs5] It opens with the phone's back button on the World screen, or Tab on a PC; the World screen is home.
    Along the bottom: level progress, gold, carry weight and what you're doing right now.
    Inside a menu a sideways swipe flips through its tabs; past the last tab it moves on to the next menu round the
    compass, and a swipe down on the header goes back to the compass. Only reads the save and routes to the game's own
@@ -9,8 +10,8 @@ const TABMENU = (() => {
   const esc = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const RING = ["char", "items", "map", "magic"];                 // clockwise from the top
   const DIR = { up: "char", right: "items", down: "map", left: "magic" };
-  const NAME = { char: "Skills", items: "Items", map: "Map", magic: "Magic" };
-  const SUBT = { char: "Character · perks · stats", items: "Weapons · apparel · potions", map: "Travel the world", magic: "Spells · powers · shouts" };
+  const NAME = { char: "Skills", items: "Items", map: "World", magic: "Magic" };
+  const SUBT = { char: "Hero · perks · stats", items: "Weapons · apparel · potions", map: "Map and travel", magic: "Spells · powers · shouts" };
   const CHAR_TABS = [["stars", "Skills"], ["hero", "Character"], ["perks", "Perks"], ["stats", "Stats"], ["diary", "Diary"]];
   const charTabs = () => typeof MENUS !== "undefined" ? MENUS.charTabs() : CHAR_TABS;   // menus.js owns the Character sub-tabs
   const MIN = 40, RATIO = 1.4;
@@ -497,15 +498,11 @@ const TABMENU = (() => {
   let timer = null;
   function mount() {
     if (!live) return;
-    if (!$("#twBtn")) {
-      const b = document.createElement("button"); b.id = "twBtn"; b.className = "twbtn"; b.setAttribute("aria-label", "Open the menu compass");
-      b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 3.5l2.2 8.5L12 20.5 9.8 12z" class="f"/><path d="M3.5 12h17"/></svg>`;
-      b.onclick = () => openHub();
-      document.body.appendChild(b);
-    }
+    // [tabs5] the World screen is home now: no floating compass button over the map and no compass at start.
+    // The compass still opens with the phone's back button on the World screen and with Tab on a PC (desktop.js).
+    $("#twBtn")?.remove();
     clearInterval(timer); timer = setInterval(() => { if (hubOpen && $("#tw")) refreshHub(); else if (hubOpen) { hubOpen = false; document.body.classList.remove("tw-on"); } }, 1000);
-    const force = /[?&]hub=1\b/.test(location.search), skip = /[?&]hub=0\b/.test(location.search);
-    if (!skip && (force || !navigator.webdriver)) setTimeout(openHub, 60);
+    if (/[?&]hub=1\b/.test(location.search)) setTimeout(openHub, 60);   // tests can still start on it
   }
   return { RING, DIR, CHAR_TABS, swipeDir, ring, step, bar, task, mini, stars, perks, mount, openHub, closeHub, go, back, afterPanel, menuClosed, fromBar, swiped,
     get open() { return hubOpen; }, set maxMs(v) { MAXMS = v; }, get charMode() { return charMode; }, get starSkill() { return starSkill; }, set starSkill(v) { starSkill = v; starPick = null; typeof SKYUI !== "undefined" && SKYUI.refocus?.(); } };

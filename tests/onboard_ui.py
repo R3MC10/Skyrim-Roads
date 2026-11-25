@@ -56,7 +56,7 @@ async def run(b, vw, vh, style, fails):
         check(await pg.evaluate("(()=>{const r=document.querySelector('#side .tut').getBoundingClientRect(); return r.top>=0 && r.top<innerHeight-60})()"), "Show me didn't bring the tutorial card into view")
     # 2. go to Whiterun
     await pg.click(".nextcard [data-act=go][data-place=Whiterun]"); await pg.wait_for_timeout(600); await clear()
-    await tab("map"); await pg.evaluate("scrollTo(0,0)"); await shot("walking")
+    await tab("world"); await pg.evaluate("scrollTo(0,0)"); await shot("walking")
     t = await pg.evaluate(TUT); print(tag, "2 tutorial:", t); check("turn by turn" in t, "road step doesn't mention turn-by-turn fights")
     # 3. a wolf on the road
     await pg.evaluate("""(()=>{ const S=__dbg.save(); let e; for(let i=0;i<300;i++){ e=G.rollEncounter(S); if(e.kind!=='event' && e.health && e.danger!=='high') break; } e.hp=e.hp??e.health; e.danger='medium'; S.trip.status='encounter'; S.trip.encounter=e; __dbg.openEncounter(); })()""")
@@ -82,7 +82,7 @@ async def run(b, vw, vh, style, fails):
     await shot("fight_result"); await clear()
     # 5. arrive in Whiterun, then the tutorial's Town / Journal steps
     await pg.evaluate("(()=>{const S=__dbg.save(); S.trip=null; S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; G.setHealth(S, G.maxHealth(S));})()"); await pg.wait_for_timeout(1500); await clear()
-    await tab("map"); await pg.evaluate("scrollTo(0,0)"); await shot("arrived")
+    await tab("world"); await pg.evaluate("scrollTo(0,0)"); await shot("arrived")
     print(tag, "5 tutorial:", await pg.evaluate(TUT))
     await tab("town"); await shot("town")
     await tab("log"); await tab("hero"); await pg.wait_for_timeout(800); await shot("hero_done")
@@ -98,7 +98,7 @@ async def run(b, vw, vh, style, fails):
     # 7. over-encumbered
     await pg.evaluate("(()=>{const S=__dbg.save(); G.give(S,'mat_iron',400);})()"); await pg.wait_for_timeout(1500)
     tip = await pg.evaluate(TIP); print(tag, "8 heavy tip:", tip[:60]); check("heavy" in tip.lower(), "no over-encumbered tip")
-    await tab("map"); await pg.evaluate("scrollTo(0,0)"); await shot("heavy_tip")
+    await tab("world"); await pg.evaluate("scrollTo(0,0)"); await shot("heavy_tip")
     await pg.click("#obtip [data-obt=ok]")
     # 8. the ideas in What to do next (mappanel.js shows 5 rows; ideas sort last, so open "Show more" when it's there)
     await pg.evaluate("document.querySelector('[data-mp=more][aria-expanded=false]')?.click()"); await pg.wait_for_timeout(300)
@@ -111,7 +111,7 @@ async def run(b, vw, vh, style, fails):
     nx2 = await pg.evaluate("[...document.querySelectorAll('.obrow .t')].map(x=>x.firstChild.textContent.trim())")
     check(first not in nx2, "hiding an idea didn't hide it")
     # a level 3 with gold: a dungeon and a horse come up
-    await pg.evaluate("(()=>{const S=__dbg.save(); S.level=3; S.pendingLevels=0; S.gold=1400; S.lt={...(S.lt||{}), foes:9};})()"); await pg.wait_for_timeout(1200); await tab("map")
+    await pg.evaluate("(()=>{const S=__dbg.save(); S.level=3; S.pendingLevels=0; S.gold=1400; S.lt={...(S.lt||{}), foes:9};})()"); await pg.wait_for_timeout(1200); await tab("world")
     print(tag, "state:", await pg.evaluate("(()=>{const S=__dbg.save(); return [S.level, S.gold, S.lt.foes, JSON.stringify(S.onb.hid)]})()"))
     await pg.evaluate("document.querySelector('[data-mp=more][aria-expanded=false]')?.click()"); await pg.wait_for_timeout(300)
     nx3 = await pg.evaluate("[...document.querySelectorAll('.obrow .t')].map(x=>x.firstChild.textContent.trim())"); print(tag, "10 ideas lvl3:", nx3)
@@ -122,7 +122,7 @@ async def run(b, vw, vh, style, fails):
     await pg.evaluate("document.querySelector('.nextcard')?.scrollIntoView({block:'start'})"); await shot("ideas_lvl3")
     # 9. first dungeon
     dn = await pg.evaluate("(()=>{const S=__dbg.save(); const n=Object.keys(WORLD.places).filter(x=>DUNGEONS.enterable(x)).sort((a,b)=>G.pxDist([S.x,S.y],WORLD.places[a])-G.pxDist([S.x,S.y],WORLD.places[b]))[0]; S.location=n; [S.x,S.y]=WORLD.places[n]; if(!S.discovered.includes(n)) S.discovered.push(n); return n;})()")
-    await tab("map")
+    await tab("world")
     if await pg.query_selector("#side [data-act=enter]"):
         await pg.click("#side [data-act=enter]"); await pg.wait_for_timeout(1800)
         tip = await pg.evaluate(TIP); print(tag, "11 dungeon", dn, "tip:", tip[:60]); check("dungeon" in tip.lower(), "no first-dungeon tip")
@@ -137,7 +137,7 @@ async def run(b, vw, vh, style, fails):
     else:
         fails.append(f"{tag}: no Go inside at {dn}")
     # 10. switch the ideas off, then back on in Settings (at the biggest text size)
-    await tab("map")
+    await tab("world")
     if await pg.query_selector(".obfoot [data-ob=off]"): await pg.click(".obfoot [data-ob=off]"); await pg.wait_for_timeout(300)
     check(await pg.evaluate("document.querySelectorAll('.obrow').length") == 0, "ideas still shown after turning off")
     if await pg.evaluate("typeof ACCESS!=='undefined'"): await pg.evaluate("ACCESS.pref('a11yText','3')")
@@ -148,12 +148,12 @@ async def run(b, vw, vh, style, fails):
     check(over == 0, "settings buttons stick out at biggest text")
     await pg.click("#modal [data-k=obNext][data-v=true]"); await pg.wait_for_timeout(300)
     check(await pg.evaluate("ONBOARD.ideasOn()"), "turning ideas back on didn't stick")
-    await clear(); await tab("map")
+    await clear(); await tab("world")
     check(await pg.evaluate("document.querySelectorAll('.obrow').length") > 0, "ideas didn't come back")
     await pg.evaluate("document.querySelector('.nextcard')?.scrollIntoView({block:'start'})"); await shot("ideas_biggest")
     if await pg.evaluate("typeof ACCESS!=='undefined'"): await pg.evaluate("ACCESS.pref('a11yText','0')")
     # veterans don't get ideas
-    await pg.evaluate("__dbg.save().level=20"); await tab("map")
+    await pg.evaluate("__dbg.save().level=20"); await tab("world")
     check(await pg.evaluate("document.querySelectorAll('.obrow').length") == 0, "a veteran still gets ideas")
     if errs: fails.append(f"{tag} page errors: {errs[:3]}")
     await ctx.close()

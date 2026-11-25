@@ -14,7 +14,7 @@ async def main():
             await pg.wait_for_timeout(400)
             async def clear():
                 await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
-            await clear(); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(300); await clear()
+            await clear(); await pg.click("[data-tab=world]"); await pg.wait_for_timeout(300); await clear()
             await pg.click("[data-act=enter]"); await pg.wait_for_timeout(500)
             # a known layout: fight → treasure → trap → rest → boss
             await pg.evaluate("()=>{ const d=window.__dbg.save().dungeon; d.rows=[[{type:'fight',links:[0,1]},{type:'trap',links:[1]}],[{type:'treasure',links:[0]},{type:'elite',links:[0,1]}],[{type:'trap',links:[0]},{type:'puzzle',links:[0]}],[{type:'rest',links:[0]}],[{type:'boss',links:[]}]]; }")

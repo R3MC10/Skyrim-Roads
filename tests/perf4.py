@@ -12,7 +12,7 @@ async def main():
         await pg.evaluate(SEED)
         cdp = await pg.context.new_cdp_session(pg); await cdp.send("Emulation.setCPUThrottlingRate", {"rate": 4})
         probe = """(ms)=>new Promise(res=>{const long=[]; const ob=new PerformanceObserver(l=>l.getEntries().forEach(e=>long.push(e.duration))); ob.observe({entryTypes:['longtask']}); let n=0; const o=WorldMap.draw; WorldMap.draw=function(...a){n++; return o.apply(this,a)}; setTimeout(()=>{ob.disconnect(); WorldMap.draw=o; res({draws:n, busyMs:Math.round(long.reduce((a,b)=>a+b,0))});}, ms);})"""
-        await pg.evaluate("document.querySelector('[data-tab=map]').click(); scrollTo(0,0)"); await pg.wait_for_timeout(500)
+        await pg.evaluate("document.querySelector('[data-tab=world]').click(); scrollTo(0,0)"); await pg.wait_for_timeout(500)
         print("standing still, map on screen 5 s:", await pg.evaluate(probe, 5000))
         await pg.evaluate("document.querySelector('[data-tab=log]').click()"); await pg.wait_for_timeout(800)
         print("reading the Journal (map scrolled away) 5 s:", await pg.evaluate(probe, 5000))

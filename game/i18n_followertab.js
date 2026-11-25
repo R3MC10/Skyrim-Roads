@@ -29,8 +29,8 @@
     "Join the Companions first.": "Najpierw dołącz do Towarzyszy.",
     // Character page line
     "{0}/{1} health · Follower tab ›": "{0}/{1} zdrowia · zakładka Towarzysz ›",
-    "(Character → Follower → Bond) to finish it.": "(Postać → Towarzysz → Więź), aby to zakończyć.",
-    "{0}: done. Talk to {1} (Character → Follower → Bond) to finish it.": "{0}: zrobione. Porozmawiaj z towarzyszem ({1}: Postać → Towarzysz → Więź), aby to zakończyć.",
+    "(Hero → Follower → Bond) to finish it.": "(Bohater → Towarzysz → Więź), aby to zakończyć.",
+    "{0}: done. Talk to {1} (Hero → Follower → Bond) to finish it.": "{0}: zrobione. Porozmawiaj z towarzyszem ({1}: Bohater → Towarzysz → Więź), aby to zakończyć.",
     // patch note
     "Your follower gets their own tab": "Twój towarzysz ma własną zakładkę",
     "Your follower now has their own Follower tab in the Character menu, next to Skills, Character and Perks. Everything about them lives there: overview, bond, gear, magic, tactics, perks, fighting style and Dismiss.":

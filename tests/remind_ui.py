@@ -63,7 +63,7 @@ async def main():
             # badges: Hero has the level-up, Travel has the far-away things
             await pg.evaluate("REMIND.paint()")
             hb = await pg.evaluate("document.querySelector('#tabs [data-tab=hero] .rmd-b')?.textContent || ''")
-            mb = await pg.evaluate("document.querySelector('#tabs [data-tab=map] .rmd-b')?.textContent || ''")
+            mb = await pg.evaluate("document.querySelector('#tabs [data-tab=world] .rmd-b')?.textContent || ''")
             print(vw, "badges hero", repr(hb), "map", repr(mb), "api", await pg.evaluate("REMIND.badge('hero')"))
             if not hb.startswith("1") and not hb.startswith("2"): fails.append(f"{vw}: Hero badge {hb!r}")
             if not mb: fails.append(f"{vw}: Travel badge missing")

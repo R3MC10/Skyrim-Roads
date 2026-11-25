@@ -18,7 +18,8 @@
     try { r = window.__ui?.back?.({ esc: true }); } catch (x) { /* nothing to close */ }
     if (r === false && typeof PAUSEM !== "undefined" && window.__ui?.inGame?.()) PAUSEM.open();
   });
-  /* hotkeys: a letter opens its tab (the letters show on the tabs), Tab opens or closes the compass menu
+  /* hotkeys: a letter or 1-5 opens its tab (the letters show on the tabs, both in their tooltips: M World, A Area,
+     C Hero, J Journal, O Social; I Items, P Magic), Tab opens or closes the compass menu
      (inside it W A S D / the arrows pick a direction and 1-5 the buttons below: tabmenu.js) */
   addEventListener("keydown", (e) => {
     if (e.defaultPrevented || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -33,7 +34,10 @@
       return;
     }
     const keys = typeof MENUS !== "undefined" ? MENUS.HOTKEYS : null; if (!keys) return;
-    const id = Object.keys(keys).find((k) => keys[k] === String(e.key).toUpperCase()); if (!id) return;
+    const inner = { I: "items", P: "magic" }[String(e.key).toUpperCase()];   // Items and Magic live under Hero now (tabs5); their old letters still open them
+    if (inner && window.__ui?.go && window.__ui?.inGame?.()) { e.preventDefault(); try { window.__ui.go(inner); } catch (x) { /* not now */ } return; }
+    const nth = /^[1-9]$/.test(e.key) && !document.getElementById("tw") ? MENUS.GROUPS[+e.key - 1]?.[0] : null;   // 1-5: the five tabs in bar order (the compass uses 1-9 for its own buttons)
+    const id = nth || Object.keys(keys).find((k) => keys[k] === String(e.key).toUpperCase()); if (!id) return;
     const b = document.querySelector(`#tabs [data-tab="${id}"]`); if (!b) return;
     e.preventDefault();
     if (document.getElementById("tw") && typeof TABMENU !== "undefined") { try { TABMENU.closeHub(); } catch (x) { /* ignore */ } }

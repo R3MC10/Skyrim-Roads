@@ -5,7 +5,7 @@ const __GAME = process.env.W || require("path").join(__dirname, "../game/");
    2. The guided first trip and the first-time tips are Polish in Polish mode, and step 3 names the Area tab.
    3. The "set off" and "arrived" toasts have Polish patterns.
    4. Every perk description has Polish with the same numbers, rank text says "Następna ranga", hireling lines,
-      title/settings lines and patch-note dates are Polish, and the level-up tip names the Character tab.
+      title/settings lines and patch-note dates are Polish, and the level-up tip names the Hero tab.
    5. Crafting, riding and road-event messages are Polish, the ride button re-syncs on refresh, and only painted icons are requested.
    W=/path/to/game/ node test_qacore.js — prints "qacore ok". */
 const fs = require("fs"), vm = require("vm");
@@ -70,8 +70,8 @@ ok(fAt > 0, "towns.js still has FOLLOWERS");
 const descs = [...fBlock.matchAll(/^\s+\w+: \[.*"((?:[^"\\]|\\.){25,})"\],?$/gm)].map((m) => m[1]);
 ok(descs.length >= 7, "hireling lines found: " + descs.length);
 for (const d of descs) ok(T(d) && T(d) !== d, "Polish for hireling line: " + d.slice(0, 50));
-ok(/"Open <b>Character<\/b>/.test(ob) && /\["hero", "Open Character"\]/.test(ob) && !/Open <b>Hero<\/b>/.test(ob), "the level-up tip names the Character tab");
-ok(!/from the Hero tab/.test(src("dawnguard.js")), "Dawnguard names the Character tab");
+ok(ob.includes('"Open <b>Hero</b>') && ob.includes('["hero", "Open Hero"]') && !ob.includes("Open <b>Character</b>"), "the level-up tip names the Hero tab (tabs5)");
+ok(/from the Hero tab/.test(src("dawnguard.js")) && !/the Character tab/.test(src("dawnguard.js")), "Dawnguard names the Hero tab (tabs5)");
 // 5. batch 3: crafting, riding, road events and missing pictures
 {
   const files = [...html.matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]);
