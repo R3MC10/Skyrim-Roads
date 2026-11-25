@@ -28,12 +28,17 @@ async def run(b, w, h):
     ok(s["hint"] and s["hint"].startswith("block"), f"{w}: key hint shows on a PC ({s['hint']})")
     await pg.screenshot(path=SH + f"{w}_0_start.png")
     first = s["card"]
-    await pg.keyboard.press("d"); await pg.wait_for_timeout(400); s = await st()
-    ok(s["card"] != first and s["on"] == s["card"] and s["sky"] in (s["card"], None), f"{w}: D moves to the next skill and the stars follow ({first} -> {s['card']}, sky {s['sky']})")
-    await pg.keyboard.press("ArrowLeft"); await pg.wait_for_timeout(400); s = await st(); ok(s["card"] == first, f"{w}: ArrowLeft goes back ({s['card']})")
-    await pg.keyboard.press("s"); await pg.wait_for_timeout(400); s2 = await st()
+    # a mouse resting on the first tile must not pull the ring back when the page redraws after a key
+    bb = await pg.evaluate(f"""(()=>{{const r=document.querySelector('#side .tw-card[data-id="{first}"]').getBoundingClientRect(); return [r.left+r.width/2, r.top+r.height/2];}})()""")
+    await pg.mouse.move(bb[0], bb[1]); await pg.wait_for_timeout(200)
+    async def press(k):   # a stray popup (a level-up toast...) would take the key: clear it first
+        await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())"); await pg.keyboard.press(k)
+    await press("d"); await pg.wait_for_timeout(400); s = await st()
+    ok(s["card"] != first and s["on"] == s["card"] and s["sky"] in (s["card"], None), f"{w}: D moves to the next skill and the stars follow ({first} -> {s["card"]}, sky {s["sky"]}) ")
+    await press("ArrowLeft"); await pg.wait_for_timeout(400); s = await st(); ok(s["card"] == first, f"{w}: ArrowLeft goes back ({s['card']})")
+    await press("s"); await pg.wait_for_timeout(400); s2 = await st()
     ok(s2["card"] != first and s2["on"] == s2["card"], f"{w}: S moves down a row ({first} -> {s2['card']})")
-    await pg.keyboard.press("w"); await pg.wait_for_timeout(400); s = await st(); ok(s["card"] == first, f"{w}: W moves back up ({s['card']})")
+    await press("w"); await pg.wait_for_timeout(400); s = await st(); ok(s["card"] == first, f"{w}: W moves back up ({s['card']})")
     ok(s["tab"] == "stars", f"{w}: A/D/W/S never opened another tab or moved the map ({s['tab']})")
     # pick Heavy Armor (as in the owner's picture), go into the stars
     await pg.evaluate("""document.querySelector('#side .tw-card[data-id="Heavy Armor"]').click()"""); await pg.wait_for_timeout(400)

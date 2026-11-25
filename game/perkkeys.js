@@ -12,7 +12,7 @@ const PERKKEYS = (() => {
   const L = (en) => { try { if (typeof I18N !== "undefined" && I18N.lang() === "pl" && typeof I18N_EXTRA !== "undefined" && I18N_EXTRA.words[en]) return I18N_EXTRA.words[en]; } catch { /* English */ } return en; };
   const HINT = { skill: "A/D skill · W/S row · E stars · Tab menu", star: "WASD move · E take · Tab back" };
   const DIRS = { w: [0, -1], arrowup: [0, -1], s: [0, 1], arrowdown: [0, 1], a: [-1, 0], arrowleft: [-1, 0], d: [1, 0], arrowright: [1, 0] };
-  let mode = "skill", cardId = null, star = null, sky = null;
+  let mode = "skill", cardId = null, star = null, sky = null, moved = false;
   const $ = (s) => document.querySelector(s);
   const panel = () => { const p = $("#side .tw-starp"); return p && p.offsetParent !== null ? p : null; };
   const cards = (p) => [...p.querySelectorAll(".tw-car > button[data-id]")];
@@ -133,7 +133,7 @@ const PERKKEYS = (() => {
     if (e.defaultPrevented) return;
     const p = active(e); if (!p) return;
     const k = String(e.key || "").toLowerCase(), v = DIRS[k];
-    const eat = () => { e.preventDefault(); e.stopImmediatePropagation(); };
+    const eat = () => { e.preventDefault(); e.stopImmediatePropagation(); moved = false; };
     if (mode === "star") {
       const sv = p.querySelector(".tw-big svg[data-sky]");
       if (!sv || sv.dataset.sky !== sky || !stars(p)[star]) mode = "skill";
@@ -161,8 +161,14 @@ const PERKKEYS = (() => {
   if (live) {
     addEventListener("keydown", onKey, true);   // window, capture: before pcmap.js (map pan) and desktop.js (tab letters)
     // the mouse: hover moves the ring, a click puts the keys there
-    document.addEventListener("pointerover", (e) => {
+    // a page redraw under a resting mouse also fires pointerover: only a real move counts, or the ring would jump back
+    let last = null;
+    const shifted = (e) => { const m = !last || Math.hypot(e.clientX - last[0], e.clientY - last[1]) > 2; last = [e.clientX, e.clientY]; return m; };
+    document.addEventListener("pointermove", (e) => { if (e.pointerType !== "touch" && shifted(e)) moved = true; }, { capture: true, passive: true });
+    document.addEventListener("pointerover", (e) => {   // (pointerover comes before pointermove, so it checks the move itself)
       if (e.pointerType === "touch") return;
+      if (shifted(e)) moved = true;
+      if (!moved) return;
       const p = panel(); if (!p || !p.contains(e.target)) return;
       const c = e.target.closest?.(".tw-car > button[data-id]");
       if (c && mode === "skill" && c.dataset.id !== cardId) { cardId = c.dataset.id; paint(); return; }
@@ -177,16 +183,16 @@ const PERKKEYS = (() => {
       if (g) { const sv = g.closest("svg[data-sky]"); sky = sv?.dataset.sky; star = +g.dataset.skPerk; mode = "star"; later(paint); }
     }, true);
     // tabmenu.js redraws the page often: put the ring back each time
-    let pend = false;
+
     const watch = () => {
       const side = document.getElementById("side"); if (!side) return setTimeout(watch, 500);
       new MutationObserver((ms) => {
-        if (pend || ms.every((m) => [...m.addedNodes, ...m.removedNodes].every((n) => n.nodeType === 1 && (n.classList?.contains("pkk-ring") || n.classList?.contains("pkk-hint"))))) return;
-        pend = true; requestAnimationFrame(() => { pend = false; if (panel()) paint(); });
+        if (ms.every((m) => m.target.classList?.contains("pkk-hint") || [...m.addedNodes, ...m.removedNodes].every((n) => n.nodeType === 1 && (n.classList?.contains("pkk-ring") || n.classList?.contains("pkk-hint"))))) return;
+        if (panel()) paint(); else if ($("#side .tw-starp")) setTimeout(() => panel() && paint(), 120);   // right away (a microtask): no frame without the ring
       }).observe(side, { childList: true, subtree: true });
     };
     document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", watch) : watch();
-    setInterval(() => { const p = panel(); if (p && !p.querySelector(".pkk-hint")) paint(); }, 400);   // drawn while still hidden: catch up once it shows
+    setInterval(() => { const p = panel(); if (p && (!p.querySelector(".pkk-hint") || !p.querySelector(".pkk-f"))) paint(); }, 250);   // drawn while still hidden, or redrawn behind our back: catch up
   }
   return { get mode() { return mode; }, get star() { return star; }, get card() { return cardId; }, paint, HINT };
 })();
