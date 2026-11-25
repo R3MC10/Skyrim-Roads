@@ -67,6 +67,7 @@ const G = (() => {
       health: 100, healthTs: now(), gold: D.START_GOLD, x, y, location: D.START_LOCATION,
       discovered: [...D.START_DISCOVERED], explored: [[x, y]], skills, spells: [...D.START_SPELLS], horse: null,
       inv: [], nextInv: 1, loadouts: {}, loadout: "Main", trip: null, journal: [], created: now(),
+      rmkV: typeof REMAKE !== "undefined" ? REMAKE.V : 1,   // made after the remake came in: no "Make your hero anew" (remake.js)
     };
     const eq = {};
     for (const [item, qty, equip] of D.START_KIT) {
@@ -92,6 +93,7 @@ const G = (() => {
   };
   function migrate(s) {
     if (typeof APPEAR !== "undefined") APPEAR.migrate(s);   // an old save keeps its face as a chosen look (appear.js)
+    if (typeof REMAKE !== "undefined") REMAKE.mark(s);   // [OURS] a hero made before women heroes and the new looks gets one remake (remake.js)
     if (Array.isArray(s.pins) && typeof GI !== "undefined") for (const p of s.pins) if (p) p.icon = GI.swap(p.icon);   // map pins saved with emoji get the matching game icon
     // a won turn-by-turn road fight used to leave the road blocked by a dead foe: clear it
     if (s.trip?.status === "encounter" && (!s.trip.encounter || s.trip.encounter.hp <= 0)) { s.trip.status = "travel"; s.trip.encounter = null; s.trip.lastTick = now(); }

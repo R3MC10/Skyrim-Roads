@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b293-remakeonce", build: 293, date: "25 Nov 2026", title: "Everyone gets to remake their hero once", items: [
+      "Everyone gets to remake their hero once: pick race, sex and look again.",
+      "When you next step onto the map, the character creator opens once for every hero made before this update. Your name, level, trained skills, perks, gear and quests all stay.",
+      "Change race and only the race's starting skill boost moves: what you trained yourself is kept, and you get the new race's power and gifts.",
+      "Happy with your hero? Tap Keep as is. It never pops up in a fight, a dungeon or a party vote: it waits until you're back on the map.",
+    ] },
     { id: "b292-caravanpanel", build: 292, date: "25 Nov 2026", title: "Caravans open in a panel", items: [
       "Tapping a caravan on the map now opens a proper panel instead of a small floating card. On a PC it sits on the right side of the screen, full height, and the map stays visible beside it; on a phone it slides up from the bottom and sits above the menu bar.",
       "Every button (Catch up, Trade, Escort, Ask for news, Help, Rob) is always reachable now: nothing hides under the bottom bar any more, and a long list of their wares scrolls inside the panel.",

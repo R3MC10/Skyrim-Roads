@@ -113,6 +113,7 @@ async def main():
             ok(s["race"] == race and s["stone"] == "warrior", f"{tag}: save has race {s['race']} and stone {s['stone']}")
             ok(json.dumps(s["app"], sort_keys=True) == json.dumps(json.loads(want), sort_keys=True), f"{tag}: save has the look made on screen")
             ok(await pg.evaluate("!document.querySelector('.cg')"), f"{tag}: creation screen closed")
+            ok(await pg.evaluate("!__dbg.save().remake && __dbg.save().rmkV >= 1"), f"{tag}: a new hero gets no remake")
             await pg.wait_for_timeout(600)
             await pg.screenshot(path=os.path.join(OUT, f"cg_{tag}_ingame_map.png"))
             # a real fight with the new hero
@@ -137,6 +138,69 @@ async def main():
             await pg.locator(".cgpanel .cgarr[data-cg=inc]").first.click(); await pg.wait_for_timeout(200)
             await pg.click("[data-cg=done]"); await pg.wait_for_timeout(300)
             ok(await pg.evaluate("!!window.__mir && !document.querySelector('.cg')"), f"{tag}: mirror Done closes and hands back the look")
+            # [remake] an old hero (saved before this build) gets "Make your hero anew" once, at a quiet moment on the map
+            if tag in ("phone", "pc"):
+                await pg.evaluate("()=>{ try { TB.close(); } catch {} document.querySelectorAll('#modal,#tbf').forEach(x=>x.remove()); }")
+                await pg.wait_for_timeout(300)
+                print("   remake state:", await pg.evaluate("[TB.open, __ui.safeToUpdate(), [...document.querySelectorAll('#modal,#tbf,#tbwatch,#lvlpick,#nickbox,.cg-over')].map(e=>e.id||e.className)]"))
+                old = "()=>{ const S=__dbg.save(); delete S.rmkV; delete S.remake; G.migrate(S); return S.remake; }"
+                ok(await pg.evaluate(old) == 1, f"{tag}: an old save gets the remake flag on load")
+                # in a dungeon: it waits
+                await pg.evaluate("()=>{ const S=__dbg.save(); S.dungeon={ place:'Embershard Mine', theme:'mine', tier:1, rows:[[{type:'fight',links:[]}]], row:0, col:0, room:null, found:[], gold:0, t:G.now() }; }")
+                await pg.wait_for_timeout(2500)
+                ok(await pg.evaluate("!document.querySelector('.cg-remake')"), f"{tag}: no remake in a dungeon")
+                await pg.evaluate("__dbg.save().dungeon=null")
+                try: await pg.wait_for_selector(".cg-remake", timeout=6000)
+                except Exception: pass
+                ok(await pg.evaluate("!!document.querySelector('.cg-remake')"), f"{tag}: remake opens back on the map")
+                await pg.wait_for_timeout(600)
+                info = json.loads(await pg.evaluate("""JSON.stringify({ h:document.querySelector('.cg-remake h2')?.textContent, p:document.querySelector('.cg-remake .cghead p')?.textContent,
+                  tabs:[...document.querySelectorAll('.cg-remake .cgtab')].map(t=>t.dataset.tab).join(), nm:document.querySelector('.cg-remake #rmknm')?.value, me:__dbg.save().name,
+                  keep:!!document.querySelector('[data-cg=keep]'), done:!!document.querySelector('[data-cg=remade]'), cancel:!!document.querySelector('.cg-remake [data-cg=cancel]') })"""))
+                ok(info["h"] == "Make your hero anew" and "women heroes" in (info["p"] or ""), f"{tag}: remake title and line {info['h']}")
+                ok("race" in info["tabs"] and "start" not in info["tabs"] and "hair" in info["tabs"], f"{tag}: remake tabs {info['tabs']}")
+                ok(info["nm"] == info["me"], f"{tag}: name kept in the box ({info['nm']})")
+                ok(info["keep"] and info["done"] and not info["cancel"], f"{tag}: Keep as is + Done, no Cancel")
+                ok(await pg.evaluate(SPILL) <= 1, f"{tag}: remake doesn't spill sideways")
+                small = await pg.evaluate(SMALL)
+                ok(not small, f"{tag}: remake touch targets at least 32px {small}")
+                await pg.keyboard.press("Escape"); await pg.wait_for_timeout(200)
+                ok(await pg.evaluate("!!document.querySelector('.cg-remake')"), f"{tag}: Escape doesn't skip the remake")
+                try: await pg.wait_for_function("document.querySelector('.cg').classList.contains('cg-painted')", timeout=30000)
+                except Exception: pass
+                await pg.wait_for_timeout(500)
+                await pg.screenshot(path=os.path.join(OUT, f"rmk_{tag}_open.png"))
+                to, sx = ("khajiit", "m") if tag == "pc" else ("nord", "m")
+                was = json.loads(await pg.evaluate("JSON.stringify({ r:__dbg.save().race, k:__dbg.save().skills, lvl:__dbg.save().level })"))
+                await pg.click(f".rpick[data-race={to}]"); await pg.wait_for_timeout(300)
+                await pg.click(f".cgsexb[data-v={sx}]"); await pg.wait_for_timeout(300)
+                await pg.click(".cgtab[data-tab=hair]"); await pg.wait_for_timeout(300)
+                await pg.locator(".cgpanel .cgarr[data-cg=inc]").first.click(); await pg.wait_for_timeout(200)
+                await pg.fill("#rmknm", "Torvar" if tag == "pc" else "Eirik"); await pg.wait_for_timeout(200)
+                try: await pg.wait_for_function("document.querySelector('.cg').classList.contains('cg-painted')", timeout=30000)
+                except Exception: pass
+                await pg.wait_for_timeout(500)
+                await pg.screenshot(path=os.path.join(OUT, f"rmk_{tag}_changed.png"))
+                await pg.click("[data-cg=remade]"); await pg.wait_for_timeout(800)
+                s = json.loads(await pg.evaluate("JSON.stringify((S=>({ r:S.race, sex:S.sex||'m', sx:S.app.sx||'m', n:S.name, rm:!!S.remake, k:S.skills, lvl:S.level, look:HEROART.lookOf(S).r }))(__dbg.save()))"))
+                ok(await pg.evaluate("!document.querySelector('.cg-remake')"), f"{tag}: Done closes the remake")
+                ok(s["r"] == to and s["look"] == to and s["sex"] == sx and s["n"] == ("Torvar" if tag == "pc" else "Eirik") and not s["rm"] and s["lvl"] == was["lvl"], f"{tag}: save has the new race, sex, name, flag cleared {s['r']} {s['sex']} {s['n']}")
+                bo, bn = await pg.evaluate(f"[REMAKE.bonus('{was['r']}'), REMAKE.bonus('{to}')]")
+                for k in ["Two-Handed", "Sneak", "Archery", "Destruction", "Alteration"]:
+                    want = min(100, max(15, was["k"][k]["lvl"] - bo.get(k, 0)) + bn.get(k, 0))
+                    ok(s["k"][k]["lvl"] == want, f"{tag}: {k} {was['k'][k]['lvl']} -> {s['k'][k]['lvl']} (want {want})")
+                await pg.wait_for_timeout(600)
+                await pg.screenshot(path=os.path.join(OUT, f"rmk_{tag}_after.png"))
+                await pg.wait_for_timeout(3000)
+                ok(await pg.evaluate("!document.querySelector('.cg-remake')"), f"{tag}: it doesn't come back")
+                # Keep as is: a second old hero confirms what they have
+                await pg.evaluate(old)
+                try: await pg.wait_for_selector(".cg-remake", timeout=6000)
+                except Exception: pass
+                before = await pg.evaluate("JSON.stringify((S=>({r:S.race,a:S.app,k:S.skills,n:S.name}))(__dbg.save()))")
+                await pg.click("[data-cg=keep]"); await pg.wait_for_timeout(600)
+                after = await pg.evaluate("JSON.stringify((S=>({r:S.race,a:S.app,k:S.skills,n:S.name}))(__dbg.save()))")
+                ok(await pg.evaluate("!document.querySelector('.cg-remake') && !__dbg.save().remake") and before == after, f"{tag}: Keep as is closes, clears the flag, changes nothing")
             ok(not errs, f"{tag}: no page errors {errs[:3]}")
             await ctx.close()
         await b.close()
