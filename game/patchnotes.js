@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b262-phonelayout", build: 262, date: "25 Nov 2026", title: "Tidier screens on phones", items: [
+      "On a phone, the Area tab lists places in full-width rows: icon, name and whether it's open. Open places come first; shut ones fold away under \"Closed\". Two columns only when every name fits.",
+      "On a phone, the Company tab shows your longhouse right under the Party / Company / Friends / Realm row. Messages, trades and chat fold away under More.",
+      "On a phone, the Items menu has one Sort button (pick what to sort by) next to the up/down switch, instead of a row of tiny buttons.",
+      "On a phone, holding a finger on an item opens its details in a panel at the bottom of the screen. The list stays where it was; tap elsewhere to close it.",
+      "On a PC map, the floating Gathering card and the world event cards on the left no longer cover each other: the cards stop above it and scroll.",
+    ] },
     { id: "b261-notify2", build: 261, date: "25 Nov 2026", title: "Promotions and tips back in their place", items: [
       "When you're promoted on a side, the banner shows again (it was quietly swallowed before).",
       "The tips for new players no longer sit on top of the dungeon's route buttons: they move below them, or wait until there's room.",
