@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b193-lockgame", build: 193, date: "25 Nov 2026", title: "Painted lockpicking", items: [
+      "Picking a lock is now a painted close-up: a real lock on a chest, your pick and the tension wrench. Drag on the lock to aim the pick (it points at your finger), then hold Turn.",
+      "The lock shakes harder the further you are from the sweet spot. Keep forcing it and the pick bends, glows and snaps, with bits of metal flying. Turn it all the way and the shackle clicks open in a little burst of light.",
+      "Every place has its own lock: Nordic knotwork in barrows and temples, Dwemer brass in the ruins, gilded locks in rich places and on master locks, steel on harder chests and plain iron elsewhere.",
+      "Your Lockpicking skill and perks still make the sweet spot wider, just like they made the old roll easier. New perk: Steady Pick (Lockpicking) makes it wider still and your picks last longer.",
+      "Works with a finger on phones, and with the mouse or the keyboard on PC (A/D or the arrows to aim, Space to turn). Rather roll the dice? Settings → Crafting → When you pick a lock → Quick pick.",
+    ] },
     { id: "b192-combos", build: 192, date: "25 Nov 2026", title: "Combat combos and teamwork", items: [
       "Set a foe up, then cash in. Freeze it and hit it with a power attack to Shatter the frost for big extra damage. Shield-bash it and follow with a power attack this round for an Exploit: it hits harder and the foe keeps reeling. Knock it off balance with a shout and your next blows land harder.",
       "New in the general store: the Oil Flask. Throw it at a foe, then any fire (a spell, a fire weapon, Fire Breath) sets the ground ablaze and burns it for a few rounds.",

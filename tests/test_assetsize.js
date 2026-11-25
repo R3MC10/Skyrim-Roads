@@ -36,6 +36,7 @@ const RULES = [
   [/^map-world$/, 2000, 1400, 10 / 7, 0.01], [/^map-world-2x$/, 3000, 2100, 10 / 7, 0.01],
   [/^ui-compass3d$/, 2240, 2240, 1, 0], [/^ui-(compass|frame|panel|parchment)$/, 1024, 1024, 1, 0],
   [/^fest-/, 1600, 600, 8 / 3, 0.01],
+  [/^lock-(iron|steel|nordic|dwemer|noble)$/, 700, 700, 1, 0.01], [/^tool-lockpick$/, 900, 70, null], [/^tool-tension-wrench$/, 680, 100, null],
   [/^room-/, 1280, 720, null], [/^icon-192/, 192, 192, 1, 0], [/^icon-/, 256, 256, 1, 0],
 ];
 const files = fs.readdirSync(W).filter((f) => /\.(webp|png|jpe?g)$/i.test(f));
