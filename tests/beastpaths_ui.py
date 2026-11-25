@@ -2,8 +2,8 @@
 Serve game/ first:  python -m http.server PORT --directory ../game
 At 390x844 (phone, touch) and 1920x1080 (PC), in both art styles:
 - a werewolf meets the werewolf on the road at night; Beast Form sits in the quick slots
-- changing swaps the action bar for the wolf's own moves (Claws, Maul, Pounce, then Howl / Feast / Change back), each with its AP
-- no Magic or Items while changed; Claws spends 2 AP
+- changing swaps the action bar for the wolf's own moves (Claws, Maul, Pounce, then Howl / Feast / Change back), each with its stamina cost
+- no Magic or Items while changed; Claws takes one move
 - a hungry vampire meets the Ashen Court: Seduction and Embrace of Shadows in the quick slots; Vampire Lord's own moves
 - the vampire panel on the Hero tab shows the new Lord stars and the sun warning
 - the wild werewolf is drawn with the wolf body; a tooltip never stays open after a move is tapped
@@ -84,18 +84,18 @@ async def run(p, w, h, touch, lang=None):
             acts = await pg.evaluate("[...document.querySelectorAll('#tbf .fc [data-tba]')].map(b=>b.dataset.tba)")
             ok(all(a in acts for a in ["beast:claw", "beast:maul", "beast:pounce", "beast:howl", "beast:revert"]), f"{tag}: the wolf's moves replace the weapon ones: {acts}")
             ok(not await pg.evaluate("!!document.querySelector('#tbf .fc [data-tbm=magic], #tbf .fc [data-tbm=items]')"), f"{tag}: no Magic or Items while changed")
-            ok(await pg.evaluate("document.querySelectorAll(\"#tbf .fc [data-tba='beast:claw'] .cp i\").length") == 2, f"{tag}: Claws shows 2 AP")
+            ok(await pg.evaluate("!!document.querySelector(\"#tbf .fc [data-tba='beast:claw'] .cp em.rc.sp\")"), f"{tag}: Claws shows its stamina cost")
             ow = await pg.evaluate("Math.max(document.querySelector('#tbf .tbin').scrollWidth, document.documentElement.scrollWidth) <= innerWidth + 1")
             ok(ow, f"{tag}: nothing wider than the screen")
             ok(await pg.evaluate("document.querySelector('#tbf .fc').getBoundingClientRect().bottom <= innerHeight + 1"), f"{tag}: the bar sits on screen")
             await pg.mouse.move(2, 2); await pg.evaluate(CLEAN)
             await pg.screenshot(path=OUT + f"{tag}_wolf_moves.png")
-            ap0 = await pg.evaluate("TB.session.ap")
+            ap0 = await pg.evaluate("TB.session.myActs")
             await pg.click("#tbf .fc [data-tba='beast:claw']"); await pg.wait_for_timeout(900)
-            ap1 = await pg.evaluate("TB.session ? TB.session.ap : -1")
-            ok(ap1 == ap0 - 2 or ap1 == -1 or ap1 > ap0, f"{tag}: Claws spends 2 AP ({ap0}->{ap1})")
+            ap1 = await pg.evaluate("TB.session ? TB.session.myActs : -1")
+            ok(ap1 == ap0 + 1 or ap1 == -1 or ap1 == 0, f"{tag}: Claws takes one of your moves ({ap0}->{ap1})")
             log = await pg.evaluate("[...document.querySelectorAll('#tbf .tbl, #tbf .tblog')].map(e=>e.textContent).join(' ')")
-            ok(("pazury" in log.lower() and "claws" not in log.lower()) if PL else "Claws" in log, f"{tag}: the log shows the claws")
+            ok(("pazury" in log.lower() and "claws" not in log.lower()) if PL else "Claws" in log, f"{tag}: the log shows the claws: {log[-160:]!r}")
             if PL:
                 bar = await pg.evaluate("document.querySelector('#tbf .fc').innerText")
                 ok(all(x in bar.lower() for x in ["pazury", "szarpanie", "postać bestii"]) and "need" not in bar.lower(), f"{tag}: the beast's bar is in Polish: {bar[:120]!r}")
@@ -104,6 +104,9 @@ async def run(p, w, h, touch, lang=None):
                 if touch: await pg.tap("#tbf .fc [data-tba='beast:howl']")
                 else: await pg.hover("#tbf .fc [data-tba='beast:howl']"); await pg.wait_for_timeout(200); await pg.click("#tbf .fc [data-tba='beast:howl']")
                 await pg.wait_for_timeout(1000)
+                if not touch:   # your turn goes on now (up to 4 moves), so the pointer may rightly hover the next button: move it off first
+                    print("   tooltip while still hovering:", await pg.evaluate("document.querySelector('.tbtip.on')?.textContent?.slice(0,60) || ''"))
+                    await pg.mouse.move(2, 2); await pg.wait_for_timeout(400)
                 ok(not await pg.evaluate("!!document.querySelector('.tbtip.on')"), f"{tag}: no tooltip left open after Howl")
                 await pg.screenshot(path=OUT + f"{tag}_wolf_howl.png")
             await pg.wait_for_timeout(700); await pg.mouse.move(2, 2); await pg.evaluate(CLEAN)

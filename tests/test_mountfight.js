@@ -1,5 +1,5 @@
 /* Mounted combat in turn-by-turn fights (mountfight.js). W=/path/to/game/ node test_mountfight.js [runs]
-   Mount / Dismount (AP, stamina), the charge after getting on, trample, bow penalty, what the saddle rules out,
+   Mount / Dismount (a move and stamina), the charge after getting on, trample, bow penalty, what the saddle rules out,
    foes going for the horse, knock-offs and the stagger, the horse never dying (it gets back up after the fight),
    the four perks doing what they say, party fights with a leader and two teammates' phones seeing the same horses,
    and a balance sim: mounted vs on foot, win rates and fight length. Prints the table and ALL OK. */
@@ -78,12 +78,12 @@ console.log("2: Mount / Dismount in a turn-by-turn fight");
 { const s = make("warrior", 20); s.horse.mounted = false; const f = road(s, enc("Bandit outlaw", 20));
   const ss = new TB.Session(f, { trySneak: false }); let r = ss.begin(), g = 0;
   while (r.turn !== "me" && g++ < 20) r = ss.advance();
-  ok(TB.cost(f, "mount") === 4 && TB.cost(f, "dismount") === 1, "Mount 4 AP, Dismount 1 AP");
+  ok(TB.cost(f, "mount").sp === 20 && TB.cost(f, "dismount").sp === 0, "Mount 20 stamina, Dismount free");
   ok(ss.canAfford("mount") && !ss.canAfford("dismount"), "on foot: Mount yes, Dismount no");
-  const sp0 = f.sp, ap0 = ss.ap; r = ss.act("mount");
-  ok(f.mount.up && f.sp === sp0 - MOUNTFIGHT.N.mountSp && ss.ap === ap0 - 4, "Mount: in the saddle, −20 stamina, −4 AP");
+  const sp0 = f.sp, mv0 = ss.myActs; r = ss.act("mount");
+  ok(f.mount.up && Math.abs(f.sp - (sp0 - MOUNTFIGHT.N.mountSp)) < 0.01 && ss.myActs === mv0 + 1, "Mount: in the saddle, −20 stamina, one move: " + (sp0 - f.sp));
   ok(ss.ev.some((e) => /swing up onto Frost/.test(e.text)), "the log says you got on");
-  ok(!ss.canAfford("mount") && (ss.ap < 1 || ss.canAfford("dismount")), "up: Mount gone, Dismount there");
+  ok(!ss.canAfford("mount") && (ss.myActs >= TB.MAX_ACTS || ss.canAfford("dismount")), "up: Mount gone, Dismount there");
   // finish the turn, then the next blow is a charge
   if (r.turn === "me") r = ss.act("end"); g = 0; while (r.turn !== "me" && !ss.done && g++ < 20) r = ss.advance();
   const e0 = f.ehp; ss.act("attack");
@@ -91,7 +91,7 @@ console.log("2: Mount / Dismount in a turn-by-turn fight");
   const before = ss.ev.length; ss.act("attack");
   ok(!ss.ev.slice(before).some((e) => /Mounted charge/.test(e.text)), "only one charge per getting on");
   if (ss.canAfford("dismount")) { ss.act("dismount"); ok(!f.mount.up && ss.ev.some((e) => /slide down from Frost/.test(e.text)), "Dismount: on foot, the horse waits"); }
-  const sp = make("warrior", 20); perk(sp, "steady_steed"); const fs2 = road(sp, enc("Bandit outlaw", 20)); ok(TB.cost(fs2, "mount") === 3, "Steady Steed: Mount costs 3 AP");
+  const sp = make("warrior", 20); perk(sp, "steady_steed"); const fs2 = road(sp, enc("Bandit outlaw", 20)); ok(TB.cost(fs2, "mount").sp === 15, "Steady Steed: Mount costs 15 stamina");
   const low = make("warrior", 20); low.horse.mounted = false; const fl = road(low, enc("Bandit outlaw", 20)); fl.sp = 5;
   ok(!fl.affordable("mount") && /stamina/.test(MOUNTFIGHT.why(fl, "mount")), "no stamina, no getting on");
   ok(/can't get on/.test(fl.act("mount")), "a forced Mount without stamina just says no");
@@ -151,15 +151,15 @@ console.log("6: thrown off: damage, stagger, on foot, the horse stays with you, 
   queue = [0.01, 0.5, 0.5]; const t = HORSEBACK.enemyTurn(f); queue = [];
   ok(/brings Frost down/.test(t) && /thrown clear/.test(t) && /knocked down/.test(t), "the horse goes down: " + t);
   const fall = hp0 - f.hp; ok(fall > 0 && fall <= Math.ceil(G.maxHealth(s) * 0.05) + 1, "a small fall: −" + fall);
-  ok(!f.mount.up && f.mount.down && f.mount.hp === 0 && MOUNTFIGHT.staggered(f) && f.kitApLoss >= 2, "on foot, staggered (−2 AP)");
+  ok(!f.mount.up && f.mount.down && f.mount.hp === 0 && MOUNTFIGHT.staggered(f) && f.kitApLoss >= 1, "on foot, staggered (one move fewer)");
   ok(!MOUNTFIGHT.moves(f).length && !f.affordable("mount"), "a knocked-down horse can't be ridden again this fight");
   const low = make("warrior", 20), fl = road(low, enc("Giant", 20)); fl.mount.hp = 1; fl.hp = 2; fl.turn = 2; queue = [0.01, 0.5, 0.5]; HORSEBACK.enemyTurn(fl); queue = [];
   ok(fl.hp >= 1, "the fall alone never finishes you");
-  // in a turn-by-turn fight the stagger costs 2 AP on your next turn
+  // in a turn-by-turn fight the stagger costs one move on your next turn
   const s2 = make("warrior", 20), f2 = road(s2, enc("Giant", 20)), ss = new TB.Session(f2, { trySneak: false }); let r = ss.begin(), g = 0;
-  while (r.turn !== "me" && g++ < 20) r = ss.advance(); const full = ss.st.ap; ss.act("end");
+  while (r.turn !== "me" && g++ < 20) r = ss.advance(); ss.act("end");
   MOUNTFIGHT.stagger(f2); g = 0; r = ss.advance(); while (r.turn !== "me" && !ss.done && g++ < 20) r = ss.advance();
-  ok(ss.done || ss.ap <= full - 2, "staggered: " + ss.ap + " AP instead of " + full);
+  ok(ss.done || ss.myActs === 1, "staggered: " + (TB.MAX_ACTS - ss.myActs) + " moves instead of " + TB.MAX_ACTS);
   // after the fight: never dead, never sent off, back up with a quarter of its health
   f.won = true; f.ehp = 0; const msgs = f.apply(T);
   ok(s.horse && !s.horse.away && HORSES.downed(s) && !HORSES.riding(s) && msgs.some((m) => /is downed/.test(m)), "the horse stays with you, downed (horses.js): " + msgs.filter((m) => /🐴/.test(m)).join(" | "));

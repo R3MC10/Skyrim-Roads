@@ -5,7 +5,8 @@
 "use strict";
 const http = require("http"), path = require("path"), { EventEmitter } = require("events");
 const S = path.join(__dirname, "../server/src/");
-const WS = require(path.join(__dirname, "../server/node_modules/ws"));
+let WS;   // the ws library comes from `npm ci` in server/; without it this test skips instead of failing
+try { WS = require(path.join(__dirname, "../server/node_modules/ws")); require.resolve(S + "app"); } catch (e) { if (e.code !== "MODULE_NOT_FOUND") throw e; console.log("hub skipped: run `npm ci` in server/ first (" + e.message.split("\n")[0] + ")"); process.exit(0); }
 const { createApp } = require(S + "app"), { createHub } = require(S + "hub"), { memoryStore } = require(S + "store-memory");
 let fails = 0, n = 0;
 const ok = (v, m) => { n++; if (!v) { fails++; console.log("FAIL", m); } };

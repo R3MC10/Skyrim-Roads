@@ -159,6 +159,7 @@ const COMBATAI = (() => {
       return { v: (pct * p.incNow / p.inc) * wDef(p) + bash * wDef(p) * 0.8 - 0.05, why: "guards against a big hit" };
     }
     if (kind === "potion") {
+      if (typeof POTFX !== "undefined" && POTFX.busy(f, arg)) return { v: -1 };   // one of that kind is still working (potionfx.js)
       const r = f.findPotion(arg), amt = r ? D.ITEMS[r.item].restore[1] : 0, keep = typeof FAVWHEEL !== "undefined" && FAVWHEEL.potFree(f, a) ? 0 : tough(f) ? 0.15 : 0.45;   // a queued favourite potion isn't saved
       if (arg === "health") return { v: healV(f, p, amt) - keep, why: "badly hurt" };
       if (arg === "magicka") {

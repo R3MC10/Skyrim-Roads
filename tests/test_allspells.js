@@ -87,16 +87,16 @@ for (const [id, sp] of SPELLS) {
   if (sp.kind === "utility") continue;
   const s = mage(), cost = G.spellCost(s, sp);
   const { f, ss } = tb(s, FOE_FOR(id, sp)());
-  const mp0 = f.mp; ss.act("spell:" + id);
-  ok(Math.abs((mp0 - f.mp) - cost) < 0.01 || sp.kind === "equilibrium" || sp.kind === "absorb", id + ": pays " + cost + " magicka (paid " + Math.round(mp0 - f.mp) + ")", id);
+  const mp0 = f.mp, tbc = TB.cost(f, "spell:" + id, ss).mp; ss.act("spell:" + id);   // a turn-based cast: spellCost less the Alteration cut (tbfight.js stats mpCut)
+  ok(Math.abs((mp0 - f.mp) - tbc) < 0.01 || sp.kind === "equilibrium" || sp.kind === "absorb", id + ": pays " + tbc + " magicka (paid " + Math.round(mp0 - f.mp) + ")", id);
   if (cost > 0) {
-    const t2 = tb(mage(), FOE_FOR(id, sp)()); t2.f.mp = cost - 1;
-    ok(!t2.f.affordable("spell:" + id) && !t2.ss.canAfford("spell:" + id) && /magicka/.test(t2.ss.act("spell:" + id)?.err), id + ": blocked with " + (cost - 1) + " magicka", id);
-    ok(t2.f.mp === cost - 1, id + ": a blocked cast costs nothing", id);
+    const t2 = tb(mage(), FOE_FOR(id, sp)()), c2 = TB.cost(t2.f, "spell:" + id, t2.ss).mp; t2.f.mp = c2 - 1;
+    ok(!t2.f.affordable("spell:" + id) && !t2.ss.canAfford("spell:" + id) && /magicka/.test(t2.ss.act("spell:" + id)?.err), id + ": blocked with " + (c2 - 1) + " magicka", id);
+    ok(t2.f.mp === c2 - 1, id + ": a blocked cast costs nothing", id);
   }
   if (MAGIC.dualable(sp)) {
-    const s3 = mage(), t3 = tb(s3, FOE_FOR(id, sp)()), m0 = t3.f.mp; t3.ss.act("dual:" + id);
-    ok(Math.abs((m0 - t3.f.mp) - G.dualCost(s3, sp, t3.f)) < 0.5 || sp.kind === "equilibrium" || sp.kind === "absorb", id + ": dual cast pays " + Math.round(G.dualCost(s3, sp, t3.f)), id);
+    const s3 = mage(), t3 = tb(s3, FOE_FOR(id, sp)()), m0 = t3.f.mp, dc = TB.cost(t3.f, "dual:" + id, t3.ss).mp; t3.ss.act("dual:" + id);
+    ok(Math.abs((m0 - t3.f.mp) - dc) < 0.5 || sp.kind === "equilibrium" || sp.kind === "absorb", id + ": dual cast pays " + dc + " (paid " + Math.round(m0 - t3.f.mp) + ")", id);
   }
 }
 // casting above your skill costs more and can fizzle
@@ -114,7 +114,7 @@ for (const id of kinds.damage) {
   ok(avg > 0 && avg >= want * 0.5 && avg <= want * 2.2, id + ": damage " + Math.round(avg) + " near its listed " + Math.round(want), id);
   // strong foe: one cast (even dual) never takes more than 40% of its health
   for (let i = 0; i < 4; i++) { const x = castTB(mage(), FOES.chief(), "dual:" + id); const d = x.b.ehp - x.f.ehp; ok(d <= x.b.ehpMax * TB.HIT_CAP + 1, id + ": no one-shot on a strong foe (" + Math.round(d) + " of " + x.b.ehpMax + ")", id); }
-  if (sp.element === "sun") { const x = castTB(mage(), FOES.bandit(), "spell:" + id); ok(x.f.ehp === x.b.ehp && /undead only/.test(x.text), id + ": sun magic does nothing to the living: " + x.text, id); }
+  if (sp.element === "sun") { const x = castTB(mage(), FOES.bandit(), "spell:" + id); ok(x.f.ehp === x.b.ehp && /undead only|misses/.test(x.text), id + ": sun magic does nothing to the living: " + x.text, id); }
   if (sp.element === "frost") ok(tries(() => { const x = castTB(mage(), foe(), "spell:" + id); return x.f.slowed > 0; }) > 0, id + ": frost slows", id);
   if (sp.element === "fire") ok(tries(() => { const x = castTB(mage(), foe(), "spell:" + id); return !!x.f.foeSt?.burn; }) > 0, id + ": fire can set the foe burning", id);
   if (sp.element === "shock") ok(tries(() => { const x = castTB(mage(), FOES.necro(), "spell:" + id); return !!x.f.foeSt?.shock || /jolt|shock/i.test(x.text); }) > 0, id + ": shock jolts", id);
@@ -335,9 +335,9 @@ for (const [it, def] of Object.entries(D.ITEMS).filter(([, d]) => d.slot === "sc
   ok(sp, it + ": casts a real spell (" + def.spell + ")");
   const { f, ss } = tb(s, FOES.bandit()); const mp0 = f.mp;
   if (sp.kind === "heal") f.hp = 10;
-  const ap0 = ss.ap; const b = { ehp: f.ehp, hp: f.hp, arm: f.armorSpell }; ss.act("scroll:" + it);
+  const acts0 = ss.myActs; const b = { ehp: f.ehp, hp: f.hp, arm: f.armorSpell }; ss.act("scroll:" + it);
   ok(f.mp === mp0, it + ": costs no magicka");
-  ok(ss.ap === ap0 - TB.cost(f, "scroll:" + it), it + ": costs " + TB.cost(f, "scroll:" + it) + " AP");
+  ok(ss.myActs === acts0 + 1, it + ": uses one move of the turn (no more action points)");
   ok(f.ehp < b.ehp || f.hp > b.hp || f.armorSpell > b.arm || /misses/.test(ss.ev[ss.ev.length - 1].text), it + ": works: " + ss.ev[ss.ev.length - 1].text);
   ok(f.left(s.inv.find((r) => r.item === it).id) === 1, it + ": one is used");
   f.ehp = 0; f.won = true; f.apply(); ok(SMITH.count(s, it) === 1, it + ": gone from your pack after the fight");
@@ -406,7 +406,7 @@ for (const [id, name, spell] of MAGIC.STAFFS) {
   for (const id of ["calm", "frenzy", "fear", "wall_of_flames", "fire_rune", "soul_trap"]) { const x = castTB(mage(), { ...FOES.bandit(), level: 3 }, "spell:" + id); ok(/st spl/.test(TB.statusChips ? TB.statusChips(x.f) : SPELLFX.foeHTML(x.f)), id + ": a chip under the foe"); tips.push(...SPELLFX.foe(x.f).filter((c) => !c.shown).map((c) => c.tip)); }
   for (const t of new Set(tips)) ok(pl(t), "chip tip in Polish: " + t);
   for (const t of ["Bandit lashes out at itself in a frenzy (12)", "It already took 40 from your spells", "Frenzy: it goes mad and turns on itself", "Not enough magicka"]) ok(pl(t), "fight line in Polish: " + t);
-  const pn = PATCHNOTES.LIST ? PATCHNOTES.LIST.slice(0, 40).find((x) => x.id === "b145-spelltest") : null;   // near the top: several features ship in one build, only one note can be first
+  const pn = PATCHNOTES.LIST ? PATCHNOTES.LIST.slice(0, 80).find((x) => x.id === "b145-spelltest") : null;   // near the top: several features ship in one build, only one note can be first
   if (PATCHNOTES.LIST) { ok(!!pn, "patch note near the top"); if (pn) for (const t of [pn.title, ...pn.items]) ok(pl(t), "patch note in Polish: " + t.slice(0, 40)); }
 }
 

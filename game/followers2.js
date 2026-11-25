@@ -268,14 +268,15 @@ const FOL2 = (() => {
   function ally(s, hp) {
     const f = st(s); if (!f) return null;
     const rec = { name: nameOf(s.follower.id), dmg: dmg(s), hp, follower: true, fid: s.follower.id, kind: "follower", look: look(s), heals: healer(f) && skillOf(f, "Restoration") >= 25 ? 2 : 0 };
-    return typeof FAI !== "undefined" ? FAI.equipAlly(s, f, rec) : rec;   // spells, magicka, stamina, AP, tactics
+    return typeof FAI !== "undefined" ? FAI.equipAlly(s, f, rec) : rec;   // spells, magicka, stamina, pace, tactics
   }
   /* their own turn's extras: drink a potion when badly hurt, heal you when you're in trouble. null = just attack */
   function turn(fight, al) {
     const s = fight.s, f = s.folData?.[al.fid]; if (!f || al.fid !== s.follower?.id) return null;
     if (al.fai && typeof FAI !== "undefined") return FAI.turn(null, fight, al) || ` · ${al.name} keeps their guard up`;   // their whole turn, picked by their AI
     const max = maxHp(s, al.fid);
-    if (al.hp < max * 0.35) { const p = potions(f)[0]; if (p) { const amt = D.ITEMS[p.item].restore[1]; al.hp = Math.min(max, al.hp + amt); p.qty--; if (p.qty <= 0) f.inv = f.inv.filter((x) => x !== p); return ` · ${al.name} drinks a ${D.ITEMS[p.item].name} (+${amt})`; } }
+    if (al.hp < max * 0.35 && typeof POTFX !== "undefined") { const p = potions(f)[0]; if (p && !POTFX.busy(al, "health")) { const amt = D.ITEMS[p.item].restore[1]; if (!al.maxHp) al.maxHp = max; p.qty--; if (p.qty <= 0) f.inv = f.inv.filter((x) => x !== p); return ` · ${al.name} drinks a ${D.ITEMS[p.item].name}: ${POTFX.ally(al, "health", amt, D.ITEMS[p.item].name)}`; } }   // over a few rounds (potionfx.js)
+    else if (al.hp < max * 0.35) { const p = potions(f)[0]; if (p) { const amt = D.ITEMS[p.item].restore[1]; al.hp = Math.min(max, al.hp + amt); p.qty--; if (p.qty <= 0) f.inv = f.inv.filter((x) => x !== p); return ` · ${al.name} drinks a ${D.ITEMS[p.item].name} (+${amt})`; } }
     if (al.heals > 0 && fight.hp > 0 && fight.hp < G.maxHealth(s) * 0.4) { al.heals--; const before = fight.hp; fight.hp = Math.min(G.maxHealth(s), fight.hp + healAmt(f)); return ` · ${al.name} heals you +${Math.round(fight.hp - before)}`; }
     return null;
   }

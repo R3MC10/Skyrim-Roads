@@ -37,7 +37,7 @@ function strike(mult, seed) {
   const f = new G.Fight(s, foe(s)); f.allies = [];
   const ss = new TB.Session(f, { trySneak: false });
   ss.begin(); let g = 0; while (ss.cur?.id !== "me" && !ss.done && g++ < 50) ss.advance();
-  if (!ss.apSet) { ss.ap = ss.st.ap; ss.spAp = ss.st.spellAp; ss.apSet = true; }
+  ss.myActs = 0; ss.used = {};
   const b = f.ehp; let saved = Math.random; let x = seed; Math.random = () => ((x = (x * 9301 + 49297) % 233280) / 233280);
   try { ss.act("attack", null, mult); } finally { Math.random = saved; }
   return { d: b - f.ehp, ss };
@@ -56,7 +56,8 @@ function strike(mult, seed) {
 { const html = R.wheel(["<button>a</button>", "<button>b</button>", "<button>c</button>"], "<button>end</button>");
   ok((html.match(/class="tbsl"/g) || []).length === 3 && /tbhub/.test(html), "the wheel has its slices and the hub");
   const s = c.make("warrior", 20), f = new G.Fight(s, foe(s));
-  ok(/AP · \d+ SP/.test(R.costLine(f, "power_attack", 5)), "power attack shows its stamina: " + R.costLine(f, "power_attack", 5)); }
+  const cl = R.costLine(f, "power_attack", TB.cost(f, "power_attack"));
+  ok(/^\d+ SP$/.test(cl) && !/AP/.test(cl), "power attack shows its stamina: " + cl); }
 
 console.log(fails ? `failed: ${fails}` : "tbradial: all ok");
 process.exit(fails ? 1 : 0);

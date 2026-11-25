@@ -7,7 +7,7 @@ const RUNS = +(process.env.RUNS || process.argv[2] || 40);
 const TUNE = process.env.TUNE ? JSON.parse(process.env.TUNE) : null;
 const c = { process: { env: process.env }, console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String, RUNS, structuredClone };
 vm.createContext(c);
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "foecap.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "foeintent.js", "tbfight.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "foecap.js", "stacks.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "foeintent.js", "tbfight.js"])
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 if (fs.existsSync(W + "sharedfight.js")) vm.runInContext(fs.readFileSync(W + "sharedfight.js", "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);   // shared party fights (section 8b; kept out of the list other tests copy)
 vm.runInContext(`
@@ -97,25 +97,33 @@ if (!process.env.SIMONLY) {
 { const s = fresh("warrior", 5), s2 = fresh("warrior", 5); s2.skills.Athletics.lvl = 100; s2.spBonus += 300; s2.skills.Acrobatics.lvl = 100; s2.skills.Sneak.lvl = 100;
   const f = new G.Fight(s, enc("Bandit outlaw", 5)), f2 = new G.Fight(s2, enc("Bandit outlaw", 5));
   const a = TB.stats(s, f), b = TB.stats(s2, f2);
-  ok(b.ap > a.ap, "Athletics/Stamina add AP " + a.ap + "→" + b.ap); ok(b.init > a.init, "Acrobatics/Sneak add initiative " + a.init + "→" + b.init);
-  const m = fresh("mage", 30), fm = new G.Fight(m, enc("Bandit outlaw", 30)); ok(TB.stats(m, fm).spellAp >= 1, "mages get spell AP");
+  ok(b.spCut > a.spCut && a.acts === TB.MAX_ACTS, "Athletics makes weapon moves cheaper " + a.spCut + "→" + b.spCut); ok(b.init > a.init, "Acrobatics/Sneak add initiative " + a.init + "→" + b.init);
+  const m = fresh("mage", 30), fm = new G.Fight(m, enc("Bandit outlaw", 30)); ok(TB.stats(m, fm).mpCut > 0, "mages cast a little cheaper (Alteration)");
   ok(a.heavy >= 3 && TB.stats(fresh("archer", 5), new G.Fight(fresh("archer", 5), enc("Bandit outlaw", 5))).init > a.init - 3, "heavy armour costs initiative"); }
-// 2. AP costs per weapon and spell tier
-{ const s = fresh("warrior", 10), f = new G.Fight(s, enc("Bandit outlaw", 10)); ok(TB.cost(f, "attack") === 3 && TB.cost(f, "power_attack") === 5, "sword 3, power 5");
-  f.wt = "dagger"; ok(TB.cost(f, "attack") === 2, "dagger 2"); f.wt = "greatsword"; ok(TB.cost(f, "attack") === 4, "greatsword 4");
-  ok(TB.cost(f, "spell:flames") === 2 && TB.cost(f, "dual:flames") === 4, "novice spell 2, dual 4"); ok(TB.cost(f, "potion:health") === 1, "potion 1"); }
+// 2. move costs: stamina per weapon, magicka per spell, repeats cost more, free potions
+{ const s = fresh("warrior", 10), f = new G.Fight(s, enc("Bandit outlaw", 10)); ok(TB.cost(f, "attack").sp === TB.ATK_SP.sword && TB.cost(f, "power_attack").sp > TB.cost(f, "attack").sp, "a sword blow costs stamina, a power attack more");
+  f.wt = "dagger"; const dg = TB.cost(f, "attack").sp; f.wt = "greatsword"; ok(TB.cost(f, "attack").sp > dg, "a greatsword blow costs more stamina than a dagger");
+  ok(TB.cost(f, "spell:flames").mp > 0 && TB.cost(f, "dual:flames").mp > TB.cost(f, "spell:flames").mp && !TB.cost(f, "spell:flames").sp, "spells cost magicka, dual casting more");
+  ok(!TB.cost(f, "potion:health").sp && !TB.cost(f, "potion:health").mp, "potions are free (2 a turn)");
+  const ss = { used: { attack: 1 }, st: {} }; f.wt = "sword"; ok(TB.cost(f, "attack", ss).sp > TB.cost(f, "attack").sp && TB.cost(f, "attack", ss).n === 1, "the same move again costs more");
+  ok(TB.costTxt(TB.cost(f, "attack")) === TB.ATK_SP.sword + " stamina", "the cost reads plainly"); }
 // 3. a manual fight: initiative order, actions, end turn, guard, foe acts, followers & summons on their own
 { const s = fresh("spellsword", 20); s.follower = { id: "lydia", hp: TOWNS.followerMax(s, "lydia"), ts: G.now() };
   const f = new G.Fight(s, enc("Bandit outlaw", 20)), ss = new TB.Session(f, { trySneak: false });
   let r = ss.begin(); ok(ss.order.length >= 3 && ss.order.some((o) => o.id === "me") && ss.order.some((o) => o.id === "foe") && ss.order.some((o) => o.al), "initiative order has you, the follower and the foe");
   const sorted = ss.order.every((o, i) => i === 0 || ss.order[i - 1].init >= o.init); ok(sorted, "order sorted by initiative");
-  if (r.turn === "me") { const ap0 = ss.ap; const r1 = ss.act("attack"); ok(ss.ap === ap0 - 3 || r1.turn !== "me", "attack spends 3 AP"); if (ss.cur?.id === "me" && r1.turn === "me") { const r2 = ss.act("end"); ok(r2.turn === "next", "end turn"); } }
+  if (r.turn === "me") { const sp0 = f.sp, n0 = ss.myActs; const r1 = ss.act("attack"); ok((f.sp < sp0 && ss.myActs === n0 + 1) || r1.turn !== "me", "attack spends stamina and a move"); if (ss.cur?.id === "me" && r1.turn === "me") { const r2 = ss.act("end"); ok(r2.turn === "next", "end turn"); } }
   let g = 0; while (!ss.done && g++ < 200) { r = ss.advance(); if (r.turn === "me") { const sp = s.spells.find((id) => D.SPELLS[id]?.kind === "summon"); const a = sp && !f.summonTurns && ss.canAfford("spell:" + sp) ? "spell:" + sp : ss.canAfford("power_attack") ? "power_attack" : "attack"; const x = ss.act(a); if (x.turn === "me") ss.act("end"); } }
+  // out of breath: one plain swing a turn is always there; a power attack is once a turn
+  { const fx = new G.Fight(fresh("warrior", 20), enc("Bandit outlaw", 20)); fx.allies = []; const sx = new TB.Session(fx, { trySneak: false }); sx.begin(); sx.beginTurn();
+    fx.sp = 0; ok(sx.why("attack") === "" && /stamina/.test(sx.why("power_attack")), "with no stamina you can still swing once a turn");
+    sx.myActs = 1; ok(/stamina/.test(sx.why("attack")), "but only the first move of the turn");
+    sx.myActs = 0; fx.sp = G.maxStamina(fx.s); sx.used = { power_attack: 1 }; ok(sx.why("power_attack") === "Once a turn", "a power attack is once a turn"); }
   ok(ss.done, "manual fight finishes"); ok(ss.ev.some((e) => e.kind === "foe"), "the foe took turns"); ok(ss.ev.some((e) => e.who === "ally"), "the follower took turns on its own");
   ok(f.log.length >= 1 && f.log.every((l) => l.hp != null), "fight log per round"); }
 // 4. every action type resolves without errors
-{ const s = fresh("mage", 30); G.give(s, "potion_health", 2); const f = new G.Fight(s, enc("Frost troll", 30)), ss = new TB.Session(f, { trySneak: false }); ss.begin(); ss.ap = 99; ss.cur = { id: "me" };
-  for (const a of ["attack", "power_attack", "block", "potion:health", ...s.spells.slice(0, 30).map((id) => "spell:" + id), ...s.spells.slice(0, 8).map((id) => "dual:" + id)]) { f.ehp = 9999; f.hp = G.maxHealth(s); f.mp = 9999; f.sp = 9999; ss.ap = 99; ss.cur = { id: "me" }; ss.idx = ss.order.findIndex((o) => o.id === "me");
+{ const s = fresh("mage", 30); G.give(s, "potion_health", 2); const f = new G.Fight(s, enc("Frost troll", 30)), ss = new TB.Session(f, { trySneak: false }); ss.begin(); ss.myActs = 0; ss.used = {}; ss.pots = 0; ss.cur = { id: "me" };
+  for (const a of ["attack", "power_attack", "block", "potion:health", ...s.spells.slice(0, 30).map((id) => "spell:" + id), ...s.spells.slice(0, 8).map((id) => "dual:" + id)]) { f.ehp = 9999; f.hp = G.maxHealth(s); f.mp = 9999; f.sp = 9999; ss.myActs = 0; ss.used = {}; ss.pots = 0; ss.cur = { id: "me" }; ss.idx = ss.order.findIndex((o) => o.id === "me");
     try { const r = ss.act(a); ok(r && !Number.isNaN(f.ehp) && !Number.isNaN(f.hp), a + " resolves"); } catch (e) { ok(false, a + " threw " + e.message); } } }
 // 4b. shields: a passive block chance, Shield bash stuns (the foe loses its turn), no stun-locking, stamina cost
 { const s = fresh("warrior", 20), f = new G.Fight(s, enc("Bandit outlaw", 20)), ss = new TB.Session(f, { trySneak: false });
@@ -125,7 +133,7 @@ if (!process.env.SIMONLY) {
   let caught = 0; for (let i = 0; i < 400; i++) { f.hp = 9999; f.blocking = false; f.allies = []; const t = f.enemyTurnInner(); if (/caught on your shield/.test(t)) caught++; }
   ok(caught > 10 && caught < 400 * 0.5, "blows get caught on the shield sometimes: " + caught + "/400");
   ss.begin(); let g = 0; while (ss.cur?.id !== "me" && !ss.done && g++ < 20) ss.advance();
-  f.sp = G.maxStamina(s); f.ehp = 9999; ss.ap = 99;
+  f.sp = G.maxStamina(s); f.ehp = 9999; ss.myActs = 0; ss.used = {}; ss.pots = 0;
   const sp0 = f.sp; ok(ss.canAfford("bash"), "can afford a bash with full stamina");
   ss.act("bash"); ok(f.sp <= sp0 - 35, "a bash costs a lot of stamina: " + Math.round(sp0 - f.sp));
   ok(f.tbStunLeft > 0, "the bash stuns a normal foe");
@@ -144,7 +152,7 @@ if (!process.env.SIMONLY) {
   const f = new G.Fight(s, enc("Frost troll", 30)), ss = new TB.Session(f, { trySneak: false });
   const A = COOP.allyFromCard({ id: "p2", name: "Alpha", coop: { prof: { dmg: 20, hp: 300, red: 0.2, role: "fighter" } } }); f.allies.push(A);
   const B = COOP.allyFromCard({ id: "p3", name: "Bravo", coop: { prof: { dmg: 20, hp: 300, red: 0.2, role: "fighter" } } }); f.allies.push(B);
-  ss.begin(); const prep = () => { f.mp = 9999; f.sp = 9999; ss.ap = 99; ss.spAp = 9; ss.cur = { id: "me" }; ss.idx = ss.order.findIndex((o) => o.id === "me"); f.ehp = 9999; };
+  ss.begin(); const prep = () => { f.mp = 9999; f.sp = 9999; ss.myActs = 0; ss.used = {}; ss.pots = 0; ss.cur = { id: "me" }; ss.idx = ss.order.findIndex((o) => o.id === "me"); f.ehp = 9999; };
   A.hp = 50; B.hp = 280; prep(); const me0 = f.hp = G.maxHealth(s) - 40;
   ss.act("potion:health", "0"); ok(A.hp > 50 && Math.round(f.hp) === me0, "a health potion dragged onto Alpha heals Alpha, not you: " + Math.round(A.hp));
   if (s.spells.includes("healing")) { const a0 = A.hp; prep(); ss.act("spell:healing", "0"); ok(A.hp > a0 && Math.round(f.hp) === me0, "Healing dragged onto Alpha heals Alpha"); }
@@ -217,7 +225,7 @@ if (typeof SHAREDFIGHT !== "undefined") { console.log("8b: shared party fights")
   ok(Math.round(m.f.ehp) === Math.round(f.ehp) && m.ehpMax === ss.ehpMax && m.f.e.name === f.e.name, "both phones show the same foe and health");
   ok(m.f.allies.some((a) => a.host && a.name === "Alfa") && !m.f.allies.some((a) => a.pid === "p2"), "the leader shows as Beta's teammate, Beta is herself");
   ok(Math.round(m.f.hp) === Math.round(mate.hp), "Beta's health is the one the leader's phone keeps");
-  ok(m.st.ap >= 4 && m.ap === Math.max(1, m.st.ap), "Beta gets her own action points");
+  ok(m.st.acts === TB.MAX_ACTS && m.myActs === 0, "Beta gets her own moves");
   const sp = s2.spells.find((id) => D.SPELLS[id]?.kind === "damage" && m.canAfford("spell:" + id));
   const e0 = m.f.ehp, mp0 = m.f.mp;
   ok(sp && m.act("spell:" + sp) && m.f.mp < mp0, "Beta casts a real spell with her own magicka (" + sp + ")");
@@ -234,7 +242,7 @@ if (typeof SHAREDFIGHT !== "undefined") { console.log("8b: shared party fights")
   ok(got && Math.abs(got.d - dealt) < 1 && got.para === 2 && got.h === 15, "the leader's phone took her damage, the paralysis and the heal: " + JSON.stringify(got) + " dealt " + Math.round(dealt));
   ok(ss.ev.some((e) => e.by === "p2" && /^Beta /.test(e.text)), "her lines show with her name on the leader's screen");
   // the leader's phone sends news: Beta's phone follows (health, log, round), and her own lines aren't doubled
-  let g2 = 0; while (!ss.done && r.turn !== "wait" && g2++ < 80) { r = r.turn === "me" ? ss.act("attack") : ss.advance(); if (r.turn === "next") r = ss.advance(); }
+  let g2 = 0; while (!ss.done && r.turn !== "wait" && g2++ < 80) { r = r.turn === "me" ? (ss.why("attack") ? ss.act("end") : ss.act("attack")) : ss.advance(); if (r.turn === "next") r = ss.advance(); }
   const d2 = { id: "fid1", owner: "p1", ...TB.fightState(ss) }; m.sync(d2);
   ok(Math.round(m.f.ehp) === Math.round(f.ehp), "after more turns both phones still show the same foe health");
   ok(Math.round(m.f.hp) === Math.max(0, Math.round(mate.down ? 0 : mate.hp)), "Beta's health follows the blows she took on the leader's phone");

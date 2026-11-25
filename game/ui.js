@@ -46,19 +46,29 @@
     if (typeof POLISH !== "undefined") POLISH.toast(el, text);
     clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.add("hide"), 3800);
   }
-  function persist(pub = false) { Store.save(S); if (pub) { publishCard(); publishHome(); publishClan(); publishHall(); } bump(); }
+  function persist(pub = false) { Store.save(S); if (pub) { publishCard(); publishHome(); publishClan(); publishHall(); publishSide(); } bump(); }
   let lastClanJson = "";
   function publishClan() {
-    const json = JSON.stringify([S.clan || null, S.name]);
+    const cl = S.clan || S.clanOld || null;   // sides.js: old clan members keep their record (their old guild hall still knows them)
+    const json = JSON.stringify([cl, S.name]);
     if (json === lastClanJson) return; lastClanJson = json;
-    if (S.clan) Store.put("clanmem", S.id, { clan: S.clan, name: S.name, t: G.now() }); else Store.remove("clanmem", S.id);
+    if (cl) Store.put("clanmem", S.id, { clan: cl, name: S.name, t: G.now() }); else Store.remove("clanmem", S.id);
+  }
+  /* sides.js: your side, level and rank XP for everyone (one record per player, "sides") */
+  let lastSideJson = "";
+  function publishSide() {
+    if (typeof SIDES === "undefined") return;
+    const rec = SIDES.record(S), json = JSON.stringify(rec ? { ...rec, t: 0 } : null);
+    if (json === lastSideJson) return; lastSideJson = json;
+    if (rec) Store.put("sides", S.id, rec); else Store.remove("sides", S.id);
+    SIDES.setDocs(null, S);
   }
   function publishCard(force = true) {
     const tr = S.trip;
     const card = { name: S.name, race: S.race, level: S.level, x: S.x, y: S.y,
       t0: tr ? tr.lastTick : G.now(), moving: !!(tr && tr.status === "travel"), dest: tr ? tr.dest : null,
       path: tr && tr.status === "travel" ? [[S.x, S.y], ...tr.path.slice(tr.idx + 1)].slice(0, 120) : null,
-      speed: G.speed(S), loc: S.location || null, region: WORLD.regionOf([S.x, S.y]), look: HEROART.lookOf(S), ride: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, party: party?.id || null, hiding: !!S.ambush, facing: S.facing ?? null, ...(typeof SNEAKMODE !== "undefined" ? SNEAKMODE.cardBits(S) : {}), clan: myClan()?.tag || null, ...MP.stats(S), coop: coopUI?.card() || null, ...(typeof PARTY !== "undefined" ? PARTY.cardBits(S, party) : {}), ...(typeof LIVING !== "undefined" ? LIVING.cardBits(S, party) : {}), ...(typeof LEVELUP !== "undefined" ? LEVELUP.cardBits(S) : {}) };
+      speed: G.speed(S), loc: S.location || null, region: WORLD.regionOf([S.x, S.y]), look: HEROART.lookOf(S), ride: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, party: party?.id || null, hiding: !!S.ambush, facing: S.facing ?? null, ...(typeof SNEAKMODE !== "undefined" ? SNEAKMODE.cardBits(S) : {}), clan: myClan()?.tag || null, ...(typeof SIDES !== "undefined" ? SIDES.cardBits(S) : {}), ...MP.stats(S), coop: coopUI?.card() || null, ...(typeof PARTY !== "undefined" ? PARTY.cardBits(S, party) : {}), ...(typeof LIVING !== "undefined" ? LIVING.cardBits(S, party) : {}), ...(typeof LEVELUP !== "undefined" ? LEVELUP.cardBits(S) : {}) };
     const json = JSON.stringify({ ...card, t0: 0, cur: Math.round(card.cur / 10) });
     if (!force && json === lastCardJson) return;
     lastCardJson = json;
@@ -132,30 +142,16 @@
   }
 
   function showCreate() {
-    let race = "nord";
-    const draw = () => {
-      app.innerHTML = `
-      <div class="panel" style="margin-top:16px">
-        <h1 style="font-size:clamp(28px,7vw,44px)">Roads of the North</h1>
-        <p class="sub">A shared Skyrim you travel in real time. Walking from Whiterun to Windhelm takes about ten minutes, and the road is rarely empty.</p>
-        <label class="sub" for="nm">Your name</label>
-        <input id="nm" maxlength="24" autocomplete="off" placeholder="e.g. Remigiusz" value="${esc($("#nm")?.value || "")}">
-        ${TITLEART.createScene(race)}
-        <h3 style="margin-top:14px">Choose your race</h3>
-        ${DOLL.racePicker(race)}
-        <div class="cshow">${DOLL.showcase(race)}</div>
-        <button class="btn pri" id="begin" style="width:100%;margin-top:8px">Begin in ${esc(D.START_LOCATION)}</button>
-        <button class="btn" id="toTitle" style="width:100%;margin-top:8px">Back to the main menu</button>
-        <p class="sub status ${net.mode === "shared" || net.mode === "p2p" ? "live" : ""}" style="margin-top:10px"><i></i>${net.mode === "shared" ? "Shared world: other players will see you on the map." : net.mode === "p2p" ? "One world for everyone with the app: your game is saved on this phone and syncs straight with everyone else's." : APP ? "Offline game: saved on this phone." : "Saved in this browser only (shared saving unavailable here)."}</p>${net.mode === "shared" || net.mode === "p2p" ? "" : onlineBtn().replace('data-act="online"', 'id="online"')}
-      </div>`;
-      app.querySelectorAll("[data-race]").forEach((b) => b.onclick = () => { race = b.dataset.race; const v = $("#nm").value; draw(); $("#nm").value = v; });
-      if ($("#online")) $("#online").onclick = openOnline;
-      $("#toTitle").onclick = () => { app.innerHTML = ""; showTitle("menu"); };
-      $("#begin").onclick = () => {
-        const name = ($("#nm").value || "").trim().slice(0, 24);
-        const bad = typeof NICK !== "undefined" ? NICK.problem(name) : name ? "" : "Pick a nickname.";
-        if (bad) { toast(bad); const f = $("#nm"); if (f) { f.classList.add("nm-bad"); f.focus(); } return; }
+    const status = () => `<p class="sub status ${net.mode === "shared" || net.mode === "p2p" ? "live" : ""}" style="margin-top:10px"><i></i>${net.mode === "shared" ? "Shared world: other players will see you on the map." : net.mode === "p2p" ? "One world for everyone with the app: your game is saved on this phone and syncs straight with everyone else's." : APP ? "Offline game: saved on this phone." : "Saved in this browser only (shared saving unavailable here)."}</p>${net.mode === "shared" || net.mode === "p2p" ? "" : onlineBtn().replace('data-act="online"', 'id="online"')}`;
+    // [OURS] character creation, Skyrim RaceMenu style (chargen.js)
+    CHARGEN.create(app, {
+      toast, startExtra: status,
+      afterRender: (root) => { const b = root.querySelector("#online"); if (b) b.onclick = openOnline; },
+      onBack: () => { app.innerHTML = ""; showTitle("menu"); },
+      onBegin: ({ name, race, app: look, stone }) => {
         S = G.newSave(Store.uid, name, race);
+        APPEAR.apply(S, look);   // the face you made (appear.js)
+        if (stone && POWERS.STONES[stone]) { S.stone = stone; S.stonePowerAt = 0; }   // the Guardian Stone you picked: its skills improve 20% faster
         if (typeof PATCHNOTES !== "undefined") PATCHNOTES.markSeen();   // a new character starts on the current version
         if (!/[?&]notut/.test(location.search)) S.tut = { step: 1, seen: {} };   // new characters get the guided first trip
         const wantIntro = !/[?&]notut/.test(location.search) && (!navigator.webdriver || /[?&]intro/.test(location.search));
@@ -163,9 +159,17 @@
         persist(true);
         startGame();
         if (wantIntro) try { TITLEART.intro(null, { reduce: reduceMotion }); } catch (e) { console.warn("intro", e); }
-      };
-    };
-    draw();
+      },
+    });
+  }
+  /* the barber at an inn (small fee) and the mirror in your house (free): the same screen without Race and Start (chargen.js) */
+  function openLookChange(mode) {
+    CHARGEN.open({ mode, save: S, cost: CHARGEN.BARBER_COST, toast,
+      onDone: (look) => {
+        if (mode === "barber") { const r = CHARGEN.pay(S, look); if (r.err) return toast(r.err); toast(r.text); }
+        else { APPEAR.apply(S, look); toast("You like what you see."); }
+        lookCache.k = ""; persist(true); renderPanel(true);
+      } });
   }
 
   // ------------------------------------------------------------ title screen (main menu)
@@ -315,7 +319,7 @@
       ${typeof LIGHTFX !== "undefined" ? LIGHTFX.settingsHTML(seg) : ""}
       ${typeof PAINTEDMAP !== "undefined" ? PAINTEDMAP.settingsHTML(seg) : ""}
       ${typeof MOTION !== "undefined" ? `<div class="setrow"><span>Motion</span>${seg("motion", [["full", "Full"], ["lite", "Lite"], ["off", "Off"]], MOTION.pref())}</div>` : ""}
-      ${typeof TB !== "undefined" ? `<h3>Fights</h3><div class="setrow"><span>Foe turns</span>${seg("tbFast", [[false, "Normal speed"], [true, "Fast"]], getPref("tbFast", false))}</div>${typeof GORE !== "undefined" ? GORE.settingsHTML(seg) : typeof COMBATFX !== "undefined" ? `<div class="setrow"><span>Blood</span>${seg("gore", [[true, "On"], [false, "Off"]], getPref("gore", true))}</div>` : ""}` : ""}${typeof FIGHTCTL !== "undefined" && typeof TB !== "undefined" ? FIGHTCTL.settingsHTML(seg) : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.settingsHTML(seg) : ""}
+      ${typeof TB !== "undefined" ? `<h3>Fights</h3>${typeof GORE !== "undefined" ? GORE.settingsHTML(seg) : typeof COMBATFX !== "undefined" ? `<div class="setrow"><span>Blood</span>${seg("gore", [[true, "On"], [false, "Off"]], getPref("gore", true))}</div>` : ""}` : ""}${typeof FIGHTCTL !== "undefined" && typeof TB !== "undefined" ? FIGHTCTL.settingsHTML(seg) : ""}${typeof COMBAT2 !== "undefined" && typeof TB !== "undefined" ? COMBAT2.settingsHTML(seg) : ""}${typeof FIGHTSET !== "undefined" && typeof TB !== "undefined" ? FIGHTSET.settingsHTML(seg) : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.settingsHTML(seg) : ""}
       ${typeof ACCESS !== "undefined" ? ACCESS.settingsHTML(seg) : ""}
       ${typeof ONBOARD !== "undefined" ? ONBOARD.settingsHTML(seg) : ""}
       ${typeof BUGREPORT !== "undefined" ? BUGREPORT.settingsHTML() : ""}
@@ -326,6 +330,7 @@
       <p class="mute" style="font-size:13px">Updates download and install by themselves, at a quiet moment (never mid-fight, in a dungeon or a trade).</p>` : ""}`;
   }
   function onSettingsInput(e) {
+    if (typeof FIGHTSET !== "undefined" && FIGHTSET.input(e.target)) return;   // Fights → Camera shake, Fight UI size (fightset.js)
     if (e.target.id === "snd_music") SOUND.set("music", e.target.value / 100);
     if (e.target.id === "snd_amb") SOUND.set("amb", e.target.value / 100);
     if (e.target.id === "snd_sfx") { SOUND.set("sfx", e.target.value / 100); if (e.type === "change") SOUND.fx("coin"); }
@@ -337,6 +342,7 @@
     if (typeof I18N !== "undefined" && I18N.pref(k, b.dataset.v)) return true;
     if (typeof ACCESS !== "undefined" && ACCESS.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }
     if (typeof ONBOARD !== "undefined" && ONBOARD.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title */ } } return true; }
+    if (typeof FIGHTSET !== "undefined" && FIGHTSET.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Fights → Fight quality, Frame rate (fightset.js)
     if (typeof GORE !== "undefined" && GORE.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Fights → Blood and gore: Off / Low / Full (gore.js)
     if (typeof FASTQOL !== "undefined" && FASTQOL.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // replay speed, carry on after road events
     if (k === "survival") { if (S) { S.survival = v; if (!v) S.coldV = 0; persist(); try { renderPanel(true); } catch { /* title */ } } SOUND.fx("click"); return true; }
@@ -487,14 +493,18 @@
   }
 
   // ------------------------------------------------------------ main screen
-  window.__dbg = { save: () => S, fightResult: (r) => showFightResult(r), view: () => view, openEvent: (n) => openEvent(n), openEncounter: (n) => openEncounter(n), tally: (k, n) => tally(k, n), message: (t, x, b) => showMessage(t, x, b), toast: (t) => toast(t), publish: () => publishCard(), others: () => others, party: () => party, pp: () => ppUI, coopRuns: () => coopUI?.runs || [] };   // for testing in the browser console
+  window.__dbg = { save: () => S, fightResult: (r) => showFightResult(r), view: () => view, openEvent: (n) => openEvent(n), openEncounter: (n) => openEncounter(n), tally: (k, n) => tally(k, n), message: (t, x, b) => showMessage(t, x, b), toast: (t) => toast(t), publish: () => publishCard(), others: () => others, party: () => party, pp: () => ppUI, coopRuns: () => coopUI?.runs || [], setView: (z, cn) => { zoom = z; if (cn) center = cn; follow = false; kickMap(); } };   // for testing in the browser console
   /* phone back button: close what's on top, step back to the map, and only then leave the app */
+  /* opts.esc: the PC's Esc key (desktop.js). It walks the same steps, except that the compass isn't "home" on a PC and
+     a fight isn't left alone: false then means "nothing left to close", and Esc opens the pause menu (pausemenu.js) */
   window.__ui = {
-    back() {
+    back(opts) {
+      const escKey = !!(opts && opts.esc);
+      if (typeof PAUSEM !== "undefined" && PAUSEM.isOpen()) { PAUSEM.close(); return true; }   // the Esc menu is the very top
       if (typeof BUGREPORT !== "undefined" && BUGREPORT.isOpen()) { BUGREPORT.close(); return true; }   // the report window sits on top of everything
       if ($("#title")) { if (titlePage !== "menu" && titlePage !== "press") { titlePage = "menu"; renderTitle(); return true; } return false; }
       if (!S && $("#toTitle")) { app.innerHTML = ""; showTitle("menu"); return true; }
-      if (typeof TB !== "undefined" && TB.open) return true;   // a turn-based fight is on: finish it (or Flee)
+      if (typeof TB !== "undefined" && TB.open) { if ($("#modal.pm-top")) { closeModal(); return true; } return !escKey; }   // a turn-based fight is on: finish it (or Flee); Esc pauses
       if (typeof FAVWHEEL !== "undefined" && FAVWHEEL.open) { FAVWHEEL.hide(); return true; }
       if (typeof LEVELUP !== "undefined" && LEVELUP.isOpen) { LEVELUP.close(); return true; }   // the level-up pillars: decide later
       if ($("#sky") && !$("#modal")) { closeMenu(); if (typeof TABMENU !== "undefined") TABMENU.menuClosed(); return true; }
@@ -505,11 +515,17 @@
       if (selected) { selected = null; renderPicked(); return true; }
       if (S && (tab === "stats" || tab === "diary") && !document.body.classList.contains("tw-char")) { tab = "hero"; renderTabs(); renderPanel(true); return true; }   // [journal] Character sub-pages
       if (S && tab === "places") { tab = "map"; renderTabs(); renderPanel(true); return true; }
-      if (typeof TABMENU !== "undefined") { const r = TABMENU.back(); if (r !== null) return r; }   // the compass is home (tabmenu.js)
+      if (typeof TABMENU !== "undefined") { const r = TABMENU.back(opts); if (r !== null) return r; }   // the compass is home (tabmenu.js); on a PC the map is
       if (S && tab !== "map") { tab = "map"; bump(); renderTabs(); renderPanel(true); return true; }
       return false;
     },
     save() { if (S) Store.save(S); },
+    /* for the Esc menu (pausemenu.js) */
+    inGame: () => !!S && !$("#title"),
+    settings: () => { if (S) openSound(); },
+    notes: () => { if (typeof PATCHNOTES !== "undefined") openNotes(); },
+    guide: () => { if (S) { openGuide(); persist(); } },
+    toTitle() { if (S) Store.save(S); try { sessionStorage.setItem("rotn_open", "menu"); } catch { /* ignore */ } location.reload(); },
     /* is this a good moment to restart on a new version? not mid-fight, dungeon, trade, menu, mini-game or typing */
     safeToUpdate() {
       const el = document.activeElement, typing = /^(INPUT|TEXTAREA|SELECT)$/.test(el?.tagName || "") || el?.isContentEditable;
@@ -609,10 +625,14 @@
     if (typeof LEVELUP !== "undefined") LEVELUP.mount({ S: () => S, persist, toast, refresh: () => { bump(); renderPanel(true); if ($("#sky")) renderMenu(); }, publishCard: () => publishCard() });   // levelup.js: skill/level notices, the three pillars
     if (typeof ONBOARD !== "undefined") ONBOARD.mount({ S: () => S, persist, toast, renderPanel, click: onPanelClick, party: () => party, invites: () => invites });   // first-time tips (onboard.js)
     if (typeof WORLDEV !== "undefined") WORLDEV.mount({ S: () => S, persist, toast, showFightResult, showMessage, openModal, closeModal, postNews, click: onPanelClick });   // world events (worldevents.js)
+    if (typeof SIDEUI !== "undefined") SIDEUI.mount({ S: () => S, persist, toast, showMessage, openModal, closeModal, render: () => renderPanel(true), party: () => party, click: onPanelClick });   // pick a side: letters, recruiters, the Faction tab (sideui.js)
     if (typeof DWEMER !== "undefined") DWEMER.mount({ S: () => S, persist, toast, showMessage, renderPanel });   // the lexicon and valve puzzles (dwemer.js)
+    if (typeof TREASURE !== "undefined") TREASURE.mount({ S: () => S, persist, toast, showMessage, renderPanel, openModal, closeModal, party: () => party, Store: typeof Store !== "undefined" ? Store : null, splitGold: (g, w) => (ppUI && ppUI.splitGold ? ppUI.splitGold(g, w) : null), enterDungeon: () => { selected = null; renderPicked(); dunNote = null; renderDungeon(); } });   // treasure maps and relics (treasure.js)
+    if (typeof LEGHUNT !== "undefined") LEGHUNT.mount({ S: () => S, persist, toast, showMessage, renderPanel });   // legendary monster contracts (leghunt.js)
     if (typeof BLACKREACH !== "undefined") BLACKREACH.mount({ S: () => S, persist, toast, showFightResult, showMessage, renderPanel, tb: tbCall });   // the cavern under Alftand (blackreach.js)
     if (typeof GREATEV !== "undefined") GREATEV.mount({ S: () => S, persist, toast, showFightResult, showMessage, openModal, closeModal, postNews, click: onPanelClick, party: () => party });   // great world events: banner + countdown (greatevents.js)
     if (typeof HOLDUI !== "undefined") HOLDUI.mount({ S: () => S, persist, toast, showFightResult, postNews, refresh: () => { bump(); renderPanel(true); }, party: () => party });   // player-run holds: Jarl, tax, raids (holdui.js)
+    if (typeof TOURNEYUI !== "undefined") TOURNEYUI.mount({ S: () => S, persist, toast, showFightResult, postNews, tbCall, refresh: () => { bump(); renderPanel(true); }, party: () => party, allies: () => allies() });   // festivals, contests and the Grand Arena (tourneyui.js)
     Store.watch("trades", (docs) => onTrades(docs));
     Store.watch("duels", (docs) => onDuels(docs));
     Store.watch("stalls", (docs) => onStalls(docs));
@@ -649,7 +669,7 @@
     Store.watch("hallchest", (docs) => { HALL.setChest(docs); if (tab === "town") bump(); });
     Store.watch("ladder", (docs) => { ladderDocs = docs; if ((tab === "log" || tab === "social")) bump(); });
     $("#picked").addEventListener("click", onPanelClick);
-    Store.watchPlayers((ps) => { others = ps; if ((tab === "log" || tab === "social")) bump(); });
+    Store.watchPlayers((ps) => { others = ps; if (typeof SIDES !== "undefined") SIDES.setCards(ps); if ((tab === "log" || tab === "social")) bump(); });
     Store.watchBags((b) => { bags = b; });
     Store.watch("attacks", (docs) => onAttacks(docs));
     Store.watch("parties", (docs) => {
@@ -727,7 +747,7 @@
   const EVENT_PER_SECOND = 1 / 110, EVENT_GAP_MS = 45000;
   function maybeRoadEvent() {
     if (document.hidden || $("#modal") || S.trip?.status !== "travel" || S.trip.carriage || S.trip.boat || Date.now() - lastEventAt < EVENT_GAP_MS) return;
-    if (G.minutesLeft(S) < 0.5 || Math.random() > EVENT_PER_SECOND) return;
+    if (G.minutesLeft(S) < 0.5 || Math.random() > EVENT_PER_SECOND * (typeof LEGHUNT !== "undefined" ? LEGHUNT.eventBoost(S) : 1)) return;   // legendary hunts: signs turn up more often inside the area
     if (typeof PARTYPLAY !== "undefined" && !PARTYPLAY.canDecide(S)) return;   // following the party leader: road events happen to them
     lastEventAt = Date.now();
     [S.x, S.y] = livePos();
@@ -952,7 +972,7 @@
     if (!mapResized && (!mapOnScreen || mapCovered())) return 200;
     const moving = S?.trip?.status === "travel" || performance.now() - mapTouchedAt < 1500;
     const wx = WEVENTS.weather(livePos()).id, weatherAnim = !reduceMotion && !["clear", "cloudy", "fog"].includes(wx);
-    const mapAnim = (typeof MAPART !== "undefined" && MAPART.active()) || (typeof MOTION !== "undefined" && MOTION.mapBusy()) || (typeof MAPHERO !== "undefined" && MAPHERO.active());   // a discovery burst or an arrival puff playing   // a discovery burst playing
+    const mapAnim = (typeof INKMAP !== "undefined" && INKMAP.pending()) || (typeof MAPART !== "undefined" && MAPART.active()) || (typeof MOTION !== "undefined" && MOTION.mapBusy()) || (typeof MAPHERO !== "undefined" && MAPHERO.active());   // a discovery burst or an arrival puff playing   // a discovery burst playing
     const raidNow = typeof RAIDART !== "undefined" && WEVENTS.activeRaid();
     const fxNow = typeof FXART !== "undefined" && S ? FXART.state(S) : null;   // spell and shout effects on the map
     const PC = typeof PCMAP !== "undefined" && PCMAP.on();   // PC map home screen (pcmap.js): smooth pan and zoom, living map (mapfx.js)
@@ -966,10 +986,10 @@
       cones, foe: S.trip?.status === "encounter" && !S.trip.encounter?.prey ? S.trip.encounter?.name : null,
       region: WORLD.regionOf(pos),
       raid: raidNow ? raidView(raidNow) : null, fx: fxNow,
-      player: pos, name: S.name, look: myLook(), moving: S.trip?.status === "travel", trail: S.trip?.trail, dest: S.trip ? { pos: S.trip.dest, name: S.trip.destName, roam: !!S.trip.roam } : null, spot: selected === "__spot" ? roamSpot : null,
+      player: pos, name: S.name, look: myLook(), side: typeof SIDES !== "undefined" ? SIDES.mine(S) : null, moving: S.trip?.status === "travel", trail: S.trip?.trail, dest: S.trip ? { pos: S.trip.dest, name: S.trip.destName, roam: !!S.trip.roam } : null, spot: selected === "__spot" ? roamSpot : null,
       route: S.trip && !S.trip.boat ? (S.trip.status === "travel" ? S.trip.path.slice(S.trip.idx + 1) : [S.trip.dest]) : null,
       sight: typeof SNEAKMODE !== "undefined" && !S.location && !S.dungeon ? SNEAKMODE.SIGHT_PX : 0, sneakRing: typeof SNEAKMODE !== "undefined" && S.sneak ? SNEAKMODE.myRange(S) : 0,
-      discovered: S.discovered, explored: [...S.explored, pos], atPlace: !!S.location, others: others.filter((o) => sameMap(o) && seesHero(o)).map((o) => ({ name: typeof GREET !== "undefined" ? GREET.label(S, o, party) : (o.clan ? `[${o.clan}] ` : "") + o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), stranger: typeof GREET !== "undefined" && !GREET.knows(S, o.id, party), atPlace: !!o.loc, pos: otherPos(o), look: o.look, race: o.race, id: o.id, moving: !!o.moving, horse: typeof o.ride === "string" ? o.ride : null, party: !!party?.members.some((m) => m.id === o.id) })),
+      discovered: S.discovered, explored: [...S.explored, pos], atPlace: !!S.location, others: others.filter((o) => sameMap(o) && seesHero(o)).map((o) => ({ name: typeof GREET !== "undefined" ? GREET.label(S, o, party) : (o.clan ? `[${o.clan}] ` : "") + o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), stranger: typeof GREET !== "undefined" && !GREET.knows(S, o.id, party), atPlace: !!o.loc, pos: otherPos(o), look: o.look, race: o.race, id: o.id, moving: !!o.moving, horse: typeof o.ride === "string" ? o.ride : null, side: typeof SIDES !== "undefined" ? SIDES.of(o.id) : null, party: !!party?.members.some((m) => m.id === o.id) })),
       rulers: Object.entries(WARS.rulers(S)).map(([hold, c]) => ({ hold, color: c.colors[0] })),
       banners: CLANS.banners(homeDocs, S, VISITS.record(S)).filter((b) => WORLD.places[b.town]).map((b) => ({ ...b, pos: WORLD.places[b.town].slice(0, 2) })),
       cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), mask: typeof PRIESTS !== "undefined" ? PRIESTS.marker(S)?.pos : null, tmaps: typeof EXPLORE !== "undefined" ? EXPLORE.marks(S) : [], rumours: typeof RUMOURS !== "undefined" ? RUMOURS.marks(S) : [], herbs: typeof GATHER !== "undefined" ? GATHER.marks(S) : [], pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
@@ -994,7 +1014,7 @@
   }
   let lookCache = { k: "", v: null };
   function myLook() {
-    const k = JSON.stringify([S.race, S.loadout, G.loadout(S).equipment, S.vampire, S.werewolf]);
+    const k = JSON.stringify([S.race, S.loadout, G.loadout(S).equipment, S.vampire, S.werewolf, S.app || 0, S.sex || ""]);
     if (k !== lookCache.k) lookCache = { k, v: HEROART.lookOf(S) };
     return lookCache.v;
   }
@@ -1003,7 +1023,7 @@
     let down = null, moved = false, pinch = null;
     const setZoom = (z, fx, fy) => {     // zoom keeping the point under the fingers still
       const PC = typeof PCMAP !== "undefined" && PCMAP.on();   // on a PC you can zoom out to all of Skyrim (pcmap.js)
-      z = Math.max(PC ? PCMAP.minZoomFor(c) : 1, Math.min(PC ? PCMAP.MAXZ : 6, z));
+      z = Math.max(PC ? PCMAP.minZoomFor(c) : 1, Math.min(PC ? (PCMAP.maxZoomFor ? PCMAP.maxZoomFor(c) : PCMAP.MAXZ) : 6, z));
       if (view.transform && fx != null) {
         const { k, ox, oy } = view.transform, mx = (fx - ox) / k / WorldMap.W, my = (fy - oy) / k / WorldMap.H;
         const r = c.getBoundingClientRect(), nk = k * z / zoom;
@@ -1384,7 +1404,7 @@
     const left = DUNGEONS.refillLeft(S, l), lvl = { 1: 1, 2: 6, 3: 12 }[DUNGEONS.info(l).tier];
     const th = DUNGEONS.info(l).theme, rec = th === "lair" ? 20 : th === "giantcamp" ? 10 : lvl;
     return `<div class="panel" style="border-color:var(--ember)"><h2>${esc(l)}</h2>${PLACEART.scene(l)}<p class="sub">${esc(DUNGEONS.describe(l))} · good from about level ${rec}. Inside, you pick your own way room by room down to the boss. Health doesn't come back on its own in there, and you can leave between rooms whenever you like.</p>
-      ${left ? refillCard(l, left) : `<button class="btn danger" data-act="enter" style="width:100%">\uE10E Go inside</button>${coopUI ? coopUI.lobbyHTML(l) : ""}`}${SMITH.MINES[l] ? `<div style="margin-top:10px">${mineHTML(l)}</div>` : ""}${typeof BLACKREACH !== "undefined" ? BLACKREACH.placeCard(S, l) : ""}</div>`;
+      ${left ? refillCard(l, left) : `<button class="btn danger" data-act="enter" style="width:100%">\uE10E Go inside</button>${coopUI ? coopUI.lobbyHTML(l) : ""}`}${SMITH.MINES[l] ? `<div style="margin-top:10px">${mineHTML(l)}</div>` : ""}${typeof BLACKREACH !== "undefined" ? BLACKREACH.placeCard(S, l) : ""}${!left && typeof DEEPDELVE !== "undefined" ? DEEPDELVE.placeCard(S, l) : ""}</div>`;
   }
   function closeDungeon() { $("#dun")?.remove(); }
   function dunMap(d) {
@@ -1416,6 +1436,7 @@
       ${dunNote.stripLoot?.length || dunNote.stripGold ? DUNART.lootStrip(dunNote.stripGold, dunNote.stripLoot) : ""}${dunNote.loot?.length || dunNote.gold ? `<p class="sub" style="margin:2px 0 0">Loot: ${[dunNote.gold ? dunNote.gold + " gold" : "", ...(dunNote.loot || [])].filter(Boolean).map(esc).join(", ")}</p>` : ""}${skillLine(dunNote)}</div>` : "";
     let main;
     if (d.done) main = `<div class="card"><h3> ${esc(d.place)} is cleared</h3>${DUNART.lootStrip(d.gold, d.found)}<p class="sub">Found so far: ${d.gold} gold${d.found.length ? ", " + d.found.map(esc).join(", ") : ""}.</p><button class="btn pri" data-act="dleave" style="width:100%">Head back outside</button></div>`;
+    else if (r && r.type === "camp" && typeof DEEPDELVE !== "undefined") main = DEEPDELVE.campHTML(S);   // deep expedition: Extract / Rest / Descend
     else if (r) {
       const e = r.enemy;
       main = `<div class="card ${e ? "foe" : ""} ${r.type === "rest" ? "rest" : ""}">${typeof DUNROOMS !== "undefined" ? DUNROOMS.room(r.type, d.theme) : PLACEART.room(r.type)}<h3>${DUNGEONS.ICON[r.type]} ${e ? esc(e.name) : DUNGEONS.LABEL[r.type]}</h3><p>${esc(r.text)}</p>
@@ -1435,7 +1456,7 @@
     el.innerHTML = `<div class="in dgrid"><div class="dcol">
       <div class="hd"><h2>\uE10E ${esc(d.place)}</h2><button class="btn sm" data-act="dmin">\uE152 Pack</button>${d.done || r?.type === "boss" ? "" : `<button class="btn sm" data-act="dleave">Leave</button>`}</div>
       <div class="vital"><small><span>Health${r ? "" : " · no natural healing in here"}</span><span class="num">${Math.round(hp)}/${mh}</span></small><div class="bar"><i style="width:${pct(hp, mh)}%;background:var(--hp)"></i></div></div>
-      ${coopUI && d.run ? coopUI.bar() : ""}<p class="sub" style="margin:0">Room ${step} of ${total} · found ${d.gold} gold${d.found.length ? ` and ${d.found.length} item${d.found.length > 1 ? "s" : ""}` : ""} · ${G.countRestore(S, "health")} healing potions</p>
+      ${typeof DEEPDELVE !== "undefined" ? DEEPDELVE.bannerHTML(S) : ""}${coopUI && d.run ? coopUI.bar() : ""}<p class="sub" style="margin:0">Room ${step} of ${total} · found ${d.gold} gold${d.found.length ? ` and ${d.found.length} item${d.found.length > 1 ? "s" : ""}` : ""} · ${G.countRestore(S, "health")} healing potions</p>
       ${res}${main}</div>
       <div class="card dmapcard">${DUNART.legendHTML(d)}<div class="dmapfit">${DUNART.mapHTML(d)}</div></div>
     </div>`;
@@ -1594,10 +1615,12 @@
     if (r.stolen) lines.push("Stolen. Only a fence will buy it.");
     if (it.slot === "recipe" && typeof CRAFTFAIR !== "undefined") lines.push(CRAFTFAIR.knows(S, it.recipe) ? "You already know these forge recipes." : `Read it to learn new forge recipes: ${Object.keys(SMITH.RECIPES).filter((k) => SMITH.RECIPES[k].needs === it.recipe).map((k) => D.ITEMS[k].name).join(", ")}.`);
     if (r.cv != null && it.slot !== "potion") lines.push(`You made this. Shops pay no more than its materials were worth${r.nm ? "" : ", but you can give it a name"}.`);
+    if (typeof TREASURE !== "undefined") lines.push(...TREASURE.detailLines(S, r));   // treasure maps and relics (treasure.js)
     const acts = [];
     const onMain = eq && !(G.loadout(S).equipment.offhand === r.id && G.loadout(S).equipment[it.slot] !== r.id);
     if (G.SLOTS.includes(it.slot)) acts.push(onMain ? `<button class="btn" data-act="uneq" data-slot="${it.slot}" data-id="${r.id}">Unequip</button>` : `<button class="btn pri" data-act="eq" data-id="${r.id}">Equip${G.canOffhand(it) ? " (right hand)" : ""}</button>`);
     acts.push(offhandBtn(r, it, ""));
+    if (typeof TREASURE !== "undefined") acts.push(...TREASURE.detailActs(S, r));
     if (it.slot === "tome") acts.push(`<button class="btn pri" data-act="read" data-id="${r.id}">Read</button>`);
     if (it.slot === "recipe") acts.push(`<button class="btn pri" data-act="cfread" data-id="${r.id}">Read</button>`);
     if (typeof CRAFTFAIR !== "undefined" && CRAFTFAIR.canName(r)) acts.push(`<span class="cf-name"><input id="cfname-${r.id}" maxlength="${CRAFTFAIR.NAME_MAX}" placeholder="Name it" value="${esc(r.nm || "")}" aria-label="Name for this item"><button class="btn" data-act="cfname" data-id="${r.id}">${r.nm ? "Rename" : "Name it"}</button></span>`);
@@ -2471,7 +2494,7 @@
   function friendCard(id) { return cardOf(id) || (SOCIAL.friends(S)[id] ? { id, name: SOCIAL.friends(S)[id].name } : null); }
   function panelSocial() {
     const nDm = SOCIAL.unread(S, dmDocs), nAdd = SOCIAL.addedMe(friendDocs, S).length, inc = myIncoming(), nParty = partyNews(), nChat = chatUnread();
-    const chips = `<div class="seg socseg">${[["friends", `Friends${nAdd ? ` (${nAdd})` : ""}`], ["msgs", `Messages${nDm ? ` (${nDm})` : ""}`], ["trades", `Trades${inc.length ? ` (${inc.length})` : ""}`], ["party", `Party${nParty ? ` (${nParty})` : ""}`], ["chat", `Chat${nChat ? ` (${nChat})` : ""}`], ["realm", "Realm"]].map(([k, l]) => `<button class="${socTab === k ? "on" : ""}" data-act="soctab" data-id="${k}">${l}</button>`).join("")}</div>`;
+    const chips = `<div class="seg socseg">${[["friends", `Friends${nAdd ? ` (${nAdd})` : ""}`], ["msgs", `Messages${nDm ? ` (${nDm})` : ""}`], ["trades", `Trades${inc.length ? ` (${inc.length})` : ""}`], ["party", `Party${nParty ? ` (${nParty})` : ""}`], ["chat", `Chat${nChat ? ` (${nChat})` : ""}`], ...(typeof SIDEUI !== "undefined" ? [["faction", `Faction${SIDEUI.badge() ? " (!)" : ""}`]] : []), ["realm", "Realm"]].map(([k, l]) => `<button class="${socTab === k ? "on" : ""}" data-act="soctab" data-id="${k}">${l}</button>`).join("")}</div>`;
     const off = Store.online ? "" : `<p class="sub">You're playing offline. Go online (Map tab) to see friends and messages.</p>`;
     let body = "";
     if (socTab === "friends") {
@@ -2501,14 +2524,16 @@
         body = (conv.length ? conv.map((c) => { const n = SOCIAL.unreadFrom(S, dmDocs, c.id); return `<div class="item ${n ? "on" : ""}" data-act="fmsg" data-id="${esc(c.id)}" role="button" tabindex="0"><div class="t">${esc(c.name)}${n ? ` <b class="gold">· ${n} new</b>` : ""}<span>${c.mine ? "You: " : ""}${esc(c.last.slice(0, 70))}</span></div><span class="num sub">${new Date(c.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span></div>`; }).join("") : `<p class="sub">No messages yet.</p>`)
           + (more.length ? `<h3 style="margin-top:10px">Write to a friend</h3>${more.map(([id, f]) => `<div class="item"><div class="t">${esc(f.name)}</div><button class="btn sm" data-act="fmsg" data-id="${esc(id)}"> Write</button></div>`).join("")}` : "");
       }
+    } else if (socTab === "faction" && typeof SIDEUI !== "undefined") {
+      return `<div class="panel"><h2> Friends & messages</h2>${chips}${off}</div>${idPanel("faction", SIDEUI.panel())}`;   // sides.js: your side, rank, cloaks, the war
     } else if (socTab === "party" || socTab === "chat" || socTab === "realm") {
       // [journal] the people side that used to live in the Journal
       const x = socialBits();
       const blocks = socTab === "party" ? [["coop", coopUI ? coopUI.invitesHTML() : ""], ["party", x.party], ["people", x.people]]
         : socTab === "chat" ? [["chat", chatPanel()], ["world", x.world], ["news", x.news]]
-        : [["holds", holdsPanel()], ["clan", clanPanel()], ["ladder", x.ladder]];
+        : [["holds", holdsPanel()], ["ladder", x.ladder]];   // clans are gone: your side lives in the Faction tab (sides.js)
       const shown = blocks.filter(([, h]) => h && h.trim()).map(([id, h]) => idPanel(id, h));
-      const intro = { party: "Your party, co-op invites and everyone travelling near you.", chat: "Talk to everyone online, and what's happening in the world.", realm: "Who rules the holds, your clan, and the leaderboard." }[socTab];
+      const intro = { party: "Your party, co-op invites and everyone travelling near you.", chat: "Talk to everyone online, and what's happening in the world.", realm: "Who rules the holds for which side, and the leaderboard." }[socTab];
       return `<div class="panel"><h2> Friends & messages</h2>${chips}${off}<p class="sub">${intro}</p></div>${shown.join("") || `<div class="panel"><p class="sub">Nothing here yet.</p></div>`}`;
     } else {
       const outC = trades.filter((d) => d.from === S.id && d.status === "open"), onWay = trades.filter((d) => d.to === S.id && d.status === "open" && !SOCIAL.arrived(d));
@@ -2591,6 +2616,7 @@
       Store.remove("attacks", d.id);
       if (!r) continue;
       if (r.bag) Store.addBag(r.bag);
+      if (r.warHold) warPoint("pvp", r.warHold);   // sides.js: you beat off an attacker from another side
       persist(true); closeDungeon(); renderPanel(true);
       if (S.pickTemple && typeof PVPDEATH !== "undefined") { openModal(`<p>${esc(r.text)}</p>${PVPDEATH.pickHTML(S, esc)}`); continue; }
       showMessage(r.bad ? "On the road" : "Word reaches you", r.text, r.bad);
@@ -2628,13 +2654,21 @@
     if (Date.now() - lastAmbushCheck < 3000 || $("#modal")) return;
     lastAmbushCheck = Date.now();
     const me = [S.x, S.y], t = G.now();
-    const victim = others.find((o) => o.moving && !party?.members.some((m) => m.id === o.id) && G.pxDist(otherPos(o, t), me) <= MP.AMBUSH_PX && (o.safeUntil || 0) < t && !(S.ambushed || {})[o.id]);
+    const victim = others.find((o) => o.moving && !party?.members.some((m) => m.id === o.id) && G.pxDist(otherPos(o, t), me) <= MP.AMBUSH_PX && (o.safeUntil || 0) < t && !(S.ambushed || {})[o.id] && (typeof SIDES === "undefined" || !SIDES.canAttack(S, o, { ambush: true, party }).err));
     if (!victim) return;
     S.ambushed = { ...(S.ambushed || {}), [victim.id]: t };
     S.ambush = false;
     doAttack(victim, true);
   }
   function doAttack(card, ambush = false) {
+    if (typeof SIDES !== "undefined") {   // sides.js: soldiers of different sides may fight anywhere in the same hold (always asked first)
+      const c = SIDES.canAttack(S, card, { ambush, party, myPos: livePos(), theirPos: otherPos(card) });
+      if (c.err) return toast(c.err);
+      if (c.mode === "war") {
+        const go = () => tbCall(() => SIDES.attack(S, card, { ambush, pos: livePos() }), (r) => { if (r.won && r.warHold) warPoint("pvp", r.warHold); attackDone(r); });
+        return ambush || typeof SIDEUI === "undefined" ? go() : SIDEUI.confirmAttack(card, go);
+      }
+    }
     const err = ambush ? null : MP.canTarget(S, card, livePos(), otherPos(card));
     if (err) return toast(err);
     tbCall(() => MP.attack(S, card, { ambush, pos: livePos() }), (r) => attackDone(r));
@@ -3151,10 +3185,10 @@
   }
   /* [ux] Town sections in a few labelled groups, with a line on what the open one is for */
   const TOWN_GROUPS = [["Shops", ["general", "blacksmith", "wizard", "fence", "market", "stables"]], ["Services", ["inn", "train", "forge", "alchemy", "enchanter", "cook", "craft", "carriage", "hire"]],
-    ["Your home", ["home", "homes", "homestead"]], ["Guilds & jobs", ["jobs", "notice", "caravans", "hall", "mine", "streets"]], ["Fun", ["arena", "fish"]]];
+    ["Your home", ["home", "homes", "homestead"]], ["Guilds & jobs", ["jobs", "notice", "hunts", "caravans", "hall", "mine", "streets"]], ["Fun", ["arena", "fish"]]];
   const TOWN_DESC = { general: "Buy food, potions and supplies; sell almost anything.", blacksmith: "Weapons, armor, arrows and metal.", wizard: "Spell tomes, staffs and soul gems.", fence: "Buys stolen goods.", market: "Things other players are selling.", stables: "Buy a horse or a cart to travel and carry more.",
     inn: "Sleep to heal and get Rested; hear rumours.", train: "Pay to raise a skill (5 times per level).", forge: "Make, smelt and improve gear.", alchemy: "Mix ingredients into potions.", enchanter: "Learn and add enchantments.", cook: "Cook meals that heal and buff.", craft: "Design your own spells.", carriage: "Safe, fast rides to other cities.", hire: "Hire a follower who fights beside you.",
-    home: "Your house: a safe chest, a bed and a garden.", homes: "Visit other players' houses here.", homestead: "Land outside town: build your own house, stage by stage.", jobs: "Small paid jobs: clear, deliver, gather.", notice: "This week's world goals and rewards.", caravans: "Guard a caravan for pay.", hall: "A hall everyone builds together.", mine: "Dig ore with a pickaxe.", streets: "Pickpocket, check your bounty, talk to guards.",
+    home: "Your house: a safe chest, a bed and a garden.", homes: "Visit other players' houses here.", homestead: "Land outside town: build your own house, stage by stage.", hunts: "The Jarl's contracts on legendary beasts, and your bestiary.", jobs: "Small paid jobs: clear, deliver, gather.", notice: "This week's world goals and rewards.", caravans: "Guard a caravan for pay.", hall: "A hall everyone builds together.", mine: "Dig ore with a pickaxe.", streets: "Pickpocket, check your bounty, talk to guards.",
     arena: "Duel other players for a stake.", fish: "Cast a line and catch fish." };
   function townGroups(sections, names) {
     const used = new Set(), html = TOWN_GROUPS.map(([g, ids]) => { const here = ids.filter((t) => sections.includes(t)); here.forEach((t) => used.add(t)); return here.length ? [g, here] : null; }).filter(Boolean);
@@ -3165,16 +3199,16 @@
   function panelTown() {
     const l = S.location, types = l ? G.shopTypes(l) : [];
     if (!l || (!types.length && !TOWNS.isTown(l))) {
-      if (l && (DUNGEONS.enterable(l) || POWERS.STONE_AT[l] || l === "High Hrothgar" || (typeof PLACESTUFF !== "undefined" && PLACESTUFF.offers(l).length))) return placeHere();
-      return wildsFood() + `<div class="panel"><h2>${l ? esc(l) : "The wilds"}</h2><p class="sub">${l ? "There's nothing to buy here." : "You're out on the road."} Cities and towns have shops, inns, trainers, alchemy labs, forges and jobs.</p></div>`;
+      if (l && (DUNGEONS.enterable(l) || POWERS.STONE_AT[l] || l === "High Hrothgar" || (typeof PLACESTUFF !== "undefined" && PLACESTUFF.offers(l).length))) return (typeof LEGHUNT !== "undefined" ? LEGHUNT.wildHTML(S, esc) : "") + placeHere();
+      return (typeof LEGHUNT !== "undefined" ? LEGHUNT.wildHTML(S, esc) : "") + wildsFood() + `<div class="panel"><h2>${l ? esc(l) : "The wilds"}</h2><p class="sub">${l ? "There's nothing to buy here." : "You're out on the road."} Cities and towns have shops, inns, trainers, alchemy labs, forges and jobs.</p></div>`;
     }
     const open = G.shopsOpen() || (typeof RUMOURS !== "undefined" && RUMOURS.knocked(S, l)), wanted = TOWNS.wanted(S), hold = G.holdAt(WORLD.places[l]);   // knocked at night (rumours.js)
-    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") || HALLS.hasForge(S, l) || (typeof HSROOMS !== "undefined" && HSROOMS.station(S, "forge")) ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home", "homes", "market"] : []), ...(SMITH.MINES[l] ? ["mine"] : []), ...(l === SPELLCRAFT.TOWN ? ["craft"] : []), ...(CARAVANS.stopsAt(l) ? ["caravans"] : []), ...(l === HALL.TOWN ? ["hall"] : []), ...(HALLS.plotHere(l) || hallDocs.some((d) => d.town === l) || S.hall?.town === l ? ["halls"] : []), "notice", ...(TOWNS.INNS[l] ? ["cook"] : []), ...(l === ARENA.TOWN ? ["arena"] : []), ...(COOK.waterNear(WORLD.places[l]) ? ["fish"] : []), ...(ENCH.hasEnchanter(l) || (typeof HSROOMS !== "undefined" && HSROOMS.station(S, "enchanter")) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : []), ...(typeof SOL !== "undefined" ? SOL.sections(l) : []), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.sections(l) : []), ...(typeof HUNTGAME !== "undefined" ? HUNTGAME.sections(l) : [])];
+    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") || HALLS.hasForge(S, l) || (typeof HSROOMS !== "undefined" && HSROOMS.station(S, "forge")) ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home", "homes", "market"] : []), ...(SMITH.MINES[l] ? ["mine"] : []), ...(l === SPELLCRAFT.TOWN ? ["craft"] : []), ...(CARAVANS.stopsAt(l) ? ["caravans"] : []), ...(l === HALL.TOWN ? ["hall"] : []), ...(HALLS.plotHere(l) || hallDocs.some((d) => d.town === l) || S.hall?.town === l ? ["halls"] : []), "notice", ...(TOWNS.INNS[l] ? ["cook"] : []), ...(l === ARENA.TOWN ? ["arena"] : []), ...(COOK.waterNear(WORLD.places[l]) ? ["fish"] : []), ...(ENCH.hasEnchanter(l) || (typeof HSROOMS !== "undefined" && HSROOMS.station(S, "enchanter")) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : []), ...(typeof SOL !== "undefined" ? SOL.sections(l) : []), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.sections(l) : []), ...(typeof LEGHUNT !== "undefined" ? LEGHUNT.sections(l) : []), ...(typeof HUNTGAME !== "undefined" ? HUNTGAME.sections(l) : []), ...(typeof TOURNEYUI !== "undefined" ? TOURNEYUI.sections(l) : [])];
     const AU = typeof AREAUI !== "undefined" ? AREAUI : null;   // areaui.js: the Area tab opens on a board of grouped places
     if (AU && townShopAt !== l) { if (townShopAt != null) townShop = ""; townShopAt = l; }   // a new town opens on its board
     townShop = sections.includes(townShop) ? townShop : AU ? "" : sections[0];
-    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", halls: "\uE119 Halls & shops", notice: "\uE103 Jarl's bounty", homes: "\uE11C Neighbours", market: "\uE133 Market stalls", mine: "\uE12A Mine", craft: "\uE10A Spell crafting", caravans: "\uE13B Caravans", cook: "\uE148 Cooking pot", arena: "\uE101 The Arena", fish: "\uE146 Fishing", hunt: "\uE10C Hunting grounds", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `\uE11D ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}`, ...(typeof SOL !== "undefined" ? SOL.NAMES : {}), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.names(S, l) : {}) };
-    const townTop = `${typeof CIVILWAR !== "undefined" ? CIVILWAR.townLine(S, l) : ""}${typeof HOLDUI !== "undefined" ? HOLDUI.townLine(S, l) : ""}${wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : ""}`;
+    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", halls: "\uE119 Halls & shops", notice: "\uE103 Jarl's bounty", homes: "\uE11C Neighbours", market: "\uE133 Market stalls", mine: "\uE12A Mine", craft: "\uE10A Spell crafting", caravans: "\uE13B Caravans", cook: "\uE148 Cooking pot", arena: "\uE101 The Arena", fish: "\uE146 Fishing", hunt: "\uE10C Hunting grounds", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `\uE11D ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}`, ...(typeof SOL !== "undefined" ? SOL.NAMES : {}), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.names(S, l) : {}), ...(typeof TOURNEYUI !== "undefined" ? TOURNEYUI.names(S, l) : {}), ...(typeof LEGHUNT !== "undefined" ? LEGHUNT.names() : {}) };
+    const townTop = `${typeof CIVILWAR !== "undefined" ? CIVILWAR.townLine(S, l) : ""}${typeof HOLDUI !== "undefined" ? HOLDUI.townLine(S, l) : ""}${typeof TOURNEYUI !== "undefined" ? TOURNEYUI.townLine(S, l) : ""}${wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : ""}`;
     if (AU && !townShop) return `<div class="panel au-panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${townTop}${typeof RUMOURS !== "undefined" ? RUMOURS.townHTML(S, l, "", open) : ""}${AU.hub({ S, l, sections, names, open, hold })}<p class="sub au-gold">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
@@ -3188,6 +3222,7 @@
       note = "Sleep to heal fully and become Rested (skills improve 5% faster for 40 minutes; your own bed gives 10%). Buy a round and the locals talk." + (FEST.freeInn() ? "  New Life Festival: rooms are free!" : "");
       body = (S.vampire ? `<div class="item"><div class="t"> Feed on a sleeping traveller<span>Resets your hunger. Someone might wake up (bounty).</span></div><button class="btn sm danger" data-act="vfeed">Feed</button></div>` : "") + (FEST.freeInn() ? `<div class="item on"><div class="t"> The innkeeper's New Life gift<span>Once a day: a hot meal and a little gold</span></div><button class="btn sm pri" data-act="festgift">Take it</button></div>` : "") + `<div class="item"><div class="t">Rent a room<span>${G.rested(S) ? "You're already rested" : "Full health and Rested"}</span></div><span class="num gold">${TOWNS.roomPrice(S)}</span><button class="btn sm pri" data-act="inn" data-c="room" ${wanted ? "disabled" : ""}>Sleep</button></div>
         <div class="item"><div class="t">Buy a round, listen for rumours<span>Reveals ${G.P(S, "rumour_monger") ? "two places" : "a place"} you haven't found yet</span></div><span class="num gold">${TOWNS.rumourPrice ? TOWNS.rumourPrice(S) : G.P(S, "rumour_monger") ? 0 : TOWNS.RUMOUR}</span><button class="btn sm" data-act="inn" data-c="rumour">Listen</button></div>`;
+      body += CHARGEN.barberRow(S);   // a new look for a few coins (chargen.js)
       body += bardHTML(l);
     } else if (townShop === "train") {
       const n = TOWNS.trainedThisLevel(S);
@@ -3294,6 +3329,7 @@
       } else {
         note = "Your home. Things in the chest are safe even if you die on the road.";
         body = `${typeof HOMEART !== "undefined" ? HOMEART.mine(S, l) : ""}<div class="item"><div class="t">Your bed<span>Full health and Well Rested (+10% skills for 40 min)</span></div><button class="btn sm pri" data-act="homebed">Sleep</button></div>
+          ${CHARGEN.mirrorRow(S)}
           <div class="item"><div class="t">Garden<span>${TOWNS.gardenReady(S) ? "Ripe: harvest ingredients" : `Growing. Ready in ${Math.ceil(((h.garden || 0) + 7200 - G.now()) / 60)} min`}</span></div><button class="btn sm" data-act="harvest" ${TOWNS.gardenReady(S) ? "" : "disabled"}>Harvest</button></div>${typeof GATHER !== "undefined" ? GATHER.gardenHTML(S) : ""}
           ${(() => { const gs = myGifts().filter((g) => g.town === l); return gs.length ? `<h3 style="margin-top:12px"> Gifts at your door (${gs.length})</h3><div class="list">${gs.map((g) => `<div class="item on"><div class="t">From ${esc(g.fromName)}<span>${[g.gold ? `${g.gold} gold` : "", g.row && D.ITEMS[g.row.item] ? VISITS.itemName(g.row) + (g.row.qty > 1 ? ` ×${g.row.qty}` : "") : "", g.note ? `“${esc(g.note)}”` : ""].filter(Boolean).join(" · ")}</span></div><button class="btn sm pri" data-act="giftopen" data-id="${esc(g.id)}">Take in</button></div>`).join("")}</div>` : ""; })()}
           ${(() => { const st = MARKET.mine(stalls, S.id).filter((d) => d.town === l); return `<h3 style="margin-top:12px"> Your stall</h3><div class="item"><div class="t">${st.length ? `${st.length} thing${st.length > 1 ? "s" : ""} for sale<span>${esc(st.map((d) => MARKET.itemName(d.row)).slice(0, 3).join(", "))}${st.length > 3 ? "…" : ""}</span>` : "Nothing for sale<span>Sell things here even while you're away</span>"}</div><button class="btn sm" data-act="shop" data-id="market">Open stall</button></div>`; })()}
@@ -3327,6 +3363,10 @@
           <p class="sub" style="margin-top:6px">${pv ? `Result: ${esc(effName(enchDraft.eff))}. ${esc(ENCH.describe ? ENCH.describe(enchDraft.eff, pv.mag) : String(pv.mag))}${ENCH.WEAPON[enchDraft.eff] ? ` ${pv.cap} charge.` : ""}` : ""}</p>
           <button class="btn pri" data-act="enchant" style="width:100%" ${pv ? "" : "disabled"}>Enchant</button>`
           : CQ ? CQ.enchMissing(blanks.length, known.length, gems.length) : `<p class="sub">You need an unenchanted weapon, armor, ring or amulet, a known effect, and a filled soul gem (court wizards sell them).</p>`}`;
+    } else if ((townShop === "festival" || townShop === "pit") && typeof TOURNEYUI !== "undefined") {
+      ({ note, body } = TOURNEYUI.townHTML(S, townShop, l));
+    } else if (townShop === "hunts" && typeof LEGHUNT !== "undefined") {
+      ({ note, body } = LEGHUNT.townHTML(S, esc));
     } else if (townShop === "homestead" && typeof HOMESTEAD !== "undefined") {
       ({ note, body } = HOMESTEAD.townHTML(S, esc));
     } else if (townShop === "docks" && typeof SOL !== "undefined") {
@@ -3379,12 +3419,12 @@
         <div style="display:flex;gap:6px;width:100%;flex-wrap:wrap">${c.taken.includes(S.id) ? '<span class="sub">You took your share.</span>' : `<button class="btn sm pri" data-act="share" data-id="${esc(c.id)}">Take my share</button>`}<button class="btn sm danger" data-act="grab" data-id="${esc(c.id)}">Take everything</button></div></div>`; }).join("")}</div>`;
     const canAmbush = shared && !S.trip && !S.location && !S.dungeon;
     const travellers = `<div class="panel"><h2>Travellers</h2>${shared
-      ? (ppl.length ? `<div class="list">${ppl.map((o) => { const near = !MP.canTarget(S, o, me, o.pos);
-          return `<div class="item" style="flex-wrap:wrap">${HEROART.portrait(o, 38)}${o.look ? `<span class="pgear" title="What ${esc(o.name)} is wearing">${HEROART.figure({ look: o.look }, 30, 42, { bare: true })}</span>` : ""}<div class="t">${esc(o.name)}${inParty(o.id) ? " ⚑" : ""}<span>Level ${o.level} ${esc(D.RACES[o.race]?.name || "")}${typeof LEVELUP !== "undefined" ? LEVELUP.cardText(o) : ""} · ${esc(o.loc || G.holdAt(o.pos))}${o.moving ? " · travelling" : ""}${o.dungeon ? " · in a dungeon" : ""}${o.bounty ? ` · wanted (${o.bounty})` : ""}</span></div>
+      ? (ppl.length ? `<div class="list">${ppl.map((o) => { const near = !MP.canTarget(S, o, me, o.pos), war = typeof SIDES !== "undefined" && !inParty(o.id) && SIDES.canAttack(S, o, { party, myPos: me, theirPos: o.pos }).mode === "war", os = typeof SIDES !== "undefined" ? SIDES.of(o.id) : null;
+          return `<div class="item" style="flex-wrap:wrap">${HEROART.portrait(o, 38)}${os ? `<span class="sideico" title="${esc(SIDES.LIST[os].name)}">${SIDES.emblem(os, 16)}</span>` : ""}${o.look ? `<span class="pgear" title="What ${esc(o.name)} is wearing">${HEROART.figure({ look: o.look }, 30, 42, { bare: true })}</span>` : ""}<div class="t">${esc(o.name)}${inParty(o.id) ? " ⚑" : ""}<span>Level ${o.level} ${esc(D.RACES[o.race]?.name || "")}${typeof LEVELUP !== "undefined" ? LEVELUP.cardText(o) : ""} · ${esc(o.loc || G.holdAt(o.pos))}${o.moving ? " · travelling" : ""}${o.dungeon ? " · in a dungeon" : ""}${o.bounty ? ` · wanted (${o.bounty})` : ""}</span></div>
           <span class="num sub">${near ? "here" : o.d < 60 ? "nearby" : "~" + fmtMin(o.d * 1.1 / G.speed(S)) + " away"}</span>
           <div style="display:flex;gap:6px;width:100%;flex-wrap:wrap">${SOCIAL.isFriend(S, o.id) ? "" : `<button class="btn sm" data-act="fadd" data-id="${esc(o.id)}">＋ Friend</button>`}${inParty(o.id) ? "" : `<button class="btn sm" data-act="invite" data-id="${esc(o.id)}">Invite</button>`}
-          ${near ? `<button class="btn sm" data-act="trade" data-id="${esc(o.id)}">Trade</button>` : ""}${near && !inParty(o.id) ? `<button class="btn sm" data-act="pick" data-id="${esc(o.id)}" ${MP.pickWait?.(S, o.id) ? `disabled title="Try again in ${Math.ceil(MP.pickWait(S, o.id) / 60)} min"` : ""}>Pickpocket</button><button class="btn sm danger" data-act="attack" data-id="${esc(o.id)}">Attack</button>` : ""}</div></div>`; }).join("")}</div>
-          <p class="sub" style="margin-top:8px">To rob or attack someone you must be in the same place. Fights use their gear and stats. Killing someone in a town is always seen; out in the wilds, sometimes.</p>`
+          ${near ? `<button class="btn sm" data-act="trade" data-id="${esc(o.id)}">Trade</button>` : ""}${near && !inParty(o.id) ? `<button class="btn sm" data-act="pick" data-id="${esc(o.id)}" ${MP.pickWait?.(S, o.id) ? `disabled title="Try again in ${Math.ceil(MP.pickWait(S, o.id) / 60)} min"` : ""}>Pickpocket</button>` : ""}${(near || war) && !inParty(o.id) ? `<button class="btn sm danger" data-act="attack" data-id="${esc(o.id)}">Attack</button>` : ""}</div></div>`; }).join("")}</div>
+          <p class="sub" style="margin-top:8px">To rob someone you must be in the same place. Soldiers of rival sides (level 20+) can attack each other anywhere in the same hold. Fights use their gear and stats. Killing someone in a town is always seen; out in the wilds, sometimes.</p>`
         : `<p class="sub">No one else ${Store.mode === "p2p" ? "online right now. Send friends the app and they" : "yet. Share this page and friends"} appear here and on the map.</p>`)
       : APP ? `<p class="sub">This is the offline game: just you. Other players live in the online world.</p>${onlineBtn()}` : '<p class="sub">Shared saving isn\'t available in this view, so you\'re playing alone in this browser.</p>'}
       ${shared ? `<div class="item" style="margin-top:8px"><div class="t"> Lie in ambush<span>${S.ambush ? "Hidden by the road. The next traveller to pass close by gets a sneak attack." : canAmbush ? "Hide here off the road (you must be standing in the wilds). You're hidden from the map." : "Stop somewhere in the wilds first."}</span></div><button class="btn sm ${S.ambush ? "danger" : ""}" data-act="ambush" ${canAmbush || S.ambush ? "" : "disabled"}>${S.ambush ? "Stop" : "Hide"}</button></div>` : ""}</div>`;
@@ -3463,7 +3503,7 @@
   const idPanel = (id, h) => (h && /<div class="panel"/.test(h) ? h.replace(/<div class="panel"/, `<div id="j-${id}" class="panel"`) : `<div id="j-${id}">${h || ""}</div>`);
   /* where each section that used to be in the Journal lives now */
   const MOVED = { chat: ["social", "chat"], world: ["social", "chat"], news: ["social", "chat"], coop: ["social", "party"], party: ["social", "party"], people: ["social", "party"],
-    trades: ["social", "trades"], holds: ["social", "realm"], clan: ["social", "realm"], ladder: ["social", "realm"], stats: ["stats"], crimes: ["stats"], finds: ["library"], log: ["diary"], cleared: ["places"],
+    trades: ["social", "trades"], holds: ["social", "realm"], clan: ["social", "faction"], faction: ["social", "faction"], ladder: ["social", "realm"], stats: ["stats"], crimes: ["stats"], finds: ["library"], log: ["diary"], cleared: ["places"],
     event: ["world"], rumours: ["world"], wev: ["world"], bounty: ["log", "misc"], caravan: ["log", "misc"], guide: ["log", "misc"], quests: ["log", "active"] };
   /* [journal] Character → Stats: lifetime stats, crime, discoveries and the library (moved out of the Journal) */
   const charNav = (cur) => typeof MENUS !== "undefined" ? "" : `<div class="seg charnav">${[["hero", "Character"], ["stats", "Stats"], ["diary", "Diary"]].map(([k, l]) => `<button class="${cur === k ? "on" : ""}" data-act="tabgo" data-id="${k}">${l}</button>`).join("")}</div>`;
@@ -3664,6 +3704,11 @@
         if (ok) CG.run("rune", { skill: G.skill(S, "Enchanting"), skillName: "Enchanting", what: `${ENCH.ARMOR[d.eff]?.[0] || ENCH.WEAPON[d.eff]?.[0] || ""} on ${D.ITEMS[G.invRow(S, d.item).item].name}` }, go); else go(CG.QUICK); break; }
       case "stone": say(POWERS.takeStone(S, b.dataset.id)); publishCard(); break;
       case "sail": { const err = SOL.sail(S); if (err) return toast(err); if (typeof IMM !== "undefined") IMM.loading(`${S.trip.ship[0].toUpperCase() + S.trip.ship.slice(1)} casts off for ${S.trip.destName}…`); SOUND.fx("coin"); persist(true); toast(` You set sail for ${S.trip.destName}. About ${fmtMin(S.trip.total)} at sea.`); tab = "map"; renderTabs(); renderPanel(true); break; }
+      case "lhact": {   // legendary hunts (leghunt.js)
+        const r = LEGHUNT.act(S, b.dataset.id, b.dataset.c); if (r.err) return toast(r.err); persist(true); renderPanel(true);
+        if (r.event) { openEvent(); ppUI?.leaderHalt("event", r.title || "", S.trip?.event?.text || ""); } else if (r.title) showMessage(r.title, r.text); else if (r.text) toast(r.text);
+        break;
+      }
       case "hsact": {
         if (b.dataset.id === "defend") { const c = b.dataset.c; tbCall(() => HOMESTEAD.act(S, "defend", c), (r) => { if (r.err) return toast(r.err); persist(true); renderPanel(true); showFightResult(r); }); break; }   // a raid on your homestead (hsrooms.js)
         const r = HOMESTEAD.act(S, b.dataset.id, b.dataset.c); if (r.err) return toast(r.err); if (r.text) SOUND.fx(r.fx || "coin"); persist(true); renderPanel(true); if (r.title) showMessage(r.title, r.text); else if (r.text) toast(r.text); break; }
@@ -3690,6 +3735,7 @@
         if (typeof FXART !== "undefined" && /^WULD/.test(m || "")) FXART.cast("whirlwind", { from }); break; }
       case "enter": { if (ppUI) { const pm = ppUI.beforeEnter(); if (pm === "check") { renderPanel(true); break; } if (pm) return toast(pm); } const err = DUNGEONS.enter(S); if (err) return toast(err); if (typeof IMM !== "undefined") IMM.loading(`Entering ${S.dungeon?.place || "the dungeon"}…`); selected = null; renderPicked(); dunNote = null; persist(true); renderDungeon(); break; }
       case "dun": renderDungeon(); break;
+      case "ddtier": { const m = DEEPDELVE.pick(S, b.dataset.place, b.dataset.t); if (m) return toast(m); persist(); renderPanel(true); break; }   // deepdelve.js: Veteran / Legendary / Mythic
       case "droom": if (pvUI && pvUI.gate("way", b.dataset.c)) break; dungeonRoom(b.dataset.c); break;
       case "pvv": case "pvnow": if (pvUI) pvUI.act(b); break;
       case "dact": if (pvUI && pvUI.gate("act", b.dataset.c)) break; dunChoice(b.dataset.c); break;
@@ -3872,6 +3918,7 @@
         const v = verseDocs.find((x) => x.id === b.dataset.id), r = BARDS.like(S, v, likeDocs); if (r.err) return toast(r.err);
         Store.put("verselikes", r.id, r.doc); if (!likeDocs.some((x) => x.id === r.id)) likeDocs.push({ ...r.doc, id: r.id }); SOUND.fx("click"); toast(` You cheer for ${v.name}'s verse.`); renderPanel(true); break; }
       case "bardsing": singSong(); break;
+      case "barber": case "mirror": openLookChange(a); break;
       case "inn": say(b.dataset.c === "room" ? TOWNS.rentRoom(S) : TOWNS.rumour(S)); break;
       case "train": say(TOWNS.train(S, b.dataset.id)); publishCard(); break;
       case "alch": { const id = +b.dataset.id; alchSel = alchSel.includes(id) ? alchSel.filter((x) => x !== id) : [...alchSel, id].slice(-3); renderPanel(true); break; }
