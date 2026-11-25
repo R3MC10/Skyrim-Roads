@@ -98,6 +98,18 @@ async def main():
                 await q.evaluate("TABMENU.closeHub && TABMENU.closeHub(); __ui.go('stars')"); await q.wait_for_timeout(250); await q.evaluate(clear)
                 await q.evaluate("""document.querySelector('#side .tw-card[data-id="One-Handed"]')?.click()"""); await q.wait_for_timeout(300)
                 await q.wait_for_selector("#side .tw-big svg[data-sky='One-Handed']", timeout=5000)
+                await q.wait_for_timeout(300)
+                # perksky: it opens on a perk you can take, the hint sits under the sky, every star is easy to hit
+                sky = await q.evaluate("""(()=>{const box=document.querySelector('#side .tw-big'), r=box.getBoundingClientRect();
+                  const vis={l:Math.max(r.left,0),t:Math.max(r.top,0),r:Math.min(r.right,innerWidth),b:Math.min(r.bottom,innerHeight)};
+                  const can=[...box.querySelectorAll('.st.can circle.core')].map(c=>c.getBoundingClientRect()).filter(c=>c.left>=vis.l&&c.right<=vis.r&&c.top>=vis.t&&c.bottom<=vis.b).length;
+                  const h=document.querySelector('.tw-hint2')?.getBoundingClientRect(); const over=h?!(h.bottom<=r.top||h.top>=r.bottom||h.right<=r.left||h.left>=r.right):true;
+                  const hs=[...box.querySelectorAll('circle.hit[data-sk-perk]')].map(c=>c.getBoundingClientRect()), small=hs.filter(b=>b.width<44||b.height<44).length;
+                  return {can, ncan:box.querySelectorAll('.st.can').length, over, n:hs.length, small, stars:box.querySelectorAll('g.st').length};})()""")
+                ok(sky["ncan"] > 0 and sky["can"] > 0, f"phone: a perk you can take is in view when One-Handed opens ({sky['can']}/{sky['ncan']})")
+                ok(not sky["over"], "phone: the 'Tap a star' hint sits under the sky, not over it")
+                ok(sky["n"] == sky["stars"] and sky["small"] == 0, f"phone: every star has a 44px hit target ({sky['n']} stars, {sky['small']} too small)")
+                await q.screenshot(path=OUT + "layout_phone_open.png")
                 tips = await q.evaluate("document.querySelectorAll('#side .tw-big [data-tip-k]').length")
                 ok(tips == 0, f"phone: no floating tooltips on the stars ({tips})")
                 await q.evaluate("SKYUI.setZoom(document.querySelector('#side .tw-big'), 0.6)")
