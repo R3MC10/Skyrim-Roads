@@ -423,6 +423,7 @@ const TB = (() => {
     applyRemote(al, r) {
       const f = this.f;
       if (!r || !al || al.down) return;
+      if (typeof PARTYSPELLS !== "undefined") PARTYSPELLS.learn(r.spells, f.s);   // the crafted spells they cast (partyspells.js)
       const name = al.name, b = f.ehp, sameFoe = r.wave == null || r.wave === this.wave;
       if (sameFoe && r.fs) for (const k of FOE_KEYS) if (k in r.fs && k !== "ehp0") f[k] = r.fs[k] && typeof r.fs[k] === "object" ? clone(r.fs[k]) : r.fs[k];
       if (sameFoe && typeof r.e0 === "number" && typeof r.ehp === "number") f.ehp = b - clamp(r.e0 - r.ehp, 0, Math.max(0, b));
@@ -482,7 +483,7 @@ const TB = (() => {
       const FI = typeof FOEINTENT !== "undefined" ? FOEINTENT : null;
       if (FI) FI.next(this);   // foeintent.js: the target its intent showed (healers first is part of that roll)
       if (typeof REACT !== "undefined") REACT.foePre(this);   // Intercept: a blow meant for a friend comes to you
-      else if (f.allies.length && !f.coverAl) { const h = f.allies.find((a) => !a.down && a.player && (a.role === "healer" || a.heals > 0)); if (h && Math.random() < 0.5) f.coverAl = h; }
+      else if (!FI && f.allies.length && !f.coverAl) { const h = f.allies.find((a) => !a.down && a.player && (a.role === "healer" || a.heals > 0)); if (h && Math.random() < 0.5) f.coverAl = h; }
       let act = null;   // the move it shows, by name (" Venom Spit → Meeko"): the log, the banner and the scene say it as it happens
       try { if (typeof FIGHTREAD !== "undefined" && !this.mirror) act = FIGHTREAD.actName(FIGHTREAD.intents(this)[0], this); } catch (x) { act = null; }
       const guards = f.allies.filter((a) => a.guard || a.tbGuard); guards.forEach((a) => { a._red = a.red; a.red = Math.min(0.85, (a.red || 0) + (a.guard ? 0.4 : 0) + (a.tbGuard || 0)); });   // tbGuard: guard a teammate kept on their own phone
@@ -1017,7 +1018,7 @@ const TB = (() => {
     return { v: 2, foeE: e, fs, kind: sess.kind, hitters: sess.hitters || 0, roster,
       order: sess.order.map((o) => ({ id: o.id, name: o.name, init: o.init, pid: o.al?.pid || null })), idx: sess.idx,
       cur: sess.cur ? { id: sess.cur.id, name: sess.cur.name, pid: sess.cur.al?.pid || null } : null, evs,
-      escaped: sess.done ? !!f.escaped : null };
+      escaped: sess.done ? !!f.escaped : null, ...(typeof PARTYSPELLS !== "undefined" ? PARTYSPELLS.forRecord(sess) : {}) };   // crafted spells cast in this fight (partyspells.js)
   }
   function remoteFor(store, myId) {
     if (!store || typeof store.put !== "function") return null;
