@@ -4616,8 +4616,8 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
   .m2-dir span{display:inline;font-size:13px}
 }
 /* the phone tooltip as a bottom sheet */
-.tip.tt-sheet{position:fixed;left:0;right:0;top:auto;bottom:0;width:100%;max-width:none;min-height:35vh;max-height:45vh;overflow-y:auto;overscroll-behavior:contain;padding:14px 16px calc(16px + env(safe-area-inset-bottom,0px));font-size:16px;line-height:1.4;border-radius:0;border-left:0;border-right:0;border-bottom:0;border-top:1px solid rgba(226,187,100,.7);box-shadow:0 -12px 32px rgba(0,0,0,.7);pointer-events:auto;transform:translateY(12px);transition:opacity .14s,transform .14s}
-.tip.tt-sheet.on{transform:none}
+.tip.tt-sheet{position:fixed;left:0;right:0;top:auto;bottom:0;width:100%;max-width:none;min-height:35vh;max-height:45vh;overflow-y:auto;overscroll-behavior:contain;padding:14px 16px calc(16px + env(safe-area-inset-bottom,0px));font-size:16px;line-height:1.4;border-radius:0;border-left:0;border-right:0;border-bottom:0;border-top:1px solid rgba(226,187,100,.7);box-shadow:0 -12px 32px rgba(0,0,0,.7);pointer-events:none;transform:translateY(12px);transition:opacity .14s,transform .14s}
+.tip.tt-sheet.on{transform:none;pointer-events:auto}
 .tip.tt-sheet::after{display:none}
 .tip.tt-sheet::before{content:"";display:block;width:40px;height:4px;margin:-4px auto 10px;border-radius:2px;background:rgba(236,230,214,.28)}
 @media (prefers-reduced-motion:reduce){.tip.tt-sheet{transition:none;transform:none}.au-closed>summary::after,.socmore-d>summary::after{transition:none}}

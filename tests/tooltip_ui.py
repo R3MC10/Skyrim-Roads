@@ -149,7 +149,9 @@ async def phone(b, style, errs):
     row = f"#sky .sky-row[data-id='{sid}']"
     await hold(pg, cdp, row, "inventory_sword", style, "Steel Sword")
     ok(await pg.query_selector(f"{row}.sel") is None, f"{style} phone: holding the row did not select it")
-    # a plain tap still selects it, and lifting hides any box
+    # on a phone the details stay up as a bottom sheet until a tap elsewhere; close it, then a plain tap still selects
+    # the row, and lifting shows no box
+    await pg.evaluate("TIP.hide()"); await pg.wait_for_timeout(250)
     await tap(pg, cdp, row)
     ok(await pg.query_selector(f"{row}.sel") is not None, f"{style} phone: a normal tap still selects the row")
     bx = await pg.evaluate(BOX); ok(bx is None, f"{style} phone: a tap shows no tooltip" + (f" got {bx['text'][:60]!r}" if bx else ""))
