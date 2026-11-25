@@ -60,7 +60,7 @@ const FIGHTPOS = (() => {
     return out;
   }
 
-  /* o: { W, Hh, l, r (the visible band, stage px), groundY, ride (you on a horse), allies: [{ name, kind, ride }],
+  /* o: { W, Hh, l, r (the visible band, stage px), t (the visible top, stage px: under the turn strip), groundY, ride (you on a horse), allies: [{ name, kind, ride }],
           foe: { kind, back, front, h } (sizes optional), waiting: foes still to come, summon: kind or null, maxWait }
      → { s, gy, l, r, hero, foe, allies, flyers, summon, waiting, more, rows, tag } — every figure { x, y (feet), sc,
        top (head), left, right } in stage px */
@@ -73,7 +73,8 @@ const FIGHTPOS = (() => {
     const minFs = fz[2] >= 90 ? Math.min(1, (1.1 * HERO[2]) / fz[2]) : 0.8;   // a dragon or a giant always stays bigger than you
     let fs = 1;
     if ((fz[0] + fz[1]) * s > 0.6 * BW) fs = Math.max(minFs, (0.6 * BW) / ((fz[0] + fz[1]) * s));
-    if (fz[2] * s * fs > gy - Hh * 0.1) fs = Math.min(fs, (gy - Hh * 0.1) / (fz[2] * s));
+    const tv = Math.max(Hh * 0.1, (o.t || 0) + 4 * s);   // [magicaim] the visible top: under the turn strip when the stage slid up
+    if (fz[2] * s * fs > gy - tv) fs = Math.min(fs, Math.max(0.35, (gy - tv) / (fz[2] * s)));
     const wOff = (q) => (o.waiting > 0 ? 0.5 * (fz[0] + fz[1]) * q * s : 0);   // room for the next one to peek out behind it
     let fx = Math.min(l + BW * 0.74, r - pad - fz[0] * fs * s - wOff(fs));
     // ---- you: a quarter in, further in when people stand behind you, never into the foe
