@@ -2,7 +2,8 @@
    Loaded before i18n.js. */
 var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 Object.assign(I18N_EXTRA.words, {
-  "Painted fighters that really move": "Malowani wojownicy, którzy naprawdę się ruszają",
+  "Painted riders on the road and on the map": "Malowani jeźdźcy w drodze i na mapie",
+  "Painted fighters that really move":"Malowani wojownicy, którzy naprawdę się ruszają",
   "In fights you, your party mates and your followers are now painted like the foes, in leather, iron or steel to match what you wear.":
     "W walce ty, twoja drużyna i twoi towarzysze jesteście teraz namalowani jak wrogowie, w skórze, żelazie albo stali, zależnie od tego, co nosisz.",
   "They move joint by joint: a sword swing winds up behind the head and cuts through, a power attack sinks low, two-handers swing wide, bows draw and loose, spells glow in the hand, shields block and bash.":

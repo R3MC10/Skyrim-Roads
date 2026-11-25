@@ -24,7 +24,7 @@ const BLACKREACH = (() => {
       ambush: E("Chaurus reaper", 520, 48, ["beast", "insect"]),
       text: "Giant mushrooms glow blue and green over a field of crimson flowers. Something clicks in the dark between them." },
     city: { name: "The Silent City", x: 0.59, y: 0.28, kind: "fight", rec: 21, vault: true, links: ["warren", "mzark", "hall"],
-      foe: E("Silent City guardians", 440, 37, ["construct", "elite"]), gold: [80, 180], loot: [["dwemer_gear", 0.7], ["dwemer_strut", 0.3], ["dwarven_mace", 0.15]],
+      foe: E("Silent City guardians", 410, 35, ["construct", "elite"]), gold: [80, 180], loot: [["dwemer_gear", 0.7], ["dwemer_strut", 0.3], ["dwarven_mace", 0.15]],
       text: "Bronze towers, empty streets. The guardians still walk their rounds after four thousand years." },
     mzark: { name: "Tower of Mzark", x: 0.83, y: 0.15, kind: "tower", links: ["city", "dynamo"],
       text: "A lens of gold and glass the size of a barn, aimed at a great glowing orb that hangs from the cavern roof." },

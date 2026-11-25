@@ -26,12 +26,12 @@ const MOUNTFIGHT = (() => {
   const HB = typeof HORSEBACK !== "undefined" ? HORSEBACK : null;
   const N = {
     mountSp: 20, steadySp: 5,
-    horseP: { base: 0.1, foot: 0.05, reach: 0.18, big: 0.22 },   // a foe goes for your horse instead of you
+    horseP: { base: 0.1, foot: 0.03, reach: 0.18, big: 0.22 },   // a foe goes for your horse instead of you
     shy: 0.2,                                         // ...and the horse shies away
     knock: { reach: 0.06, big: 0.08 },                // a spear, an arrow, a spell or a giant drags you out of the saddle
-    dodge: 0.1,                                       // swords and axes on foot can't reach you well
+    dodge: 0.02,                                      // swords and axes on foot can't reach you well
     fall: 0.05, stagAp: 1,   // stagAp: moves lost on your next turn
-    bowMiss: 0.15, twoH: 0.85, trample: 0.12, trampleStag: 0.25, chargeStag: 0.25,
+    bowMiss: 0.15, twoH: 0.85, trample: 0.12, trampleStag: 0.25, chargeStag: 0.15,
     getUp: 0.25,                                      // a knocked-down horse gets back up after the fight with this much health
     allyHp: 200,
   };

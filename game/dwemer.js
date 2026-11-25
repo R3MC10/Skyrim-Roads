@@ -14,7 +14,7 @@
    - Party: only the leader turns the lexicon or the valves; party members see the result. Dungeon stages are ordinary
      clears (co-op runs, loot vote at the end). */
 const DWEMER = (() => {
-  const E = (name, health, damage, tags, extra = {}) => ({ name, health: Math.round(health * 0.84), damage: Math.round(damage * 0.9), tags, level: 10, danger: "high", gold: [0, 0], text: "", hitCap: 0.36, ...extra });   // as dawnguard.js: no blow takes more than 36% of your health
+  const E = (name, health, damage, tags, extra = {}) => ({ name, health: Math.round(health * 0.84), damage: Math.round(damage * 0.84), tags, level: 10, danger: "high", gold: [0, 0], text: "", hitCap: 0.36, ...extra });   // as dawnguard.js: no blow takes more than 36% of your health
   const DOM = typeof document !== "undefined";
   const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const pfx = (s, k) => (typeof PFX !== "undefined" ? PFX.num(s, k) : 0);
