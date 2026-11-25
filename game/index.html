@@ -4527,6 +4527,12 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 .mapbtns .ridebtn{display:grid;place-items:center}
 .mapbtns .ridebtn.hide{display:none}
 .mapbtns .ridebtn.on{color:#ffe2a8;background:rgba(58,40,18,.88);box-shadow:inset 0 0 0 1px rgba(226,187,100,.7),0 0 10px rgba(226,187,100,.35)}
+/* fightctl.js: who gets a heal - name buttons in the aim bar (an open menu covers the portraits on phones) */
+#tbf .fc-aimbar{flex-wrap:wrap}
+#tbf .fc-aimbar em{font-style:normal}
+#tbf .fc-aimbar .fc-whos{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px}
+#tbf .fc-aimbar .fc-who{min-height:40px;padding:6px 14px;border-radius:8px;border:1px solid rgba(226,187,100,.6);background:rgba(58,40,18,.9);color:#f3d98b;font:inherit;font-weight:600;cursor:pointer}
+#tbf .fc-aimbar .fc-who:active{background:rgba(96,66,24,.95)}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -4819,6 +4825,7 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 <script src="i18n_herorig.js"></script>
 <script src="i18n_folsex.js"></script>
 <script src="i18n_qaside.js"></script>
+<script src="i18n_qafight.js"></script>
 <script src="i18n_riding.js"></script>
 <script src="i18n_bugreport.js"></script>
 <script src="i18n_paintedmap.js"></script>

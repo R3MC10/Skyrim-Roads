@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b239-qafight", build: 239, date: "25 Nov 2026", title: "Fight fixes", items: [
+      "Fixed: on phones, casting a heal with a follower along asked you to tap a portrait, but the Magic menu covered every portrait. The bar at the top now has a button for each person you can heal.",
+      "Fixed: if the last foe fell between your moves, End turn and every other button could do nothing and the fight never ended. Any tap now finishes the fight.",
+      "Fixed: more of the fight screen is in Polish (choosing who gets a heal, Your turn, Dual, the Magic and Items hints).",
+    ] },
     { id: "b238-qaside", build: 238, date: "25 Nov 2026", title: "Company fixes", items: [
       "Fixed: tapping Found twice quickly could pay for the company twice.",
       "Fixed: tapping Put in twice quickly could put the same gold in the treasury twice and leave your purse below zero.",
