@@ -509,7 +509,7 @@ const SMITHGAME = (() => {
     // the heat strip (screen space): colour of the metal, the gold band, where it is now
     if (ph === "heat" || ph === "hammer" || ph === "quench" || ph === "carry") {
       const quench = ph === "quench" || ph === "carry";
-      gauge(g, w, h, S.temp, quench ? S.T.qlo : S.T.lo, quench ? S.T.qhi : S.T.hi, quench ? LX("Quench at cherry red") : LX("Forging heat"));
+      gauge(g, w, h, S.temp, quench ? S.T.qlo : S.T.lo, quench ? S.T.qhi : S.T.hi, quench ? LX("Quench at cherry red") : LX("Forging heat"), quench);
     }
     if (ph === "hammer" || ph === "carry") pips(g, w, h, S);
   }
@@ -564,8 +564,9 @@ const SMITHGAME = (() => {
     g.lineWidth = Math.max(px(3), 6); g.strokeStyle = `rgba(255,248,230,${0.45 + 0.55 * near})`; g.shadowColor = "#ffd27a"; g.shadowBlur = 12;
     g.beginPath(); g.arc(p.x, p.y, R, 0, Math.PI * 2); g.stroke(); g.shadowBlur = 0;
   }
-  function gauge(g, w, h, temp, lo, hi, label) {
-    const gw = Math.min(560, w - 32), gh = w < 500 ? 12 : 14, x = (w - gw) / 2, y = w < 500 ? 30 : 36;
+  function gauge(g, w, h, temp, lo, hi, label, side) {
+    // over the barrel on wide screens the tongs and blade come in from the top right: the strip moves to the left
+    const gw = Math.min(560, w - 32, side && w >= 500 ? w * 0.4 : 1e9), gh = w < 500 ? 12 : 14, x = side && w >= 500 ? 26 : (w - gw) / 2, y = w < 500 ? 30 : 36;
     g.fillStyle = "rgba(8,6,5,.66)"; roundRect(g, x - 10, y - 24, gw + 20, gh + 44, 10); g.fill();
     const gr = g.createLinearGradient(x, 0, x + gw, 0); for (let i = 0; i <= 10; i++) gr.addColorStop(i / 10, heatCSS(i / 10));
     g.fillStyle = gr; roundRect(g, x, y, gw, gh, gh / 2); g.fill();
