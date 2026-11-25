@@ -64,6 +64,10 @@
                                          at (0.5, 0.40): iron steel nordic dwemer noble. GPT art, trimmed, 1.5x Lanczos, WebP q86.
      tool-lockpick            933×80     the pick, horizontal, hook tip on the right; tool-tension-wrench 705×116, bend on the right.
                                          Missing files: lockgame.js draws the lock and tools in code.
+     mg-hunting-bg            2048×1152  painted misty clearing for the hunting mini-game (huntart.js), layered for parallax. WebP q84.
+     animal-<slug>            ~500-720   painted game animals for hunting (huntart.js): transparent, side view facing right,
+                                         trimmed, WebP q88. slugs: deer elk fox hare (snow fox borrows the fox, bleached).
+                                         Cut into body/head/ear/tail by huntart.js RIG; any other animal keeps the ink drawing.
      ui-panel                 1024×1024  tileable dark panel texture
      ui-parchment             1024×1024  tileable parchment texture
      ui-compass               1254×1254  transparent compass rose
