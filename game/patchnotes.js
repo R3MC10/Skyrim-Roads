@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b340-rewards", build: 340, date: "25 Nov 2026", title: "Rewards that feel like rewards", items: [
+      "Loot, gold and skill practice now share one quiet line at the top, like \"+24 gold · +15 One-Handed · Iron Dagger ×2\". What comes together is added up, and during a fight it waits and comes out as one line after.",
+      "Better items on that line show their name in their rarity colour.",
+      "A short toast tells you when you pick up something better than what you wear, learn a spell or get a new word for your shouts.",
+      "Big moments get a full screen: a level that opens something new (\"LEVEL 4 · Smithing unlocked\"), your first follower, your first horse, your first shout. Legendary finds, your first dragon and your own clan too.",
+      "These never pop up in the middle of a fight, a mini-game, a party vote or a dungeon: they wait until you're done, and only one shows at a time.",
+      "New first quests for smithing, gathering, followers, horses and your first proper dungeon: one step each, with a small useful reward. Start them from the big screen.",
+      "Under your level bar you now see what the next level brings.",
+    ] },
     { id: "b339-fightfixes", build: 339, date: "25 Nov 2026", title: "Small fixes on the road and in hero creation", items: [
       "A new quest popping up no longer wipes the choices of a road encounter (Pay, Talk, Fight...). It waits until you've made your pick.",
       "On small phones the round compass button no longer sits on your health, magicka and stamina bars.",

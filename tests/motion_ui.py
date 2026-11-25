@@ -55,7 +55,7 @@ async def run(b, style, reduce=False, plain=False):
     res["stagger"] = await pg.evaluate("(()=>{document.querySelector('#tabs [data-tab=log]').click(); return document.querySelectorAll('#side .mo-st').length})()")
     await pg.wait_for_timeout(800)
     # level up constellation
-    await pg.evaluate("()=>POLISH.levelUp(2)")
+    await pg.evaluate("()=>MOTION.celebrate()")
     await pg.wait_for_timeout(700)
     res["const"] = await pg.evaluate("window.__seen.has('mo-const')")
     if not reduce and not plain: await pg.screenshot(path=f"mo_level_{tag}.png")
