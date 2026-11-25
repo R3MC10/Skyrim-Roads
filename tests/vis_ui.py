@@ -3,6 +3,8 @@ Usage: python3 vis_ui.py PORT"""
 import asyncio, sys, io
 from PIL import Image
 from playwright.async_api import async_playwright
+_SHOTS = (__import__("os").environ.get("SHOTS") or __import__("os").path.join(__import__("tempfile").gettempdir(), "rotn_shots")).replace("\\", "/").rstrip("/") + "/"   # screenshots: $SHOTS or the temp folder
+__import__("os").makedirs(_SHOTS, exist_ok=True)
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 fails = []
 def ok(c, m):
@@ -15,7 +17,7 @@ def png(w, h, col, alpha=False):
 
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
+        b = await p.chromium.launch(executable_path=(__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None)), args=["--no-sandbox"])
         errs = []
         for style in ["ink"]:
             # --- 1. no picture files: everything falls back to drawn art
@@ -74,7 +76,7 @@ async def main():
             ok(await pg.evaluate("()=>!!document.querySelector('#sky .nm.q-superior')"), f"[{style}] Elven Bow listed in superior blue")
             await pg.evaluate("()=>document.querySelector('#sky [data-act=uxhelp]')?.click()"); await pg.wait_for_timeout(300)
             ok(await pg.evaluate("()=>!!document.querySelector('#sky .cclegend')"), f"[{style}] colour key in the ⓘ help")
-            await pg.screenshot(path=f"/home/claude/tests/vis_{style}.png")
+            await pg.screenshot(path=f"{_SHOTS}vis_{style}.png")
             await ctx.close()
         ok(not errs, f"no page errors {errs[:3]}")
         await b.close()

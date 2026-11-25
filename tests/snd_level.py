@@ -6,7 +6,7 @@ INIT = """
 """
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox","--autoplay-policy=no-user-gesture-required"])
+        b = await p.chromium.launch(executable_path=(__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None)), args=["--no-sandbox","--autoplay-policy=no-user-gesture-required"])
         pg = await b.new_page(viewport={"width": 390, "height": 844})
         await pg.add_init_script(INIT)
         await pg.goto("http://localhost:8765/index.html?p=snd9"); await pg.wait_for_timeout(2000)

@@ -8,7 +8,7 @@ from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 LANG = os.environ.get("LANG_UI", "en")
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_sides") + os.sep; os.makedirs(OUT, exist_ok=True)
-CHROME = os.environ.get("CHROME", "/usr/bin/google-chrome")
+CHROME = (__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None))
 fails = []
 def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)
@@ -23,7 +23,7 @@ CASES = [("phone_ink", 390, 844, "ink"), ("pc_ink", 1366, 900, "ink")]
 
 async def main():
     async with async_playwright() as p:
-        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
+        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if CHROME and os.path.exists(CHROME) else {}
         b = await p.chromium.launch(**kw)
         errs = []
         for base, w, h, style in CASES:

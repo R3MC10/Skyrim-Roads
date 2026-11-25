@@ -4,9 +4,11 @@
 # usage: python3 chargen_ui.py [port] [out_dir]   (serve ../game on the port)
 import asyncio, sys, os, json
 from playwright.async_api import async_playwright
+_SHOTS = (__import__("os").environ.get("SHOTS") or __import__("os").path.join(__import__("tempfile").gettempdir(), "rotn_shots")).replace("\\", "/").rstrip("/") + "/"   # screenshots: $SHOTS or the temp folder
+__import__("os").makedirs(_SHOTS, exist_ok=True)
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 HOST = os.environ.get("HOST", "localhost")
-OUT = sys.argv[2] if len(sys.argv) > 2 else os.environ.get("OUT", "/home/claude/tests/")
+OUT = sys.argv[2] if len(sys.argv) > 2 else os.environ.get("OUT", _SHOTS)
 os.makedirs(OUT, exist_ok=True)
 SIZES = [("phone", 390, 844, 3, "khajiit"), ("pc", 1920, 1080, 1, "nord"), ("wide", 2560, 1080, 1, "argonian")]
 TABS = ["race", "body", "head", "face", "hair", "marks", "start"]

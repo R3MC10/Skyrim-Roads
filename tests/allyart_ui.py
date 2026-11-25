@@ -2,9 +2,11 @@
 import asyncio, sys, io, json, re
 from playwright.async_api import async_playwright
 from PIL import Image, ImageDraw
+_SHOTS = (__import__("os").environ.get("SHOTS") or __import__("os").path.join(__import__("tempfile").gettempdir(), "rotn_shots")).replace("\\", "/").rstrip("/") + "/"   # screenshots: $SHOTS or the temp folder
+__import__("os").makedirs(_SHOTS, exist_ok=True)
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8842"
-OUT = "/home/claude/tests/"
-JS = re.search(r'JS = r"""(.*?)"""', open(OUT + "fight2_ui.py").read(), re.S).group(1)   # the fight-scene helpers (__f2) from the fight animation test
+OUT = _SHOTS
+JS = re.search(r'JS = r"""(.*?)"""', open(__import__("os").path.join(__import__("os").path.dirname(__import__("os").path.abspath(__file__)), "fight2_ui.py"), encoding="utf-8").read(), re.S).group(1)   # the fight-scene helpers (__f2) from the fight animation test
 FRAMES = [200, 560, 700, 1500]
 # (label, line action, my line, allies)
 CASES = [
@@ -36,7 +38,7 @@ def sheet(rows, path, title):
 
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
+        b = await p.chromium.launch(executable_path=(__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None)), args=["--no-sandbox"])
         errs = []
         for style in ["ink"]:
             ctx = await b.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2)

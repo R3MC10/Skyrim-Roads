@@ -1,4 +1,5 @@
-/* i18n_gather.js: Polish for gathering (gather.js) and its patch notes. Loaded after i18n.js. [OURS] */
+/* i18n_gather.js: Polish for gathering (gather.js) and its patch notes. Loaded before i18n.js (lines go in I18N_EXTRA.words). [OURS] */
+var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 const I18N_GATHER = (() => {
   const PL = {
     "Couldn't gather that. Please try again.": "Nie udało się tego zebrać. Spróbuj jeszcze raz.",
@@ -11,6 +12,6 @@ const I18N_GATHER = (() => {
     "If picking ever goes wrong, you now get a short message instead of a button that does nothing.":
       "Gdy zbieranie się nie uda, dostajesz krótką wiadomość zamiast przycisku, który nic nie robi.",
   };
-  if (typeof I18N !== "undefined" && I18N.PL) for (const [k, v] of Object.entries(PL)) if (!(k in I18N.PL)) I18N.PL[k] = v;
+  for (const [k, v] of Object.entries(PL)) if (!(k in I18N_EXTRA.words)) I18N_EXTRA.words[k] = v;
   return { PL };
 })();

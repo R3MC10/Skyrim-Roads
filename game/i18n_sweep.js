@@ -117,7 +117,9 @@ const I18N_SWEEP = (() => {
     [/^familiar (\d+)$/, (m) => `chowaniec ${m[1]}`],
     [/^a shimmering ward rises \((\d+)\)\. It soaks magic until it breaks$/, (m) => `wznosi się migocząca osłona (${m[1]}). Pochłania magię, dopóki nie pęknie`],
     [/^([^·\d]+?) (\d+)$/, (m) => { const a = tr0(m[1]); return a == null ? null : `${a} ${m[2]}`; }],   // "Frost Cloak 8"
-    [/^([^·:]+): ([^·]+)$/, (m) => { const a = tr0(m[1]), b = tr0(m[2]); return a == null || b == null ? null : `${a}: ${b}`; }],   // "Staff of Calming: Calm: it stops fighting"
+    // "Staff of Calming: Calm: it stops fighting"; the longest left part that translates wins ("Dawnguard: Hunt the Night: “Awakening” done.")
+    [/^([^·:]+): ([^·]+)$/, (m) => { const t = m[0], cuts = []; for (let i = t.indexOf(": "); i > 0; i = t.indexOf(": ", i + 2)) if (!t.slice(0, i).includes("·")) cuts.unshift(i);
+      for (const i of cuts) { const a = tr0(t.slice(0, i)), b = tr0(t.slice(i + 2)); if (a != null && b != null) return `${a}: ${b}`; } return null; }],
   ];
   for (const [k, v] of Object.entries(WORDS)) if (!(k in I18N_EXTRA.words)) I18N_EXTRA.words[k] = v;
   I18N_EXTRA.pat.push(...PAT);
