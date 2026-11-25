@@ -1452,7 +1452,7 @@ const G = (() => {
     const sp = D.ITEMS[r.item].spell;
     if (s.spells.includes(sp)) return "You already know that spell.";
     take(s, id); s.spells.push(sp);
-    return `You learned ${D.SPELLS[sp].name}. ${typeof MAGIC !== "undefined" && D.SPELLS[sp].kind === "utility" ? "Cast it from the Magic menu (Pack → Magic), outside fights." : "Add it to your tactics."}`;
+    return `You learned ${D.SPELLS[sp].name}. ${typeof MAGIC !== "undefined" && D.SPELLS[sp].kind === "utility" ? "Cast it from the Magic menu (Pack → Magic), outside fights." : "Find it in the Magic menu and use it in your next fight."}`;
   }
   function drinkPotion(s, t = now()) {
     const f = new Fight(s, { name: "-", health: 1, damage: 0 }), r = f.findPotion("health");

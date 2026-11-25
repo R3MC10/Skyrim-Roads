@@ -78,7 +78,7 @@ const SHOUTS = (() => {
     if (lv && s.voiceAt !== v0 && !s._test) s.voiceAt = t + cd(s, id, lv);
     return r;
   };
-  const use = (s, id, t = now()) => (outside(id) ? P.roadShout(s, id, t) : "That shout is for fights. Add it to your tactics.");
+  const use = (s, id, t = now()) => (outside(id) ? P.roadShout(s, id, t) : "That shout is for fights. Use it during a fight.");
 
   return { CD_CAP, ELEM, OUT_EXTRA, mastery, cd, left, outside, fightable, list, unlock, use };
 })();

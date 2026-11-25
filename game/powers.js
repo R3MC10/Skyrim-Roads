@@ -88,7 +88,7 @@ const POWERS = (() => {
     s.greybeards = true;
     ["FUS", "RO", "DAH"].forEach((w) => learnWord(s, w));
     s.unlocked = [...new Set([...(s.unlocked || []), "FUS", "RO", "DAH"])];
-    return "Arngeir speaks, and the walls shake. The Greybeards teach you RO and DAH and share their understanding of all three words: Unrelenting Force is yours at full strength. Use it in your tactics.";
+    return "Arngeir speaks, and the walls shake. The Greybeards teach you RO and DAH and share their understanding of all three words: Unrelenting Force is yours at full strength. Shout it in your next fight.";
   }
   function roadShout(s, id, t = now()) {
     const lv = level(s, id);
@@ -108,7 +108,7 @@ const POWERS = (() => {
       s.voiceAt = t + SHOUTS[id][2][lv - 1];
       return found.length ? `You whisper, and the land answers: ${found.join(", ")}.` : "You whisper. Nothing new nearby.";
     }
-    return "That shout is for fights. Add it to your tactics.";
+    return "That shout is for fights. Use it during a fight.";
   }
 
   // ---- combat hooks (called from the Fight class in engine.js)
