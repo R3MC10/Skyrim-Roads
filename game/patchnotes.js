@@ -1,4 +1,14 @@
-/* Patch notes: what changed in each build, newest first, in plain words. [OURS]
+/* Patch notes:     { id: "b211-longhouse", build: 211, date: "25 Nov 2026", title: "Your own adventuring company", items: [
+      "Found an adventuring company with your party or your friends: up to 8 players (followers don't count). Open Social, then Company.",
+      "Founding costs 3000 gold in a town or village, and that's where your longhouse stands. Everyone in the company sees the same longhouse, live.",
+      "A shared treasury: anyone can put gold in, and the founder chooses who may take it out and how much a day. Every coin and every gift is in the log.",
+      "Build five rooms with gold from the treasury and materials from the stockpile, three levels each. Bigger companies pay a little more in total but much less each.",
+      "Forge: more Smithing practice, better tempering and harder hits with tempered weapons. Library: every skill book teaches more, and it opens Rune table forms early.",
+      "Trophy hall: beat legendary beasts and big bosses to hang their trophies up. Each one makes every member a bit stronger against that kind of foe.",
+      "Stables: your horse's bond grows faster, and at the top level horses carry more. Planning table: pick a battle plan that helps every member in dungeons and hold crises.",
+      "New perks: Company Purse (Mercantile) makes founding and building cheaper, War Council (Etiquette) makes the battle plan stronger for you, and Trophy Mounter (Smithing) doubles your trophy bonuses.",
+    ] },
+what changed in each build, newest first, in plain words. [OURS]
    To add a build: put a new entry at the TOP of LIST with a new id. The newest id is what the
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
@@ -1476,9 +1486,8 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 208;
+  const NEXT_AT = 211;
   const NEXT = [
-    "An adventuring company longhouse: a shared base with a treasury, a trophy hall and stables",
     "Daedric bargains and artifacts that awaken",
     "Heists in the big cities",
   ];

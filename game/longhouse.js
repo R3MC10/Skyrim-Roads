@@ -42,7 +42,7 @@ const LONGHOUSE = (() => {
     library: { name: "Library", icon: "", lv: [[1200, { mat_firewood: 10, mat_leather: 8 }], [3000, { mat_leather: 10, mat_moonstone: 3 }], [7000, { mat_moonstone: 6, mat_dwarven: 4 }]],
       fx: ["Every skill book also gives a quarter of the next level. Rune table budget +3%.", "Skill books give half of the next level as well. Rune budget +6%, and the cheap and quick runes are open to you.", "Skill books give three quarters of the next level as well. Rune budget +9%, and the rune and lingering forms are open too."] },
     trophy: { name: "Trophy hall", icon: "", lv: [[1000, { mat_iron: 6, mat_leather: 6 }], [2500, { mat_steel: 8, mat_leather: 8 }], [6000, { mat_steel: 12, mat_moonstone: 4 }]],
-      fx: ["4 trophies on the wall. Each one: +4% damage and 4% less damage taken against that kind of foe (legendary beasts 6%).", "9 trophies on the wall.", "18 trophies on the wall: every one the company can earn."] },
+      fx: ["4 trophies on the wall. Each one: +4% damage and 4% less damage taken against that kind of foe (legendary beasts 6%).", "9 trophies on the wall, each one +4% against its kind of foe (legendary beasts 6%).", "18 trophies on the wall: every one the company can earn, each +4% against its kind of foe (legendary beasts 6%)."] },
     stables: { name: "Stables", icon: "", lv: [[800, { mat_firewood: 12, mat_iron: 4 }], [2000, { mat_leather: 10, mat_iron: 8 }], [5000, { mat_steel: 10, mat_leather: 10 }]],
       fx: ["Your horse's bond grows 20% faster.", "Your horse's bond grows 40% faster.", "Your horse's bond grows 60% faster, and horses carry 25 more."] },
     plan: { name: "Planning table", icon: "", lv: [[800, { mat_firewood: 8, mat_iron: 4 }], [2000, { mat_steel: 6, mat_leather: 4 }], [5000, { mat_steel: 10, mat_dwarven: 4 }]],
@@ -112,7 +112,7 @@ const LONGHOUSE = (() => {
     const nx = {};
     for (const d of list || []) if (d && d.id && !d._del) nx[d.id] = d;
     docs = nx;
-    const S = me(); if (S) { checkInvites(S); if (api && tab && typeof document !== "undefined" && document.getElementById("lng-root")) api.render?.(); }
+    const S = me(); if (S) { checkInvites(S); const ae = typeof document !== "undefined" ? document.activeElement : null, typing = !!ae?.closest?.("#lng-root") && /INPUT|SELECT/.test(ae.tagName); if (api && !typing && typeof document !== "undefined" && document.getElementById("lng-root")) api.render?.(); }
   }
   const me = () => (api ? api.S() : null);
   const live = (m) => !!m && !m.gone;
@@ -445,7 +445,7 @@ const LONGHOUSE = (() => {
   }
   function treasuryHTML(S, d, x) {
     const may = can(d, S.id, "wd"), founder = roleOf(d, S.id) === "founder", left = founder ? null : Math.max(0, capOf(d) - takenToday(d, S.id, nowS()));
-    const mats = MATS.map((k) => { const r = rowOf(S, k); return `<div class="lng-mat"><span>${esc(itemName(k))}</span><b>${x.mats[k] || 0}</b><span class="lng-have">${T("you: {n}", { n: r?.qty || 0 })}</span>${r?.qty ? `<button class="btn sm" data-lng="give" data-id="${k}" data-n="1">+1</button><button class="btn sm" data-lng="give" data-id="${k}" data-n="${r.qty}">${T("All")}</button>` : ""}</div>`; }).join("");
+    const mats = MATS.map((k) => { const r = rowOf(S, k); return `<div class="lng-mat"><span>${esc(itemName(k))}</span><b>${x.mats[k] || 0}</b><span class="lng-have">${T("you: {n}", { n: r?.qty || 0 })}</span><span class="lng-mb">${r?.qty ? `<button class="btn sm" data-lng="give" data-id="${k}" data-n="1">+1</button><button class="btn sm" data-lng="give" data-id="${k}" data-n="${r.qty}">${T("All")}</button>` : ""}</span></div>`; }).join("");
     return `<div class="lng-gold"><input id="lng-amt" inputmode="numeric" placeholder="${T("Gold")}" value="${esc(draft.gold)}" aria-label="${T("Gold")}">
       <button class="btn pri" data-lng="dep">${T("Put in")}</button><button class="btn" data-lng="wd"${may ? "" : " disabled"}>${T("Take out")}</button></div>
       <p class="sub">${T("You carry {n} gold.", { n: S.gold || 0 })} ${may ? (left == null ? T("You can take out as much as you like.") : T("You can take out {n} more gold today.", { n: left })) : T("Only the people the founder allows can take gold out.")}</p>
@@ -453,8 +453,8 @@ const LONGHOUSE = (() => {
   }
   function membersHTML(S, d) {
     const mem = membersOf(d), founder = roleOf(d, S.id) === "founder";
-    const rows = mem.map((m) => `<div class="item"><div class="t">${esc(m.name)}${m.id === S.id ? ` <span class="gold">${T("(you)")}</span>` : ""}<span>${T(ROLE[m.role] || "Member")}</span></div>
-      ${founder && m.id !== S.id ? `<div class="fbtns"><button class="btn sm" data-lng="role" data-id="${esc(m.id)}" data-r="${m.role === "officer" ? "member" : "officer"}">${m.role === "officer" ? T("Make member") : T("Make officer")}</button><button class="btn sm" data-lng="role" data-id="${esc(m.id)}" data-r="founder">${T("Hand over")}</button><button class="btn sm danger" data-lng="role" data-id="${esc(m.id)}" data-r="out">${T("Send away")}</button></div>` : ""}</div>`).join("");
+    const rows = mem.map((m) => `<div class="lng-mem"><div class="t"><b style="font-weight:500">${esc(m.name)}${m.id === S.id ? ` <span class="gold">${T("(you)")}</span>` : ""}</b><span>${T(ROLE[m.role] || "Member")}</span></div>
+      ${founder && m.id !== S.id ? `<div class="lng-mbtn"><button class="btn sm" data-lng="role" data-id="${esc(m.id)}" data-r="${m.role === "officer" ? "member" : "officer"}">${m.role === "officer" ? T("Make member") : T("Make officer")}</button><button class="btn sm" data-lng="role" data-id="${esc(m.id)}" data-r="founder">${T("Hand over")}</button><button class="btn sm danger" data-lng="role" data-id="${esc(m.id)}" data-r="out">${T("Send away")}</button></div>` : ""}</div>`).join("");
     const inv = can(d, S.id, "invite") && mem.length < MAXM ? inviteList(S, d) : "";
     const pend = Object.entries(d.invites || {}).filter(([id, i]) => !i.gone && !live(d.members?.[id]));
     return `<h3>${T("Members")} · ${mem.length}/${MAXM}</h3>${rows}
@@ -538,7 +538,7 @@ const LONGHOUSE = (() => {
   function mount(a) {
     api = a;
     if (typeof Store !== "undefined") Store.watch(COL, (list) => setDocs(list));
-    if (!mount.bound && typeof document !== "undefined") { document.addEventListener("click", onClick); document.addEventListener("change", onChange); mount.bound = true; }
+    if (!mount.bound && typeof document !== "undefined") { document.addEventListener("click", onClick); document.addEventListener("change", onChange); document.addEventListener("input", (ev) => { const id = ev.target?.id; if (id === "lng-amt") draft.gold = ev.target.value; else if (id === "lng-name") draft.name = ev.target.value; }); mount.bound = true; }
     clearInterval(loopT); loopT = setInterval(loop, 5000); loop();
   }
   if (typeof I18N !== "undefined" && I18N.add && typeof I18N_LONGHOUSE !== "undefined") I18N.add(I18N_LONGHOUSE.tpl, I18N_LONGHOUSE.words);

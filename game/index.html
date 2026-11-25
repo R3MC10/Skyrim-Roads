@@ -3973,7 +3973,7 @@ body:has(#modal .sheet) #pbanners{top:auto!important;bottom:calc(6px + env(safe-
 .lng-plan b{font-family:"Cinzel",serif;letter-spacing:.04em}.lng-plan span{font-size:13px;color:var(--mute)}
 .lng-plan.on{border-color:var(--gold);background:rgba(226,187,100,.1)}.lng-plan.on b{color:var(--gold)}.lng-plan:disabled{opacity:.45}
 .lng-troph{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
-.lng-tr{display:flex;gap:8px;align-items:center;padding:7px 9px;border:1px solid var(--line);opacity:.55}.lng-tr.on{opacity:1;border-color:rgba(214,178,94,.45)}
+.lng-tr .lng-ic{font-size:26px;width:30px}.lng-tr{display:flex;gap:8px;align-items:center;padding:7px 9px;border:1px solid var(--line);opacity:.55}.lng-tr.on{opacity:1;border-color:rgba(214,178,94,.45)}
 .lng-tr div{display:flex;flex-direction:column;min-width:0}.lng-tr span{font-size:13px;color:var(--mute)}
 .lng-gold{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.lng-gold input{flex:1 1 140px;min-width:0}
 .lng-mats{display:flex;flex-direction:column}
@@ -3981,6 +3981,10 @@ body:has(#modal .sheet) #pbanners{top:auto!important;bottom:calc(6px + env(safe-
 .lng-mat>span:first-child{flex:1;min-width:0}.lng-mat b{min-width:34px;text-align:right;color:var(--gold)}.lng-have{font-size:12px;color:var(--mute);min-width:52px}
 .lng-perm{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--line);font-size:14px}.lng-perm select{max-width:52%}
 .lng-log{display:flex;flex-direction:column}.lng-le{display:flex;gap:8px;justify-content:space-between;padding:5px 2px;border-bottom:1px solid var(--line);font-size:14px}.lng-le i{color:var(--mute);font-size:12px;white-space:nowrap}
+.lng-mem{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 2px;border-bottom:1px solid var(--line)}.lng-mem .t{flex:1 1 140px;min-width:0;display:flex;flex-direction:column}.lng-mem .t>span{font-size:13px;color:var(--mute)}
+.lng-mbtn{display:flex;flex-wrap:wrap;gap:6px}
+.lng-mb{display:flex;gap:6px;min-width:112px;justify-content:flex-end}
+@media (min-width:700px){.lng-seg button{flex:1 1 0}}
 @media (max-width:420px){.lng-rooms,.lng-plans,.lng-troph{grid-template-columns:1fr}.lng-banner img{height:96px}}
 /* stables polish: the horse's painted portrait in a SkyUI-style frame, the bond bar says what it measures */
 .hhead{display:flex;gap:12px;align-items:stretch}
