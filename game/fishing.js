@@ -280,6 +280,10 @@ const FISHGAME = (() => {
   function up() { if (st) st.held = false; }
   function end(text, ok) {
     st.result = ok || null; st.msg = text; setPhase("done", text);
+    if (ok?.item && typeof RTIP !== "undefined") {   // [rewardtips] the catch as icons with their item cards
+      const m = document.querySelector("#fishgame #fhmsg");
+      if (m) m.insertAdjacentHTML("beforeend", RTIP.strip(0, [[ok.item, 1], ...(ok.extra || []).map((i) => [i, 1])], { size: 30, cls: "fh-got" }));
+    }
   }
   function tick(dt) {
     st.pt += dt;

@@ -385,7 +385,7 @@ const EXPEDITION = (() => {
   };
   function offerCard(s, o, d, x, may) {
     const pl = planLvOf(s), open = slotOpen(o.slot, pl), r = reward(s, o, pl), mine = x && x.key === o.key, low = (s.level || 1) < o.lvl;
-    const loot = r.items.map(([id, q]) => `${q > 1 ? q + " " : ""}${esc(itemName(id))}`).join(", ");
+    const loot = r.items.map(([id, q]) => `<span class="exp-it"${typeof RTIP !== "undefined" ? RTIP.attr(id, q) : ""}>${q > 1 ? q + " " : ""}${esc(itemName(id))}</span>`).join(", ");   // [rewardtips] each reward: its item card
     const p = party(), btn = mine ? `<span class="exp-tag">${T("You're on it")}</span>`
       : !open ? `<span class="exp-why">${T("Build the planning table to open this one.")}</span>`
       : p ? "" : `<button class="btn pri" data-exp="go" data-k="${esc(o.key)}"${may ? "" : " disabled"}>${T("Set out")}</button>`;
@@ -464,7 +464,7 @@ const EXPEDITION = (() => {
       ${sc ? `<p class="sub">${T("Seasoned Scout: you can tell how each choice will go.")}</p>` : ""}</div></div>`;
   }
   function flashSheet(f) {
-    return `<div class="exp-sheet" role="dialog" aria-label="${esc(f.title)}"><div class="exp-done"><h3>${esc(f.title)}</h3>${f.lines.map((l) => `<p>${esc(l)}</p>`).join("")}<button class="btn pri" data-exp="ok">${T("Continue")}</button></div></div>`;
+    return `<div class="exp-sheet" role="dialog" aria-label="${esc(f.title)}"><div class="exp-done"><h3>${esc(f.title)}</h3>${f.lines.map((l) => `<p>${esc(l)}</p>`).join("")}${f.items && typeof RTIP !== "undefined" ? RTIP.strip(f.gold || 0, f.items) : ""}<button class="btn pri" data-exp="ok">${T("Continue")}</button></div></div>`;
   }
   function sheet() {
     if (typeof document === "undefined" || !document.body) return;
@@ -489,7 +489,7 @@ const EXPEDITION = (() => {
     const d = typeof LONGHOUSE !== "undefined" ? LONGHOUSE.mine(s) : null;
     const names = p ? p.members.map((m) => m.name) : [s.name];
     if (d && typeof Store !== "undefined") { try { await Store.change("longhouse", d.id, (cur0) => (cur0 ? ledgerEntry(cur0, r.o, s, names) : cur0)); } catch { /* the loot is yours anyway */ } }
-    flash = { title: T("Expedition done: {title}", { title: r.title }), lines: [T("You get {g} gold and {items}.", { g: r.gold, items: r.items.map(([id, q]) => `${q > 1 ? q + " " : ""}${itemName(id)}`).join(", ") }), d ? T("+{n} renown for the company.", { n: r.renown }) : T("Join a company to earn renown toward its weekly chest.")] };
+    flash = { title: T("Expedition done: {title}", { title: r.title }), lines: [T("You get {g} gold and {items}.", { g: r.gold, items: r.items.map(([id, q]) => `${q > 1 ? q + " " : ""}${itemName(id)}`).join(", ") }), d ? T("+{n} renown for the company.", { n: r.renown }) : T("Join a company to earn renown toward its weekly chest.")], gold: r.gold, items: r.items };
     try { if (typeof SOUND !== "undefined") SOUND.fx("quest"); } catch { /* fine */ }
     api.persist(true); api.render?.();
   }
@@ -583,7 +583,7 @@ const EXPEDITION = (() => {
       await Store.change("longhouse", d.id, (q) => (q ? rerolled(q, s.id) : q));
       api.toast(T("The table is cleared and new letters come in.")); api.render?.(); return;
     }
-    if (a === "chest" && d) { const c = takeChest(s, d); if (c) { flash = { title: T("The company chest"), lines: [T("You get {g} gold and {items}.", { g: c.gold, items: c.items.map(([id, q]) => `${q > 1 ? q + " " : ""}${itemName(id)}`).join(", ") })] }; api.persist(true); api.render?.(); sheet(); } }
+    if (a === "chest" && d) { const c = takeChest(s, d); if (c) { flash = { title: T("The company chest"), lines: [T("You get {g} gold and {items}.", { g: c.gold, items: c.items.map(([id, q]) => `${q > 1 ? q + " " : ""}${itemName(id)}`).join(", ") })], gold: c.gold, items: c.items }; api.persist(true); api.render?.(); sheet(); } }
   }
   function mount(a) {
     api = a;

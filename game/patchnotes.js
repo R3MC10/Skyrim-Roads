@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b232-rewardtips", build: 232, date: "25 Nov 2026", title: "Item cards on rewards", items: [
+      "Every loot and reward icon now shows the full item card, like in your pack: damage or armour, weight, value, the enchantment and what it does, potion effects, a green or red comparison with what you wear, and how many you already have. On a PC rest the mouse on it; on a phone tap the icon (tap anywhere else to close).",
+      "Dungeon loot, fight loot, boss loot, the party loot vote, road events, quest and crisis rewards, expeditions, heists, Daedric artifacts, fishing, hunting, mining and market stalls all have it.",
+      "Gold and stacks get a short card too, and the box never covers the buttons.",
+    ] },
     { id: "b231-nomountfight", build: 231, date: "25 Nov 2026", title: "Horses wait at the edge of the fight", items: [
       "Horses now wait at the edge of the fight; you always fight on foot. That goes for solo fights, parties and co-op.",
       "Nobody goes for your horse and it never gets knocked down in a fight. If you rode in, you're back in the saddle when it's over.",

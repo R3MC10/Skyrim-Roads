@@ -365,7 +365,7 @@ const HUNTGAME = (() => {
     setPhase("done", r.text + (r.skills?.length ? " " + r.skills.join(". ") + "." : ""));
     // what came off the animal, as chips that pop in while the hide goes on the frame (huntart.js draws the skinning)
     const lootEl = DOM && document.querySelector("#hgloot");
-    if (lootEl && r.kill) lootEl.innerHTML = Object.entries(r.got || {}).map(([i, n], k) => `<span class="hgchip" style="animation-delay:${(quality === "clean" ? 2.3 : 2) + k * 0.25}s">${n > 1 ? n + "× " : ""}${esc(D.ITEMS[i]?.name || i)}</span>`).join("");
+    if (lootEl && r.kill) lootEl.innerHTML = Object.entries(r.got || {}).map(([i, n], k) => `<span class="hgchip"${typeof RTIP !== "undefined" ? RTIP.attr(i, n) : ""} style="animation-delay:${(quality === "clean" ? 2.3 : 2) + k * 0.25}s">${n > 1 ? n + "× " : ""}${esc(D.ITEMS[i]?.name || i)}</span>`).join("");
     S.opts.onResult?.(S.res);
   }
   function again() {

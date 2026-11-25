@@ -405,7 +405,8 @@ const BOSSFIGHT = (() => {
     const items = [...new Set([...(r.stripLoot || r.loot || [])])].map(name);
     const gold = r.stripGold || r.gold || 0;
     if (!items.length && !gold) return;
-    const li = items.map((n, i) => `<li style="--i:${i}">${esc(pl() ? T(n) || n : n)}</li>`).join("");
+    const RT = typeof RTIP !== "undefined" ? RTIP : null;   // [rewardtips] each line: the item's icon and its full card on hover / tap
+    const li = items.map((n, i) => { const id = RT ? RT.idOf(n) : null, q = RT ? RT.qtyOf(n) : 1; return `<li style="--i:${i}"${id ? RT.attr(id, q) : ""}>${id ? RT.icon(id, 22) : ""}${esc(pl() ? T(n) || n : n)}</li>`; }).join("");
     overlay("bfloot", `<div class="bfcard"><small>${esc(say(f, "{0} is beaten"))}</small><h2>${esc(T("Boss loot"))}</h2>${gold ? `<p class="bfgold"> ${esc(fmt("{0} gold", gold))}</p>` : ""}<ul>${li}</ul><em>${esc(T("Tap to close"))}</em></div>`, 0, document.getElementById("tbf"));
   }
 

@@ -272,9 +272,12 @@ const DUNART = (() => {
   function lootStrip(gold, names) {
     const items = (names || []).map((n) => { const m = String(n).match(/^(.*?)(?: ×(\d+))?$/); return { name: m[1], n: +(m[2] || 1), id: idOf(m[1]) }; });
     if (!gold && !items.length) return "";
-    const one = (icon, label, i) => `<span class="dloot" style="animation-delay:${i * 90}ms" title="${label.replace(/"/g, "")}">${icon}<small>${label}</small></span>`;
+    // [rewardtips] each icon carries the full item card (rewardtips.js); gold its own short one
+    const RT = typeof RTIP !== "undefined" ? RTIP : null; if (RT) RT.forget();   // (shown here, not again in the next window)
+    if (RT) for (const x of items) { const better = RT.idOf(x.name); if (better) x.id = better; }   // your enchanted find, not just the plain base item
+    const one = (icon, label, i, a) => `<span class="dloot${a ? " rt" : ""}" style="animation-delay:${i * 90}ms"${a || ` title="${label.replace(/"/g, "")}"`}${a ? ` tabindex="0" role="img" aria-label="${label.replace(/"/g, "")}"` : ""}>${icon}<small>${label}</small></span>`;
     let i = 0;
-    return `<div class="dloots">${gold ? one(coins(34), `${gold} gold`, i++) : ""}${items.map((x) => one(x.id && typeof ICONART !== "undefined" ? ICONART.item(x.id, 34) : coins(34), `${x.name}${x.n > 1 ? " ×" + x.n : ""}`, i++)).join("")}</div>`;
+    return `<div class="dloots">${gold ? one(coins(34), `${gold} gold`, i++, RT ? RT.goldAttr(gold) : "") : ""}${items.map((x) => one(x.id && typeof ICONART !== "undefined" ? (RT ? RT.icon(x.id, 34) : ICONART.item(x.id, 34)) : coins(34), `${x.name}${x.n > 1 ? " ×" + x.n : ""}`, i++, RT && x.id ? RT.attr(x.id, x.n) : "")).join("")}</div>`;
   }
 
   // ---- a chest that opens (treasure rooms)
@@ -313,5 +316,5 @@ const DUNART = (() => {
 
   /* everything that should start after the dungeon screen is drawn */
   function after(root, reduce) { start(root, reduce); animateChest(root, reduce); if (typeof DUNROOMS !== "undefined") DUNROOMS.after(root); }
-  return { TH, TYPES, W, GAP, mapHTML, legendHTML, medalHTML, drawMap, symbol, chamber, lootStrip, chestHTML, after, themeOf, xy, heightOf, curve, newestStep };
+  return { TH, TYPES, W, GAP, mapHTML, legendHTML, medalHTML, drawMap, symbol, chamber, lootStrip, coins, chestHTML, after, themeOf, xy, heightOf, curve, newestStep };
 })();

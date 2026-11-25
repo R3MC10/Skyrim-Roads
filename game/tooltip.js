@@ -68,7 +68,7 @@ const TIP = (() => {
     if (it.aenchant && enL?.length) { const ae = [it.aenchant, ...(it.aenchant.more || [])]; L.push(...enL.map((x, i) => `✦ ${ae[i]?.name && !x.startsWith(ae[i].name) ? `${ae[i].name} · ` : ""}${x}`), "While worn."); }   // name · what it does
     else if (it.aenchant) L.push(`✦ ${[it.aenchant, ...(it.aenchant.more || [])].map((e) => (e.key.startsWith("dae:") ? e.name : `${e.name} ${e.mag}`)).join(" · ")} while worn`);
     if (it.desc) L.push(it.desc);
-    if (it.effects) L.push(it.effects.map(([e, m, d]) => `${e} ${m}${d * 5 >= 60 ? ` for ${Math.round(d * 5 / 60)} min` : ""}`).join(" · "));
+    if (it.effects) L.push(it.effects.map(([e, m, d]) => `${e} ${m}${d * 5 >= 60 ? ` for ${Math.round(d * 5 / 60)} min` : d > 0 ? ` for ${Math.round(d * 5)} s` : ""}`).join(" · "));   // [rewardtips] short ones say their seconds
     else if (it.restore) L.push(`Restores ${it.restore[1]} ${it.restore[0]}`);
     if (it.restore && g("POTFX")) L.push(g("POTFX").note(s, it.restore[1]));   // over a few rounds (potionfx.js)
     else if (it.cures) L.push("Cures diseases");
@@ -114,7 +114,9 @@ const TIP = (() => {
       else if (wit && (it.slot !== "weapon" || wit.skill === it.skill)) { const a = stat(it, r), b = stat(wit, w), word = it.slot === "weapon" ? "damage" : "armor"; cmp = `<p class="${a > b ? "tt-up" : a < b ? "tt-dn" : "tt-hint"}">${a > b ? "▲" : a < b ? "▼" : "="} ${a} ${word} vs ${b} on your ${esc(wit.name)}</p>`; }
       else if (!w) cmp = `<p class="tt-up">Nothing worn there yet</p>`;
     }
-    return head(name, "q-" + tier) + sub(kind + (CC_ && tier !== "common" ? ` · ${CC_.TIER_NAME[tier]}` : "")) + stats(st) + L.map((x) => line(x)).join("") + (g("CHARGE") ? g("CHARGE").detail(itemId, r, s) : "") + (tomeCard ? `<div class="tt-tome">${tomeCard}</div>` : "") + cmp;
+    let haveL = "";   // [rewardtips] a bare item (a reward, a shop row): how many you already carry
+    if (!r && s?.inv) { const n = s.inv.reduce((a, x) => a + (x.item === itemId ? x.qty || 1 : 0), 0); haveL = n ? `<p class="tt-have">Already have ${n}</p>` : ""; }
+    return head(name, "q-" + tier) + sub(kind + (CC_ && tier !== "common" ? ` · ${CC_.TIER_NAME[tier]}` : "")) + stats(st) + L.map((x) => line(x)).join("") + (g("CHARGE") ? g("CHARGE").detail(itemId, r, s) : "") + (tomeCard ? `<div class="tt-tome">${tomeCard}</div>` : "") + cmp + haveL;
   }
   register("item", (id, s) => itemHTML(id, s));
   register("inv", (id, s) => { const r = s?.inv?.find((x) => String(x.id) === String(id)); return r ? itemHTML(r.item, s, r) : null; });
@@ -264,8 +266,9 @@ const TIP = (() => {
   let byName = null;
   function keyForText(t) {
     const D_ = g("D"); if (!D_?.ITEMS || !t) return null;
-    if (!byName) {
-      byName = new Map();
+    const nIt = Object.keys(D_.ITEMS).length;   // [rewardtips] enchanted finds (ench|...) are made on demand: learn their names too
+    if (!byName || byName.n !== nIt) {
+      byName = new Map(); byName.n = nIt;
       for (const [id, sp] of Object.entries(D_.SPELLS || {})) if (sp?.name && !byName.has(sp.name.toLowerCase())) byName.set(sp.name.toLowerCase(), "spell:" + id);
       for (const [id, it] of Object.entries(D_.ITEMS)) if (it?.name) byName.set(it.name.toLowerCase(), "item:" + id);   // an item wins over a spell of the same name
     }
@@ -310,7 +313,14 @@ const TIP = (() => {
     const cs = getComputedStyle(probe), n = (v) => parseFloat(cs[v]) || 0;
     return { t: n("paddingTop"), r: n("paddingRight"), b: n("paddingBottom"), l: n("paddingLeft") };
   }
-  function place(rect) {
+  /* [rewardtips] reward icons: the box keeps off the buttons of the card it's on (above, below, then beside the icon) */
+  const AVOID_IN = "#modal .sheet, .c2rescard, .bfcard, .hz-modal, .card, .panel, .exp-card";
+  function avoidRects(el) {
+    const root = el?.closest?.("[data-rtip]") && el.closest(AVOID_IN); if (!root) return [];
+    return [...root.querySelectorAll("button, .btn, [data-act]:not([data-rtip])")].map((b) => b.getBoundingClientRect()).filter((r) => r.width && r.height);
+  }
+  const hits = (x, y, w, h, rs) => rs.some((r) => x < r.right && x + w > r.left && y < r.bottom && y + h > r.top);
+  function place(rect, el = null) {
     const vv = window.visualViewport, vw = vv ? vv.width : innerWidth, vh = vv ? vv.height : innerHeight, ox = vv ? vv.offsetLeft : 0, oy = vv ? vv.offsetTop : 0;
     const ins = insets(), M = 8, L = ox + ins.l + M, R = ox + vw - ins.r - M, T = oy + ins.t + M, B = oy + vh - ins.b - M;
     box.style.maxWidth = Math.max(160, Math.min(340, R - L)) + "px"; box.style.width = "";   // (a fight-bar line set a width)
@@ -320,6 +330,18 @@ const TIP = (() => {
     let x = Math.max(L, Math.min(R - tw, cx - tw / 2));
     const above = rect.top - gap - th, below = rect.bottom + gap;
     let y, side;
+    const av = avoidRects(el);
+    if (av.length) {   // try each side; the first that fits on screen and covers no button wins
+      const cy = rect.top + rect.height / 2, opts = [[x, above, "above"], [x, below, "below"], [rect.right + gap, cy - th / 2, "right"], [rect.left - gap - tw, cy - th / 2, "left"]];
+      const fit = ([ox, oy]) => ox >= L && ox + tw <= R && oy >= T && oy + th <= B;
+      const best = opts.find((o) => fit(o) && !hits(o[0], o[1], tw, th, av));
+      if (best) {
+        box.style.left = Math.round(best[0]) + "px"; box.style.top = Math.round(best[1]) + "px";
+        box.style.setProperty("--ax", Math.round(Math.max(12, Math.min(tw - 12, cx - best[0]))) + "px");
+        box.classList.toggle("tt-above", best[2] === "above"); box.classList.toggle("tt-below", best[2] === "below");
+        return;
+      }
+    }
     if (above >= T) { y = above; side = "above"; }
     else if (below + th <= B) { y = below; side = "below"; }
     else { side = rect.top - T > B - rect.bottom ? "above" : "below"; y = side === "above" ? T : Math.max(T, B - th); }   // no room either way: as far from the finger as fits
@@ -349,8 +371,10 @@ const TIP = (() => {
     box.style.top = Math.round(Math.max(8, b.top - box.offsetHeight - 6)) + "px";
     box.classList.remove("tt-below"); box.classList.add("tt-above");
   }
+  let gate = null;   // [rewardtips] (el) => false keeps a tip from showing (a result card covers that icon: overlays.js)
   function show(hit, rect = null) {
     if (!DOM) return;
+    if (gate && hit?.el && !rect) { let ok = true; try { ok = gate(hit.el) !== false; } catch { ok = true; } if (!ok) return hide(); }
     const main = hit.k ? html(hit.k) : hit.t ? `<p class="tt-plain">${esc(hit.t)}</p>` : null;
     const body = main && hit.note ? `<p class="tt-note">${esc(hit.note)}</p>` + main : main;
     if (!body) return hide();
@@ -361,7 +385,7 @@ const TIP = (() => {
     const dock = !rect && hit.el?.closest?.("#tbf.c2 .tbdock");
     box.classList.toggle("tt-dock", !!dock);
     if (dock) dockLine(dock);
-    else place(rect || anchor(hit.el));
+    else place(rect || anchor(hit.el), rect ? null : hit.el);
     box.classList.add("on");
     if (hit.el?.id) hit.el.setAttribute("aria-describedby", "tip");
     clearInterval(watchT); watchT = setInterval(watch, 300);
@@ -436,7 +460,7 @@ const TIP = (() => {
   function up(e) {
     if (!press || e.pointerId !== press.id) return;
     clearTimeout(press.timer);
-    if (press.shown) { swallowUntil = Date.now() + 700; clearTimeout(hideT); hideT = setTimeout(hide, 1800); }   // the lift doesn't press what's under it; the box stays a moment to finish reading
+    if (press.shown) { swallowUntil = Date.now() + 700; clearTimeout(hideT); if (!press.h?.el?.closest?.("[data-rtip]")) hideT = setTimeout(hide, 1800); }   // [rewardtips] a reward icon's box stays until you tap elsewhere   // the lift doesn't press what's under it; the box stays a moment to finish reading
     press = null;
   }
   function eatClick(e) {
@@ -482,6 +506,6 @@ const TIP = (() => {
   }
   if (DOM) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount); else mount(); }
 
-  return { register, html, show, hide, find, area, itemHTML, AUTO, eatClick, keyForText, get providers() { return Object.keys(P); }, set state(fn) { stateFn = fn; }, get open() { return !!cur; }, get HOLD() { return HOLD; } };
+  return { register, html, show, hide, find, area, itemHTML, AUTO, eatClick, keyForText, get providers() { return Object.keys(P); }, set state(fn) { stateFn = fn; }, set gate(fn) { gate = fn; }, get current() { return cur; }, get open() { return !!cur; }, get HOLD() { return HOLD; } };
 })();
 if (typeof module !== "undefined") module.exports = TIP;
