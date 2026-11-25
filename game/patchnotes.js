@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b307-fighttipstop", build: 307, date: "25 Nov 2026", title: "Fight tooltips show in full", items: [
+      "In a fight, the cards in the Magic and Items lists now show their whole tooltip right next to the card: above it, below it or beside it, wherever it fits.",
+      "Tooltips in fights are never cut off, never hidden under the list or the top bar, and never cover the card you're pointing at. A very long one scrolls inside instead.",
+      "Tooltips now always sit on top of everything else on the screen, minigames and damage numbers included.",
+    ] },
     { id: "b306-remakeonce", build: 306, date: "25 Nov 2026", title: "Everyone gets to remake their hero once", items: [
       "Everyone gets to remake their hero once: pick race, sex and look again.",
       "When you next step onto the map, the character creator opens once for every hero made before this update. Your name, level, trained skills, perks, gear and quests all stay.",
