@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b226-busts", build: 226, date: "25 Nov 2026", title: "Painted faces for every race", items: [
+      "Picking a race now shows a painted portrait of each one on a dark panel, with the race name underneath.",
+      "The Character page shows your race's painted portrait, and the Worn screen in your inventory has a small one in the corner of your paper doll.",
+      "There is one painting per race, of a man or a woman. If your hero is the other sex, the painting shows as a round race crest instead of as your face.",
+      "Fights and the paper doll still show your hero in the gear you wear.",
+    ] },
     { id: "b225-heistart", build: 225, date: "25 Nov 2026", title: "Heists you can see", items: [
       "Every heist now shows a painting of the house you're robbing: Battle-Born's farm, the Shatter-Shield house on the icy docks, Erikur's townhouse, the Silver-Blood stone house and Maven's manor on the canal.",
       "On phones the heist takes the whole screen. The house sits at the top and your choices at the bottom, within thumb reach. The X in the corner closes it, and you carry on later from the town.",
