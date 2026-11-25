@@ -124,6 +124,9 @@ const TB = (() => {
     if (foes.length < 2 || typeof AISET === "undefined" || !AISET.pickTarget) return foes;
     try { return AISET.pickTarget(G.loadout(f.s), foes); } catch (e) { return foes; }
   }
+  /* which of the foe's moves this round a turn-order entry is: "foe" is its 1st, "foe2" its 2nd... (one foe, several moves) */
+  const moveNo = (o) => { const m = /^foe(\d+)$/.exec(o?.id || ""); return m ? +m[1] : 1; };
+  const ORD = (n) => (n === 2 ? "2nd" : n === 3 ? "3rd" : n + "th");
   // ------------------------------------------------------------------ one fight, played round by round
   class Session {
     constructor(f, opts = {}) {
@@ -773,7 +776,10 @@ const TB = (() => {
     const pe = playing ? vis[vis.length - 1] : null;
     const acting = (o) => (pe ? (pe.kind === "foe" ? o.id.startsWith("foe") : pe.kind === "me" ? o.id === "me" : pe.kind === "ally" ? o.name === pe.name || (pe.pid && o.pid === pe.pid) : pe.kind === "sum" ? o.id === "sum" : false) : o.id === sess.cur?.id && !sess.done);
     const actIdx = sess.order.findIndex(acting);
-    const order = sess.order.map((o, i) => `<span class="tbini ${acting(o) ? "now" : ""} ${(playing ? actIdx >= 0 && i < actIdx : i < sess.idx) ? "gone" : ""} ${o.id.startsWith("foe") ? "foe" : o.id === "me" ? "me" : "ally"}" data-tip="${esc(o.name)}: initiative ${o.init}. Higher initiative acts earlier in the round.">${icon(o, f)} ${esc(o.name.split(" ")[0])}<i>${o.init}</i></span>`).join("");
+    // a foe that acts 2 or 3 times a round has one chip per move: the later ones are marked as its 2nd/3rd move, so the bar
+    // doesn't read as three bandits when one is standing there (a group's next foe only steps in when this one falls)
+    const order = sess.order.map((o, i) => { const mv = moveNo(o);
+      return `<span class="tbini ${acting(o) ? "now" : ""} ${(playing ? actIdx >= 0 && i < actIdx : i < sess.idx) ? "gone" : ""} ${o.id.startsWith("foe") ? "foe" : o.id === "me" ? "me" : "ally"}${mv > 1 ? " again" : ""}" data-tip="${mv > 1 ? `${esc(o.name)} acts again: its ${ORD(mv)} move this round.` : `${esc(o.name)}: initiative ${o.init}. Higher initiative acts earlier in the round.`}">${icon(o, f)} ${esc(o.name.split(" ")[0])}${mv > 1 ? `<b class="tbag">${ORD(mv)}</b>` : ""}<i>${o.init}</i></span>`; }).join("");
     const pips = (n, m, cls) => Array.from({ length: m }, (_, i) => `<i class="${i < n ? "on" : ""} ${cls}"></i>`).join("");
     const allies = partyHTML(f);
     const mine = state.turn === "me";
@@ -916,7 +922,14 @@ const TB = (() => {
     render(r || { turn: ui.sess.done ? "done" : ui.sess.cur?.id === "me" ? "me" : "auto" });
   }
   function onClick(ev) {
-    if (!ui || ui.timing) return;   // the timing ring is up
+    if (!ui) return;
+    if (ui.timing) {   // the timing ring / minigame is up: it owns the clicks...
+      // ...unless it is stuck (hotfix build 232): nothing on screen any more, or up far longer than any minigame lasts.
+      // A stuck flag used to swallow every click for the rest of the fight ("I press Attack and nothing happens").
+      const live = document.querySelector("#tbf .tbtime:not(.hit)");
+      if (live && Date.now() - (ui.timingAt || 0) < 12000) return;
+      ui.timing = false; ui.timingTok = (ui.timingTok || 0) + 1; live?.remove();   // the old game's result is dropped
+    }
     const b = ev.target.closest("button"); if (!b || b.disabled) return;
     const sess = ui.sess;
     if (b.dataset.tbx === "wheel") { TBRADIAL.toggle(); return step(); }
@@ -934,7 +947,9 @@ const TB = (() => {
       const go = (g) => {
         if (!ui || ui.sess !== sess) return;
         const was = { sp: f.sp, mp: f.mp, hp: f.hp };
-        let r = sess.act(a, tgt, g ? g.mult : 1, g);
+        let r;
+        try { r = sess.act(a, tgt, g ? g.mult : 1, g); }
+        catch (e) { console.error("fight move", a, e); if (hooks.toast) hooks.toast("That move didn't work, try another"); return step(); }   // never leave the screen dead
         if (r?.err) { if (hooks.toast) hooks.toast(r.err); return; }
         const d = { sp: was.sp - f.sp, mp: was.mp - f.mp, hp: f.hp - was.hp };
         if (r?.turn === "next") r = sess.advance();
@@ -945,14 +960,18 @@ const TB = (() => {
       // the minigames (minigame.js): every blow, guard and spell you make yourself; Auto never plays them
       if (typeof MINIGAME !== "undefined" && MINIGAME.on() && MINIGAME.kindFor(f, a) && sess.canAfford(a)) {
         const sp = spellOf(a);
-        ui.timing = true;
-        return MINIGAME.play(root, f, a, { icon: iconOf(f, a), label: sp ? sp.name : a === "power_attack" ? "Power attack" : a === "bash" ? "Shield bash" : a === "block" ? "Guard" : f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack" })
-          .then((g) => { if (ui) ui.timing = false; go(g); }, () => { if (ui) ui.timing = false; go(null); });
+        ui.timing = true; ui.timingAt = Date.now();
+        let game;
+        try { game = MINIGAME.play(root, f, a, { icon: iconOf(f, a), label: sp ? sp.name : a === "power_attack" ? "Power attack" : a === "bash" ? "Shield bash" : a === "block" ? "Guard" : f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack" }); }
+        catch (e) { console.error("minigame", a, e); game = null; }   // a broken minigame must not lock the fight: the move goes in as a normal hit
+        if (!game || typeof game.then !== "function") { ui.timing = false; return go(null); }
+        const tok = ui.timingTok;
+        return game.then((g) => { if (!ui || ui.timingTok !== tok) return; ui.timing = false; go(g); }, () => { if (!ui || ui.timingTok !== tok) return; ui.timing = false; go(null); });
       }
       // the old timing ring (wheel only, when the minigames are off)
       if (typeof TBRADIAL !== "undefined" && TBRADIAL.on() && !fast() && TBRADIAL.timed(a, zoneOf(a)) && sess.canAfford(a) && typeof MINIGAME === "undefined") {
         const sp = spellOf(a), perk = typeof PFX !== "undefined" ? PFX.num(f.s, "timing") : 0;
-        ui.timing = true;
+        ui.timing = true; ui.timingAt = Date.now();
         return TBRADIAL.ring(root, { z: TBRADIAL.zone(TBRADIAL.skillFor(f, a, sp), perk), icon: iconOf(f, a), label: sp ? sp.name : a === "power_attack" ? "Power attack" : a === "bash" ? "Shield bash" : f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack" })
           .then((g) => { if (ui) ui.timing = false; go(g); });
       }
