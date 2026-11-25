@@ -357,7 +357,7 @@ const PAINTRIG = (() => {
       else if (two && !o.shield) farOn = add(nearGrip(), rot(wa + tipA, [-4.5 * m * WSC, 0]));
     }
     if (farOn) { P.farHand = farOn; Object.assign(B, solve(G, P)); }
-    const shieldOn = !!o.shield && !two && !ranged, shieldFront = shieldOn && (P.front || P.back < -0.8);
+    const shieldOn = !!o.shield && !two && !ranged, shieldFront = shieldOn && (P.front || P.back < -0.8 || !!o.shieldOut);   // shieldOut: a fight scene shows the shield's face over the body (side-on behind the torso it vanished)
     const kS = m * 1.35;
     const shieldHere = (front) => { if (!kit) return; const wr = B.armF.wr; g.save(); g.translate(wr[0], wr[1]); g.rotate(B.sa); g.scale(kS, kS); if (gear) gear.shield(g, sp, front, st); else kit.shieldAt(g, sp, 0, 0, front, st); g.restore(); };
     // the far arm, in shade, behind everything

@@ -9,6 +9,24 @@ const PATCHNOTES = (() => {
       "With Smart AI on, your own rules fold into one row (they're kept for Custom and Hybrid) instead of sitting there greyed out.",
       "In fights, moves the AI plays for you end with a short [AI] reason in the log. Moves you pick yourself don't.",
     ] },
+    { id: "b289-followersize", build: 289, date: "25 Nov 2026", title: "Followers at full size, softer glows", items: [
+      "In fights your follower and your party now stand as tall as you do (women and some races a touch shorter, like in Skyrim) instead of looking like dwarves next to you. Everyone still fits on screen, and name tags sit just above their heads.",
+      "Enchanted weapons no longer hide under a big glowing blob. Now a thin shine runs along the blade's edges in the enchantment's colour (fire orange, frost pale blue, shock violet, absorb purple) and gently pulses; axes and maces glow faintly around the head, bows along the limb.",
+      "Summons step out with a short, faint shimmer instead of a white flash that covered them, and the portal they come through is see-through. Sovngarde heroes and other helpers shed smaller sparks.",
+      "Your shield now shows on your arm in fights (and on followers and party members who carry one, like Lydia).",
+    ] },
+    { id: "b288-itemgames", build: 288, date: "25 Nov 2026", title: "Shield bash minigame, poisons in fights", items: [
+      "Shield bash now has its own quick game in turn-based fights: slam as your shield meets the foe. A Perfect hits harder and gives Might and Haste, a Miss hits softer. Guard had the same problem and works again too.",
+      "A staff now draws the rune of its spell's school instead of the sword bar, and scrolls draw their spell's rune.",
+      "Throwing an oil flask is a quick game too: a Perfect throw keeps the foe soaked a round longer, a miss splashes most of it on the ground (a round shorter).",
+      "Poisons work in fights: open Items and tap Coat (or put the poison on your hotbar). It takes one move, uses the poison up, and your next hit delivers it. Bows coat their arrows. Not in Beast Form, and not while your weapon is still coated.",
+      "Holding or resting on a poison shows what your next hit will carry.",
+      "In party fights a Perfect from the minigame now adds its bonus too.",
+    ] },
+    { id: "b287-chargensex", build: 287, date: "25 Nov 2026", title: "Pick man or woman first", items: [
+      "Character creation now starts with a big Male / Female switch at the top, above the tabs, so it's the first thing you pick.",
+      "Switching keeps your race and everything else you chose; a woman just loses the beard. Randomise now keeps the one you picked.",
+    ] },
     { id: "b286-titlesilent", build: 286, date: "25 Nov 2026", title: "Quiet start", items: [
       "Tapping \"Tap to begin\" on the title screen no longer plays a sound.",
     ] },

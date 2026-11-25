@@ -127,3 +127,12 @@ Object.assign(I18N_EXTRA.words, {
   "On a phone, your hero's head and a raised sword stay below the turn and Face buttons instead of hiding behind them.": "Na telefonie głowa bohatera i uniesiony miecz zostają pod przyciskami obrotu i Twarzy, zamiast chować się za nimi.",
 });
 // [/raceheads]
+
+// [chargensex] the Male / Female switch and its patch note
+Object.assign(I18N_EXTRA.words, {
+  "Your name, e.g. Brynja": "Twoje imię, np. Brynja",
+  "Pick man or woman first": "Najpierw wybierz: mężczyzna czy kobieta",
+  "Character creation now starts with a big Male / Female switch at the top, above the tabs, so it's the first thing you pick.": "Tworzenie postaci zaczyna się teraz od dużego przełącznika Mężczyzna / Kobieta na górze, nad zakładkami, więc wybierasz to na samym początku.",
+  "Switching keeps your race and everything else you chose; a woman just loses the beard. Randomise now keeps the one you picked.": "Przełączenie zachowuje rasę i wszystko inne, co wybrałeś; kobieta traci tylko brodę. Losowanie zostawia teraz wybraną płeć.",
+});
+// [/chargensex]
