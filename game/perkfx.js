@@ -346,6 +346,10 @@ const PFX = (() => {
     // afflictions (afflictions.js reads affup / affdown)
     [ "Illusion", "aff_embrace", "Embrace the Curse", 1, [25], ["novice_illusion"], "You stop fighting what's in your blood: every affliction's upsides are 50% stronger. [OURS]", [["affup", 0.5, {}]]],
     [ "Restoration", "aff_warding", "Warding Rites", 1, [30], ["novice_restoration"], "Old prayers and salt lines keep the worst at bay: every affliction's downsides are 40% weaker. [OURS]", [["affdown", 0.4, {}]]],
+    // rune spell crafting (runecraft.js reads rcbudget / rcmods / rcturns)
+    [ "Destruction", "rune_scholar", "Rune Scholar", 2, [30, 60], ["novice_destruction"], "Spells you craft at the Rune table get a 5/10% bigger power budget. [OURS]", [["rcbudget", [0.05, 0.1], {}]]],
+    [ "Mysticism", "spellwright", "Spellwright", 1, [40], ["spell_absorption"], "Spells you craft at the Rune table can carry two modifiers. [OURS]", [["rcmods", 1, {}]]],
+    [ "Destruction", "runic_echo", "Runic Echo", 1, [50], ["rune_master"], "Your crafted cloaks, walls and healing circles last a round longer, and a crafted rune trap re-arms once at half strength. [OURS]", [["rcturns", 1, {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {
