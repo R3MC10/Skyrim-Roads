@@ -313,7 +313,7 @@ const TIP = (() => {
   function place(rect) {
     const vv = window.visualViewport, vw = vv ? vv.width : innerWidth, vh = vv ? vv.height : innerHeight, ox = vv ? vv.offsetLeft : 0, oy = vv ? vv.offsetTop : 0;
     const ins = insets(), M = 8, L = ox + ins.l + M, R = ox + vw - ins.r - M, T = oy + ins.t + M, B = oy + vh - ins.b - M;
-    box.style.maxWidth = Math.max(160, Math.min(340, R - L)) + "px";
+    box.style.maxWidth = Math.max(160, Math.min(340, R - L)) + "px"; box.style.width = "";   // (a fight-bar line set a width)
     box.style.left = "0px"; box.style.top = "0px";
     const tw = box.offsetWidth, th = box.offsetHeight, gap = 10;
     const cx = rect.left + rect.width / 2;
@@ -335,6 +335,20 @@ const TIP = (() => {
     const b = bar.getBoundingClientRect();
     return { left: r.left, width: r.width, right: r.right, top: Math.min(r.top, b.top), bottom: r.bottom, height: r.bottom - Math.min(r.top, b.top) };
   }
+  /* [fightdeclutter] a move on the fight screen's skill bar: its tip is a fixed info line right above the bar, as wide
+     as the bar (at most 620px), never over the buttons or under the finger */
+  function dockLine(bar) {
+    // html.a11y-zoom (access.js) zooms the page: the bar's rect comes back zoomed, the box's left/top are set before the zoom
+    const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+    const r = bar.getBoundingClientRect(), b = { left: r.left / z, top: r.top / z, width: r.width / z };
+    const vw = (window.visualViewport ? window.visualViewport.width : innerWidth) / z;
+    const w = Math.round(Math.min(620, b.width - 12, vw - 16));
+    box.style.maxWidth = w + "px"; box.style.width = w + "px";
+    box.style.left = Math.round(Math.max(8, b.left + (b.width - w) / 2)) + "px";
+    box.style.top = "0px";
+    box.style.top = Math.round(Math.max(8, b.top - box.offsetHeight - 6)) + "px";
+    box.classList.remove("tt-below"); box.classList.add("tt-above");
+  }
   function show(hit, rect = null) {
     if (!DOM) return;
     const main = hit.k ? html(hit.k) : hit.t ? `<p class="tt-plain">${esc(hit.t)}</p>` : null;
@@ -344,7 +358,10 @@ const TIP = (() => {
     if (!box.isConnected) document.body.appendChild(box);
     box.innerHTML = body;
     cur = hit; hit.rect = rect;
-    place(rect || anchor(hit.el));
+    const dock = !rect && hit.el?.closest?.("#tbf.c2 .tbdock");
+    box.classList.toggle("tt-dock", !!dock);
+    if (dock) dockLine(dock);
+    else place(rect || anchor(hit.el));
     box.classList.add("on");
     if (hit.el?.id) hit.el.setAttribute("aria-describedby", "tip");
     clearInterval(watchT); watchT = setInterval(watch, 300);

@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b220-fightdeclutter", build: 220, date: "25 Nov 2026", title: "A calmer fight screen", items: [
+      "The fight screen is tidier, mostly on phones. The top is one slim strip with the round and the turn order; the fight log and the combat wheel sit in the new … menu.",
+      "The foe's card shows its name and kind on one line and only its next move. Tap the card to see everything it plans this round.",
+      "The target is a thin ring on the ground under the foe. The dashed line to it only shows while you aim.",
+      "Your health, magicka and stamina live only in the orb now; its striped band shows how much the foe is about to take. No more bars over your hero or numbers in the Moves row.",
+      "The Moves diamonds and \"Your turn\" share one thin line, and a move's description shows as a fixed line just above your buttons, never on top of them.",
+      "End turn is a plain button in its own corner. Snow falls as soft round flakes.",
+    ] },
     { id: "b219-mapread", build: 219, date: "25 Nov 2026", title: "An easier map to read", items: [
       "Land you've already explored now sits under a light mist instead of the heavy one. Places you've never been stay dark.",
       "Names no longer pile up: your party and your objective always show first, then towns, then everything else. A town's name steps aside instead of vanishing.",

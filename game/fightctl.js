@@ -229,14 +229,14 @@ const FIGHTCTL = (() => {
     return `<button class="tbact end fc-end${g > 0 ? "" : " ready"}" data-tba="end" data-fk=" "${endTip} aria-label="End turn${g > 0 ? `, +${g}% guard` : ""}">
       <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M5 5l8 7-8 7z M13 5l8 7-8 7z" fill="currentColor"/></svg></span><b>End turn</b><small>${g > 0 ? `+${g}% guard` : "ready"}</small>${keyLbl(" ")}</button>`;
   }
-  /* the top row of your turn: moves left (used ones burst away), then stamina / magicka / health as numbers */
+  /* the top row of your turn: moves left (used ones burst away) and "Your turn". Stamina / magicka / health live in
+     the orb (fightdeclutter.js: one place for each number), so no coloured numbers here any more. */
   function apHTML(sess) {
     const key = sess.round + ":" + sess.idx, same = key === last.key, acts = sess.st.acts || 4, left = Math.max(0, acts - (sess.myActs || 0));
     const lost = same ? Math.max(0, last.left - left) : 0;
     last = { key, left };
-    const f = sess.f, row = Array.from({ length: acts }, (_, i) => `<i class="${i < left ? "on " : i < left + lost ? "lost " : ""}ap"></i>`).join("");
-    const res = f && f.s && typeof G !== "undefined" ? `<span class="fc-res"><em class="rc sp">${Math.round(f.sp)}</em><em class="rc mp">${Math.round(f.mp)}</em><em class="rc hp">${Math.round(f.hp)}</em></span>` : "";
-    return `<span class="fc-apl">Moves</span><span class="fc-pips" data-k="ap">${row}</span><b class="fc-apn num">${left}<small>/${acts}</small></b>${res}<em>Your turn${sess.until ? ` <b class="num" id="tbcd">${Math.max(0, Math.ceil((sess.until - Date.now()) / 1000))}s</b>` : ""}</em>`;
+    const row = Array.from({ length: acts }, (_, i) => `<i class="${i < left ? "on " : i < left + lost ? "lost " : ""}ap"></i>`).join("");
+    return `<span class="fc-apl">Moves</span><span class="fc-pips" data-k="ap">${row}</span><b class="fc-apn num">${left}<small>/${acts}</small></b><em>Your turn${sess.until ? ` <b class="num" id="tbcd">${Math.max(0, Math.ceil((sess.until - Date.now()) / 1000))}s</b>` : ""}</em>`;
   }
 
   // ------------------------------------------------------------------ settings row (Settings → Fights)
