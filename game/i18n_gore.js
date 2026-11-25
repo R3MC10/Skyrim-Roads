@@ -38,6 +38,19 @@ Object.assign(I18N_EXTRA.words, {
     "Krew i flaki na Pełne pokazuje wszystko; Niskie zostawia kurz, iskry i efekty czarów bez realistycznej krwi; Wył. nie pokazuje nic.",
 });
 
+/* blood3 (b188-blood3): cleaner blood */
+Object.assign(I18N_EXTRA.words, {
+  "Cleaner blood": "Czystsza krew",
+  "No more grey circles floating over a fallen foe: the dust when a body hits the ground is a low, soft puff that settles fast.":
+    "Koniec z szarymi kółkami nad pokonanym wrogiem: kurz, gdy ciało pada na ziemię, to niski, miękki obłoczek, który szybko opada.",
+  "A critical hit now throws thin streams of blood that break into drops of all sizes, plus a quick fine spray. No more red pills or pale sticks.":
+    "Trafienie krytyczne wyrzuca teraz cienkie strugi krwi, które rwą się na krople różnej wielkości, i krótką drobną mgiełkę. Koniec z czerwonymi pigułkami i bladymi patyczkami.",
+  "Sparks only fly when a blade hits metal (plate armour or a machine), and they're small, bright and quick.":
+    "Iskry lecą tylko, gdy ostrze trafia w metal (płytową zbroję albo maszynę), i są małe, jasne i krótkie.",
+  "The pool under a fallen foe (or under you when you're knocked down) spreads wider over two seconds, with a soft, uneven edge, a darker middle and a wet shine.":
+    "Kałuża pod pokonanym wrogiem (albo pod tobą, gdy padniesz) rozlewa się szerzej przez dwie sekundy, z miękkim, nierównym brzegiem, ciemniejszym środkiem i mokrym połyskiem.",
+});
+
 /* blood2 (b185-blood2): realistic liquid blood, the Gore setting */
 Object.assign(I18N_EXTRA.words, {
   "Gore": "Krew",
