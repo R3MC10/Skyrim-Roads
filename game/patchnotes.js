@@ -3,11 +3,16 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b327-dunloop", build: 327, date: "25 Nov 2026", title: "Dungeons no longer send you round in circles", items: [
+    { id: "b328-dunloop", build: 328, date: "25 Nov 2026", title: "Dungeons no longer send you round in circles", items: [
       "Dungeons no longer send you round in circles: every room you finish moves you on to the next one, all the way to the boss and out.",
       "On a deep expedition in a party, the others now follow the leader down the stairs and through every new level, instead of waiting at the camp for good.",
       "In a party, the leader's choices reach everyone in the order they were made, so nobody gets left behind in a cleared room or at the camp when the connection is slow.",
       "If your game was saved at a camp or right after a boss and the room got lost, loading it puts you back at the camp (or lets you leave), instead of making you fight the same boss again.",
+    ] },
+    { id: "b327-phonefight", build: 327, date: "25 Nov 2026", title: "Fights fit your phone", items: [
+      "On a phone the fight log now shows only its newest line. Tap the small arrow next to it to see the last few lines, and again to fold it. The game remembers your choice.",
+      "The foe's health shows as numbers under its bar on a phone, so you can see how close it is to falling without tapping it.",
+      "Every status icon in a fight shows its number: how many stacks of burning, poison, bleeding, vulnerable, winded and the rest, or how many turns a spell has left. On the foe, on you and on your party. Hold or hover an icon for the full text.",
     ] },
     { id: "b326-smooth", build: 326, date: "25 Nov 2026", title: "Smoother map, travel and fights", items: [
       "The map is much lighter to draw: the painted ground and the fog are kept ready while you look around, so the map no longer stutters and your phone stays cooler.",
