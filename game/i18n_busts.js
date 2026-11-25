@@ -2,7 +2,7 @@
 var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 (() => {
   Object.assign(I18N_EXTRA.words, {
-    // patch note (build 224)
+    // patch note (build 226)
     "Painted faces for every race": "Malowane twarze dla każdej rasy",
     "Picking a race now shows a painted portrait of each one on a dark panel, with the race name underneath.":
       "Przy wyborze rasy każda ma teraz malowany portret na ciemnym tle, a pod nim nazwę rasy.",

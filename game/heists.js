@@ -461,7 +461,7 @@ const HEISTS = (() => {
     const btn = r && r.id === h.id ? `<button class="btn pri" data-hs="open">${esc(" Carry on with the heist")}</button>`
       : `<button class="btn pri" data-hs="start" ${why ? "disabled" : ""}>${esc(" Plan the heist")}</button>`;
     const stats = x.stats.runs ? `<div class="hz-stats"><span>${esc("Heists")} <b>${x.stats.runs}</b></span><span>${esc("Clean")} <b>${x.stats.clean}</b></span><span>${esc("Caught")} <b>${x.stats.caught}</b></span><span>${esc("Gold")} <b class="gold">${x.stats.gold}</b></span></div>` : "";
-    const body = `<div class="hz-card hz-${h.id}"><div class="hz-scene" aria-hidden="true"><span class="hz-moon"></span><span class="hz-roofs"></span><span class="hz-win"></span></div>
+    const body = `<div class="hz-card hz-${h.id}">${typeof HEISTSCENE !== "undefined" ? HEISTSCENE.card(h.id) : ""}<div class="hz-scene" aria-hidden="true"><span class="hz-moon"></span><span class="hz-roofs"></span><span class="hz-win"></span></div>
       <div class="hz-head"><h3>${esc(h.name[0])}</h3><span class="hz-tier t${h.tier}">${esc(tierTag(h))}</span></div>
       <p class="hz-blurb">${esc(h.blurb[0])}</p>
       <div class="item hz-prize">${typeof ICONART !== "undefined" ? ICONART.item(h.prize, 32) : ""}<div class="t">${esc(pz.name)}<span>${esc(done ? "Taken once already. The house hid the rest better." : "The prize. A fence pays well for it.")}</span></div></div>
@@ -492,8 +492,11 @@ const HEISTS = (() => {
     const h = BY_ID[r.id], vote = voteState();
     const intro = r.stage === 0 && !r.last ? h.blurb[0] : r.last;
     const vbox = vote ? `<div class="hz-vote"><p>${esc0(` Your party is voting: ${vote.n} of ${vote.of} have voted.`)}</p><p class="sub">${esc0("Tap another choice to change your vote. Most votes win; a tie goes to you.")}</p><div class="hz-btns"><button class="btn pri" data-hs="decide">${esc0("Decide now")}</button></div></div>` : "";
-    return `<div class="hz-modal"><div class="hz-top"><h2>${esc0(h.name[0])}</h2><p class="sub">${esc0(h.city)} · ${esc0(tierTag(h))}</p></div>${tracker(r)}${heatBar(r)}
-      ${intro ? `<p class="hz-say">${esc0(intro)}</p>` : ""}${vbox}<div class="hz-opts">${options(s).map((o) => optRow(o, vote)).join("")}</div></div>`;
+    const top = `<div class="hz-top"><h2>${esc0(h.name[0])}</h2><p class="sub">${esc0(h.city)} · ${esc0(tierTag(h))}</p></div>`;
+    const low = `${tracker(r)}${heatBar(r)}${intro ? `<p class="hz-say">${esc0(intro)}</p>` : ""}${vbox}<div class="hz-opts">${options(s).map((o) => optRow(o, vote)).join("")}</div>`;
+    /* [heistart] the house painting behind the choices (heistscene.js) */
+    if (typeof HEISTSCENE !== "undefined") return HEISTSCENE.wrap(r, `${top}<div class="hz-low">${low}</div>`);
+    return `<div class="hz-modal">${top}${low}</div>`;
   }
   function endHTML(res, extra = "") {
     const h = BY_ID[res.house], cls = res.outcome === "clean" ? "ok" : res.outcome === "caught" ? "bad" : res.outcome === "quit" ? "" : "warn";
@@ -509,7 +512,8 @@ const HEISTS = (() => {
     const s = S(); if (!s || !ctx) return;
     const html = heistHTML(s); if (!html) return;
     const m = DOM ? document.querySelector("#modal .hz-modal") : null;
-    if (m && !m.classList.contains("hz-end")) m.outerHTML = html; else ctx.openModal(html, "hz");
+    if (m && !m.classList.contains("hz-end")) { if (typeof HEISTSCENE !== "undefined" && HEISTSCENE.patch(m, html)) return; m.outerHTML = html; }
+    else ctx.openModal(html, typeof HEISTSCENE !== "undefined" ? "hz hz-fs" : "hz");
   }
   const mates = () => { try { return ctx?.mates ? ctx.mates() || [] : []; } catch { return []; } };
   const leading = (s) => role(s) === "leader" && mates().length > 0 && ctx?.Store && ctx.party?.();

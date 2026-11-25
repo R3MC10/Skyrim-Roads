@@ -267,7 +267,7 @@ const FOL2 = (() => {
   /* an ally record for your own follower (engine pushes it) */
   function ally(s, hp) {
     const f = st(s); if (!f) return null;
-    const rec = { name: nameOf(s.follower.id), dmg: dmg(s), hp, follower: true, fid: s.follower.id, kind: "follower", look: look(s), heals: healer(f) && skillOf(f, "Restoration") >= 25 ? 2 : 0 };
+    const rec = { name: nameOf(s.follower.id), dmg: dmg(s), hp, follower: true, fid: s.follower.id, kind: (typeof TOWNS !== "undefined" && TOWNS.FOLLOWERS[s.follower.id]?.[6]) || "follower", look: look(s), heals: healer(f) && skillOf(f, "Restoration") >= 25 ? 2 : 0 };
     return typeof FAI !== "undefined" ? FAI.equipAlly(s, f, rec) : rec;   // spells, magicka, stamina, pace, tactics
   }
   /* their own turn's extras: drink a potion when badly hurt, heal you when you're in trouble. null = just attack */
@@ -320,7 +320,7 @@ const FOL2 = (() => {
     const p = c?.fold; if (!p || !p.id) return [];
     const hp = Math.max(20, p.cur || p.hp || 100);
     return [{ name: p.n || nameOf(p.id), dmg: Math.max(1, p.dmg || 5), hp, maxHp: p.hp || hp, red: clamp(p.red || 0, 0, 0.7), role: p.role || "fighter", sneaky: !!p.sn,
-      healAt: 45, healAmt: p.ha || 0, heals: p.heals || 0, potAt: 0, pots: 0, potAmt: 50, coop: typeof COOP !== "undefined", kind: "follower", fid: p.id, ofUid: c.id, look: lookFromCard(c), partyFollower: true }];
+      healAt: 45, healAmt: p.ha || 0, heals: p.heals || 0, potAt: 0, pots: 0, potAmt: 50, coop: typeof COOP !== "undefined", kind: (typeof TOWNS !== "undefined" && TOWNS.FOLLOWERS[p.id]?.[6]) || "follower", fid: p.id, ofUid: c.id, look: lookFromCard(c), partyFollower: true }];
   }
 
   // ---- hiring the extra followers (added to the town list) and their conditions
