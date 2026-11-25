@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b297-netfix", build: 297, date: "25 Nov 2026", title: "Players can see each other again", items: [
+      "Players can see each other again. Since accounts came in, players who signed in and players who didn't were in two separate worlds, so friends vanished from each other's map, Social tab and parties.",
+      "Signed in, your phone now joins both: the account world and the phone-to-phone world. Signed in or not, you see each other, chat, trade and team up like before.",
+      "A friend who signed in on an older version still only sees players who signed in. If someone is missing, ask them to update the game.",
+    ] },
     { id: "b296-nomountfight", build: 296, date: "25 Nov 2026", title: "Horses are for travel", items: [
       "Horses are for travel now: fights always happen on foot.",
       "Riding when a fight starts on the road? You get down and fight on foot. Your horse waits beside you, safe: nobody goes for it and a fight never hurts it. You ride on afterwards.",
