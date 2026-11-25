@@ -4713,6 +4713,39 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 #tbf .fc-aimbar .fc-who:active{background:rgba(96,66,24,.95)}
 /* [notify-2] an onboarding tip waits, hidden, while it would cover the dungeon route strip */
 #obtip.obwait{visibility:hidden;pointer-events:none}
+/* [nocover] nocover.js: nothing floats on a button. The history button starts the message lane (or sits right of "World news"
+   on a PC), banners keep to a slim band at the top, the Gather prompt docks on the bottom bar on phones */
+#nfhbtn{position:fixed;right:auto}
+#hudlane{padding-right:0}
+#hudlane.nc-hb{padding-left:44px}
+#nfhbtn.nc-off{display:none}
+#pbanners.nc-fit{align-items:center}
+#pbanners.nc-fit .pban{min-width:0;max-width:100%;box-sizing:border-box;max-height:64px;overflow:hidden;padding:6px 18px}
+#pbanners.nc-fit .pban .ptx b{-webkit-line-clamp:1;line-clamp:1}
+#pbanners.nc-fit .pban .ptx{max-width:100%}
+#pbanners.nc-fit .pban .pic img{max-height:44px;width:auto}
+#pbanners.nc-fit .pban img.pmini{width:auto;max-height:44px}
+body.nc-gdock #gnear:not(:empty){left:0;right:0;max-width:none;margin:0;z-index:6}
+body.nc-gdock #gnear .gnear{padding:8px max(12px,env(safe-area-inset-left)) 8px max(12px,env(safe-area-inset-right));box-shadow:0 -1px 0 rgba(170,220,130,.35),0 -8px 20px rgba(0,0,0,.45)}
+body.nc-gdock .app{padding-bottom:calc(140px + var(--nc-gnear,0px) + env(safe-area-inset-bottom))}
+body:has(#tbf) #gnear{display:none!important}
+/* [movepreview] movepreview.js: what a move will do while you hover or hold it */
+#tbf .tbbar .mpv{position:absolute;top:0;bottom:0;z-index:2;pointer-events:none;border-radius:2px}
+#tbf .tbbar .mpv.lose.maybe{background:repeating-linear-gradient(135deg,rgba(255,236,190,.85) 0 3px,rgba(120,20,10,.35) 3px 7px);box-shadow:inset 0 0 0 1px rgba(255,230,170,.7)}
+#tbf .tbbar .mpv.lose.sure{background:repeating-linear-gradient(135deg,rgba(255,255,255,.95) 0 3px,rgba(255,190,120,.75) 3px 7px);box-shadow:inset 0 0 0 1px #fff;animation:mpvpulse 1.1s ease-in-out infinite}
+#tbf .tbbar .mpv.cost{background:repeating-linear-gradient(135deg,rgba(0,0,0,.55) 0 3px,rgba(0,0,0,.3) 3px 6px)}
+#tbf .tbbar .mpv.heal{background:repeating-linear-gradient(135deg,rgba(140,240,150,.9) 0 3px,rgba(40,120,50,.5) 3px 7px)}
+#tbf .tbbar .mpv-n{position:absolute;z-index:3;right:0;bottom:calc(100% + 2px);font:700 11px/1 "Barlow Semi Condensed",sans-serif;font-style:normal;color:#ffe2b0;text-shadow:0 1px 2px #000,0 0 4px #000;pointer-events:none;white-space:nowrap}
+#tbf .tbbar .mpv-n.heal{color:#b8f5b0;left:auto}
+#tbf .c2arcs .mpv-arc{fill:none;stroke-width:7.5;stroke-linecap:butt;stroke:rgba(10,6,4,.78)!important;transition:none}
+#tbf .c2mpn.mpv-num::after,#tbf .c2spn.mpv-num::after{content:" " attr(data-mpv);color:#ffb39a}
+#tbf .c2glass .mpv-heal{position:absolute;left:0;right:0;z-index:1;background:repeating-linear-gradient(135deg,rgba(140,240,150,.75) 0 3px,rgba(40,120,50,.35) 3px 7px)}
+#tbf .c2orb.mpv-guarded .c2glass{box-shadow:0 0 0 3px rgba(150,200,255,.75),0 0 20px rgba(150,200,255,.55),inset 0 0 14px #000}
+#tbf .mpv-guard{margin-top:4px;padding:3px 8px;border-radius:6px;background:rgba(20,32,52,.88);border:1px solid rgba(150,200,255,.6);color:#d6e8ff;font-size:11px;line-height:1.25;max-width:220px;pointer-events:none}
+#tbf .tbap i.ap.mpv-use{opacity:.3;animation:none!important;box-shadow:none!important;transform:scale(.85)}
+#tbf .tbact.mpv-src{outline:2px solid rgba(255,226,160,.8);outline-offset:1px}
+@keyframes mpvpulse{50%{opacity:.6}}
+@media (prefers-reduced-motion:reduce){#tbf .tbbar .mpv.lose.sure{animation:none}}
 /* [stations] a place's page opens on the work: folded town news, a capped painting, the keeper on one line, the note under the list */
 .au-news{margin:0 0 4px}
 #side .au-newsb{display:flex;align-items:center;gap:6px;width:100%;min-height:40px;padding:6px 10px;background:rgba(20,16,12,.55);border:1px solid rgba(214,178,94,.25);border-radius:6px;color:var(--sk-mute,#9d978a);font:600 13px/1.2 var(--sk-ui,GameIcons,system-ui);letter-spacing:.05em;text-transform:uppercase;cursor:pointer;text-align:left}
@@ -4868,6 +4901,7 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 <script src="fightset.js"></script>
 <script src="combat2.js"></script>
 <script src="fightdeclutter.js"></script>
+<script src="movepreview.js"></script>
 <script src="guide.js"></script>
 <script src="patchnotes.js"></script>
 <script src="market.js"></script>
@@ -5046,6 +5080,7 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 <script src="i18n_balfear.js"></script>
 <script src="i18n_combat2.js"></script>
 <script src="i18n_fightdeclutter.js"></script>
+<script src="i18n_movepreview.js"></script>
 <script src="i18n_busts.js"></script><script src="i18n_npcportraits.js"></script>
 <script src="i18n_fightset.js"></script>
 <script src="i18n_stacks.js"></script>
@@ -5110,6 +5145,7 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 <script src="i18n_qaside2.js"></script>
 <script src="i18n_gptqa.js"></script>
 <script src="i18n_perklayout.js"></script>
+<script src="i18n_nocover.js"></script>
 <script src="i18n_perksky.js"></script>
 <script src="i18n_crafticons.js"></script>
 <script src="i18n_stations.js"></script>
@@ -5133,6 +5169,7 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 <script src="hud2.js"></script>
 <script src="skillup.js"></script>
 <script src="notify.js"></script>
+<script src="nocover.js"></script>
 <script src="invites.js"></script>
 <script src="tourney.js"></script>
 <script src="holdui.js"></script>

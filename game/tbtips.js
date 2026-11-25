@@ -8,6 +8,12 @@ const TBTIPS = (() => {
   const hitPct = () => r0(100 * (typeof F !== "undefined" ? F.HIT_CHANCE : 0.85));
   function range(base) { const [a, b] = spread(); return `${Math.max(1, r0(base * a))}–${Math.max(1, r0(base * b))}`; }
   function foeCut(f, d) { return f.e?.red ? d * (1 - f.e.red) : d; }
+  /* [movepreview] the same numbers the striped piece on the foe's bar shows (TB.preview in tbfight.js) */
+  function pv(f, a) {
+    try { if (typeof TB === "undefined" || !TB.preview) return null; const S = TB.session; return TB.preview(f, a, S && S.f === f ? S : null); } catch (e) { return null; }
+  }
+  const pvTxt = (p) => (p.lo === p.hi ? `${p.hi}` : `${p.lo}–${p.hi}`);
+  function rangeOf(f, a, base) { const p = pv(f, a); return p && p.raw ? pvTxt(p) + (p.capped ? " (one blow can't take more than 40% of a strong foe)" : "") : range(base); }
   function weaponName(f) { return f.bound ? f.bound.name || "bound weapon" : f.weapon ? f.weapon.name || "weapon" : "fists"; }
   function safeDmg(f) { try { return f.weaponDamage(); } catch (e) { return 0; } }
 
@@ -20,11 +26,11 @@ const TBTIPS = (() => {
     if (typeof REACT !== "undefined" && REACT.owns(a)) return `${REACT.tip(f, a)} ${apTxt}`;   // reactions.js
     if (a === "attack") {
       const d = foeCut(f, safeDmg(f));
-      return `Attack with your ${weaponName(f)}: about ${range(d)} damage, ${hitPct()}% to hit. ${apTxt}`;
+      return `Attack with your ${weaponName(f)}: about ${rangeOf(f, a, d)} damage, ${hitPct()}% to hit. ${apTxt}`;
     }
     if (a === "power_attack") {
       const d = foeCut(f, safeDmg(f) * (typeof F !== "undefined" ? F.POWER_ATTACK_DAMAGE : 2));
-      return `A heavy swing: about ${range(d)} damage and it can stagger the foe. ${apTxt}`;
+      return `A heavy swing: about ${rangeOf(f, a, d)} damage and it can stagger the foe. ${apTxt}`;
     }
     if (a === "block") return f.shield
       ? `Slam your shield into the foe: small damage and they're stunned and lose their next turn. Costs a lot of stamina. ${apTxt}`
@@ -38,8 +44,8 @@ const TBTIPS = (() => {
       if (!sp) return apTxt;
       const mc = k === "scroll" ? 0 : r0((typeof G.spellCost === "function" ? G.spellCost(f.s, sp) : sp.cost) * (k === "dual" ? 2.2 : 1));
       const el = sp.element && sp.element !== "none" ? ` ${sp.element}` : "";
-      const amt = sp.amount ? r0(sp.amount * (k === "dual" ? 2.2 : 1)) : 0;
-      const what = sp.kind === "damage" ? `about ${amt}${el} damage` : sp.kind === "heal" ? `heals about ${amt}` : sp.kind === "armor" ? `+${amt} armour for the fight` : sp.kind;
+      const amt = sp.amount ? r0(sp.amount * (k === "dual" ? 2.2 : 1)) : 0, p = sp.kind === "damage" ? pv(f, a) : null;
+      const what = sp.kind === "damage" ? `about ${p && p.raw ? pvTxt(p) : amt}${el} damage` : sp.kind === "heal" ? `heals about ${amt}` : sp.kind === "armor" ? `+${amt} armour for the fight` : sp.kind;
       const src = k === "scroll" ? "Read the scroll (it's used up)" : k === "dual" ? "Cast it with both hands: stronger, costs more" : `${sp.school || "Magic"} spell`;
       return `${sp.name}: ${what}. ${src}.${k === "scroll" ? "" : ` ${apTxt || `${mc} magicka.`}`}`;
     }
@@ -63,6 +69,6 @@ const TBTIPS = (() => {
     return `${kind}: ${e.name}. ${r0(Math.max(0, f.ehp))} / ${r0(ehpMax)} health, hits for about ${range(e.damage || 0)}.${e.red ? ` Armour blunts ${r0(e.red * 100)}% of your blows.` : ""}${tags.length ? ` (${tags.join(", ")})` : ""}${typeof FOEKIT !== "undefined" && FOEKIT.names(f).length ? ` Can use: ${FOEKIT.names(f).join(", ")}.` : ""}`;
   }
   const STATUS = { burn: "Burning: takes fire damage each turn", chill: "Chilled: slower and clumsier, misses more", shock: "Shocked: loses magicka and takes shock damage", para: "Paralyzed: can't act", stag: "Staggered: loses their next move", stun: "Stunned by your shield: loses their next turn" };
-  return { action, me, foe, STATUS };
+  return { action, me, foe, STATUS, pvTxt, rangeOf };
 })();
 if (typeof module !== "undefined") module.exports = TBTIPS;

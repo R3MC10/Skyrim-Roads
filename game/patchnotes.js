@@ -3,9 +3,21 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b271-roadart", build: 271, date: "25 Nov 2026", title: "Painted road encounters", items: [
+    { id: "b273-roadart", build: 273, date: "25 Nov 2026", title: "Painted road encounters", items: [
       "Almost everything you meet on the road now has its own painting: bandits' tolls, caravans, shipwrecks, avalanches, giants, wisps, hagravens, peddlers, shrines and many more.",
       "You see it when the encounter starts, on the result after you choose, and in the party vote.",
+    ] },
+    { id: "b272-nocover", build: 272, date: "25 Nov 2026", title: "Nothing covers your buttons", items: [
+      "The round message history button now sits at the left end of the messages (on a PC, next to World news) and steps aside when there's a button under it. It used to land on Leave in a dungeon, the info button in a town and other buttons in the corner. It hides while a menu, the character creator, the perk stars or a mini-game is open.",
+      "Big banners (quest done, achievements) stay in a slim strip near the top and pick a spot with no buttons under it. On the map and in a dungeon they never drop below the top fifth of the screen, so the dungeon route stays readable.",
+      "On a phone, the Gather prompt is a strip right on top of the bottom bar, and the page gets room for it at the end. On a PC it no longer shows when the Gathering card already has the same Gather button.",
+      "Character creation: a raised sword is never cut off at the top and never touches the turn and Face buttons.",
+    ] },
+    { id: "b271-movepreview", build: 271, date: "25 Nov 2026", title: "See a move before you make it", items: [
+      "In a fight, rest the mouse on a move (or hold your finger on it on a phone): the foe's health bar shows a striped piece for what it could lose, from the lowest to the highest hit.",
+      "Your stamina or magicka dims by what the move costs, and one of your move diamonds fades. Healing spells show the health you'd get back; End turn shows the guard you keep.",
+      "The numbers match the tooltip, and a strong foe never shows more than 40% gone from one blow. A quick tap still does the move right away.",
+      "Bandit archers now carry a bow instead of an axe, bandit mages a staff and a spell, and Forsworn and draugr archers have their own pictures too.",
     ] },
     { id: "b270-stations", build: 270, date: "25 Nov 2026", title: "Places open on the work", items: [
       "Opening the Forge, a shop, the inn or any other place in town now shows its tabs and list right away: the town news folds into one \"Town news\" row you can open, and the how-it-works note sits under the list.",
