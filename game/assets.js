@@ -19,12 +19,16 @@
               frostatronach stormatronach dremora chaurus mudcrab horker riekling ashspawn
      horse-<coat>-<pose>      ~1024 max  painted horses (horseart.js): transparent, side view facing right, saddled, no rider,
                                          hooves on the bottom edge, trimmed. poses stand gallop rear down (lying, head right).
-                                         Have: grey (all four), bay (stand). A missing coat borrows the grey picture, tinted;
+                                         Have: grey (all four), black and chestnut (stand gallop down),
+                                         bay (stand). A missing coat borrows the grey picture, tinted;
                                          add new files to HORSEART.HAVE (and their seat point to META). WebP q88.
      rig-<who>-<set>-<part>   ~300-1100  painted fighter parts (rig.js; joints measured in rigdata.js): transparent, side view
                                          facing right, 2x Lanczos of the trimmed cut-outs, WebP q84. who: nordm nordf · set: leather
-                                         iron steel (nordf: leather) · part: head torso pelvis uparm forearm hand-open hand-fist thigh
-                                         shin foot leg-bent. A set is used once all 11 parts load; until then the ink figure stays.
+                                         iron steel (both nordm and nordf) · part: head torso pelvis uparm forearm hand-open hand-fist
+                                         thigh shin foot leg-bent. A set is used once all 11 parts load; until then the ink figure stays.
+     rig-head-<race><m|f>     ~430-650   painted heads for other races on the same bodies (rig.js; RIGDATA.HEADS): dunmer khajiit
+                                         argonian, m/f. Scaled so the neck is 110 px at 1x (like the Nord necks), trimmed, 2x, WebP q84.
+                                         A missing one keeps the Nord head with a skin tint.
      rig-w-<pic>              ~200-460   painted weapons and shields the painted fighters hold (riggear.js; grip points in its
                                          PIV table): transparent, trimmed, WebP q86. Weapons lie flat, point right: sword
                                          sword-iron dagger greatsword axe battleaxe mace staff (360/330/200/460/320/440/330/460
@@ -65,10 +69,19 @@
      mg-smith-blade1 … 4      ~1170-1350 ×~125  blade stages (bar, rough, cooling, finished), transparent, tang left, tip right,
                                          trimmed, all cut from one sheet at the same scale (keep it). WebP q85.
      mg-smith-hammer, -tongs  785×278, 892×169  transparent tools, horizontal, head / jaws on the right. WebP q85.
+     mg-fishing-bg            2048×1152  painted lake at dusk for the fishing mini-game (fishart.js), 16:9, WebP q82. Water wobble,
+                                         glints, mist and weather are drawn over it; without it the ink lake stays.
+     fish-<kind>              ~720 wide  painted fish, transparent, side view facing right, trimmed, WebP q86 (fishart.js SPR maps
+       kinds: salmon trout perch pike goldcarp ghostfish     every game fish to one, some tinted; others keep the ink fish)
+     tool-fishing-rod         1400×71    painted rod, horizontal, tip on the right, trimmed; drawn in slices so it bends
      lock-<face>              720×720    painted lock faces for the lockpicking game (lockgame.js), transparent, keyhole centre
                                          at (0.5, 0.40): iron steel nordic dwemer noble. GPT art, trimmed, 1.5x Lanczos, WebP q86.
      tool-lockpick            933×80     the pick, horizontal, hook tip on the right; tool-tension-wrench 705×116, bend on the right.
                                          Missing files: lockgame.js draws the lock and tools in code.
+     mg-hunting-bg            2048×1152  painted misty clearing for the hunting mini-game (huntart.js), layered for parallax. WebP q84.
+     animal-<slug>            ~500-720   painted game animals for hunting (huntart.js): transparent, side view facing right,
+                                         trimmed, WebP q88. slugs: deer elk fox hare (snow fox borrows the fox, bleached).
+                                         Cut into body/head/ear/tail by huntart.js RIG; any other animal keeps the ink drawing.
      ui-panel                 1024×1024  tileable dark panel texture
      ui-parchment             1024×1024  tileable parchment texture
      ui-compass               1254×1254  transparent compass rose

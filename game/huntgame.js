@@ -158,7 +158,7 @@ const HUNTGAME = (() => {
   }
 
   // ====================================================================== the rules (pure, tested in Node)
-  const W = 560, H = 300, HORIZON = 150;
+  const W = 560, H = 300, HORIZON = 150, FLY = 0.5;   // FLY: seconds the arrow is in the air (just the look)
   function plan(s, id, opts = {}, rnd = Math.random) {
     const a = ANIMALS[id] || ANIMALS.deer, w = weapon(s) || { kind: "arrow" };
     return { id, a, dist: opts.road ? 48 + rnd() * 10 : 68 + rnd() * 16, alert: 0, head: "down", headT: 1.5 + rnd() * 2.5, facing: rnd() < 0.5 ? -1 : 1,
@@ -266,6 +266,7 @@ const HUNTGAME = (() => {
       <canvas id="hgcv" width="${W}" height="${H}" aria-hidden="true"></canvas>
       <div class="hgbars"><span class="hglab">\uE14B</span><div class="hgalert" id="hgalert"><i></i></div><span class="hgdist" id="hgdist"></span></div>
       <p class="fhmsg" id="hgmsg" aria-live="polite"></p>
+      <div class="hgloot" id="hgloot"></div>
       <div class="cgrow" id="hgrow"></div>
       <p class="cghint" id="hghint"></p></div>`;
     document.body.appendChild(el);
@@ -349,7 +350,7 @@ const HUNTGAME = (() => {
         el.querySelector("#hgdist").textContent = `${Math.round(g.dist)} m`;
       }
     } else if (st.phase === "flight") {
-      st.arrow.t += dt / 0.35;
+      st.arrow.t += dt / FLY;
       if (st.arrow.t >= 1) { st.resRnd = rng(g.seed + "|res"); const q = outcome(g, st.shot.hit, st.resRnd); end(st.shot.hit, q); }
     }
   }
@@ -362,6 +363,9 @@ const HUNTGAME = (() => {
     sfx(r.kill ? "coin" : "miss"); if (r.kill) buzz([20, 30, 60]);
     S.fleeT = 0;
     setPhase("done", r.text + (r.skills?.length ? " " + r.skills.join(". ") + "." : ""));
+    // what came off the animal, as chips that pop in while the hide goes on the frame (huntart.js draws the skinning)
+    const lootEl = DOM && document.querySelector("#hgloot");
+    if (lootEl && r.kill) lootEl.innerHTML = Object.entries(r.got || {}).map(([i, n], k) => `<span class="hgchip" style="animation-delay:${(quality === "clean" ? 2.3 : 2) + k * 0.25}s">${n > 1 ? n + "× " : ""}${esc(D.ITEMS[i]?.name || i)}</span>`).join("");
     S.opts.onResult?.(S.res);
   }
   function again() {
@@ -377,6 +381,8 @@ const HUNTGAME = (() => {
   function draw(ts) {
     const cv = document.querySelector("#hgcv"); if (!cv) return;
     const g = typeof FITCANVAS !== "undefined" ? FITCANVAS.fixed(cv, W, H) : cv.getContext("2d");
+    // the painted scene (huntart.js); this ink picture stays for when the paintings aren't there
+    if (typeof HUNTART !== "undefined" && HUNTART.draw(g, st, ts, ART_API)) return;
     const T = ts / 1000, G2 = st.g;
     let night = false; try { night = G.isNight(); } catch { /* fine */ }
     const sky = g.createLinearGradient(0, 0, 0, HORIZON);
@@ -429,6 +435,7 @@ const HUNTGAME = (() => {
     if (st.phase === "done" && st.shot) { g.strokeStyle = st.shot.hit === "vital" ? "#b6372a" : "rgba(35,29,23,.8)"; g.lineWidth = 1.4; g.beginPath(); g.moveTo(st.shot.x - 5, st.shot.y - 5); g.lineTo(st.shot.x + 5, st.shot.y + 5); g.moveTo(st.shot.x + 5, st.shot.y - 5); g.lineTo(st.shot.x - 5, st.shot.y + 5); g.stroke(); }
     if (night) { g.fillStyle = "rgba(10,14,24,.25)"; g.fillRect(0, 0, W, H); }
   }
+  const ART_API = { W, H, HORIZON, L, get box() { return box; }, get swayAt() { return swayAt; }, get drawAnimal() { return drawAnimal; }, ANIMALS };
   /* an ink animal; f = facing (1 right, -1 left) */
   function drawAnimal(g, id, x, y, rx, ry, headUp, f, T, down, running) {
     const a = ANIMALS[id] || ANIMALS.deer;
@@ -493,6 +500,7 @@ const HUNTGAME = (() => {
     s.trip.status = "travel"; s.trip.encounter = null; s.trip.lastTick = G.now();
   }
   return { hash, rng, seedFor, ANIMALS, HABITAT, TOWNS_HG, PER_DAY, W, H, knifeTier, habitat, pickAnimal, fromEncounter, sections, groundKey, groundLeft, useGround, weapon, block,
-    plan, scent, alertRate, stalkStep, box, swayAt, drift, shoot, outcome, skin, settle, play, close, told, endRoad, state: () => st, _toAim: toAim, _loose: loose };
+    plan, scent, alertRate, stalkStep, box, swayAt, drift, shoot, outcome, skin, settle, play, close, told, endRoad, state: () => st, _toAim: toAim, _loose: loose,
+    HORIZON, drawAnimal };
 })();
 if (typeof module !== "undefined") module.exports = HUNTGAME;

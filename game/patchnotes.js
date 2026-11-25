@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b197-mgsmith", build: 197, date: "25 Nov 2026", title: "A real forge for smithing", items: [
+    { id: "b201-mgsmith", build: 201, date: "25 Nov 2026", title: "A real forge for smithing", items: [
       "Making weapons and armor at a forge is now a small scene at a painted smithy: heat the bar, hammer it into shape, then quench it.",
       "Heat: hold to pump the bellows and keep the glow in the gold band. Too hot and it burns, too cold and it won't move.",
       "Hammer: tap the glowing spots as the rings close on them. Sparks fly and the bar turns into a rough blade, then a shaped one. The metal cools while you work, so reheat it when the glow fades.",
@@ -11,6 +11,31 @@ const PATCHNOTES = (() => {
       "Good work gives the same small, capped bonus as before (a point or two of damage or armor). Great work can also save one piece of the main material now and then. The forge still uses up everything else.",
       "Quick craft skips it, like the other crafting games. The Smithing contest at festivals uses the new forge too.",
       "New Smithing perk, Forge Sense: wider gold bands, slower cooling, and a better chance to save material.",
+    ] },
+    { id: "b200-rigraces", build: 200, date: "25 Nov 2026", title: "Painted races and a softer swing", items: [
+      "Women in iron or steel armour now wear it in fights too, painted to match, instead of always showing up in leather.",
+      "Dark Elves, Khajiit and Argonians get their own painted faces in fights, for men and women, sized to sit right on the armour. Other races keep the tinted face for now.",
+      "Your sword swing leaves a soft, fading arc that follows the blade, instead of a hard white line shooting up into the sky.",
+      "Damage numbers on the fight screen pop up next to the fighter who took the hit, not floating high in the sky.",
+    ] },
+    { id: "b199-horsecoats", build: 199, date: "25 Nov 2026", title: "Black and chestnut horses", items: [
+      "Black and chestnut horses are painted too: a glossy black with a white star, and a copper chestnut with a light mane, a white blaze and white socks. They stand, gallop and lie down like the grey.",
+      "Chestnut is a new coat at the stables. The stables now show the whole horse in the coat you pick before you buy.",
+      "Wild horses by the road can be chestnut too.",
+    ] },
+    { id: "b198-mgfishing", build: 198, date: "25 Nov 2026", title: "Fishing gets a makeover", items: [
+      "Fishing now happens on a painted lake at dusk: the water moves and glints, fish rise here and there, and mist drifts along the far shore. Night, rain, snow and fog show on it too.",
+      "Your rod is painted and really bends: it flexes back when you aim, whips forward on the cast and bows deeper the tighter the line gets. The line arcs out with the float.",
+      "The float bobs with little rings, twitches on nibbles and goes under with a splash on the real bite.",
+      "While you reel, you see the fish's shadow dart under the water, and on a hard run it may leap right out.",
+      "A landed fish shows on a catch card with its painting, marked when it's rare or the first of its kind. Same fish, same rules: only the look is new.",
+    ] },
+    { id: "b197-mghunt", build: 197, date: "25 Nov 2026", title: "Painted hunting", items: [
+      "Hunting is now a painted scene: a misty clearing at sunrise, with trees, ferns and heather that slide apart as you creep closer, and the animal grows as you close in.",
+      "Deer, elk, foxes, snow foxes and hares are painted and move: they graze with their head down, look up when they hear you, flick their ears and tail, and bolt away in a real run. Other animals keep their drawing.",
+      "The wind shows in the grass, with leaves and seeds drifting the way it blows.",
+      "You see your bow come up and draw, and the arrow flies in a real arc. A hit makes the animal flinch or drop; blood follows the Gore setting (Off, Reduced, Full).",
+      "Skinning shows the hide stretched on a frame, and what you got pops up below.",
     ] },
     { id: "b196-mgmining", build: 196, date: "25 Nov 2026", title: "Mining looks and feels new", items: [
       "The mining game now happens in a painted cave. The rock face is real stone cut from the painting, and you can see chunks of ore poking out of the veins.",

@@ -798,7 +798,19 @@ const FIGHTART = (() => {
     function jag() { const n = 24; for (let i = 0; i < n; i++) { const t = i / (n - 1), off = i === 0 || i === n - 1 ? 0 : (Math.random() - 0.5) * 18 * s; BOLT[i * 2] = boltX0 + (boltX1 - boltX0) * t; BOLT[i * 2 + 1] = boltY0 + (boltY1 - boltY0) * t + off; }
       const at = 8 + Math.floor(Math.random() * 8); let x = BOLT[at * 2], y = BOLT[at * 2 + 1]; for (let i = 0; i < 10; i++) { FORK[i * 2] = x; FORK[i * 2 + 1] = y; x += (4 + Math.random() * 6) * s; y += (Math.random() * 7 + 1) * s; } }
     // weapon-tip trail
-    const TR = new Float32Array(26); let trN = 0, trOn = false, trailC = "#f4f6ff";
+    const TR = new Float32Array(26); let trOn = false, trailC = "#f4f6ff";
+    /* [rigraces] the swing trail: the blade tip (x,y) and a point part way down the blade (bx,by), sampled as the blade
+       moves; drawn as a soft crescent between the two that tapers and fades toward its tail. The painted fighter reports
+       its real blade (PAINTRIG.tip), the ink figures the drawn tip; a jump or a point far over the head starts it over */
+    const TRL = []; let heroRig = false, tipN = -1;
+    const nowS = () => real;   // the scene's own clock, so a paused or hand-stepped scene keeps its trail
+    function pushTrail(x, y, bx, by) {
+      if (!(isFinite(x) && isFinite(y) && isFinite(bx) && isFinite(by))) return;
+      if (y < groundY - 110 * s || y > groundY + 4 * s) { TRL.length = 0; return; }
+      const q = TRL[TRL.length - 1];
+      if (q && Math.hypot(x - q.x, y - q.y) > Math.max(40 * s, 4 * Math.hypot(x - bx, y - by))) TRL.length = 0;   // a fast swing moves the tip far between frames; only a jump of several blade lengths is a glitch
+      TRL.push({ x, y, bx, by, t: nowS() }); if (TRL.length > 24) TRL.shift();
+    }
     // [OURS] combat effects (combatfx.js): blood, the way the foe dies, the camera
     const CFX = typeof COMBATFX !== "undefined" ? COMBATFX : null, goreOn = !!CFX && CFX.gore(), bleed = CFX ? CFX.bleedOf(foeK) : [null, null, "none"];
     const NECK = -52 * fSize;
@@ -1001,7 +1013,7 @@ const FIGHTART = (() => {
         if (u >= 1) {
           if (!m.hits.length) landNumbers(b);
           revealLog(b.li);
-          bi++; lt = 0; hitIdx = 0; boltOn = 0; trN = 0;
+          bi++; lt = 0; hitIdx = 0; boltOn = 0; TRL.length = 0;
           if (bi >= beats.length) { phase = f.tbMid ? (CFX && !rm ? "settle" : "idle") : "fall"; phaseT = 0; if (phase === "idle") { done = true; rec.played = true; revealLog(1e9); ctl?.remove(); } if (phase === "fall") pickDeath(); }
         }
       } else if (phase === "settle") {   // a turn-by-turn fight: let the camera ease back before the scene rests
@@ -1060,7 +1072,12 @@ const FIGHTART = (() => {
     function sampleTrail(b, m, u) {   // the weapon tip, every step, so the trail follows the real arc
       if (!m.trail) return;
       const hitU = m.hits[0], side = b.who === "me" ? 1 : -1;
-      if (u > hitU - 0.18 && u < hitU + 0.1) { poses(b, m, u, b.st, 0); if (trN === 12) { TR.copyWithin(0, 2); trN = 11; } tipOf(side, side > 0 ? heroP : foeP, side > 0 ? heroP.wt : (foeP.wt || FOE_MOVE[foeK]), trN * 2); trN++; }
+      if (side > 0 && heroRig) return;   // the painted figure reports its own blade while it is drawn (draw)
+      if (u > hitU - 0.18 && u < hitU + 0.1) {
+        poses(b, m, u, b.st, 0); const P0 = side > 0 ? heroP : foeP; tipOf(side, P0, side > 0 ? heroP.wt : (foeP.wt || FOE_MOVE[foeK]), 22);
+        const hx = handX(side, P0), hy = handY(side), x = TR[22], y = TR[23];
+        pushTrail(x, y, hx + (x - hx) * 0.45, hy + (y - hy) * 0.45);
+      }
     }
     // ---- drawing
     function draw(now) {
@@ -1137,7 +1154,7 @@ const FIGHTART = (() => {
       }
       wg.save(); wg.translate(hx0 + (heroP.dx - heroKnock - hdg * 18) * s, groundY + (heroP.dy - hdg * 3) * s); wg.scale(s, s);
       const painted = !!rec.hero.look && !rec.hero.beast && typeof PAINTRIG !== "undefined" && PAINTRIG.can(rec.hero.look);   // the painted figure falls by itself
-      heroP.knock = heroKnock; heroP.down = meDown && painted ? fallE : 0;
+      heroP.knock = heroKnock; heroP.down = meDown && painted ? fallE : 0; heroRig = painted;
       if (meDown && !painted) { wg.translate(-6 * fallE, 0); wg.rotate(-Math.PI / 2 * fallE); wg.translate(0, 6 * fallE); }
       if (st.invis && !(b && b.who === "me" && b.move !== "self" && b.move !== "shout")) wg.globalAlpha = 0.28 + Math.sin(tt * 3) * 0.05;
       const MFx = typeof MOUNTFIGHT !== "undefined" ? MOUNTFIGHT : null, rfrac = phase === "play" && b ? (b.li != null ? b.li + u : (bi + u) / Math.max(1, beats.length) * (f.log || []).length) / Math.max(1, (f.log || []).length) : 1;
@@ -1146,7 +1163,12 @@ const FIGHTART = (() => {
       if (mp && !mp.ride && mp.stand) MFx.drawStand(wg, rec.horse, mp, tt, rec.horseCoat);
       heroP.ride = !!onHorse;
       if (onHorse) { if (mp) MFx.drawMount(wg, rec.horse, mp, tt, "back", rec.horseCoat); else HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "back", rec.horseCoat); wg.save(); if (mp) MFx.seat(wg, mp); else wg.translate(0, -30); }
-      { const fs = b ? b.st : st, form = fs && (fs.beast || fs.lord) && (phase === "play" || phase === "settle" || phase === "idle"); heroFig(wg, form ? { ...rec.hero, beast: fs.beast, lord: fs.lord } : rec.hero, form ? Math.max(0, Math.min(1, (heroP.dx || 0) / 40)) : 0, tt, heroP); }   // werewolf or Vampire Lord while changed
+      { const fs = b ? b.st : st, form = fs && (fs.beast || fs.lord) && (phase === "play" || phase === "settle" || phase === "idle"); heroFig(wg, form ? { ...rec.hero, beast: fs.beast, lord: fs.lord } : rec.hero, form ? Math.max(0, Math.min(1, (heroP.dx || 0) / 40)) : 0, tt, heroP);
+        if (form) heroRig = false;
+        else if (painted && b && b.who === "me" && m && m.trail && phase === "play" && u > m.hits[0] - 0.15 && u < m.hits[0] + 0.1 && PAINTRIG.tip) {   // [rigraces] the painted blade, where it really is
+          const T = PAINTRIG.tip("me");
+          if (T && T.n !== tipN) { tipN = T.n; const q = TRL[TRL.length - 1]; if (q && TRL.length < 8 && (T.x - tx) / sc < q.x - s) TRL.length = 0;   /* the backswing leaves no trail */ pushTrail((T.x - tx) / sc, (T.y - ty) / sc, (T.bx - tx) / sc, (T.by - ty) / sc); }
+        } }   // werewolf or Vampire Lord while changed
       if (onHorse) { wg.restore(); if (mp) MFx.drawMount(wg, rec.horse, mp, tt, "front", rec.horseCoat); else HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "front", rec.horseCoat); }
       wg.restore();
       if (GS) GS.drawMarks(wg, "hero", hx0 + (heroP.dx - heroKnock - hdg * 18) * s, heroChest - (onHorse ? 30 * s : 0), s, hpD / hpMax, meDown || !!st.invis);
@@ -1252,7 +1274,7 @@ const FIGHTART = (() => {
       if (b && m && m.trail && phase === "play") {
         const hitU = m.hits[0];
         trailC = b.who === "me" && rec.hero.ench ? rec.hero.ench[1] : "#f4f6ff";
-        if (trN > 1 && u < hitU + 0.22) trail(m.trail, b.miss ? 0.35 : 0.75 * (u < hitU + 0.1 ? 1 : 1 - (u - hitU - 0.1) / 0.12), b.power);
+        if (TRL.length > 1 && u < hitU + 0.22) trail(m.trail, b.miss ? 0.35 : 0.75 * (u < hitU + 0.1 ? 1 : 1 - (u - hitU - 0.1) / 0.12), b.power);
       }
       // a projectile in flight
       if (projX >= 0 && b && m && m.proj && u >= m.proj[0] && u <= m.proj[1]) projectile();
@@ -1303,9 +1325,25 @@ const FIGHTART = (() => {
       }
       wg.restore();
     }
+    /* a soft crescent along the blade's path: its outer edge the tip, its inner edge part way down the blade, thin and
+       clear at the tail, full and bright at the blade; drawn twice (a wide faint glow, then the core) so it has no hard edge */
     function trail(kind, a, power) {
-      wg.save(); additive(); wg.globalAlpha = a; wg.strokeStyle = power ? "#ffe0a0" : trailC; wg.lineCap = "round"; wg.lineJoin = "round";
-      for (let i = 1; i < trN; i++) { wg.lineWidth = Math.max(1, (kind === "wide" ? 7 : kind === "stab" ? 3 : 5) * s * (i / trN)); wg.beginPath(); wg.moveTo(TR[(i - 1) * 2], TR[(i - 1) * 2 + 1]); wg.lineTo(TR[i * 2], TR[i * 2 + 1]); wg.stroke(); }
+      const now = nowS(), life = kind === "stab" ? 0.1 : 0.15;
+      while (TRL.length && now - TRL[0].t > life) TRL.shift();
+      const n = TRL.length; if (n < 2) return;
+      const wk = kind === "wide" ? 1 : kind === "stab" ? 0.35 : 0.8, c = power ? "#ffe0a0" : trailC, h = TRL[n - 1], t0 = TRL[0];
+      const rgb = /^#[0-9a-f]{6}$/i.test(c) ? [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16)).join(",") : "244,246,255";
+      wg.save(); additive();
+      for (let pass = 0; pass < 2; pass++) {
+        const wf = wk * (pass ? 0.55 : 1), al = a * (pass ? 0.75 : 0.28);
+        const gr = wg.createLinearGradient(t0.x, t0.y, h.x, h.y);
+        gr.addColorStop(0, `rgba(${rgb},0)`); gr.addColorStop(0.55, `rgba(${rgb},${(al * 0.45).toFixed(3)})`); gr.addColorStop(1, `rgba(${rgb},${al.toFixed(3)})`);
+        wg.fillStyle = gr; wg.beginPath(); wg.moveTo(TRL[0].x, TRL[0].y);
+        for (let i = 1; i < n; i++) { const p = TRL[i - 1], q = TRL[i]; wg.quadraticCurveTo(p.x, p.y, (p.x + q.x) / 2, (p.y + q.y) / 2); }
+        wg.lineTo(h.x, h.y);
+        for (let i = n - 1; i >= 0; i--) { const q = TRL[i], f = Math.pow(i / (n - 1), 1.4) * wf; wg.lineTo(q.x + (q.bx - q.x) * f, q.y + (q.by - q.y) * f); }
+        wg.closePath(); wg.fill();
+      }
       wg.restore();
     }
     function projectile() {
