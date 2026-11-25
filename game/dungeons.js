@@ -512,7 +512,12 @@ const DUNGEONS = (() => {
     }
     if (d.row >= 0 && !d.rows[d.row]?.[d.col]) { d.row = Math.min(d.row, last - 1); d.col = 0; d.room = null; fixed.push("lost place"); }
     if (!d.room) {
-      if (d.row >= last) { backFromBoss(); fixed.push("boss room was empty"); }
+      // [dunloop] past a boss that's already down (a deep level's major fight, or the boss of this very visit): never the boss again
+      const beaten = d.row >= last && (d.deep?.level > 0 || (s.cleared?.[d.place] || 0) >= (d.t || 0) && (d.t || 0) > 0);
+      if (beaten) {
+        if (typeof DEEPDELVE !== "undefined" && (d.deep?.level > 0 || DEEPDELVE.offer(s))) { d.room = DEEPDELVE.campRoom(s); fixed.push("back at the camp"); }
+        else { d.done = true; fixed.push("boss already beaten"); }
+      } else if (d.row >= last) { backFromBoss(); fixed.push("boss room was empty"); }
       else if (d.row >= 0 && !nextChoices(s).length) { d.rows[d.row][d.col].links = d.rows[d.row + 1].map((_, i) => i); fixed.push("dead end opened"); }
     }
     if (fixed.length && typeof console !== "undefined") console.warn(`dungeon repaired (${d.place}): ${fixed.join(", ")}`);

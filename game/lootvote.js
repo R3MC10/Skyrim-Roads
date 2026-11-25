@@ -18,7 +18,7 @@ const LOOTVOTE = (() => {
 
   /* a run counts as a party run (shared pile, leader decides) when two or more heroes are in it */
   const partyRun = (run) => !!run && act(run).length >= 2;
-  const lastAt = (path, row, col) => { for (let i = (path || []).length - 1; i >= 0; i--) if (path[i][0] === row && path[i][1] === col) return i; return -1; };   // where a room sits in the shared path
+  const lastAt = (path, row, col, lv = 0) => { for (let i = (path || []).length - 1; i >= 0; i--) if (path[i][0] === row && path[i][1] === col && (path[i][2] || 0) === lv) return i; return -1; };   // [dunloop] a deep level's rooms carry the level   // where a room sits in the shared path
 
   // ---- gains: what a single action added to a save (new rows, bigger stacks, gold)
   function snap(s) { const q = {}; for (const r of s.inv) q[r.id] = r.qty; return { q, next: s.nextInv, gold: s.gold }; }
@@ -161,10 +161,11 @@ const LOOTVOTE = (() => {
     function memberLocked() { return inPartyRun() && !leader(); }
     function lockedHTML() { return `<div class="card lv-wait"><h3> <span>Waiting for the next party vote…</span></h3><p class="sub">In a party, everyone votes on each choice. The vote opens on your screen as soon as the leader starts it. What the party picks happens to you too, and everything found goes into the party's loot pile.</p></div>`; }
     /* wrap the leader's room action: shared pile + record the choice for the others */
+    let writing = Promise.resolve();   // the leader's last choice still being written
     async function aroundAct(c, doAct) {
       const s = S(), r = run();
       if (!inPartyRun()) return doAct();
-      const dd = s.dungeon, pi = leader() ? lastAt(r.path, dd.row, dd.col) : -1;   // the leader files the choice under the room's place in the shared path, even if their own count drifted
+      const dd = s.dungeon, pi = leader() ? lastAt(r.path, dd.row, dd.col, dd.deep?.level || 0) : -1;   // the leader files the choice under the room's place in the shared path, even if their own count drifted
       const step = pi >= 0 ? pi : Math.max(0, (dd.cstep || 1) - 1), before = snap(s);
       const res = doAct();
       const got = strip(s, before);
@@ -172,10 +173,12 @@ const LOOTVOTE = (() => {
         if ((got.items.length || got.gold) && res) res.text = `${res.text || ""} Into the party's loot pile: ${[got.gold ? got.gold + " gold" : "", ...got.items.map((x) => (x.qty > 1 ? `${x.qty}× ` : "") + (D.ITEMS[x.item]?.name || x.item))].filter(Boolean).join(", ")}.`.trim();
         const rec = res?.rec ? res.rec : c === "pick" && res ? (/^Click/.test(res.text || "") ? "pick@1" : "pick@0") : c;   // the lock: members replay whether it opened, not a roll of their own; a mystery room's check rides on res.rec (dunevents.js)
         const tok = Math.random().toString(36).slice(2);   // a busy store answers null: try again, but never write the same choice twice (members would replay it twice)
-        for (let k = 0; k < 4; k++) {
+        const prev = writing; let release; writing = new Promise((ok) => { release = ok; });
+        await prev;   // [dunloop] choices land in the order they were made: a retried fight landing after "extract" left the others at the camp for good
+        try { for (let k = 0; k < 4; k++) {
           if (k) await new Promise((ok) => setTimeout(ok, 250 * k));
           if (await Store.change("runs", r.id, (x) => ((x.actIds || []).includes(tok) ? x : { ...poolAdd(recordAct(x, step, rec), got.items, got.gold), actIds: [...(x.actIds || []).slice(-40), tok] }))) break;
-        }
+        } } finally { release(); }
       } else if (res && (got.items.length || got.gold)) res.text = `${res.text || ""} (Finds go to the party's loot pile.)`.trim();
       ctx.persist(true);
       return res;

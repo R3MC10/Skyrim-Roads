@@ -1,4 +1,7 @@
 const __GAME = process.env.W || require("path").join(__dirname, "../game/");
+// [dunloop] every dungeon module that touches a run is loaded (mystery events and their shortcuts, deep expeditions and
+// their camp, claw doors, party votes...). Players saw runs going round in circles: a deep expedition's next level never
+// reached the party's shared path (members waited forever), and a save made at an emptied camp sent you back to the boss.
 // dungeon runs never loop or stall: solo and party runs (leader + members syncing over a shared store) of every theme
 // reach the boss and end, even when the store drops writes, the leader's fight snapshot (tbfight.js) undoes a late
 // sync, or a save was made mid-run in a broken state. Saves stuck in a loop are repaired on load.
@@ -9,7 +12,7 @@ c.document = { getElementById: () => null, querySelector: () => null };
 c.SEED = +process.env.SEED || 12345;
 c.__fail = (e) => { console.error(e.stack || e); process.exitCode = 1; };
 vm.createContext(c);
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "guilds.js", "priests.js", "horses.js", "horsetravel.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "market.js", "smithing.js", "craftfair.js", "social.js", "ammo.js", "tomes.js", "magic.js", "combatai.js", "mp.js", "roam.js", "explore.js", "gather.js", "coop.js", "party.js", "partyplay.js", "lootvote.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "guilds.js", "priests.js", "horses.js", "horsetravel.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "market.js", "smithing.js", "craftfair.js", "social.js", "ammo.js", "tomes.js", "magic.js", "combatai.js", "mp.js", "roam.js", "explore.js", "gather.js", "coop.js", "party.js", "partyplay.js", "lootvote.js", "dunlines.js", "dunevents.js", "shouts2.js", "partytraps.js", "partyvote.js", "deepdelve.js", "dwemer.js", "blackreach.js", "treasure.js", "afflictions.js", "bargains.js", "dungeongames.js"])
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 
 vm.runInContext(`
@@ -17,13 +20,16 @@ vm.runInContext(`
 const ok = (x, m) => { if (!x) throw new Error("FAIL " + m); };
 const clone = (x) => JSON.parse(JSON.stringify(x));
 const flush = async (n = 6) => { for (let i = 0; i < n; i++) await new Promise((r) => setImmediate(r)); };
-let seed = SEED; Math.random = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+// mulberry32: the old LCG lost precision (seed × 1103515245 is past 2^53) and fell into short cycles, so the leader's
+// write tokens repeated and a choice was taken as already written (a test artifact that looked like a stuck member)
+let seed = SEED >>> 0; Math.random = () => { seed = (seed + 0x6D2B79F5) >>> 0; let t = seed; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 if (typeof GATHER !== "undefined" && GATHER.dungeonHooks) GATHER.dungeonHooks();
 
 // keep the heroes alive: the test is about the flow, not balance (every foe has 1 health and hits for 0)
 for (const k of ["scaleEnemy", "scaleQuestFoe"]) { const f0 = G[k]; if (f0) G[k] = (...a) => { const e = f0(...a); e.health = e.hp = 1; e.damage = 0; return e; }; }
 const act0 = DUNGEONS.act;
 DUNGEONS.act = (s, ch, t) => { const r = s.dungeon?.room; if (r?.enemy) { r.enemy.hp = r.enemy.health = 1; r.enemy.damage = 0; } G.setHealth(s, G.maxHealth(s)); return act0(s, ch, t); };
+const lvKey = (d) => (d.deep?.level || 0) * 100 + d.row;   // a deep expedition starts a new map on every level
 const mk = (id, name, place) => { const s = G.newSave(id, name, "nord"); s.location = place; [s.x, s.y] = WORLD.places[place] || [0, 0]; s.level = 30; return s; };
 const KINDS = ["dash", "trigger", "smash", "sneak", "flee", "search"];
 function choose(s) {   // the leader's pick, like a player: any real choice, sometimes played as a mini-game
@@ -39,17 +45,20 @@ const places = Object.keys(WORLD.places).filter((p) => DUNGEONS.enterable(p));
 const themes = {};
 for (const p of places) { const th = DUNGEONS.info(p).theme; (themes[th] = themes[th] || []).push(p); }
 let soloRuns = 0;
-for (const [th, list] of Object.entries(themes)) for (let k = 0; k < 6; k++) {
-  const place = list[k % list.length], s = mk("S" + k, "Solo", place);
+for (const [th, list] of Object.entries(themes)) for (let k = 0; k < 9; k++) {
+  const place = list[k % list.length];
+  let s = mk("S" + k, "Solo", place);
+  const reload = k % 3 === 1, runner = k % 3 === 2;   // saved and loaded again between steps / always tries to run past foes
   ok(DUNGEONS.enter(s) === null, "enter " + place);
   const rows = [];
   for (let n = 0; n < 400 && s.dungeon && !s.dungeon.done; n++) {
-    if (s.dungeon.room) { DUNGEONS.act(s, choose(s)); continue; }
+    if (reload && Math.random() < 0.5) { s = G.migrate(clone(s)); if (!s.dungeon || s.dungeon.done) break; }
+    if (s.dungeon.room) { const fl = runner && DUNGEONS.roomChoices(s).some((c) => c[0] === "flee"); DUNGEONS.act(s, fl ? (Math.random() < 0.5 ? "flee@0.1" : "flee@0.9") : choose(s)); continue; }
     const nx = DUNGEONS.nextChoices(s); ok(nx.length, "solo: a way on in " + place + " row " + s.dungeon.row);
     ok(DUNGEONS.enterRoom(s, nx[Math.floor(Math.random() * nx.length)]) === null, "solo enter room");
-    rows.push(s.dungeon.row);
+    rows.push(lvKey(s.dungeon));
   }
-  ok(s.dungeon && s.dungeon.done, "solo run of " + place + " (" + th + ") reaches the boss and ends");
+  ok(s.dungeon && s.dungeon.done, "solo run of " + place + " (" + th + (reload ? ", reloaded" : runner ? ", running" : "") + ") reaches the boss and ends");
   ok(rows.every((r, i) => !i || r > rows[i - 1]), "solo: never the same room twice " + rows);
   soloRuns++;
 }
@@ -76,7 +85,9 @@ function world(opts = {}) {
       persist() {}, publishCard() {}, renderDungeon() {}, renderPanel() {}, bump() {} });
     P.lv = LOOTVOTE.ui({ S: () => P.s, runs: () => P.coop.runs, Store, toast: (m) => P.log.push(m), esc: (x) => x, persist() {}, openModal() {}, closeModal() {}, modalOpen: () => false,
       renderDungeon() {}, nameOf: () => "x", dungeonAct: (ch, replay) => dungeonAct(P, ch, replay) });
-    P.trace = []; P.on = (col, docs) => { if (col === "runs") { P.coop.onRuns(docs); P.lv.onRuns(); const d = P.s.dungeon, k = d ? d.row + ":" + d.col + "/" + d.cstep + "/" + (d.room?.type || "-") + (d.done ? "D" : "") : "out"; if (P.trace[P.trace.length - 1] !== k) P.trace.push(k); } };
+    P.pv = PARTYVOTE.ui({ S: () => P.s, runs: () => P.coop.runs, Store, toast: (m) => P.log.push(m), esc: (x) => x, cardOf: () => null, online: () => true,
+      persist() {}, renderDungeon() {}, choose: (kind, key) => (kind === "way" ? dungeonRoom(P, key) : dungeonAct(P, key)) });
+    P.trace = []; P.on = (col, docs) => { if (col === "runs") { P.coop.onRuns(docs); P.lv.onRuns(); if (opts.vote) P.pv.onRuns(); const d = P.s.dungeon, k = d ? d.row + ":" + d.col + "/" + d.cstep + "/" + (d.room?.type || "-") + (d.done ? "D" : "") : "out"; if (P.trace[P.trace.length - 1] !== k) P.trace.push(k); } };
     P.Store = Store;
     players.push(P);
     return P;
@@ -112,8 +123,8 @@ function dungeonRoom(P, col) {   // ui.js dungeonRoom
 }
 
 async function partyRun(place, n, opts = {}) {
-  const Wd = world(opts), heroes = [];
-  for (let i = 0; i < n; i++) heroes.push(Wd.add(mk("P" + i, "Hero" + i, place)));
+  const Wd = world(opts), heroes = []; let votes = 0;
+  for (let i = 0; i < n; i++) { const h = mk("P" + i, "Hero" + i, place); if (opts.lvl) h.level = opts.lvl; heroes.push(Wd.add(h)); }
   const L = heroes[0];
   heroes.forEach((P) => { P.tb = !!opts.tb; });
   const nr = COOP.newRun(L.s); ok(nr.doc, "new run " + nr.err);
@@ -130,17 +141,31 @@ async function partyRun(place, n, opts = {}) {
     await flush();
     const s = L.s, d = s.dungeon;
     if (!d || d.done) break;
+    if (opts.vote) {   // every choice is a party vote (partyvote.js): the leader taps, the others vote, majority wins
+      const nx0 = d.room ? [] : DUNGEONS.nextChoices(s);
+      const kind = d.room ? "act" : "way", key = d.room ? String(choose(s)).replace(/@.*$/, "") : String(nx0[Math.floor(Math.random() * Math.max(1, nx0.length))]);
+      if (key !== "undefined" && L.pv.gate(kind, key)) {
+        for (let k = 0; k < 10; k++) {
+          await flush();
+          const pv = Object.values(Wd.DB.runs)[0]?.pv;
+          if (pv && !pv.res) for (const M of heroes.slice(1)) if (!pv.votes[M.s.id]) M.pv.gate(pv.kind, pv.opts[Math.floor(Math.random() * pv.opts.length)][0]);
+        }
+        votes++; continue;
+      }
+    }
     if (d.room) { const r0 = where(L); await dungeonAct(L, choose(s)); continue; }
     const nx = DUNGEONS.nextChoices(s);
     if (!nx.length) { stuck.waits++; continue; }
     const before = d.cstep;
     const err = dungeonRoom(L, nx[Math.floor(Math.random() * nx.length)]);
     if (err) { stuck.picks++; if (stuck.picks > 60) break; continue; }
-    L.entered.push(d.row);
+    L.entered.push(lvKey(d));
     if (opts.tb && d.room?.enemy) await dungeonAct(L, "fight");   // a quick tap on Fight: the fight starts before the store has answered the pick
   }
   for (let i = 0; i < 40; i++) await flush();
-  if (opts.drop) { await new Promise((r) => setTimeout(r, 2000)); for (let i = 0; i < 40; i++) await flush(); }   // the store retries after a short wait
+  // the store retries after a short wait (the leader's choices are written one after another, so a slow store takes a while)
+  for (let w = 0; w < (opts.drop ? 30 : 8) && !heroes.every((P) => !P.s.dungeon || P.s.dungeon.done); w++) { await new Promise((r) => setTimeout(r, 500)); for (let i = 0; i < 40; i++) await flush(); }
+  if (opts.vote) ok(votes > 0, "votes were held");
   return { heroes, L, steps, stuck, DB: Wd.DB };
 }
 
@@ -163,6 +188,11 @@ const checkRun = (res, tag) => {
 const dplaces = Object.entries(themes).filter(([th]) => th !== "giantcamp" && th !== "lair").map(([, l]) => l[0]);
 for (const place of dplaces) for (const n of [2, 3]) checkRun(await partyRun(place, n), "party of " + n + " in " + place);
 for (const place of [...dplaces, themes.lair?.[0], themes.giantcamp?.[0]].filter(Boolean)) checkRun(await partyRun(place, 2), "party in " + place);
+// every choice put to a party vote, with 3 heroes
+for (const place of dplaces) checkRun(await partyRun(place, 3, { vote: true }), "voting party of 3 in " + place);
+// a deep expedition (deadly dungeons): every level's rooms reach the others too
+const deepPlace = dplaces.find((p) => typeof DEEPDELVE !== "undefined" && DEEPDELVE.deepable(p));
+if (deepPlace) for (const n of [2, 3]) checkRun(await partyRun(deepPlace, n, { lvl: 40 }), "deep party of " + n + " in " + deepPlace);
 // the leader's fight snapshot comes back after the store answered (turn-by-turn fights on phones)
 for (const place of dplaces.slice(0, 4)) for (const n of [2, 3]) checkRun(await partyRun(place, n, { tb: true }), "turn-by-turn party of " + n + " in " + place);
 // a busy store drops writes now and then
@@ -212,6 +242,31 @@ for (const place of dplaces.slice(0, 3)) checkRun(await partyRun(place, 3, { dro
   COOP.follow(B, run); if (B.dungeon.room && B.dungeon.row === 0) ok(false, "member sent into the same room twice");
   if (!B.dungeon.room) COOP.follow(B, run);
   ok(B.dungeon.row === 1 && B.dungeon.cstep === 3, "member moves on to the next row (" + B.dungeon.row + ", cstep " + B.dungeon.cstep + ")");
+}
+{ // a deep camp emptied (a member stepped out of it): loading puts you back at the camp, never in front of the boss again
+  const s = mk("R3", "Rep", deepPlace || dplaces[0]); s.level = 40; DUNGEONS.enter(s);
+  const d = s.dungeon; d.row = d.rows.length - 1; d.col = 0; d.room = null; d.deep = d.deep || {}; d.deep.level = 2;
+  const m = G.migrate(clone(s));
+  ok(m.dungeon && m.dungeon.room?.type === "camp", "an emptied camp comes back as the camp, not the boss (" + m.dungeon?.room?.type + ")");
+}
+{ // the boss of this visit is down but the save lost the result: the run ends instead of the boss waiting again
+  const s = mk("R4", "Rep", dplaces[0]); DUNGEONS.enter(s);
+  const d = s.dungeon; d.row = d.rows.length - 1; d.col = 0; d.room = null; s.cleared = { [d.place]: d.t + 5 };
+  const m = G.migrate(clone(s));
+  ok(m.dungeon && (m.dungeon.done || m.dungeon.room?.type === "camp"), "a beaten boss isn't fought again on load");
+}
+{ // a member at the camp when the leader is already on the next level: follows them down the stairs
+  const s = mk("A", "Lead", deepPlace || dplaces[0]), B = mk("B", "Mem", deepPlace || dplaces[0]); s.level = B.level = 40;
+  let run = COOP.newRun(s); const id = run.id; run = { ...COOP.addMember(run.doc, B), status: "in", id };
+  COOP.join(B, run);
+  const last = B.dungeon.rows.length - 1;
+  B.dungeon.row = last; B.dungeon.col = 0; B.dungeon.room = null; B.dungeon.cstep = 5;
+  run = { ...run, path: [[0, 0], [1, 0], [2, 0], [3, 0], [last, 0], [0, 0, 1]], rooms: [{}, {}, {}, {}, { type: "boss" }, { type: "fight" }] };
+  ok(COOP.follow(B, run) === 1, "member walks into the leader's room on the next level");
+  ok(B.dungeon.deep?.level === 1 && B.dungeon.row === 0 && B.dungeon.cstep === 6, "member is on level 1 now (" + B.dungeon.deep?.level + ", row " + B.dungeon.row + ")");
+  const r2 = COOP.recordPick(run, { ...B.dungeon, cstep: 6, row: 1, col: 0, room: { type: "trap" } });
+  ok(r2 && r2.path.length === 7 && r2.path[6][2] === 1, "a pick on a deeper level is recorded with its level");
+  ok(!COOP.recordPick(r2, { ...B.dungeon, cstep: 7, deep: null, row: 3, col: 0, room: { type: "trap" } }), "a late pick from the level above is not recorded");
 }
 console.log("dungeon loop OK: " + soloRuns + " solo runs, " + partyRuns + " party runs, repairs checked");
 })().catch((e) => __fail(e));

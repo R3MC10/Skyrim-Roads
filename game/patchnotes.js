@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b316-dunloop", build: 316, date: "25 Nov 2026", title: "Dungeons no longer send you round in circles", items: [
+      "Dungeons no longer send you round in circles: every room you finish moves you on to the next one, all the way to the boss and out.",
+      "On a deep expedition in a party, the others now follow the leader down the stairs and through every new level, instead of waiting at the camp for good.",
+      "In a party, the leader's choices reach everyone in the order they were made, so nobody gets left behind in a cleared room or at the camp when the connection is slow.",
+      "If your game was saved at a camp or right after a boss and the room got lost, loading it puts you back at the camp (or lets you leave), instead of making you fight the same boss again.",
+    ] },
     { id: "b315-hourlyupdates", build: 315, date: "25 Nov 2026", title: "Updates arrive on time", items: [
       "New versions now reach the app reliably within about an hour of a change, instead of sometimes waiting many hours.",
     ] },
