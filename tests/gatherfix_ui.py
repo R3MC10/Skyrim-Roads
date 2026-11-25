@@ -23,9 +23,9 @@ async def run(b, w, h, phone, bad, old=False):
        if (old) S.gather={seen:{},picked:{}};
        for (const m of GATHER.around([S.x,S.y],120)) GATHER.st(S).seen[m.id]=1; if (old) delete S.gather.got;}""", old)
     await pg.evaluate("document.querySelector('[data-tab=log]')?.click()"); await pg.wait_for_timeout(300)
-    await pg.evaluate("document.querySelector('[data-tab=map]')?.click()"); await pg.wait_for_timeout(1500)
+    await pg.evaluate("document.querySelector('[data-tab=town]')?.click()"); await pg.wait_for_timeout(1500)   # [gatherarea] Gathering lives in the Area tab
     await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
-    root = ".gcard" if phone else "#gpop .gcard"
+    root = "#side #au-gather"
     vis = await pg.evaluate(f"()=>{{const c=document.querySelector('{root}'); return !!c && c.getBoundingClientRect().height>0}}")
     ok(vis, "the Gathering card is on screen")
     os.makedirs(OUT, exist_ok=True)

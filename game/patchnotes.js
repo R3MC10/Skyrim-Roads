@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b294-gatherarea", build: 294, date: "25 Nov 2026", title: "Gathering moved to the Area tab", items: [
+      "Gathering no longer floats over the map. It's now its own section in the Area tab: the plants around you, which ones are ripe and when picked ones grow back, Gather or Quick pick for each, Forage here (with how long until you can search again), Herbalist's notes and the Auto-pick switch.",
+      "The how-it-works text hides behind a small \"?\" next to the heading.",
+      "On the map a ripe plant in reach still shows its own Gather button, so you can pick it without leaving the map. In a party everyone still picks their own share.",
+    ] },
     { id: "b293-layout3", build: 293, date: "25 Nov 2026", title: "Titles you can read, hotbar in order", items: [
       "On phones the round message history button no longer sits on a screen's title (Area, Journal, Social, AI & Loadouts, a dungeon's name): the title makes room for it.",
       "The fight hotbar on phones shows its slots in key order again: 1 to 5 on top, 6 to 0 below. Catch your breath no longer jumps out of line.",
