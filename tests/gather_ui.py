@@ -17,7 +17,7 @@ async def rows_layout(b, bad):
            for (const m of GATHER.nodes()){const k=GATHER.around(m.pos,60).length; if(k>best){best=k;n=m;}}
            S.location=null; S.x=n.pos[0]; S.y=n.pos[1]; GATHER.st(S).auto=true;
            let i=0; for (const m of GATHER.around([S.x,S.y],120)){GATHER.st(S).seen[m.id]=1; if(i++%2) GATHER.st(S).picked[m.id]=G.now();}}""")
-        for t in ("log", "map"):
+        for t in ("log", "town"):
             await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
             await pg.evaluate(f"document.querySelector('[data-tab={t}]')?.click()"); await pg.wait_for_timeout(500)
         r = await pg.evaluate("""()=>{const c=document.querySelector('.gcard'); if(!c) return null; c.scrollIntoView();
@@ -58,13 +58,14 @@ async def main():
             # stand in the Reach next to a juniper/canis patch; spot everything around
             await pg.evaluate("""()=>{const S=window.__dbg.save(); const n=GATHER.nodes().find(n=>n.ing==='ing_juniper')||GATHER.nodes()[0]; S.location=null; S.x=n.pos[0]; S.y=n.pos[1];
                for (const m of GATHER.around([S.x,S.y],120)) GATHER.st(S).seen[m.id]=1; window.__n=n.id;}""")
-            await tab("tactics"); await tab("map")
+            await tab("log"); await tab("town")
             card = await pg.query_selector(".gcard")
-            ok(bool(card), "Travel shows the Gathering card")
+            ok(bool(card), "the Area tab shows the Gathering card")
             if card: await card.screenshot(path=f"ga_card_{style}.png")
             await pg.screenshot(path=f"ga_map_{style}.png")
             n0 = await pg.evaluate("()=>window.__dbg.save().inv.filter(r=>D.ITEMS[r.item].slot==='ingredient').reduce((a,r)=>a+r.qty,0)")
             await click("[data-act=gpick]")
+            await pg.evaluate("typeof HARVESTGAME!=='undefined' && HARVESTGAME.isOpen() && (HARVESTGAME._finish('good'), setTimeout(()=>HARVESTGAME.isOpen()&&HARVESTGAME.close(),400))"); await pg.wait_for_timeout(900)   # the hand-pick mini-game
             n1 = await pg.evaluate("()=>window.__dbg.save().inv.filter(r=>D.ITEMS[r.item].slot==='ingredient').reduce((a,r)=>a+r.qty,0)")
             ok(n1 > n0, f"Gather picks ingredients ({n0} -> {n1})")
             picked = await pg.evaluate("document.querySelectorAll('.gcard .gnode.gdone').length")

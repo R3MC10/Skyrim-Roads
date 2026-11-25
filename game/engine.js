@@ -286,6 +286,7 @@ const G = (() => {
   const withHorse = (s) => (typeof HORSES !== "undefined" ? HORSES.present(s) : !!s.horse);
   const capacity = (s) => F.BASE_CARRY + Math.floor(s.spBonus / F.ATTRIBUTE_PER_LEVEL) * F.CARRY_PER_STAMINA_LEVEL
     + (withHorse(s) ? (typeof HORSES !== "undefined" ? HORSES.carry(s) : D.HORSE_CARRY) : 0) + (P(s, "extra_pockets") ? 100 : 0) + fxSum(s, "carry") + (typeof PFX !== "undefined" ? PFX.num(s, "carry") : 0) + (s.stone === "steed" ? 100 : 0) + (s.follower ? 100 + (typeof BONDS2 !== "undefined" ? BONDS2.carry(s) : 0) : 0)   // [OURS] a follower carries 100 for you (more from Companion rank, bonds.js)
+    + (typeof PETS !== "undefined" ? PETS.carry(s) : 0)   // a pet carries a little too (pets.js)
     + (typeof HALL !== "undefined" ? HALL.carryBonus() : 0)   // [OURS] Jarl's Keep tier of the shared hall
     + (typeof CARAVANS !== "undefined" ? CARAVANS.cartCarry(s) : 0);   // [OURS] a cart behind your horse
   const overweight = (s) => carried(s) > capacity(s);
@@ -540,6 +541,7 @@ const G = (() => {
         if (fa && fd[6] && !fa.kind) fa.kind = fd[6];
         this.allies.push(fa || { name: fd[0], dmg: fd[4] * 0.55 * (1 + 0.05 * (s.level - 1)), hp: TOWNS.followerHp(s, t), follower: true, fid: s.follower.id, kind: fd[6] || "follower" });   // [OURS] 55% of their listed damage
       }
+      if (s.pet && typeof PETS !== "undefined") { const pa = PETS.ally(s, t); if (pa) this.allies.push(pa); }   // your pet fights beside your follower (pets.js)
       if (s.thrall && s.thrall.fights > 0) { this.allies.push({ name: s.thrall.name, dmg: s.thrall.dmg, thrall: true, kind: "zombie" }); this.thrallFought = true; }   // a raised corpse fights for you
       this.pw = typeof POWERS !== "undefined" ? POWERS.fightState() : null;
       if (typeof PFX !== "undefined") { const ab = Math.min(0.5, PFX.sum(s, "allies", null, {})); if (ab) for (const al of this.allies) if (al.dmg) al.dmg *= 1 + ab; }   // Inspiring, Rally, Thane's Guard
@@ -942,12 +944,12 @@ const G = (() => {
         if (al.fsum && typeof FAI !== "undefined") return FAI.hitSummon(this, al);   // a follower's summon takes the blow
         if (al.mt?.up && typeof MOUNTFIGHT !== "undefined") { const mr = MOUNTFIGHT.allyTurn(this, al); if (mr) return mr; }   // [OURS] a teammate on horseback
         if (al.coop && typeof COOP !== "undefined") return COOP.hitAlly(this, al);   // co-op party members take their own blows
-        if (al.follower && Math.random() < F.HIT_CHANCE) {
-          let d = this.e.damage * rnd(...F.DAMAGE_SPREAD) * (typeof FOL2 !== "undefined" && al.fid === s.follower?.id ? FOL2.taken(s) : 0.8);   // [OURS] followers wear armor (their real armor, with FOL2)
+        if ((al.follower || al.pet || al.partyPet) && Math.random() < F.HIT_CHANCE) {   // pets (yours or a teammate's) take blows too (pets.js)
+          let d = this.e.damage * rnd(...F.DAMAGE_SPREAD) * (al.pet && typeof PETS !== "undefined" ? PETS.taken(s) : typeof FOL2 !== "undefined" && al.follower && al.fid === s.follower?.id ? FOL2.taken(s) : 0.8);   // [OURS] followers wear armor (their real armor, with FOL2)
           if (typeof SPELLBOOK !== "undefined") d = SPELLBOOK.allyTakes(this, al, d);   // wards, stoneskin and veils you cast on them
           if (al.fai && typeof FAI !== "undefined") d = FAI.takes(this, al, d);   // a follower on guard blocks part of it
           al.hp -= d;
-          if (al.hp <= 0) { this.allies = this.allies.filter((x) => x !== al); this.followerDown = al.name; return `${n} knocks ${al.name} to their knees. ${al.name} is down!`; }   // [Skyrim] protected followers kneel instead of dying
+          if (al.hp <= 0) { this.allies = this.allies.filter((x) => x !== al); if (al.pet) this.petDown = al.name; else if (!al.partyPet) this.followerDown = al.name; return `${n} knocks ${al.name} to their knees. ${al.name} is down!`; }   // [Skyrim] protected followers kneel instead of dying
           return `${n} hits ${al.name} ${Math.round(d)}`;
         }
         return `${n} goes for ${al.name}`;
@@ -1039,9 +1041,9 @@ const G = (() => {
         this.turn++;
         const [rule, a] = this.choose();
         const line = { turn: this.turn, rule, me: this.act(a), them: "", a, wt: this.wt };   // a / wt: what was done, for the fight scene only
-        if (this.ai && !rule) { line.ai = true; if (this.aiWhy && this.aiWhy !== this.aiLastWhy) line.why = this.aiWhy; this.aiLastWhy = this.aiWhy; }   // why the AI did it (shown when the reason changes)
+        if (this.ai && !rule) { line.ai = true; const w = COMBATAI.shortWhy ? COMBATAI.shortWhy(a, this.aiWhy) : this.aiWhy; if (w && w !== this.aiLastWhy) line.why = w; this.aiLastWhy = w; }   // why the AI did it (shown when the reason changes; plain moves get a short reason too)
         if (this.bleed.length && this.ehp > 0) { const b = this.bleed.reduce((x, y) => x + y.dmg, 0); this.ehp -= b; this.bleed = this.bleed.map((y) => ({ ...y, turns: y.turns - 1 })).filter((y) => y.turns > 0); line.me += ` · bleeds ${Math.round(b)}`; }
-        for (const al of [...this.allies]) if (this.ehp > 0) { if (al.coop && typeof COOP !== "undefined") { line.me += COOP.allyAct(this, al); continue; } if (al.follower && typeof FOL2 !== "undefined") { const ft = FOL2.turn(this, al); if (ft) { line.me += ft; continue; } } if (al.follower && this.ai) { line.me += COMBATAI.followerAct(this, al); continue; } const d = al.dmg * rnd(...F.DAMAGE_SPREAD); this.ehp -= d; line.me += ` · ${al.name} ${Math.round(d)}`; }
+        for (const al of [...this.allies]) if (this.ehp > 0) { if (al.coop && typeof COOP !== "undefined") { line.me += COOP.allyAct(this, al); continue; } if (al.pet && typeof PETS !== "undefined") { line.me += PETS.turn(this, al); continue; } if (al.follower && typeof FOL2 !== "undefined") { const ft = FOL2.turn(this, al); if (ft) { line.me += ft; continue; } } if (al.follower && this.ai) { line.me += COMBATAI.followerAct(this, al); continue; } const d = al.dmg * rnd(...F.DAMAGE_SPREAD); this.ehp -= d; line.me += ` · ${al.name} ${Math.round(d)}`; }
         if (typeof PFX !== "undefined") PFX.tick(this, line);   // burning, chills and jolts
         if (this.dd) DEEPDELVE.tick(this, line);   // frost stacks, blood moon, overcharge, the restless dead
         if (this.summonTurns > 0 && this.ehp > 0) { this.summonTurns--; this.ehp -= this.summonDmg; line.me += ` · familiar ${this.summonDmg}`; }
@@ -1074,6 +1076,7 @@ const G = (() => {
         else if (fa) { this.s.follower.hp = Math.max(1, fa.hp); this.s.follower.ts = t; }
       }
       if (typeof FOL2 !== "undefined" && this.s.follower && !this.s._test && (this.followerDown || this.allies.some((a) => a.follower))) daeMsgs.push(...FOL2.gain(this.s, this));   // they learn from fights they were in
+      if (typeof PETS !== "undefined" && this.s.pet) daeMsgs.push(...PETS.after(this, t));   // your pet's health, up again if knocked down (pets.js)
       const extraMsgs = this.won && this.ehp <= 0 && this.tags.has("dragon") && typeof POWERS !== "undefined" && !this.s._test ? [POWERS.absorb(this.s)] : [];
       for (const [id, q] of Object.entries(this.used)) take(this.s, +id, q);
       for (const [id, c] of Object.entries(this.charges)) { const r = invRow(this.s, +id); if (r) r.charge = c; }
@@ -1276,15 +1279,14 @@ const G = (() => {
         if (ce) { const e = scaleEnemy(ce, fightLevel(s)); tr.status = "encounter"; tr.encounter = e; out.encounter = e; note(s, ` Caravan ambush: ${e.name}`); return out; }
         continue;
       }
-      const rate = tr.carriage || tr.follow ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1) * (typeof SNEAKMODE !== "undefined" ? SNEAKMODE.encounterMult(s) : 1) * (typeof CRISES !== "undefined" ? CRISES.encounterMult(s, [s.x, s.y], stepT) : 1) * (typeof CVROAD !== "undefined" ? CVROAD.ambushMult(s, stepT) : 1);   // nobody robs a carriage on a Jarl's road; party members following their leader leave the road to them (partyplay.js)
+      const rate = tr.carriage || tr.follow ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1) * (typeof SNEAKMODE !== "undefined" ? SNEAKMODE.encounterMult(s) : 1) * (typeof CRISES !== "undefined" ? CRISES.encounterMult(s, [s.x, s.y], stepT) : 1) * (typeof CVROAD !== "undefined" ? CVROAD.ambushMult(s, stepT) : 1) * (typeof HORSETRAVEL !== "undefined" ? HORSETRAVEL.encounterMult(s) : 1);   // nobody robs a carriage on a Jarl's road; party members following their leader leave the road to them (partyplay.js)
       if (Math.random() < 1 - (1 - rate) ** (dt / 60)) {
         const e = rollEncounter(s, stepT);
         if (e.danger === "low" && e.kind === "event") {   // every fight is yours to play: the trip stops for it (no auto fighting)
           const g = rint(...e.gold); s.gold += g;
           tripLog(s, e.text + (g ? ` (+${g} gold)` : ""));
         } else {
-          const hm = typeof HORSES !== "undefined" ? HORSES.hurt(s, e, stepT, 0.25) : null;   // horses go down, they never die
-          if (hm) tripLog(s, hm);
+          // your horse is never hurt by a road fight: it waits beside you, safe (horses are for travel)
           tr.status = "encounter"; tr.encounter = e;
           out.encounter = e;
           note(s, ` Encounter: ${e.name}`);
@@ -1333,7 +1335,7 @@ const G = (() => {
       enemyFirst = true; lines.unshift(`A twig snaps. ${theFoe(e, true)} spots you!`);
     }
     const f = new Fight(s, e, null, t);
-    if (typeof HORSEBACK !== "undefined" && (typeof MOUNTCOMBAT === "undefined" || MOUNTCOMBAT.enabled)) HORSEBACK.engage(f, t);   // [OURS] riding? you fight from the saddle (mountcombat.js: off for now, everyone fights on foot)
+    // [OURS] no mounted combat: riding into a fight, you get down and fight on foot; your horse waits, safe (horsetravel.js)
     f.canFlee = true;   // a "flee" tactic can break off a road fight
     f.run({ enemyFirst, t, hidden: opts.hidden ?? null });
     const skillMsgs = f.apply(t);
