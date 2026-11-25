@@ -3,6 +3,17 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b209-daedric", build: 209, date: "25 Nov 2026", title: "Daedric bargains and artifacts that wake up", items: [
+      "Black shrines by the road can now carry an offer from one of six Daedric princes: Mehrunes Dagon, Azura, Nocturnal, Hircine, Boethiah and Meridia (from level 8).",
+      "Accept a contract and do three things your prince likes, counted from how you really play: slaying foes, winning at night, picking pockets and locks, hunting beasts, fighting alone or putting the dead to rest.",
+      "Finish it and the prince's artifact is yours. Bind one at a time: it starts Dormant, wakes up with more of those deeds and can become Ascendant. Every stage adds a new power in every kind of fight.",
+      "Ascendant comes with a curse, and you choose: accept it, or refuse and stay Awakened. You can let it sleep again later.",
+      "The Daedric Mark matters here: carrying it, shrines call twice as often and your deeds count more. Accepting a curse brands you with the Mark, and the Vow of Cleansing makes the princes turn away.",
+      "Artifacts help, but never more than going from good gear to the best you can forge.",
+      "Find it all on the Character screen under Daedric bargains.",
+      "New perks: Princely Favour (Mysticism, deeds count more), Bound Will (Restoration, curses half as strong) and Awakened Bond (Enchanting, artifact powers stronger).",
+      "Daedric bargains are off the Coming next list: they're in the game now.",
+    ] },
     { id: "b208-runecraft", build: 208, date: "25 Nov 2026", title: "Rune crafting: make your own spells", items: [
       "A new Rune table at the College of Winterhold and at every arcane enchanter: build your own spell from an element, a delivery and a modifier.",
       "Elements: fire, frost, shock, poison, healing and ward. Deliveries: bolt, touch, rune trap, cloak, area and over time. Modifiers: chain, lingering, slow, piercing, cheap and quick.",
@@ -1463,10 +1474,9 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 208;
+  const NEXT_AT = 209;
   const NEXT = [
     "An adventuring company longhouse: a shared base with a treasury, a trophy hall and stables",
-    "Daedric bargains and artifacts that awaken",
     "Heists in the big cities",
   ];
   const KEY = "rotn_notes_seen";

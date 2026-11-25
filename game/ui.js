@@ -2936,7 +2936,7 @@
       + fold("powers", "Powers & shouts", powersHtml, S.souls ? `<span>Dragon souls</span> <b class="num">${S.souls}</b>` : "")
       + fold("skills", "Skills", `${groups}<p class="sub" style="margin-top:14px">Skills rise as you use them, with Skyrim's own rates.</p>`)
       + fold("perks", `Perks${pts > 0 ? ` <span class="gold">· ${pts} to spend</span>` : ""}`, perks)
-      + `${typeof RESPEC !== "undefined" ? RESPEC.panel(S) : ""}${typeof AFFL !== "undefined" ? AFFL.panel(S) : ""}${bloodPanel()}${typeof MENUS !== "undefined" ? "" : achPanel()}${start}`;
+      + `${typeof RESPEC !== "undefined" ? RESPEC.panel(S) : ""}${typeof AFFL !== "undefined" ? AFFL.panel(S) : ""}${typeof BARGAIN !== "undefined" ? BARGAIN.panel(S) : ""}${bloodPanel()}${typeof MENUS !== "undefined" ? "" : achPanel()}${start}`;
   }
 
   function panelPack() {
@@ -3645,6 +3645,7 @@
     if (/^pp(ready|go|cancel|kick|catch|vote|vhide)$/.test(a) && ppUI) return void ppUI.act(b);
     if (a.startsWith("cq") && CQ) return void CQ.act(S, b, { toast, openModal, closeModal, persist, renderPanel, tally, sound: (n) => SOUND.fx(n), guide: (k) => GUIDE.mark(S, k), selectMix: (ids) => { alchSel = ids; renderPanel(true); }, alchSel: () => alchSel });   // crafting shortcuts (craftqol.js)
     const say = (m) => { toast(m); persist(); renderPanel(true); if ($("#sky")) renderMenu(); };
+    if (a && a.startsWith("dbg") && typeof BARGAIN !== "undefined") return void BARGAIN.act(S, b, { say, show: (t, m) => { persist(); renderPanel(true); showMessage(t, m); } });   // Daedric bargains: bind, ascend, refuse, break (bargains.js)
     if (a && a.startsWith("affl") && typeof AFFL !== "undefined") return void AFFL.act(S, b, { say, show: (t, m) => { persist(); renderPanel(true); showMessage(t, m); } });   // afflictions: cures and favours; the temple rites get a popup (afflictions.js)
     if (typeof INVQOL !== "undefined" && INVQOL.onClick(b, S, { say, openModal, closeModal, stall: (id) => stalls.find((d) => d.id === id),   // inventory helpers: Keep, junk, undo sale, confirms (invqol.js)
       render: () => { persist(); renderPanel(true); if ($("#sky")) renderMenu(); }, again: (ds) => { const x = document.createElement("button"); Object.assign(x.dataset, ds); onPanelClick({ target: x }); },

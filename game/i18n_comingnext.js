@@ -4,8 +4,6 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
   Object.assign(I18N_EXTRA.words, {
     "14 more painted battle backdrops":
       "14 nowych malowanych teł bitew",
-    "Daedric bargains and artifacts that awaken":
-      "Daedryczne układy i artefakty, które się budzą",
     "Regional crises and heists":
       "Kryzysy w regionach i skoki",
     "Follower and horse bonds, and spell crafting":
