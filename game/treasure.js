@@ -606,7 +606,7 @@ const TREASURE = (() => {
       return out;
     }
     const rel = Object.entries(RELICS).find(([, v]) => v.from === r.item);
-    if (rel) { const i = relicInfo(s, rel[0]); if (i.have >= i.need) out.push(`<button class="btn pri" data-tm="restore" data-id="${rel[0]}" ${i.can ? "" : "disabled"}>\uE168 Restore${i.self ? "" : ` · ${i.fee} gold`}</button>`); }
+    if (rel) { const i = relicInfo(s, rel[0]); if (i.have >= i.need) out.push(`<button class="btn pri" data-tm="restore" data-id="${rel[0]}" ${i.can ? "" : "disabled"}>\uE19E Restore${i.self ? "" : ` · ${i.fee} gold`}</button>`); }
     if (RELICS[r.item] && COLLECTORS[s.location]) out.push(`<button class="btn" data-tm="sellrelic" data-id="${r.item}">Sell to the collector · ${relicPrice(s, r.item)} gold</button>`);
     return out;
   }
@@ -620,8 +620,8 @@ const TREASURE = (() => {
     const rows = [...ls.map((l) => `<div class="item tm-row">${ICONART.item(l.id, 30)}<div class="t">${esc(leadLabel(l.id))}<span>${hints(s, l.seed).map(esc).join(" ") || "No hints yet."}</span></div><button class="btn sm" data-tm="look" data-id="${esc(l.id)}">${l.kind === "journal" ? "Read" : "Look"}</button></div>`),
       ...bs.map((b) => `<div class="item tm-row">${ICONART.item(idOf.frag(b.seed, 1, b.n), 30)}<div class="t">${esc(`Torn map: ${b.count} of ${b.n} pieces`)}<span>${b.full ? "All here: put them together." : "Find or trade for the rest."}</span></div>${b.full ? `<button class="btn sm pri" data-tm="combine" data-seed="${esc(b.seed)}">Piece together</button>` : `<button class="btn sm" data-tm="look" data-id="${esc(idOf.frag(b.seed, +Object.keys(b.have)[0], b.n))}">Look</button>`}</div>`)].join("");
     const tombH = tb ? `<div class="tm-tomb"><p>\uE10E ${esc("Steps lead down under the slab you dug up. Whatever was buried here, someone made sure it stayed down.")}</p><button class="btn danger" data-tm="tomb" style="width:100%">${esc("\uE10E Go down into the tomb")}</button></div>` : "";
-    const collH = coll && relics.length ? `<p class="sub">${esc(`\uE168 ${coll} collects old relics.`)}</p>${relics.map((r) => `<div class="item tm-row">${ICONART.item(r.item, 28)}<div class="t">${esc(D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}</div>${detailActs(s, r).join("")}</div>`).join("")}` : "";
-    const digB = ls.length ? `<div class="tm-btns"><button class="btn pri" data-tm="dig" ${left || mem ? "disabled" : ""}>${esc(left ? `\uE12A Rest ${left} s` : "\uE12A Dig here")}</button>${lead ? `<button class="btn" data-tm="vote">${esc("\uE15E Ask the party")}</button>` : ""}</div>` : "";
+    const collH = coll && relics.length ? `<p class="sub">${esc(`\uE19E ${coll} collects old relics.`)}</p>${relics.map((r) => `<div class="item tm-row">${ICONART.item(r.item, 28)}<div class="t">${esc(D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}</div>${detailActs(s, r).join("")}</div>`).join("")}` : "";
+    const digB = ls.length ? `<div class="tm-btns"><button class="btn pri" data-tm="dig" ${left || mem ? "disabled" : ""}>${esc(left ? `\uE12A Rest ${left} s` : "\uE12A Dig here")}</button>${lead ? `<button class="btn" data-tm="vote">${esc("\uE19D Ask the party")}</button>` : ""}</div>` : "";
     return `<div class="panel tmcard"><h2>\uE128 ${esc("Treasure hunt")}</h2>${tombH}${ls.length || bs.length ? `<p class="sub">${esc("No marker on your map: match the sketch or the riddle to the land, go there and dig. A wrong guess only costs you a little time.")}</p>` : ""}${mem ? `<p class="sub">${esc("In a party only your leader digs. Vote for the spot when they ask.")}</p>` : ""}
       <div class="list">${rows}</div>${digB}${collH}</div>`;
   }
@@ -680,7 +680,7 @@ const TREASURE = (() => {
     const p = ctx.party?.(); const h = p?.halt;
     if (!h || h.kind !== "dig") return "";
     const tl = typeof PARTYPLAY !== "undefined" ? PARTYPLAY.tally(h) : {};
-    return `<div class="tmvote"><h2>\uE15E ${esc("Where do we dig?")}</h2><p class="sub">${esc("Your party is voting. Settle it when you're ready: the most votes win.")}</p>
+    return `<div class="tmvote"><h2>\uE19D ${esc("Where do we dig?")}</h2><p class="sub">${esc("Your party is voting. Settle it when you're ready: the most votes win.")}</p>
       <div class="list">${h.opts.map(([k, l]) => `<div class="item"><div class="t">${esc(l)}</div><b class="num">${(tl[k] || []).length}</b></div>`).join("")}</div>
       <div class="tm-btns col"><button class="btn pri" data-tm="vsettle">${esc("Settle the vote")}</button><button class="btn" data-tm="vcancel">${esc("Call it off")}</button></div></div>`;
   }

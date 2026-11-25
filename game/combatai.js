@@ -338,7 +338,7 @@ const COMBATAI = (() => {
     const eq = G.equipment(s), w = eq.weapon ? D.ITEMS[eq.weapon.item] : null;
     const healSp = heals.length && G.skill(s, "Restoration") >= 25 ? heals[0][1] : null;
     const role = healSp ? "healer" : eq.shield ? "guard" : w?.skill === "Two-Handed" || w?.skill === "One-Handed" ? "striker" : "fighter";
-    return { role, sneaky: G.skill(s, "Sneak") >= 40, healAt: 45, healAmt: healSp ? Math.round(healSp.amount || 30) : 0, heals: healSp ? 3 : 0, potAt: 35, pots: Math.min(2, G.countRestore(s, "health")), potAmt: 50 };
+    return { role, sneaky: G.skill(s, "Sneak") >= 40, healAt: 45, healAmt: healSp ? Math.round(healSp.amount || 30) : 0, heals: healSp ? 3 : 0, potAt: 50, pots: Math.min(2, G.countRestore(s, "health")), potAmt: 50 };
   }
 
   /* one turn at a time (for turn-based fights and the Auto button): no dice, the same state gives the same move.

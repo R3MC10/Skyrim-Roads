@@ -3,10 +3,46 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b178-mergefix", build: 178, date: "25 Nov 2026", title: "Small fixes after a big update", items: [
+    { id: "b184-mergefix", build: 184, date: "25 Nov 2026", title: "Small fixes after a big update", items: [
       "A horse knocked down in a fight now stays downed beside you afterwards, like everywhere else, until it gets back up (a few hours, a night's sleep or a stablehand).",
       "You only see one notice when a skill goes up, not two.",
       "Patch notes use the new game icons too.",
+    ] },
+    { id: "b183-potionbal", build: 183, date: "25 Nov 2026", title: "Potions hit harder again", items: [
+      "In a fight 60% of a potion now lands the moment you drink it, and the rest comes in over the next two rounds (small and big brewed ones: the next round). A potion saves you in a pinch again.",
+      "Still one potion of a kind at a time: another of the same kind only helps once the last one has mostly done its work.",
+      "Your tactics presets, followers and the Smart AI's party plans now drink a little earlier, at about half health, since potions take a moment to work.",
+      "Quick Draught is easier to reach (Alchemy 25 and 50) and each rank also makes 5% more of a potion land at once.",
+      "Relics, treasure hunts and the dig vote use proper game icons instead of phone emoji.",
+    ] },
+    { id: "b182-mappolish", build: 182, date: "25 Nov 2026", title: "Map polish: a clearer close-up and tidier cards", items: [
+      "Zoomed in close, the hand-inked chart now uses the painting's own colours, so going from the painting to the chart is smooth. Plains, forests, snow and mountains each get their own calm wash on soft paper, with a gentle shade on the hills.",
+      "Sun rays, cloud shadows, mist and town glows fade as you zoom in, so the close-up stays easy to read.",
+      "On a PC the world event card, its notices (a town rebuilding, a reward waiting), the dragon raid card and the caravan card now sit in one column at the left edge instead of over the middle of the map. The card still folds into a pill. Phones keep the old layout.",
+      "Names on the map no longer pile on top of each other: a camp's or a patrol's name moves aside or waits until you zoom in, and nothing is written under the cards at the left.",
+    ] },
+    { id: "b181-comingnext", build: 181, date: "25 Nov 2026", title: "A fresh Coming next list", items: [
+      "The Coming next list in Patch notes is up to date: werewolf paths, follower quests, legendary hunts, festivals, deep expeditions, treasure maps and the big fight screen are all in the game now, so they're off the list.",
+      "New on the list: painted fighters and blood, makeovers for the fishing, hunting, mining and lockpicking mini-games, afflictions, a longhouse for your adventuring company, Daedric bargains and more.",
+    ] },
+    { id: "b180-deepdelve-bal", build: 180, date: "25 Nov 2026", title: "Fairer deep expeditions and difficulty tiers", items: [
+      "Veteran, Legendary and Mythic are fairer when you go alone: a careful hero with a follower now beats the legendary lair about 1 time in 3 on Legendary and now and then even on Mythic.",
+      "A full party has it tougher on Legendary and Mythic: the foes grow more for every extra player, so four friends still need to work for the deepest hoard.",
+      "Going higher in level no longer makes the depths harder. A level 40 hero now does better down there than a level 30 one.",
+      "The master of the legendary lair at the very bottom has a little less health, so that fight is long but winnable.",
+    ] },
+    { id: "b179-leghuntpolish", build: 179, date: "25 Nov 2026", title: "Legendary hunts: painted beasts and fairer fights", items: [
+      "The Jarl's posters, your hunt card and the bestiary now show each legendary beast as a proper painting in a gold frame, in its own colours: the White Ghost is snow white, Grimfang and Ashtusk are black as soot, Bloodmoon has a blood-red tint.",
+      "In the fight the beast is that same painting too, a little bigger than its ordinary kin and in its legendary colours.",
+      "Fixed: winning said \"You defeat the Whitefang the Frost Troll\". Named foes don't get an extra \"the\" any more.",
+      "Fixed: Whitefang (and any legendary troll) healed far more often in a big party, because more players gave it more turns. It now heals at most once every three rounds, so a party of 8 does at least as well as a party of 4.",
+      "Knowing a beast's weakness always helps now: its guard drops so it has less health, and the fight no longer quietly gives it extra health to make up for your bonus damage.",
+    ] },
+    { id: "b178-fightpolish", build: 178, date: "25 Nov 2026", title: "A tidier fight screen", items: [
+      "On a PC, your follower's name over their head is a small tag again instead of a giant label.",
+      "Snow and rain in fights on a big screen fall as fine flakes and drops, not big squares.",
+      "On phones, holding a move to read what it does shows the tip above the skill bar, so it no longer covers the Moves row.",
+      "The short fight log in the corner sits on a soft dark strip, so a single line reads clearly instead of looking half faded.",
     ] },
     { id: "b176-deepdelve", build: 176, date: "25 Nov 2026", title: "Deep expeditions and harder dungeons", items: [
       "Deadly dungeons go deeper. When the master falls, stairs lead down to five more levels: entrance guardians, traps and elites, the ancient vault, the cursed sanctuary and the legendary lair.",
@@ -1250,12 +1286,14 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 176;
+  const NEXT_AT = 181;
   const NEXT = [
-    "Dragon Shouts learned from word walls",
-    "Werewolf and vampire paths",
-    "Followers with their own quests, opinions and banter",
-    "Weather that changes how the road and fights go",
+    "Painted fighters with realistic fight animations, and realistic blood and splatter",
+    "Makeovers for fishing, hunting, mining and lockpicking, plus painted festival and arena pictures",
+    "Afflictions with an upside and a downside: lycanthropy, the Draugr curse and the Daedric mark",
+    "An adventuring company longhouse: a shared base with a treasury, a trophy hall and stables",
+    "Daedric bargains and artifacts that awaken, plus regional crises and heists",
+    "Combat combos (frost + heavy = Shatter, oil + fire), follower and horse bonds, and spell crafting",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];

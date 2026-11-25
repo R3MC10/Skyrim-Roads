@@ -280,6 +280,8 @@ const G = (() => {
   }
   /* horses: riding gives speed; a horse that's with you (ridden or led) carries for you */
   const riding = (s) => (typeof HORSES !== "undefined" ? HORSES.riding(s) : !!s.horse);
+  /* "the wolf", but just "Whitefang the Frost Troll" or "the Mudcrab King": named foes don't take another "the" */
+  const theFoe = (e, cap) => { const n = String((e && e.name) || "foe"), named = !!(e && (e.named || e.unique || e.legend)) || /^the\s/i.test(n); const t = named ? n.replace(/^The\s/, "the ") : "the " + n; return cap ? t.charAt(0).toUpperCase() + t.slice(1) : t; };
   const withHorse = (s) => (typeof HORSES !== "undefined" ? HORSES.present(s) : !!s.horse);
   const capacity = (s) => F.BASE_CARRY + Math.floor(s.spBonus / F.ATTRIBUTE_PER_LEVEL) * F.CARRY_PER_STAMINA_LEVEL
     + (withHorse(s) ? (typeof HORSES !== "undefined" ? HORSES.carry(s) : D.HORSE_CARRY) : 0) + (P(s, "extra_pockets") ? 100 : 0) + fxSum(s, "carry") + (typeof PFX !== "undefined" ? PFX.num(s, "carry") : 0) + (s.stone === "steed" ? 100 : 0) + (s.follower ? 100 : 0)   // [OURS] a follower carries 100 for you
@@ -1293,12 +1295,12 @@ const G = (() => {
     if (action === "flee") {
       const ch = 0.55 + skill(s, "Athletics") / 250 - (e.danger === "high" ? 0.2 : 0) + (riding(s) ? 0.15 : 0);   // [OURS]
       lines.push(...useSkill(s, "Athletics", 10 * F.ATHLETICS_XP_PER_SECOND));
-      if (Math.random() < ch) { tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, ` Escaped the ${e.name}`); const ds = e.caravan && typeof CARAVANS !== "undefined" ? CARAVANS.deserted(s) : null; return { text: `You ${riding(s) ? "ride" : "run"} and lose the ${e.name}.${ds ? " " + ds : ""}`, skills: lines }; }
-      enemyFirst = true; lines.unshift(`You try to escape, but the ${e.name} catches you!`);
+      if (Math.random() < ch) { tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, ` Escaped ${theFoe(e)}`); const ds = e.caravan && typeof CARAVANS !== "undefined" ? CARAVANS.deserted(s) : null; return { text: `You ${riding(s) ? "ride" : "run"} and lose ${theFoe(e)}.${ds ? " " + ds : ""}`, skills: lines }; }
+      enemyFirst = true; lines.unshift(`You try to escape, but ${theFoe(e)} catches you!`);
     } else if (action === "sneak") {
       lines.push(...useSkill(s, "Sneak", 2.5 + 0.625 * 10));   // [Skyrim] 2.5 for hiding + 0.625/s hidden
-      if (Math.random() < hiddenChance(s, e, t)) { tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, ` Slipped past the ${e.name}`); return { text: `You slip past the ${e.name} unseen.`, skills: lines }; }
-      enemyFirst = true; lines.unshift(`A twig snaps. The ${e.name} spots you!`);
+      if (Math.random() < hiddenChance(s, e, t)) { tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, ` Slipped past ${theFoe(e)}`); return { text: `You slip past ${theFoe(e)} unseen.`, skills: lines }; }
+      enemyFirst = true; lines.unshift(`A twig snaps. ${theFoe(e, true)} spots you!`);
     }
     const f = new Fight(s, e, null, t);
     if (typeof HORSEBACK !== "undefined") HORSEBACK.engage(f, t);   // [OURS] riding? you fight from the saddle
@@ -1306,14 +1308,14 @@ const G = (() => {
     f.run({ enemyFirst, t, hidden: opts.hidden ?? null });
     const skillMsgs = f.apply(t);
     if (f.fled && !f.won && f.hp > 0) {
-      tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, ` Broke off the fight with the ${e.name}`);
-      return { text: [...lines, `You break off the fight and leave the ${e.name} behind.`].join(" "), fight: f, fled: true, skills: skillMsgs };
+      tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, ` Broke off the fight with ${theFoe(e)}`);
+      return { text: [...lines, `You break off the fight and leave ${theFoe(e)} behind.`].join(" "), fight: f, fled: true, skills: skillMsgs };
     }
     if (f.won) {
       const g = rint(...e.gold); s.gold += g; const loot = rollLoot(s, e);
       tr.status = "travel"; tr.encounter = null; tr.lastTick = t;
-      tripLog(s, ` Defeated the ${e.name}${g ? ` (+${g} gold)` : ""}`);
-      return { text: lines.join(" ") || `You defeat the ${e.name}.`, fight: f, gold: g, loot, skills: skillMsgs };
+      tripLog(s, ` Defeated ${theFoe(e)}${g ? ` (+${g} gold)` : ""}`);
+      return { text: lines.join(" ") || `You defeat ${theFoe(e)}.`, fight: f, gold: g, loot, skills: skillMsgs };
     }
     const d = die(s, e.name, t);
     return { text: lines.join(" "), fight: f, died: d.msg, bag: d.bag, skills: skillMsgs };
@@ -1476,7 +1478,7 @@ const G = (() => {
     riding, withHorse, STACKABLE, give, take, invRow, wornCount, freeQty, handable, carried, capacity, overweight, equipment, equip, unequip, equipOff, canOffhand, countRestore, itemStats,
     loadout: lo, addRule, ruleSlot, deadRules, fixTactics, saveLoadoutAs, deleteLoadout, spellCost, describeRule, describeAction, Fight, scaleEnemy, scaleQuestFoe, questLevel, rollLoot,
     rollEncounter, die, speed, discoverRadius, startTrip, startEvent, eventChoices, eventChoice, buyFrom, minutesLeft, minutesTo, posAfter, advance, encounterAction, migrate, PLACES,
-    spellDamage, spellHeal, spellArmor, spellSummon, spellCalm, dualCost, shopTypes, shopStock, buyPrice, sellPrice, lotPrice, buy, sell, readTome, drinkPotion, recharge, clone, note,
+    theFoe, spellDamage, spellHeal, spellArmor, spellSummon, spellCalm, dualCost, shopTypes, shopStock, buyPrice, sellPrice, lotPrice, buy, sell, readTome, drinkPotion, recharge, clone, note,
   };
 })();
 if (typeof module !== "undefined") module.exports = G;

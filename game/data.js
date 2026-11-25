@@ -1643,7 +1643,7 @@ const D = {
    "rules": [
     {
      "if": "hp_below",
-     "pct": 40,
+     "pct": 50,
      "do": "potion:health"
     },
     {
@@ -1689,7 +1689,7 @@ const D = {
    "rules": [
     {
      "if": "hp_below",
-     "pct": 35,
+     "pct": 45,
      "do": "potion:health"
     },
     {
@@ -1716,7 +1716,7 @@ const D = {
    "rules": [
     {
      "if": "hp_below",
-     "pct": 50,
+     "pct": 60,
      "do": "potion:health"
     },
     {
