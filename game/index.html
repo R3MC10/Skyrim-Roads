@@ -4987,6 +4987,15 @@ body:has(#tbf) #gnear{display:none!important}
 .aitrule.fire .aitmark{color:var(--sp);font-weight:700}
 .aitrule.skip .aitmark{color:var(--ember)}
 .aitrule.later{opacity:.5}
+/* [layout3] the hotbar keeps key order 1-0 (the old skill bar's Catch-your-breath / Flee spots don't apply to its slots);
+   sub-tab strips fade at an end that hides more tabs; the Journal's chosen tab in dark ink with a gold underline */
+#tbf.c2 .fc.fc-hb .hb-bar>.hb-s{grid-row:auto!important;grid-column:auto!important}
+.mn-fl{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 30px);mask-image:linear-gradient(90deg,transparent 0,#000 30px)}
+.mn-fr{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent 100%);mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent 100%)}
+.mn-fl.mn-fr{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 30px,#000 calc(100% - 30px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 30px,#000 calc(100% - 30px),transparent 100%)}
+#side[data-tab=log] .seg{border-color:rgba(90,62,30,.35)}
+#side[data-tab=log] .seg button{color:#5e4a33;text-shadow:none}
+#side[data-tab=log] .seg button.on{color:#2e1f0d;background:linear-gradient(0deg,rgba(90,62,30,.16),rgba(90,62,30,.04));box-shadow:inset 0 -3px 0 #a8791f;text-shadow:none}
 /* [chargensex] Male / Female switch above the creator's tabs */
 .cgsex{display:flex;align-items:center;gap:6px;padding:6px 14px 4px}
 .cgsexl{flex:none;margin-right:4px;font-family:"Cinzel",serif;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
@@ -5354,6 +5363,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_gptqa.js"></script>
 <script src="i18n_perklayout.js"></script>
 <script src="i18n_nocover.js"></script>
+<script src="i18n_layout3.js"></script>
 <script src="i18n_followersize.js"></script>
 <script src="i18n_caravanpanel.js"></script>
 <script src="i18n_magicaim.js"></script>
