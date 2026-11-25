@@ -530,6 +530,7 @@
       if ($("#sky") && !$("#modal") && escKey && sky.page === "items" && sky.sel != null && typeof ITEMCMP !== "undefined" && ITEMCMP.side($("#sky"))) { sky.sel = null; renderMenu(); return true; }   // [itemdetail] Esc lets go of the pinned item first
       if ($("#sky") && !$("#modal")) { closeMenu(); if (typeof TABMENU !== "undefined") TABMENU.menuClosed(); return true; }
       if ($("#modal")) { if (!$("#modal [data-act=enc], #modal [data-act=ev], #modal [data-act=guard]")) closeModal(); return true; }
+      if (typeof WAGONS !== "undefined" && WAGONS.isOpen()) { WAGONS.close(); return true; }   // [caravan-panel] a caravan's panel: back closes it
       if (typeof DWEMER !== "undefined" && DWEMER.closeOv()) return true;   // a lexicon / valve puzzle (dwemer.js)
       if (typeof BLACKREACH !== "undefined" && BLACKREACH.close()) return true;   // the Blackreach map (blackreach.js)
       if ($("#dun")) { closeDungeon(); return true; }
@@ -1705,7 +1706,8 @@
     const canShop = S.location && G.shopTypes(S.location).length && (G.shopsOpen() || (typeof RUMOURS !== "undefined" && RUMOURS.knocked(S)));
     const gems = S.inv.filter((x) => D.ITEMS[x.item]?.slot === "soulgem");
     const stats = [];
-    if (it.slot === "weapon") stats.push(["Damage", it.damage + (r.temper ? ` (+${r.temper})` : "")], ["Skill", it.skill], ["Hands", it.hands === 2 ? "Two" : "One"]);
+    const hitN = it.slot === "weapon" && !it.staff && typeof ITEMCMP !== "undefined" ? ITEMCMP.hits(S, r.item, r) : 0;   // [itemcards2] the with-skill number, as in the compare
+    if (it.slot === "weapon") stats.push(hitN ? ["Hits for", `${hitN} (${it.damage + (r.temper || 0)} base)`] : ["Damage", it.damage + (r.temper ? ` (+${r.temper})` : "")], ["Skill", it.skill], ["Hands", it.hands === 2 ? "Two" : "One"]);
     if (G.ARMOR_SLOTS.includes(it.slot)) stats.push(["Armor", (it.armor || 0) + (r.temper ? ` (+${r.temper})` : "")], ["Type", it.type || "—"], ["Slot", it.slot]);
     if (it.slot === "ring" || it.slot === "amulet") stats.push(["Slot", it.slot === "ring" ? "Ring (two can be worn)" : "Amulet"]);
     stats.push(["Weight", +(it.weight * r.qty).toFixed(2)], ["Value", it.value]);

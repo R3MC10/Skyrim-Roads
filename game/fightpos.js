@@ -22,7 +22,7 @@ const FIGHTPOS = (() => {
     skeever: [16, 18, 18], crab: [32, 32, 22], spider: [30, 26, 32], dspider: [30, 26, 32], sphere: [16, 20, 62], wisp: [26, 26, 62], atronach: [24, 24, 76],
     lich: [14, 16, 84], hagraven: [13, 15, 70], goblin: [10, 12, 46] };
   // helpers on your side (fightart.js allyFig, its own scale included)
-  const ALLY = { mate: [12, 14, 56], follower: [12, 14, 56], soldier: [10, 12, 45], zombie: [11, 12, 50], valor: [13, 15, 60], dremora: [12, 16, 60],
+  const ALLY = { mate: [13, 15, 72], follower: [13, 15, 72], soldier: [10, 12, 45], zombie: [11, 12, 50], valor: [13, 15, 60], dremora: [12, 16, 60],
     icewolf: [16, 20, 26], beast: [18, 22, 32], familiar: [16, 20, 26], werewolf: [18, 20, 50], vlord: [16, 16, 55], gargoyle: [16, 16, 58],
     flame_atronach: [14, 14, 66], frost_atronach: [16, 16, 62], storm_atronach: [18, 18, 62], dog: [12, 14, 18], odah: [50, 40, 60], dragon: [50, 40, 60] };
   const HERO = [12, 14, 72], HORSE = [40, 42, 100];

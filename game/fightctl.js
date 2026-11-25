@@ -60,6 +60,7 @@ const FIGHTCTL = (() => {
     if (k === "spell" || k === "dual") return (f.s.spells || []).includes(arg) && !!D.SPELLS[arg] && D.SPELLS[arg].kind !== "utility";
     if (k === "potion") return potCount(f, arg) > 0;
     if (k === "scroll") { try { return !!f.findItem(arg); } catch { return false; } }
+    if (k === "poison") return typeof POISONFX !== "undefined" && !!POISONFX.rowOf(f, a);
     return k === "shout" || k === "power";
   }
   const tierN = { Novice: 1, Apprentice: 2, Adept: 3, Expert: 4, Master: 5 };
@@ -95,6 +96,7 @@ const FIGHTCTL = (() => {
       }
       if (k === "potion") return typeof CURSE !== "undefined" && CURSE.noPotions && CURSE.noPotions(f) ? "Not in Beast Form" : potCount(f, arg) ? "" : "None left";
       if (k === "scroll") return "None left";
+      if (k === "poison" && typeof POISONFX !== "undefined") return POISONFX.why(f, a);   // poisonfight.js
       if (k === "shout" || k === "power") return "Not ready yet";
       if (typeof BEASTPATH !== "undefined" && BEASTPATH.why) { const w = BEASTPATH.why(f, a); if (w) return w; }
     } catch { /* fall through */ }
@@ -137,6 +139,7 @@ const FIGHTCTL = (() => {
     if (k === "spell" || k === "dual") return (k === "dual" ? "Dual " : "") + (D.SPELLS[arg]?.name || arg);
     if (k === "potion") return arg[0].toUpperCase() + arg.slice(1);
     if (k === "scroll") return (D.ITEMS[arg]?.name || "Scroll").replace(/^Scroll of /i, "");
+    if (k === "poison" && typeof POISONFX !== "undefined") return POISONFX.name(f.s, a).replace(/^Poison of /i, "");
     if (k === "shout") return arg.toUpperCase();
     if (k === "power") return "Power";
     if (a === "mount" || a === "dismount") return a === "mount" ? "Mount" : "Dismount";
@@ -222,10 +225,11 @@ const FIGHTCTL = (() => {
       for (const r of ["health", "magicka", "stamina"]) if (potCount(f, r)) rows.push(["potion:" + r, `${r[0].toUpperCase() + r.slice(1)} potion`, `${potCount(f, r)} left`]);
       const scrolls = [...new Set(s.inv.filter((r) => D.ITEMS[r.item]?.spell && f.left(r.id) > 0).map((r) => r.item))].slice(0, 6);
       for (const it of scrolls) rows.push(["scroll:" + it, D.ITEMS[it].name, "scroll"]);
+      if (typeof POISONFX !== "undefined") for (const [a, name, n] of POISONFX.list(f).slice(0, 6)) rows.push([a, name, `${n} left · coats your weapon`]);   // poisonfight.js
       body = rows.map(([a, name, sub]) => {
         const k = ++n <= 9 ? String(n) : "";
-        return `<div class="tbsp fc-row2"><span class="nm"><span class="fc-sic" aria-hidden="true">${iconFor(f, a, api, 30)}</span><span class="fc-nm">${esc(name)}<small>${esc(sub)}</small></span></span>${star(a)}${btn(sess, api, a, { label: a.startsWith("potion:") ? "Drink" : "Read", extra: "fc-cast", key: k, icon: " " })}<span></span></div>`;
-      }).join("") || `<p class="sub">No potions or scrolls.</p>`;
+        return `<div class="tbsp fc-row2"><span class="nm"><span class="fc-sic" aria-hidden="true">${iconFor(f, a, api, 30)}</span><span class="fc-nm">${esc(name)}<small>${esc(sub)}</small></span></span>${star(a)}${btn(sess, api, a, { label: a.startsWith("potion:") ? "Drink" : a.startsWith("poison:") ? "Coat" : "Read", extra: "fc-cast", key: k, icon: " " })}<span></span></div>`;
+      }).join("") || `<p class="sub">No potions, scrolls or poisons.</p>`;
     }
     const tab = (id, label) => `<button class="fc-tab${m === id ? " on" : ""}" data-tbm="${id}" aria-pressed="${m === id}"><span class="ic" aria-hidden="true">${iconFor(f, id, api, 20)}</span>${label}</button>`;
     return `<div class="fc fc-pick${enter ? " enter" : ""}" data-fcmode="${m}">

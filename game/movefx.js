@@ -544,7 +544,7 @@ const MOVEFX = (() => {
         case "brand": cur.proj = { k: "brand", x: X, y: Y }; if (rnd() < 0.8 * q) P(EMBER, pick(pal, 0, 2), X, Y, -dir * 30 * s, -10 * s, 0.3, 2.2, -40); break;
         case "storm": if (r.p === "frost" && rnd() < 2 * q) P(CRYSTAL, pick(pal, 0, 2), tx + (rnd() - 0.2) * 70 * s, ty - 90 * s, -dir * 120 * s, 160 * s, 0.6, 2.2, 0, 1); if (r.p === "frost" && rnd() < 0.6 * q) P(PUFF, pal[1], tx + (rnd() - 0.5) * 60 * s, ty - 30 * s, -dir * 80 * s, 40 * s, 0.8, 9); if (r.p === "shock" && rnd() < 0.4 * q) S("bolt", { x: lerp(hx, tx, rnd()), y: lerp(hy, ty, 0.5) - 6 * s, x2: tx, y2: ty + (rnd() - 0.5) * 20 * s, life: 0.08, pal, w: 1.6, forks: 0, jag: 10 }); break;
         case "vortex": if (rnd() < 1.4 * q) { const cx = lerp(hx, tx, p), a = rnd() * TAU, rr = (10 + rnd() * 18) * s; P(CRYSTAL, pick(pal, 0, 2), cx + Math.cos(a) * rr, gy - rnd() * 80 * s, -Math.sin(a) * 140 * s, -30 * s, 0.4, 2.4, 0); } break;
-        case "rift": if (rnd() < 0.6 * q) P(GLOW, pick(pal, 0, 2), G.from[0] + 46 * s + (rnd() - 0.5) * 16 * s, gy - rnd() * 50 * s, (rnd() - 0.5) * 30 * s, -30 * s, 0.6, 2.6, 0); break;
+        case "rift": if (rnd() < 0.3 * q) P(GLOW, pick(pal, 1, 3), G.from[0] + 46 * s + (rnd() - 0.5) * 16 * s, gy - rnd() * 50 * s, (rnd() - 0.5) * 30 * s, -30 * s, 0.6, 1.3, 0); break;   // [summonfx] a few faint motes, no white cloud
         case "pull": if (rnd() < q) P(r.p === "soul" ? WISP : GLOW, pick(pal, 0, 3), tx, ty, (hx - tx) * 1.6, (hy - ty) * 1.6 - 30 * s, 0.6, 3, 0, 1); break;
         case "thread": if (rnd() < 0.8 * q) P(MOTE, pick(pal, 0, 2), lerp(hx, G.ally[0], rnd()), lerp(hy, G.ally[1], rnd()), 0, -20 * s, 0.6, 2, -4); break;
         case "toss": { const Yl = lerp(hy, ty, p) - Math.sin(p * Math.PI) * 34 * s; cur.proj = { k: "flask", x: X, y: Yl, rot: p * 9 * dir }; if (rnd() < 0.3 * q) P(CHIP, pick(pal, 1, 3), X, Yl, 0, 0, 0.3, 1.4, 200); break; }
@@ -584,7 +584,7 @@ const MOVEFX = (() => {
         case "plates": S("plates", { x: ax, y: ay, r: 22 * s * z, life: 1, pal, k: r.k }); spray(CHIP, pal, ax, ay, 8 * z, 90, 0.5, 2.6, 200, null, TAU, 1, 3); break;
         case "chains": S("chains", { x: tx, y: ty, r: 24 * s * z, life: 1.2, pal, k: r.k }); spray(SPARK, pal, tx, ty, 10, 160, 0.4, 1.6); break;
         case "ripple": S("mind", { x: tx, y: ty - 6 * s, r: 30 * s * z, life: 1, pal, k: r.k }); spray(WISP, pal, tx, ty - 10 * s, 8 * z, 50, 0.9, 4, -10, null, TAU, 1, 3); break;
-        case "rift": S("rift", { x: fx + 46 * s, y: gyy, h: 64 * s * z, life: 0.6, pal, k: r.k, open: 1 }); spray(GLOW, pal, fx + 46 * s, gyy - 30 * s, 20 * z, 120, 0.7, 3, 0, null, TAU, 0, 3); break;
+        case "rift": S("rift", { x: fx + 46 * s, y: gyy, h: 64 * s * z, life: 0.6, pal, k: r.k, open: 1 }); spray(GLOW, pal, fx + 46 * s, gyy - 30 * s, 8 * z, 120, 0.55, 1.4, 0, null, TAU, 1, 3); break;   // [summonfx] a brief shimmer where it steps out, never a blob over it
         case "necro": S("tendrils", { x: fx + 46 * s, y: gyy, h: 50 * s * z, life: 1, pal, k: r.k }); spray(PUFF, pal, fx + 46 * s, gyy, 6 * z, 30, 1.2, 8, -16, -Math.PI / 2, 1, 2, 4); break;
         case "soul": S("spiral", { x: tx, y: ty, x2: fx, y2: fy, r: 22 * s, life: 1.1, pal }); break;
         case "cloak": S("cloak", { x: fx, y: fy, r: 30 * s * z, life: 1.1, pal, k: r.k }); break;
@@ -757,10 +757,10 @@ const MOVEFX = (() => {
           case "rift": {   // a purple tear standing on the ground: it opens, things step out, it seals
             const op = q.close ? 1 - u : q.open ? Math.min(1, u * 4) * (1 - Math.max(0, (u - 0.7) / 0.3)) : Math.sin(Math.min(1, u * 1.2) * Math.PI), h = q.h * op, w = h * 0.28;
             if (op <= 0.01) break;
-            g.globalAlpha = a * 0.85; g.fillStyle = "#0c0614"; g.beginPath(); g.ellipse(q.x, q.y - q.h * 0.5, w * 0.6, h * 0.5, 0, 0, TAU); g.fill();
+            g.globalAlpha = a * 0.35; g.fillStyle = "#0c0614"; g.beginPath(); g.ellipse(q.x, q.y - q.h * 0.5, w * 0.6, h * 0.5, 0, 0, TAU); g.fill();   // [summonfx] a see-through tear: what steps out stays visible
             g.globalCompositeOperation = "lighter";
             for (let i = 0; i < 3; i++) strokePath(g, () => g.ellipse(q.x, q.y - q.h * 0.5, w * (0.6 + i * 0.25), h * (0.5 + i * 0.05), Math.sin(t * 2 + i) * 0.12, 0, TAU), p, (2.4 - i * 0.6) * s, a * (1 - i * 0.25));
-            blob(g, 2, p[2], q.x, q.y - q.h * 0.5, w * 2.2, a * 0.4);
+            blob(g, 2, p[2], q.x, q.y - q.h * 0.5, w * 1.4, a * 0.14);
             g.globalCompositeOperation = "source-over"; break;
           }
           case "tendrils": {   // the dead rising: dark green tendrils clawing up out of the ground

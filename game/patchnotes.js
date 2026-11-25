@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b288-nomountfight", build: 288, date: "25 Nov 2026", title: "Horses are for travel", items: [
+    { id: "b293-nomountfight", build: 293, date: "25 Nov 2026", title: "Horses are for travel", items: [
       "Horses are for travel now: fights always happen on foot.",
       "Riding when a fight starts on the road? You get down and fight on foot. Your horse waits beside you, safe: nobody goes for it and a fight never hurts it. You ride on afterwards.",
       "No more Mount and Dismount moves, charges or trampling in fights, and no horse health bar in the fight.",
@@ -11,6 +11,37 @@ const PATCHNOTES = (() => {
       "Ranger now makes you travel 3% faster, and Lance makes spear power attacks 10% stronger.",
       "The warhorse speciality now means fewer fights find you while you ride.",
       "An ambush on the road no longer hurts your horse.",
+    ] },
+    { id: "b292-caravanpanel", build: 292, date: "25 Nov 2026", title: "Caravans open in a panel", items: [
+      "Tapping a caravan on the map now opens a proper panel instead of a small floating card. On a PC it sits on the right side of the screen, full height, and the map stays visible beside it; on a phone it slides up from the bottom and sits above the menu bar.",
+      "Every button (Catch up, Trade, Escort, Ask for news, Help, Rob) is always reachable now: nothing hides under the bottom bar any more, and a long list of their wares scrolls inside the panel.",
+      "Close it with the X, Esc, or your phone's back button.",
+    ] },
+    { id: "b291-herocard", build: 291, date: "25 Nov 2026", title: "Your hero card looks like you", items: [
+      "The figure in the Items menu (and on the Hero page, title cards and other players' cards) is now the same painted hero you see in fights: your sex, race, hair and the armour and weapon you wear. It changes as soon as you change gear or look.",
+      "A woman no longer shows up as a bearded man there, and a raised weapon stays inside the card.",
+      "The small round race portrait next to it only shows when it matches your hero's sex.",
+    ] },
+    { id: "b290-itemcards2", build: 290, date: "25 Nov 2026", title: "Item cards say what changes", items: [
+      "The damage at the top of a weapon's card is now what it really hits for in your hands, with your skill and perks, the same number as in the comparison below. The weapon's own number is shown next to it as \"base\".",
+      "Item cards now say what else changes when you put something on: a two-handed weapon takes your shield off (and with it its armour and Shield bash), a shield takes a two-handed weapon off, and a bow or crossbow tells you when you have nothing to shoot.",
+      "When a weapon uses a different skill from the one you hold, the card says so, with both of your skill levels.",
+      "This shows on loot and reward cards, in the Items menu, in shops and on the phone's bottom sheet.",
+      "Putting on a shield while holding a two-handed weapon now takes the weapon off, instead of saying no.",
+    ] },
+    { id: "b289-followersize", build: 289, date: "25 Nov 2026", title: "Followers at full size, softer glows", items: [
+      "In fights your follower and your party now stand as tall as you do (women and some races a touch shorter, like in Skyrim) instead of looking like dwarves next to you. Everyone still fits on screen, and name tags sit just above their heads.",
+      "Enchanted weapons no longer hide under a big glowing blob. Now a thin shine runs along the blade's edges in the enchantment's colour (fire orange, frost pale blue, shock violet, absorb purple) and gently pulses; axes and maces glow faintly around the head, bows along the limb.",
+      "Summons step out with a short, faint shimmer instead of a white flash that covered them, and the portal they come through is see-through. Sovngarde heroes and other helpers shed smaller sparks.",
+      "Your shield now shows on your arm in fights (and on followers and party members who carry one, like Lydia).",
+    ] },
+    { id: "b288-itemgames", build: 288, date: "25 Nov 2026", title: "Shield bash minigame, poisons in fights", items: [
+      "Shield bash now has its own quick game in turn-based fights: slam as your shield meets the foe. A Perfect hits harder and gives Might and Haste, a Miss hits softer. Guard had the same problem and works again too.",
+      "A staff now draws the rune of its spell's school instead of the sword bar, and scrolls draw their spell's rune.",
+      "Throwing an oil flask is a quick game too: a Perfect throw keeps the foe soaked a round longer, a miss splashes most of it on the ground (a round shorter).",
+      "Poisons work in fights: open Items and tap Coat (or put the poison on your hotbar). It takes one move, uses the poison up, and your next hit delivers it. Bows coat their arrows. Not in Beast Form, and not while your weapon is still coated.",
+      "Holding or resting on a poison shows what your next hit will carry.",
+      "In party fights a Perfect from the minigame now adds its bonus too.",
     ] },
     { id: "b287-chargensex", build: 287, date: "25 Nov 2026", title: "Pick man or woman first", items: [
       "Character creation now starts with a big Male / Female switch at the top, above the tabs, so it's the first thing you pick.",
