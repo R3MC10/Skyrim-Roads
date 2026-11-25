@@ -365,7 +365,7 @@ const TREASURE = (() => {
     if (!tb || typeof DUNGEONS === "undefined") return { err: "There's no tomb here." };
     s.dungeon = { place: tb.name, theme: "barrow", tier: tb.tier, rows: DUNGEONS.layout("barrow", tb.tier), row: -1, col: 0, room: null, found: [], gold: 0, t, tomb: tb.seed };
     G.setHealth(s, G.curHealth(s, t), t);
-    G.note(s, `🕯 Went down into ${tb.name}`);
+    G.note(s, `\uE10E Went down into ${tb.name}`);
     return { ok: true, name: tb.name };
   }
 
@@ -601,12 +601,12 @@ const TREASURE = (() => {
   function detailActs(s, r) {
     const p = parse(r.item), out = [];
     if (p) {
-      out.push(`<button class="btn pri" data-tm="look" data-id="${esc(r.item)}">${p.kind === "journal" ? "📖 Read" : "🗺 Look at it"}</button>`);
-      if (p.kind === "frag") { const b = sets(s).find((x) => x.seed === p.seed); if (b?.full) out.push(`<button class="btn" data-tm="combine" data-seed="${esc(p.seed)}">🧩 Piece them together</button>`); }
+      out.push(`<button class="btn pri" data-tm="look" data-id="${esc(r.item)}">${p.kind === "journal" ? "\uE108 Read" : "\uE128 Look at it"}</button>`);
+      if (p.kind === "frag") { const b = sets(s).find((x) => x.seed === p.seed); if (b?.full) out.push(`<button class="btn" data-tm="combine" data-seed="${esc(p.seed)}">\uE164 Piece them together</button>`); }
       return out;
     }
     const rel = Object.entries(RELICS).find(([, v]) => v.from === r.item);
-    if (rel) { const i = relicInfo(s, rel[0]); if (i.have >= i.need) out.push(`<button class="btn pri" data-tm="restore" data-id="${rel[0]}" ${i.can ? "" : "disabled"}>🏺 Restore${i.self ? "" : ` · ${i.fee} gold`}</button>`); }
+    if (rel) { const i = relicInfo(s, rel[0]); if (i.have >= i.need) out.push(`<button class="btn pri" data-tm="restore" data-id="${rel[0]}" ${i.can ? "" : "disabled"}>\uE19E Restore${i.self ? "" : ` · ${i.fee} gold`}</button>`); }
     if (RELICS[r.item] && COLLECTORS[s.location]) out.push(`<button class="btn" data-tm="sellrelic" data-id="${r.item}">Sell to the collector · ${relicPrice(s, r.item)} gold</button>`);
     return out;
   }
@@ -619,10 +619,10 @@ const TREASURE = (() => {
     const left = restLeft(s), lead = role(s) === "leader" && ctx?.party?.()?.members?.length > 1, mem = role(s) === "member";
     const rows = [...ls.map((l) => `<div class="item tm-row">${ICONART.item(l.id, 30)}<div class="t">${esc(leadLabel(l.id))}<span>${hints(s, l.seed).map(esc).join(" ") || "No hints yet."}</span></div><button class="btn sm" data-tm="look" data-id="${esc(l.id)}">${l.kind === "journal" ? "Read" : "Look"}</button></div>`),
       ...bs.map((b) => `<div class="item tm-row">${ICONART.item(idOf.frag(b.seed, 1, b.n), 30)}<div class="t">${esc(`Torn map: ${b.count} of ${b.n} pieces`)}<span>${b.full ? "All here: put them together." : "Find or trade for the rest."}</span></div>${b.full ? `<button class="btn sm pri" data-tm="combine" data-seed="${esc(b.seed)}">Piece together</button>` : `<button class="btn sm" data-tm="look" data-id="${esc(idOf.frag(b.seed, +Object.keys(b.have)[0], b.n))}">Look</button>`}</div>`)].join("");
-    const tombH = tb ? `<div class="tm-tomb"><p>🕯 ${esc("Steps lead down under the slab you dug up. Whatever was buried here, someone made sure it stayed down.")}</p><button class="btn danger" data-tm="tomb" style="width:100%">${esc("🕯 Go down into the tomb")}</button></div>` : "";
-    const collH = coll && relics.length ? `<p class="sub">${esc(`🏺 ${coll} collects old relics.`)}</p>${relics.map((r) => `<div class="item tm-row">${ICONART.item(r.item, 28)}<div class="t">${esc(D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}</div>${detailActs(s, r).join("")}</div>`).join("")}` : "";
-    const digB = ls.length ? `<div class="tm-btns"><button class="btn pri" data-tm="dig" ${left || mem ? "disabled" : ""}>${esc(left ? `⛏ Rest ${left} s` : "⛏ Dig here")}</button>${lead ? `<button class="btn" data-tm="vote">${esc("🗳 Ask the party")}</button>` : ""}</div>` : "";
-    return `<div class="panel tmcard"><h2>🗺 ${esc("Treasure hunt")}</h2>${tombH}${ls.length || bs.length ? `<p class="sub">${esc("No marker on your map: match the sketch or the riddle to the land, go there and dig. A wrong guess only costs you a little time.")}</p>` : ""}${mem ? `<p class="sub">${esc("In a party only your leader digs. Vote for the spot when they ask.")}</p>` : ""}
+    const tombH = tb ? `<div class="tm-tomb"><p>\uE10E ${esc("Steps lead down under the slab you dug up. Whatever was buried here, someone made sure it stayed down.")}</p><button class="btn danger" data-tm="tomb" style="width:100%">${esc("\uE10E Go down into the tomb")}</button></div>` : "";
+    const collH = coll && relics.length ? `<p class="sub">${esc(`\uE19E ${coll} collects old relics.`)}</p>${relics.map((r) => `<div class="item tm-row">${ICONART.item(r.item, 28)}<div class="t">${esc(D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}</div>${detailActs(s, r).join("")}</div>`).join("")}` : "";
+    const digB = ls.length ? `<div class="tm-btns"><button class="btn pri" data-tm="dig" ${left || mem ? "disabled" : ""}>${esc(left ? `\uE12A Rest ${left} s` : "\uE12A Dig here")}</button>${lead ? `<button class="btn" data-tm="vote">${esc("\uE19D Ask the party")}</button>` : ""}</div>` : "";
+    return `<div class="panel tmcard"><h2>\uE128 ${esc("Treasure hunt")}</h2>${tombH}${ls.length || bs.length ? `<p class="sub">${esc("No marker on your map: match the sketch or the riddle to the land, go there and dig. A wrong guess only costs you a little time.")}</p>` : ""}${mem ? `<p class="sub">${esc("In a party only your leader digs. Vote for the spot when they ask.")}</p>` : ""}
       <div class="list">${rows}</div>${digB}${collH}</div>`;
   }
   /* the look window: the sketch (or riddle), hints, pin to the map, ask the innkeeper */
@@ -638,10 +638,10 @@ const TREASURE = (() => {
     }
     const hintH = hs.length ? `<div class="tm-hints"><b>${esc("Hints")}</b>${hs.map((h) => `<p>${esc(h)}</p>`).join("")}</div>` : (p.kind !== "frag" ? `<p class="sub">${esc("Every two wrong digs, you'll work out a little more.")}</p>` : "");
     const left = restLeft(s), canDig = p.kind !== "frag" && stopped(s) && role(s) !== "member";
-    const btns = [canDig ? `<button class="btn" data-tm="dig" ${left ? "disabled" : ""}>${esc(left ? `⛏ Rest ${left} s` : "⛏ Dig here")}</button>` : "",
-      p.kind !== "frag" ? `<button class="btn pri" data-tm="pin" data-id="${esc(id)}">${esc("📌 Pin it next to the world map")}</button>` : "",
-      p.kind !== "frag" && inn && hintLevel(s, seed) < 3 ? `<button class="btn" data-tm="inn" data-seed="${esc(seed)}" ${s.gold >= HINT_GOLD ? "" : "disabled"}>${esc(`🍺 Ask the innkeeper · ${HINT_GOLD} gold`)}</button>` : "",
-      p.kind === "frag" && sets(s).find((x) => x.seed === seed)?.full ? `<button class="btn pri" data-tm="combine" data-seed="${esc(seed)}">${esc("🧩 Piece them together")}</button>` : "",
+    const btns = [canDig ? `<button class="btn" data-tm="dig" ${left ? "disabled" : ""}>${esc(left ? `\uE12A Rest ${left} s` : "\uE12A Dig here")}</button>` : "",
+      p.kind !== "frag" ? `<button class="btn pri" data-tm="pin" data-id="${esc(id)}">${esc("\uE122 Pin it next to the world map")}</button>` : "",
+      p.kind !== "frag" && inn && hintLevel(s, seed) < 3 ? `<button class="btn" data-tm="inn" data-seed="${esc(seed)}" ${s.gold >= HINT_GOLD ? "" : "disabled"}>${esc(`\uE15A Ask the innkeeper · ${HINT_GOLD} gold`)}</button>` : "",
+      p.kind === "frag" && sets(s).find((x) => x.seed === seed)?.full ? `<button class="btn pri" data-tm="combine" data-seed="${esc(seed)}">${esc("\uE164 Piece them together")}</button>` : "",
       `<button class="btn" data-act="close">${esc("Close")}</button>`].filter(Boolean).join("");
     return `<div class="tm-look"><h2>${esc(it?.name || "Treasure map")}</h2>${body}${hintH}<div class="tm-btns col">${btns}</div></div>`;
   }
@@ -671,16 +671,16 @@ const TREASURE = (() => {
     try { if (typeof SOUND !== "undefined") SOUND.fx(r.ok ? "coin" : "hit"); } catch { /* optional */ }
     let split = null;
     if (r.ok && r.gold && role(s) === "leader" && ctx.splitGold) split = ctx.splitGold(r.gold, "the buried treasure");
-    if (r.ok) G.note(s, `⛏ ${r.text}`);
+    if (r.ok) G.note(s, `\uE12A ${r.text}`);
     ctx.persist(true); ctx.renderPanel(true);
-    if (r.ok) ctx.openModal(`<div class="tm-found"><h2>⛏ ${esc("Buried treasure")}</h2><p>${esc(r.text)}</p>${split ? `<p class="sub">${esc(split)}</p>` : ""}${r.tomb ? `<button class="btn danger" data-tm="tomb" style="width:100%;margin-bottom:6px">${esc("🕯 Go down into the tomb")}</button>` : ""}<button class="btn pri" data-act="close" style="width:100%">${esc("Continue")}</button></div>`);
-    else ctx.openModal(`<div class="tm-found"><h2>⛏ ${esc("Nothing here")}</h2><p>${esc(r.text)}</p>${r.hint ? `<p class="tm-hintnew">💡 ${esc(r.hint)}</p>` : ""}<button class="btn pri" data-act="close" style="width:100%">${esc("Continue")}</button></div>`);
+    if (r.ok) ctx.openModal(`<div class="tm-found"><h2>\uE12A ${esc("Buried treasure")}</h2><p>${esc(r.text)}</p>${split ? `<p class="sub">${esc(split)}</p>` : ""}${r.tomb ? `<button class="btn danger" data-tm="tomb" style="width:100%;margin-bottom:6px">${esc("\uE10E Go down into the tomb")}</button>` : ""}<button class="btn pri" data-act="close" style="width:100%">${esc("Continue")}</button></div>`);
+    else ctx.openModal(`<div class="tm-found"><h2>\uE12A ${esc("Nothing here")}</h2><p>${esc(r.text)}</p>${r.hint ? `<p class="tm-hintnew">\uE163 ${esc(r.hint)}</p>` : ""}<button class="btn pri" data-act="close" style="width:100%">${esc("Continue")}</button></div>`);
   }
   function voteModal() {
     const p = ctx.party?.(); const h = p?.halt;
     if (!h || h.kind !== "dig") return "";
     const tl = typeof PARTYPLAY !== "undefined" ? PARTYPLAY.tally(h) : {};
-    return `<div class="tmvote"><h2>🗳 ${esc("Where do we dig?")}</h2><p class="sub">${esc("Your party is voting. Settle it when you're ready: the most votes win.")}</p>
+    return `<div class="tmvote"><h2>\uE19D ${esc("Where do we dig?")}</h2><p class="sub">${esc("Your party is voting. Settle it when you're ready: the most votes win.")}</p>
       <div class="list">${h.opts.map(([k, l]) => `<div class="item"><div class="t">${esc(l)}</div><b class="num">${(tl[k] || []).length}</b></div>`).join("")}</div>
       <div class="tm-btns col"><button class="btn pri" data-tm="vsettle">${esc("Settle the vote")}</button><button class="btn" data-tm="vcancel">${esc("Call it off")}</button></div></div>`;
   }
@@ -734,7 +734,7 @@ const TREASURE = (() => {
     const x = st(s), ls = leads(s), bs = sets(s);
     const relics = Object.keys(RELICS).map((id) => { const i = relicInfo(s, id); return `<div class="item">${ICONART.item(id, 28)}<div class="t">${esc(D.ITEMS[id].name)}<span>${esc(`${i.have} of ${i.need} fragments`)}</span></div></div>`; }).join("");
     return `<div class="panel"><h2>${esc("Treasure hunts")}</h2><p class="sub">${esc("Treasure maps, old journals and torn pieces from loot. No marker shows the way: compare them with the world map, then go and dig.")}</p>
-      <div class="xstats"><span>⛏ ${esc("Dug up")} <b>${x.finds}</b></span><span>🗺 ${esc("Leads")} <b>${ls.length}</b></span><span>🧩 ${esc("Torn maps")} <b>${bs.length}</b></span></div>
+      <div class="xstats"><span>\uE12A ${esc("Dug up")} <b>${x.finds}</b></span><span>\uE128 ${esc("Leads")} <b>${ls.length}</b></span><span>\uE164 ${esc("Torn maps")} <b>${bs.length}</b></span></div>
       <div class="list">${ls.map((l) => `<div class="item">${ICONART.item(l.id, 28)}<div class="t">${esc(leadLabel(l.id))}</div><button class="btn sm" data-tm="look" data-id="${esc(l.id)}">${l.kind === "journal" ? "Read" : "Look"}</button></div>`).join("")}</div>
       <h3 class="xh">${esc("Relics")}</h3><div class="list">${relics}</div></div>`;
   }

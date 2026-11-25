@@ -166,6 +166,11 @@ const GI = (() => {
     basket: [0xE197, '<path d="M3 10h18l-2 10.5H5zM7 10l3.5-6.5M17 10l-3.5-6.5M7.5 13v5M12 13v5M16.5 13v5"/>', "🧺"],
     handshake: [0xE198, '<path d="M2.5 10.5l4-4 4 1.5 3-1.5 4 1 4 3M6.5 6.5L4 13l5 5 1.5-1 1.5 1.5 1.5-1 1.5 1.5 1.5-1.5 1 .5 2.5-4.5M10.5 8l-2 3.5c.5 1 1.5 1.2 2.5.5l2-2 4.5 4"/>', "🤝"],
     shrine: [0xE199, '<path d="M7 20h10M9 20V9h6v11M8 9l4-5 4 5"/>', "⛩"],
+    prev: [0xE19A, '<path d="M17 4.5L5 12l12 7.5z"/>', "◀"],
+    mirror: [0xE19B, '<ellipse cx="12" cy="9.5" rx="5.5" ry="6.5"/><path d="M12 16v4.5M8.5 20.5h7M10 6.5c-1 .8-1.5 2-1.5 3.2"/>', "🪞"],
+    barber: [0xE19C, '<path d="M8.5 3.5h7M8.5 20.5h7M9.5 3.5v17M14.5 3.5v17M9.5 7l5 3M9.5 11.5l5 3M9.5 16l5 3"/>', "💈"],
+    ballot: [0xE19D, '<path d="M4 11h16v9.5H4zM8.5 11V4h7v7M7.5 14.5h9"/>', "🗳"],
+    urn: [0xE19E, '<path d="M9 3.5h6M10 3.5v2.5c-3 1.5-4.5 4-4.5 7 0 3.5 2.5 6.5 6.5 7.5 4-1 6.5-4 6.5-7.5 0-3-1.5-5.5-4.5-7V3.5M7 11h10"/>', "🏺"],
   };
   const CH = {}, FROM = {};
   for (const [name, [cp, , emo]] of Object.entries(ICONS)) { CH[name] = String.fromCharCode(cp); for (const e of emo || "") FROM[e] = CH[name]; }
@@ -178,7 +183,7 @@ const GI = (() => {
   // canvas text draws before the font is fetched; ask for it up front so maps and fight canvases have icons
   try { if (typeof document !== "undefined" && document.fonts) for (const f of document.fonts) if (/E100/i.test(f.unicodeRange) || f.family.replace(/"/g, "") === "GameIcons") f.load().catch(() => {}); } catch (e) { /* no fonts API */ }
   // the font is built from these drawings; the build writes their fingerprint here (checked by tests/test_gameicons.js)
-  const FONT_HASH = "bfcd0c6a";
+  const FONT_HASH = "db7b72d6";
   const hashOf = () => { let h = 0x811c9dc5; for (const [k, [cp, d]] of Object.entries(ICONS)) for (const c of `${k}|${cp}|${d};`) { h ^= c.charCodeAt(0); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16); };
   return { ICONS, CH, FROM, EMO, MINE, ch, swap, plain, svg, FONT_HASH, hashOf };
 })();

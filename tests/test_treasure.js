@@ -173,7 +173,7 @@ for (const id of ["cartographer", "antiquarian", "excavator"]) OK(Object.values(
   for (const p of Object.values(PERKS.TREES).flat().filter((p) => ["cartographer", "antiquarian", "excavator"].includes(p[0]))) lines.push(p[1], p[5]);
   const s = hero(25); G.give(s, "tmap|plpl1234"); s.tre = undefined; T.st(s); s.tre.tries.plpl1234 = 6;
   lines.push(...T.hints(s, "plpl1234"), "The torn edges line up. You have a whole treasure map now.", "You dig for an hour and hit only roots and stones. Not here.",
-    "No marker on your map: match the sketch or the riddle to the land, go there and dig.", "Treasure hunt", "⛏ Dig here", "🕯 Go down into the tomb", "Where do we dig?", "Sealed tomb near Riverwood",
+    "No marker on your map: match the sketch or the riddle to the land, go there and dig.", "Treasure hunt", " Dig here", " Go down into the tomb", "Where do we dig?", "Sealed tomb near Riverwood",
     "You have 2 of 3 pieces.", "Your spade hits wood: a rotten chest.", "🍺 Ask the innkeeper · 60 gold", "Look near Riverwood.");
   c_lang("pl");
   OK(I18N.tr("Treasure hunt") === "Poszukiwanie skarbu" && /Zakopałem to kawałek drogi/.test(I18N.tr(T.riddle("sd5q1").en.find((l) => /buried/.test(l)))), "Polish is on: " + I18N.tr(T.riddle("sd5q1").en.join(" ")));
