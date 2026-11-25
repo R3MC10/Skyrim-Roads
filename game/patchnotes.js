@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b272-nocover", build: 272, date: "25 Nov 2026", title: "Nothing covers your buttons", items: [
+      "The round message history button now sits at the left end of the messages (on a PC, next to World news) and steps aside when there's a button under it. It used to land on Leave in a dungeon, the info button in a town and other buttons in the corner. It hides while a menu, the character creator, the perk stars or a mini-game is open.",
+      "Big banners (quest done, achievements) stay in a slim strip near the top and pick a spot with no buttons under it. On the map and in a dungeon they never drop below the top fifth of the screen, so the dungeon route stays readable.",
+      "On a phone, the Gather prompt is a strip right on top of the bottom bar, and the page gets room for it at the end. On a PC it no longer shows when the Gathering card already has the same Gather button.",
+      "Character creation: a raised sword is never cut off at the top and never touches the turn and Face buttons.",
+    ] },
     { id: "b271-movepreview", build: 271, date: "25 Nov 2026", title: "See a move before you make it", items: [
       "In a fight, rest the mouse on a move (or hold your finger on it on a phone): the foe's health bar shows a striped piece for what it could lose, from the lowest to the highest hit.",
       "Your stamina or magicka dims by what the move costs, and one of your move diamonds fades. Healing spells show the health you'd get back; End turn shows the guard you keep.",
