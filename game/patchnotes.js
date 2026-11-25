@@ -3,12 +3,19 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b320-dollrig", build: 320, date: "25 Nov 2026", title: "Your hero holds their gear properly", items: [
+    { id: "b321-dollrig", build: 321, date: "25 Nov 2026", title: "Your hero holds their gear properly", items: [
       "On the Items screen your hero now stands calmly with the weapon gripped in the fist, the shield strapped on the arm in front of the body and the helmet on the head.",
       "In fights your hero, party members and followers wear their helmets too, and the shield arm comes up into a guard in front of the chest instead of hanging behind the hip.",
       "Bows hang low by the hip on the Items screen, so the string no longer cuts across the face.",
       "The equipment slots around your hero line up in even rows (weapon across from the head, shield across from the chest), with bigger, easier to read names on phones and PCs.",
       "The gear set name under your hero on the Items screen is gone.",
+    ] },
+    { id: "b320-avatars", build: 320, date: "25 Nov 2026", title: "Your portrait follows your sex", items: [
+      "Your round portrait now always shows someone of your hero's sex. A Breton man no longer gets the Breton woman's face: until every race has a painting of both a man and a woman, you get the closest one of your sex.",
+      "Pick your own portrait: tap it on your Character page, or choose one on the Race tab when you make a hero (or remake one). Automatic follows your race and sex.",
+      "Your Friends list shows each friend's painted portrait, the one they picked. Friends who are offline keep the portrait you last saw; someone you've never seen shows a plain outline.",
+      "The tiny figure squeezed next to each face in the Friends and travellers lists is gone, so rows are easier to read.",
+      "Party lists, party vote chips, Ask to join and party invite cards, and your face in fights all show the same portrait.",
     ] },
     { id: "b319-partyinvites", build: 319, date: "25 Nov 2026", title: "Your party goes in together", items: [
       "When your party leader starts a co-op dungeon run, everyone in the party is in it straight away: no separate invites and no Accept cards for people already in your party.",

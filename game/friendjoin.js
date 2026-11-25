@@ -95,7 +95,7 @@ const FRIENDJOIN = (() => {
   /* the request record */
   function makeReq(me, card, t = nowS()) {
     const tg = target(card);
-    return { id: reqId(me.id, tg.id), doc: { from: me.id, fromName: me.name, fromLevel: me.level || 1, to: tg.id, toName: tg.name, via: card.id, viaName: card.name, t, st: "open" } };
+    return { id: reqId(me.id, tg.id), doc: { from: me.id, fromName: me.name, fromLevel: me.level || 1, ...(typeof AVATAR !== "undefined" ? { fromAv: AVATAR.of(me) } : {}), to: tg.id, toName: tg.name, via: card.id, viaName: card.name, t, st: "open" } };
   }
   /* open requests waiting for me (I'm the leader, or alone). party: my party record; a request from someone who is in
      it by now is stale and never shows */
@@ -113,7 +113,7 @@ const FRIENDJOIN = (() => {
   /* cards for invites.js */
   function inviteCards(docs, myId, party, t = nowS()) {
     const n = party ? (party.members || []).length : 1, full = n >= CAP;
-    return incoming(docs, myId, t, party).map((d) => ({ key: "join:" + d.id, kind: "join", id: d.id, from: d.fromName, t: d.t || 0,
+    return incoming(docs, myId, t, party).map((d) => ({ key: "join:" + d.id, kind: "join", id: d.id, from: d.fromName, uid: d.from, av: d.fromAv || "", t: d.t || 0,
       text: `${d.fromName} asks to join your party`, sub: full ? `Your party is full (${n}/${CAP})` : `Level ${d.fromLevel || 1}${d.via && d.via !== myId ? ` · friend of ${d.viaName}` : ""} · party ${n}/${CAP}`, can: true, full }));
   }
 
@@ -185,7 +185,8 @@ const FRIENDJOIN = (() => {
     else if (r.st === "full") ctx.toast?.("Your party is full.");
     ctx.refreshInvites?.();
   }
-  const cards = () => { const s = S(); return s ? inviteCards(docs, s.id, ctx.party?.()) : []; };
+  /* [avatars] each card carries the asker's portrait: their live card, else the one they sent with the request */
+  const cards = () => { const s = S(); return s ? inviteCards(docs, s.id, ctx.party?.()).map((c) => (typeof AVATAR !== "undefined" ? { ...c, pic: AVATAR.face(ctx.cardOf?.(c.uid), c.av, 30) } : c)) : []; };
   const bits = (s, party) => cardBits(s, party, flags());
 
   return { CAP, TIMEOUT, COOLDOWN, WINDOW, PER_WINDOW, COL, activity, cardBits, presence, target, reqId, isOpen, outcome, rateWait, canAsk, makeReq, incoming, answer, inviteCards,

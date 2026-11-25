@@ -161,7 +161,7 @@ const PARTYVOTE = (() => {
     function face(uid, size = 26) {
       const c = uid === me() ? S() : ctx.cardOf(uid);
       let h = "";
-      try { h = c && typeof HEROART !== "undefined" ? HEROART.portrait(c, size) : ""; } catch { h = ""; }
+      try { h = c && typeof AVATAR !== "undefined" ? AVATAR.portrait(c, size) : ""; } catch { h = ""; }
       const nm = actives(run()).find((m) => m.id === uid)?.name || c?.name || "?";
       return h || `<b>${esc(nm.slice(0, 1).toUpperCase())}</b>`;
     }
