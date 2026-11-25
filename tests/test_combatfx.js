@@ -31,14 +31,8 @@ ok(X.bleedOf("bandit")[2] === "blood" && X.bleedOf("skeleton")[2] === "bone" && 
 ok(X.glowOf("fire")[0] === "#ff7a2a" && X.glowOf("frost") !== X.glowOf("fire") && X.glowOf("absorb")[0] === X.glowOf("drain")[0], "glows are colour coded");
 ok(X.glowOf(null) === null && Array.isArray(X.glowOf("something odd")), "no enchantment, no glow; unknown ones still glow");
 ok(X.enchantOf({ weapon: { enchant: { effect: "shock" } } }) === "shock" && X.enchantOf({ weapon: {} }) === null && X.enchantOf({ off: { enchant: { effect: "fire" } } }) === "fire", "reads the main or off-hand enchantment");
-// the camera
-{ let lo = 9, hi = 0;
-  for (const b of [sword, { ...sword, crit: true }, { ...sword, final: true }, { who: "them", move: "bite" }, { who: "me", move: "potion" }]) for (let u = 0; u <= 1; u += 0.05) { const [fx, z] = X.camFor(b, u); lo = Math.min(lo, fx, z); hi = Math.max(hi, z); ok(fx > 0.2 && fx < 0.8 && z >= 1 && z <= 1.25, `camera stays sane: ${fx.toFixed(2)} ${z.toFixed(2)}`); }
-  n -= 104; ok(hi > 1.2, "the killing blow gets the closest shot");
-  ok(X.camFor({ ...sword, crit: true }, 0.9)[1] > X.camFor(sword, 0.9)[1], "a critical punches in closer than a plain blow");
-  ok(X.camFor(sword, 0.9)[0] > X.camFor(sword, 0.1)[0], "the camera follows your blow to the foe");
-  ok(X.camFor({ who: "them", move: "bite" }, 0.9)[0] < 0.5, "and the foe's blow to you"); }
-ok(Math.abs(X.pan(0, 1.2, 400, 200) - 40) < 1e-9 && Math.abs(X.pan(400, 1.2, 400, 200) + 40) < 1e-9 && X.pan(999, 1, 400, 200) === 0, "the pan never shows past the picture");
+// the camera moved to fightcam.js (tests/test_fightcam.js)
+ok(X.camFor === undefined && X.pan === undefined, "no second camera left in combatfx");
 // sounds
 ok(X.soundOf({ miss: true }, "bandit") === "swing" && X.soundOf({ blocked: true }, "bandit") === "clang", "miss and block sounds");
 ok(X.soundOf({ who: "me", el: "fire" }, "bandit", false) === "spell-fire" && X.soundOf({ who: "me", crit: true }, "bandit", true) === "hit-crit", "spell and crit sounds");

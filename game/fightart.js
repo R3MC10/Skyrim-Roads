@@ -733,7 +733,7 @@ const FIGHTART = (() => {
     }
     return sp;
   }
-  let MANUAL = false; const LIVE = new Set();
+  let MANUAL = false; const LIVE = new Set(), CAMS = new Set();   // CAMS: [fightcam] finished scenes whose camera tests step by hand
   const PERF = new Float32Array(2000); let perfN = 0;
   const prefs = () => { try { return JSON.parse(localStorage.getItem("rotn_prefs") || "{}"); } catch { return {}; } };
   const setPref = (k, v) => { try { const p = prefs(); p[k] = v; localStorage.setItem("rotn_prefs", JSON.stringify(p)); } catch { /* private mode */ } };
@@ -781,7 +781,8 @@ const FIGHTART = (() => {
     const work = cv, wg = g;   // one canvas: the stage is drawn straight to the screen
 
     const bg = bgFor(rec.scene, W, Hh, rec.wagon, rec.sky);
-    const wxp = rec.sky && (!FS || FS.weather()) ? SKY.particles(rec.sky, W, Hh, { reduce: rm, scale: () => vs }) : null;   // snow, rain, leaves or fireflies during the replay
+    const CHAN = typeof CHANNEL !== "undefined" ? CHANNEL : null;   // [channel] moves being prepared (channel.js)
+    const wxp = rec.sky && (!FS || FS.weather()) ? SKY.particles(rec.sky, W, Hh, { reduce: rm, scale: () => vs * (CHAN ? CHAN.ambient() : 1) }) : null;   // [channel] thinner when many prepare at once   // snow, rain, leaves or fireflies during the replay
     const f = rec.f, beats = beatsOf(f, rec.hero);
     const hp0 = f.hp0 ?? Math.max(1, ...((f.log || []).map((l) => l.hp).filter((v) => v != null)));
     const ehp0 = f.ehp0 ?? Math.max(1, ...((f.log || []).map((l) => l.ehp).filter((v) => v != null)));
@@ -883,7 +884,7 @@ const FIGHTART = (() => {
     function trailWin(w, b, u) { if (w !== trW) { TRL.length = 0; trW = w; if (w >= 0 && b) wlog({ k: "trail", b: bi, u, i: w, who: b.who }); } }
     let seatLift = 0, muteFx = false;   // how high you sit in the saddle (shots leave from there); muteFx: movefx draws this impact, the shared bursts stay quiet
     // ---- state (all allocated once)
-    let bi = 0, lt = 0, hitIdx = 0, phase = beats.length ? "play" : "end", phaseT = 0, real = 0, slowT = 0, shake = 0, zoom = 1, zoomT = 0, zcx = W / 2, zcy = Hh / 2, flash = 0, flashC = "#fff";
+    let bi = 0, lt = 0, hitIdx = 0, phase = beats.length ? "play" : "end", phaseT = 0, real = 0, slowT = 0, slowF = 0.3, shake = 0, flash = 0, flashC = "#fff";
     let done = false, speed = rm ? 2 : 1, lastNow = performance.now(), raf = 0, revealed = -2;
     let hpD = hp0, hpT = hp0, hpL = hp0, hpLT = 0, ehpD = ehp0, ehpT = ehp0, ehpL = ehp0, ehpLT = 0;
     const heroP = idlePose({}, rec.hero.wt), foeP = idlePose({}, null), tmpP = {};
@@ -946,7 +947,47 @@ const FIGHTART = (() => {
     const GS = typeof GORE !== "undefined" && GORE.on() ? GORE.scene({ fight: fightOf, W, H: Hh, groundY, s, pixel: false, reduce: rm, foeK, foeName: rec.foeName, tags: f.e?.tags, ehpMax }) : null;
     const foeMetal = bleed[2] === "oil" || (typeof GOREFX2 !== "undefined" && GOREFX2.metal ? GOREFX2.metal(rec.foeName) : false);   // [blood3] plate or a machine: a blade sparks on it
     const goreKey = (b, i) => `${(f.log || [])[b.li]?.turn ?? b.li}|${b.li}|${b.who}|${b.dmg ?? 0}|${i}`;
-    let deathK = null, camF = 0.5;
+    let deathK = null;
+    /* [fightcam] the camera (fightcam.js): the fight screen shares one (its banners talk to it), any other scene has its own.
+       This scene feeds it the fighters' boxes and its moments (wind-ups, breaks, crits, kills, the win) and draws through it */
+    const FC = typeof FIGHTCAM !== "undefined" ? FIGHTCAM : null, cam = FC ? (cv.closest && cv.closest("#tbf") ? FC.main : FC.create()) : null;
+    if (cam) { if (cam.kind === "victory") cam.reset(); cam.__owner = cv; }
+    const camMode = () => (FC ? FC.mode() : "off"), camMine = () => !!cam && cam.__owner === cv;
+    const camEv = (kind, o) => (camMine() ? cam.ev(kind, o) : null);
+    const camGeo = () => { if (!cam || !camMine()) return; const fw = 30 * s * Math.min(1.8, fSize), fh = 80 * s * Math.min(1.8, fSize); cam.geo({ W, H: Hh, vis: [band[0], band[2] || 0, band[1], Hh], boxes: { hero: [hx0 - 22 * s, groundY - 78 * s, hx0 + 22 * s, groundY + 2 * s], foe: [fx0 - fw, groundY - fh, fx0 + fw, groundY + 2 * s] } }); };
+    let camBi = -1, camRaf = 0, camLast = 0, camDom = "";
+    function camBeat(b) {   // a beat starts: a wind-up or a power attack leans in, a staggered foe is a break
+      if (!b || !cam) return;
+      const me = b.who === "me" || !!b.ally, foc = me ? ["hero", "foe"] : ["foe", "hero"];
+      if (b.who === "them" && b.status === "stagger") camEv("brk", { focus: ["foe"], own: !b.ally });
+      else if (b.power || (b.tag && b.who === "them")) camEv("heavy", { focus: foc, own: !b.ally, dir: me ? 1 : -1 });
+    }
+    function camHit(b, last) {   // a blow lands: a crit (slow motion, counting the hit-stop), a kill, or just a tiny punch
+      if (!cam || !last || b.miss || !camMine()) return;
+      const me = b.who === "me" || !!b.ally, foc = me ? ["hero", "foe"] : ["foe", "hero"], o = { focus: foc, own: !b.ally, dir: me ? 1 : -1, hitstop: Math.max(0, stopT) * 1000 };
+      let hit = false;
+      if (b.crit || b.sneak) { const r = cam.ev("crit", o); hit = !!(r && r.ok); if (r && r.slow && r.slow[1] > 0 && !b.final) { slowF = r.slow[0]; slowT = Math.max(slowT, r.slow[1] / 1000); debt += (r.slow[1] / 1000) * (1 - slowF); } }
+      if (b.final) { const r = cam.ev(f.bf && me ? "bosskill" : "kill", { ...o, focus: me ? ["foe"] : ["hero"] }); hit = hit || !!(r && r.ok); }
+      if (!hit) cam.bump();
+    }
+    /* the ring under the foe and its stars follow it on the screen ([fightcam]; CSS translate, page px) */
+    function camFollow(LY) {
+      const tb = cv.closest ? cv.closest("#tbf") : null; if (!tb) return;
+      const p = LY.toScreen(fx0, groundY), kk = (cv.clientWidth || W) / W, key = LY.flat ? "" : ((p[0] - fx0) * kk).toFixed(1) + "|" + ((p[1] - groundY) * kk).toFixed(1);
+      if (key === camDom) return; camDom = key;
+      const [dx, dy] = key ? key.split("|") : ["0", "0"]; tb.style.setProperty("--fcdx", dx + "px"); tb.style.setProperty("--fcdy", dy + "px");
+    }
+    const camWake = () => {   // a moment arrived after this scene finished playing (your turn, a banner): run the camera on its own
+      if (!cv.isConnected) { camOff?.(); return; }
+      if (done && camMine() && !camRaf && !MANUAL) { camLast = performance.now(); camRaf = requestAnimationFrame(camLoop); }
+    };
+    function camLoop(now) {
+      camRaf = 0; if (!cv.isConnected || !done || !camMine() || MANUAL) return;
+      cam.tick(Math.min(50, Math.max(0, now - camLast))); camLast = now; draw(now);
+      if (cam.active() && !cam.still) camRaf = requestAnimationFrame(camLoop);
+    }
+    const camOff = cam ? cam.onWake(camWake) : null;
+    if (cam) { CAMS.add({ cv, step(ms) { if (done && camMine()) { for (let l = ms; l > 0; l -= 16) cam.tick(Math.min(16, l)); draw(performance.now()); } } }); while (CAMS.size > 4) CAMS.delete(CAMS.values().next().value); }
     const meleeOf = (b) => !!b && !MOVES[b.move]?.proj && !["self", "potion", "wait", "block", "cast", "shout"].includes(b.move);
     function pickDeath() {
       if (deathK || !CFX || !won || turned) return;
@@ -1071,10 +1112,11 @@ const FIGHTART = (() => {
       else if (b.move === "drain") burst(tx, ty, 10, 0, COL.drain, 80 * s, 0.5, 3, 0);
       else { burst(tx, ty, 14, 1, COL.spark, 220 * s, 0.35, 2, 260); if (["arrow", "bolt"].includes(MOVES[b.move]?.proj?.[2]) && !b.ally) bloodAt(tx, ty, dir, b.final || b.crit ? 12 : 6, !me); }
       hstop(b);   // [fightfeel] (none with reduced motion)
+      camHit(b, last);   // [fightcam] the crit's slow motion and the camera's moments (fightcam.js)
       if (rm) { shake = 0; return; }
       if (b.power) shake = Math.max(shake, 5);
-      if (b.crit || b.sneak) { slowT = 0.45; shake = Math.max(shake, 4); }
-      if (b.final) { slowT = f.bf && b.who === "me" ? 1.4 : f.tbTall ? 1.3 : 0.6; /* [OURS] the blow that ends a turn-by-turn fight plays in slow motion */ shake = Math.max(shake, 8); zoomT = f.bf ? 1.5 : 0.9; if (!CFX) { zcx = tx; zcy = ty; } flash = Math.max(flash, 0.3); flashC = "#fff"; }
+      if (b.crit || b.sneak) shake = Math.max(shake, 4);
+      if (b.final) { if (camMode() === "cin") { slowT = f.bf && b.who === "me" ? 1.4 : f.tbTall ? 1.3 : 0.6; slowF = 0.3; } /* [OURS] the blow that ends a turn-by-turn fight plays in slow motion (Calm: none) */ shake = Math.max(shake, 8); flash = Math.max(flash, 0.3); flashC = "#fff"; }
     }
     let ringT = 1, ringX = 0, ringC = "#e9dcc0", beamT = 1, beamC = "#9affc0";
     function landNumbers(b) {   // the number and the health bars, once per beat (on the last hit)
@@ -1098,7 +1140,7 @@ const FIGHTART = (() => {
       done = true; rec.played = true; phase = f.tbMid ? "idle" : "end"; bi = beats.length; fall = f.tbMid ? 0 : 1;
       hpD = hpT = hpL = last.hp ?? hpT; ehpD = ehpT = ehpL = last.ehp ?? ehpT;
       for (let i = 0; i < NP; i++) pl[i] = 0; for (let i = 0; i < NF; i++) fl[i] = 0;
-      label = null; slowT = 0; shake = 0; zoomT = 0; zoom = 1; camF = 0.5; stopT = 0; debt = 0; FFX?.clear(); flash = 0; boltOn = 0; AFX?.clear(); MFX?.clear();
+      label = null; slowT = 0; shake = 0; stopT = 0; debt = 0; FFX?.clear(); flash = 0; boltOn = 0; AFX?.clear(); MFX?.clear();
       if (!f.tbMid) pickDeath();
       GS?.settle();   // what's in the air drops; what has landed stays
       revealLog(1e9); ctl?.remove();
@@ -1114,23 +1156,18 @@ const FIGHTART = (() => {
       if (done) return;
       real += dtr;
       let fdt = dtr, pay = 0;   // [fightfeel] fdt: the fighters' clock (still in a hit-stop); the scene's own things run on dtr / wdt
-      if (stopT > 0) { stopT -= dtr; fdt = 0; } else if (debt > 0) { pay = Math.min(debt, dtr * 0.6); debt -= pay; }   // then the beat makes the time back
+      if (stopT > 0) { stopT -= dtr; fdt = 0; } else if (debt > 0 && slowT <= 0) { pay = Math.min(debt, dtr * 0.6); debt -= pay; }   // then the beat makes the time back ([fightcam] after the slow motion too)
       let dt = fdt;
-      if (slowT > 0) { slowT -= fdt; dt *= 0.3; }
-      const wdt = dtr * (slowT > 0 ? 0.3 : 1);
+      if (slowT > 0) { slowT -= fdt; dt *= slowF; }
+      const wdt = dtr * (slowT > 0 ? slowF : 1);
+      if (camMine()) cam.tick(dtr * 1000);   // [fightcam] the camera runs on real time: never slowed, never in the way
       if (RIG) RIG.update(dt);
       // bars drain smoothly, the white lag bar follows a moment later
       hpD += (hpT - hpD) * Math.min(1, dtr * 10); ehpD += (ehpT - ehpD) * Math.min(1, dtr * 10);
       if (hpLT > 0) hpLT -= dtr; else hpL += (hpD - hpL) * Math.min(1, dtr * 4);
       if (ehpLT > 0) ehpLT -= dtr; else ehpL += (ehpD - ehpL) * Math.min(1, dtr * 4);
-      shake = Math.max(0, shake - dtr * 22); flash = Math.max(0, flash - dtr * 2.5); zoomT = Math.max(0, zoomT - dtr);
-      if (CFX && !rm) {   // the camera leans toward the swing, follows the blow, punches in on crits and holds on the killing blow
-        let tf = 0.5, tz = 1;
-        if (phase === "play" && beats[bi]) { const b2 = beats[bi], m2 = MOVES[b2.move] || MOVES.wait; [tf, tz] = CFX.camFor(b2, Math.min(1, lt / b2.dur), { hx: hx0 / W, fx: fx0 / W, hitU: m2.hits[0] ?? 0.55, boss: !!f.bf }); }
-        else if (phase === "fall") { tf = (won && !turned ? fx0 : hx0) / W; tz = 1.15; }
-        if (zoomT > 0) tz = Math.max(tz, 1.2);
-        camF += (tf - camF) * Math.min(1, dtr * 4); zoom += (tz - zoom) * Math.min(1, dtr * (tz > zoom ? 7 : 3));
-      } else zoom += ((zoomT > 0 && !rm ? 1.12 : 1) - zoom) * Math.min(1, dtr * 8);
+      shake = Math.max(0, shake - dtr * 22); flash = Math.max(0, flash - dtr * 2.5);
+      if (phase === "play" && bi !== camBi) { camBi = bi; camBeat(beats[bi]); }   // [fightcam] ordinary swings keep the camera calm
       heroKnock *= Math.exp(-fdt * 7); foeKnock *= Math.exp(-fdt * 7); hPt += fdt; fPt += fdt;
       hPush = FF ? FF.push(hPt, hPk) : heroKnock; fPush = FF ? FF.push(fPt, fPk) : foeKnock; FFX?.tick(wdt);
       heroDodge = Math.min(1, heroDodge + dtr * 2.6); foeDodge = Math.min(1, foeDodge + dtr * 2.6); wolfT = Math.min(1, wolfT + dtr * 1.4);
@@ -1180,10 +1217,8 @@ const FIGHTART = (() => {
           if (!m.hits.length) landNumbers(b);
           revealLog(b.li);
           bi++; lt = 0; hitIdx = 0; boltOn = 0; TRL.length = 0; trW = -1; debt = 0;
-          if (bi >= beats.length) { phase = f.tbMid ? (CFX && !rm ? "settle" : "idle") : "fall"; phaseT = 0; if (phase === "idle") { done = true; rec.played = true; revealLog(1e9); ctl?.remove(); } if (phase === "fall") pickDeath(); }
+          if (bi >= beats.length) { phase = f.tbMid ? "idle" : "fall"; phaseT = 0; if (phase === "idle") { done = true; rec.played = true; revealLog(1e9); ctl?.remove(); } if (phase === "fall") { pickDeath(); if (won && !turned) camEv("victory", { focus: ["foe", "hero"] }); } }   // [fightcam] the scene never waits for the camera
         }
-      } else if (phase === "settle") {   // a turn-by-turn fight: let the camera ease back before the scene rests
-        phaseT += dtr; if (phaseT > 0.5 || Math.abs(zoom - 1) < 0.004) { zoom = 1; camF = 0.5; phase = "idle"; done = true; rec.played = true; revealLog(1e9); ctl?.remove(); }
       } else if (phase === "fall") {
         phaseT += dt; fall = Math.min(1, phaseT / 0.7);
         if (deathK === "decap" && phaseT < 0.9) {   // the neck sprays as the body goes down
@@ -1257,6 +1292,7 @@ const FIGHTART = (() => {
       foeP.wt = b && b.who === "them" && b.wt ? b.wt : null;
       const mine = !!(b && b.who === "me" && m);   // [OURS] the painted figure (rig.js) plays the body of the move, its blow landing on the hit frame
       heroP.move = mine ? b.move : null; heroP.mu = mine ? poseU : null; heroP.hitU = mine && m.hits ? m.hits[0] : null; heroP.power = mine && !!b.power;
+      if (!mine && CHAN) CHAN.heroPose(heroP, rec.hero.wt);   // [channel] preparing a move: the cast / wind-up / draw pose while the minigame runs
     }
     function sampleTrail(b, m, u) {   // the weapon tip, every step, so the trail follows the real arc
       if (!m.trail) return;
@@ -1278,14 +1314,20 @@ const FIGHTART = (() => {
       const tt = now / 1000;
       poses(b, m, u, st, tt);
       // camera
-      const camK = FS ? FS.cam() : 1, sh = rm ? 0 : shake * camK, z = 1 + (zoom - 1) * camK, ox = (sh ? (Math.random() - 0.5) * sh * 2 : 0) + (CFX && !rm ? CFX.pan(camF * W, z, W, zcx) : 0), oy = (sh ? (Math.random() - 0.5) * sh * 2 : 0) + (CFX && !rm ? CFX.pan(heroChest, z, Hh, zcy) : 0);
+      // [fightcam] the camera (fightcam.js): its view this frame, the shake on top (Cinematic only); every layer is drawn
+      // through the canvas matrix (the backdrop in rows that move at their own depth), the HUD and buttons never move
+      camGeo();
+      const camK = FS ? FS.cam() : 1, sh = rm || camMode() !== "cin" ? 0 : shake * camK, shx = sh ? (Math.random() - 0.5) * sh * 2 : 0, shy = sh ? (Math.random() - 0.5) * sh * 2 : 0;
+      const V = cam && camMine() ? cam.view() : FC ? FC.NEUTRAL(W, Hh) : null;
+      const LY = FC ? FC.layers(wg, k, V, shx, shy) : { flat: true, set: () => wg.setTransform(k, 0, 0, k, 0, 0), paint: (im, ...a) => wg.drawImage(im, ...a.slice(0, 8)), toScreen: (x, y) => [x, y], toStage: (qx, qy) => [qx / k, qy / k] };
       wg.setTransform(1, 0, 0, 1, 0, 0); wg.imageSmoothingEnabled = true;
-      if (z !== 1 || sh) { wg.fillStyle = "#1c2128"; wg.fillRect(0, 0, work.width, work.height); }
-      const sc = k * z, tx = (ox + zcx - zcx * z) * k, ty = (oy + zcy - zcy * z) * k;
-      wg.setTransform(sc, 0, 0, sc, tx, ty);
+      if (!LY.flat) { wg.fillStyle = "#1c2128"; wg.fillRect(0, 0, work.width, work.height); }
       const art = rec.art && typeof BSCENE !== "undefined" ? BSCENE.ready(rec.art) : null;   // [OURS] the painted scene once its pictures are in, else the drawn one
-      const artO = art ? { W, Hh, t: rm ? 0 : tt, ox, sky: rec.sky, wagon: rec.wagon } : null;
-      if (art) BSCENE.back(wg, art, artO); else wg.drawImage(bg, 0, 0, W, Hh);
+      const artO = art ? { W, Hh, t: rm ? 0 : tt, sky: rec.sky, wagon: rec.wagon, lay: LY } : null;
+      if (art) BSCENE.back(wg, art, artO); else LY.paint(bg, 0, 0, bg.width, bg.height, 0, 0, W, Hh, { top: true, bottom: true });
+      LY.set(1);   // the fighters and the ground they stand on
+      cv.__cam = LY.flat ? null : LY.toScreen;   // fightpos.js screenOf: where a fighter shows now
+      camFollow(LY);
       if (cv.dataset.bs !== (art ? rec.art : "")) cv.dataset.bs = art ? rec.art : "";   // which painted scene is on (screen tests)
       const RL = typeof RIGLOOK !== "undefined" ? RIGLOOK : null; if (RL) RL.scene(art ? rec.art : null);   // [rigcohesion] the fighters take this scene's light (riglook.js)
       GS?.drawGround(wg);   // [OURS] gore.js: splats, pools and scorch marks on the ground (they stay for the fight)
@@ -1303,7 +1345,7 @@ const FIGHTART = (() => {
       const allyLunge0 = b && b.who === "me" && b.ally && u > 0.5 && u < 0.85 ? Math.sin((u - 0.5) / 0.35 * Math.PI) : 0;
       const AA = typeof ALLYANIM !== "undefined" ? ALLYANIM : null, named = !!(b && b.allyActs && b.allyActs.length), hitU0 = m && m.hits.length ? m.hits[0] : 0.5;
       const allyLunge = named ? 0 : allyLunge0;   // [OURS] named allies play their own clip (allyanim.js); the rest step in together as before
-      const animOf = (a) => AA && a.name ? AA.anim(b, a.name, u, hitU0, beats.downEnd) : null;
+      const animOf = (a) => { const x = AA && a.name ? AA.anim(b, a.name, u, hitU0, beats.downEnd) : null; return x || (CHAN && a.kind === "mate" ? CHAN.allyAnim(a.name) : null); };   // [channel] a teammate preparing a move
       if (slots.length) { const tag = slots.map((a) => { const x = animOf(a); return x ? x.clip : "idle"; }).join(","); if (cv.dataset.allyClips !== tag) cv.dataset.allyClips = tag; }   // which clip each ally is on (screen tests)
       const two = slots.length > 3;
       const order = slots.map((a, i) => ({ a, i, p: slotOf.get(i) || { x: hx0 - (26 + i * 20) * s, y: groundY, sc: 1, row: 0 } })).sort((p, q) => q.p.row - p.p.row || p.p.x - q.p.x);
@@ -1313,7 +1355,7 @@ const FIGHTART = (() => {
         // a melee blow: they step out of their row up to the foe, then back to their spot
         const tx = fx0 - (foeFront + 16) * s, sc2 = s * (p.sc + (1 - p.sc) * al2), ax = p.x + Math.max(0, tx - p.x) * al2 + allyLunge * 14 * s, ay = p.y + (groundY - p.y) * al2;
         const ahc = a.kind === "mate" && typeof MOUNTFIGHT !== "undefined" && typeof HORSEBACK !== "undefined" && !(an && an.clip === "down") ? MOUNTFIGHT.allyHorse(f, a.name) : null;   // a teammate in the saddle (mountfight.js)
-        if (a.name && !two && (a.kind === "mate" || a.kind === "follower" || a.kind === "valor" || a.kind === "dog")) mateTags.push([a.name, ax * z + ox + zcx - zcx * z, (ay - (66 + (ahc ? 30 : 0)) * sc2) * z + oy + zcy - zcy * z]);   // [followersize] just over the head (a rider sits higher)
+        if (a.name && !two && (a.kind === "mate" || a.kind === "follower" || a.kind === "valor" || a.kind === "dog") && !(CHAN && CHAN.busy(a.name))) mateTags.push([a.name, ...LY.toScreen(ax, ay - (66 + (ahc ? 30 : 0)) * sc2)]);   // [followersize] just over the head (a rider sits higher)
         if (AFX && an && an.shoot && an.u >= 0.55 && b && phase === "play" && !(b.shotBy && b.shotBy.includes(a.name))) {   // [arrowfx] a follower or party archer looses at the foe
           (b.shotBy = b.shotBy || []).push(a.name);
           AFX.fire(null, { x0: ax + 16 * sc2, y0: ay - (ahc ? 74 : 44) * sc2, x1: fx0, y1: foeChest, dur: 0.24, sp: ARROWFX.spec({ wt: /crossbow/.test(a.look?.wt || "") ? "crossbow" : "bow" }), miss: false, gore: !!GS });
@@ -1332,12 +1374,12 @@ const FIGHTART = (() => {
         wg.restore();
         const sp = SPARK[a.kind]; if (sp && Math.random() < (two ? 0.09 : 0.18) * pmul) spawn(sp[1], sp[0], ax + (Math.random() - 0.5) * 18 * s, ay + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 14 * s, -20 * s, 0.7, 1.3, 0);   // [summonfx] small motes, never a glow over the figure
       }
-      if (two) { const named = slots.filter((a) => a.kind === "mate").length, tg = LAY && LAY.tag ? LAY.tag : { x: hx0 - 50 * s, y: groundY - 78 * s }; mateTags.push([L(`⚑ ${named ? `${named} of your party` : `${slots.length} allies`} with you`), tg.x * z + ox + zcx - zcx * z, tg.y * z + oy + zcy - zcy * z]); }   // a big party: one label instead of a pile of names
+      if (two) { const named = slots.filter((a) => a.kind === "mate").length, tg = LAY && LAY.tag ? LAY.tag : { x: hx0 - 50 * s, y: groundY - 78 * s }; mateTags.push([L(`⚑ ${named ? `${named} of your party` : `${slots.length} allies`} with you`), ...LY.toScreen(tg.x, tg.y)]); }   // a big party: one label instead of a pile of names
       for (const a of flyers) {   // a dragon circles above and dives in with fire when it strikes
         const fp0 = LAY && LAY.flyers[0], cx = Math.max(band[0] + 40 * s, (fp0 ? fp0.x : hx0 - 10 * s) + Math.sin(tt * 0.5) * 30 * s) + allyLunge * (fx0 - hx0) * 0.35, cy = (fp0 ? fp0.y : groundY - 44 * s) + allyLunge * 10 * s + Math.sin(tt * 1.3) * 4 * s;
         wg.save(); wg.translate(cx, cy); wg.scale(s, s); allyFig(wg, a.kind, { lunge: allyLunge, t: tt }); wg.restore();
         if (allyLunge > 0.3) for (let k = 0; k < 3; k++) if (Math.random() < pmul) spawn(0, ["#fff2c0", "#ffb347", "#e8653a"][k], cx + 40 * s, cy - 40 * s, (fx0 - cx) * (1.2 + Math.random() * 0.6), (groundY - 40 * s - cy) * (1.1 + Math.random() * 0.5), 0.6, 4, 0);
-        if (a.name) mateTags.push([a.name, cx * z + ox + zcx - zcx * z, (cy - 50 * s) * z + oy + zcy - zcy * z]);
+        if (a.name) mateTags.push([a.name, ...LY.toScreen(cx, cy - 50 * s)]);
       }
       // your summon: the spectral wolf, a Dremora, an atronach
       const liveSum = f.tbMid && f.summonTurns > 0 && f.summonId ? summonKind(f.summonId, f.summonName) : null;   // a turn-by-turn fight: your summon stays in view between turns
@@ -1349,7 +1391,7 @@ const FIGHTART = (() => {
         const sp = SPARK[sk]; if (sp && Math.random() < 0.14 * pmul) spawn(sp[1], sp[0], sx + (Math.random() - 0.5) * 16 * s, groundY + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 12 * s, -24 * s, 0.6, 1.1, 0);   // [summonfx] a few small motes
       }
       // you
-      const over = phase !== "play" && phase !== "idle" && phase !== "settle";   // "idle": one turn of a turn-by-turn fight has played, both still stand
+      const over = phase !== "play" && phase !== "idle";   // "idle": one turn of a turn-by-turn fight has played, both still stand
       const meDown = over && !won, foeDown = over && won && !turned, fallE = EASE.out(fall);
       if (GS && meDown && GS.down && !GS.downDone) { GS.downDone = true; GS.down({ side: "hero", x: hx0 - 14 * s, ground: groundY, instant: done }); }   // [blood2] knocked down: a pool spreads under you (gorefx2.js; never under friends or horses)
       const hdg = heroDodge < 1 ? Math.sin(heroDodge * Math.PI) : 0, fdg = foeDodge < 1 ? Math.sin(foeDodge * Math.PI) : 0;
@@ -1372,13 +1414,13 @@ const FIGHTART = (() => {
       const seatHere = () => { if (mp) MFx.seat(wg, mp, tt, rec.horse); else wg.translate(0, -30 - (HORSEBACK.riderBob ? HORSEBACK.riderBob(rec.horse, tt) : 0)); };
       if (onHorse && heroP.ride && rec.hero.look && !rec.hero.beast && !rec.hero.lord && !(b && b.st && (b.st.beast || b.st.lord))) { wg.save(); seatHere(); heroFig(wg, rec.hero, 0, tt, { ...heroP, rideLayer: "far" }); wg.restore(); }
       if (onHorse) { for (const part of ["back", "front"]) { if (mp) MFx.drawMount(wg, rec.horse, mp, tt, part, rec.horseCoat); else HORSEBACK.drawHorse(wg, rec.horse, 0, tt, part, rec.horseCoat); } wg.save(); seatHere(); }
-      { const fs = b ? b.st : st, form = fs && (fs.beast || fs.lord) && (phase === "play" || phase === "settle" || phase === "idle"); heroFig(wg, form ? { ...rec.hero, beast: fs.beast, lord: fs.lord } : rec.hero, form ? Math.max(0, Math.min(1, (heroP.dx || 0) / 40)) : 0, tt, heroP);
+      { const fs = b ? b.st : st, form = fs && (fs.beast || fs.lord) && (phase === "play" || phase === "idle"); heroFig(wg, form ? { ...rec.hero, beast: fs.beast, lord: fs.lord } : rec.hero, form ? Math.max(0, Math.min(1, (heroP.dx || 0) / 40)) : 0, tt, heroP);
         if (form) heroRig = false;
         else if (painted && PAINTRIG.tip) {   // [rigraces] the painted blade, where it really is ([weaponfx] read right after it's drawn: a painted bandit reports under the same name)
           const T = PAINTRIG.tip("me");
-          if (T && isFinite(T.x)) { heroTip = [(T.x - tx) / sc, (T.y - ty) / sc]; heroTipBi = bi; }
+          if (T && isFinite(T.x)) { heroTip = LY.toStage(T.x, T.y); heroTipBi = bi; }   // [fightcam] back through the camera
           const w = b && b.who === "me" && m && m.trail && phase === "play" ? swingOn(m, u, false) : -1;
-          if (T && w >= 0 && T.n !== tipN) { tipN = T.n; trailWin(w, b, u); const q = TRL[TRL.length - 1]; if (q && TRL.length < 8 && (T.x - tx) / sc < q.x - s) TRL.length = 0;   /* the backswing leaves no trail */ pushTrail((T.x - tx) / sc, (T.y - ty) / sc, (T.bx - tx) / sc, (T.by - ty) / sc); }
+          if (T && w >= 0 && T.n !== tipN) { tipN = T.n; trailWin(w, b, u); const q = TRL[TRL.length - 1], p1 = LY.toStage(T.x, T.y), p2 = LY.toStage(T.bx, T.by); if (q && TRL.length < 8 && p1[0] < q.x - s) TRL.length = 0;   /* the backswing leaves no trail */ pushTrail(p1[0], p1[1], p2[0], p2[1]); }
         } }   // werewolf or Vampire Lord while changed
       if (onHorse) wg.restore();
       wg.restore();
@@ -1394,7 +1436,7 @@ const FIGHTART = (() => {
           const wt = heroP.wt || "sword", GL = COMBATFX.GLOW, col = SHINE.find(([k]) => GL[k] === c)?.[1] || c[0];
           const dx = tx2 - hxH, dy = ty2 - hyH, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len, nx = -uy, ny = ux;
           const pulse = 0.75 + 0.25 * Math.sin(tt * 2.6), at = (q, o) => [hxH + dx * q + nx * o, hyH + dy * q + ny * o];
-          wg.save(); wg.lineCap = "round"; wg.lineJoin = "round"; wg.strokeStyle = col; wg.shadowColor = col; wg.shadowBlur = 3 * s * k * z;
+          wg.save(); wg.lineCap = "round"; wg.lineJoin = "round"; wg.strokeStyle = col; wg.shadowColor = col; wg.shadowBlur = 3 * s * k * (V ? V.z : 1);
           if (/axe|mace|hammer|staff/.test(wt)) {   // a head at the end of a haft: a faint rim around the head, the haft stays plain
             const r = (/battleaxe|warhammer/.test(wt) ? 5 : /staff/.test(wt) ? 2.5 : 3.6) * s, [cx, cy] = at(heroRig ? 0.9 : 0.92, 0);
             wg.globalAlpha = 0.34 * pulse; wg.lineWidth = 0.7 * s; wg.beginPath(); wg.arc(cx, cy, r, 0, Math.PI * 2); wg.stroke();
@@ -1414,6 +1456,7 @@ const FIGHTART = (() => {
       if (st.ward || (b && b.who === "me" && b.fx === "ward" && u > 0.4)) hexWard(hx0 + 26 * s, heroChest, b && b.who === "them" && b.absorbed && u > 0.4 ? 1 : 0.5, tt);
       const cloakEl = st.cloak || (b && b.who === "me" && b.fx === "cloak" && u > 0.4 ? b.el || "fire" : null);
       if (cloakEl) orbit(hx0 + heroP.dx * s, heroChest, colOf("cloak", cloakEl), tt);
+      if (CHAN) CHAN.scene({ spawn, ffx: FFX, s, pmul, rm, hero: [hx0 + heroP.dx * s, heroChest], foe: [fx0, foeChest], allyAt: (n) => { const p = LAY && LAY.allies.find((q) => q.name === n); return p ? [p.x, p.y - 36 * s * p.sc] : null; }, flash: (a, c) => { flash = Math.max(flash, a); flashC = c; }, shake: (v) => { shake = Math.max(shake, v); } });   // [channel] motes at the hands, a crit's gold flash
       if (b && b.who === "me" && b.fx === "armor" && u > 0.4) { wg.save(); wg.globalAlpha = 0.5 * (1 - u); wg.strokeStyle = "#e0c890"; wg.lineWidth = 3; wg.beginPath(); wg.ellipse(hx0, groundY - 32 * s, 20 * s, 36 * s, 0, 0, 7); wg.stroke(); wg.restore(); }
       // the foe (faces left)
       wg.save();
@@ -1500,7 +1543,7 @@ const FIGHTART = (() => {
         if (b.fx === "turn" && u > 0.4 && u < 0.9) rays(hx0, heroChest, (u - 0.4) / 0.5);
       }
       if (RL) RL.scene(null);   // figures drawn anywhere else (character screens) stay ungraded
-      if (art) BSCENE.front(wg, art, artO);   // the near-edge strip goes over the fighters' feet, under the weather and the HUD
+      if (art) { BSCENE.front(wg, art, artO); LY.set(1); }   // the near-edge strip goes over the fighters' feet, under the weather and the HUD
       // weather in front of the fighters
       if (wxp) { const dt = Math.min(0.05, Math.max(0, (now - lastNow) / 1000)); lastNow = now; wxp.step(wg, done ? 0 : dt); }
       // weapon trail
@@ -1534,13 +1577,17 @@ const FIGHTART = (() => {
         const FN = typeof FIGHTNUMS !== "undefined" ? FIGHTNUMS : null, base = FN ? FN.sceneSize(fsz[i], vs, fsz[i] >= 20) : fsz[i];   // [fightnums] readable on a phone, not huge on a PC
         const pop = Math.min(1, (1 - fl[i]) * 8), sz = Math.round(base * (1 + (1 - pop) * 0.5) * 10) / 10;
         g.font = `700 ${sz}px Cinzel, Georgia, serif`; g.globalAlpha = Math.max(0, Math.min(1, fl[i] * 2.5));
+        const [qx, qy] = LY.toScreen(fxs[i], fys[i]);   // [fightcam] where it shows now, still the same size
         if (FN) {   // a thick dark outline, and the whole word inside the part of the stage you can see
-          const hw = g.measureText(ftx[i]).width / 2 + sz * 0.15, x = Math.max(band[0] + hw, Math.min(band[1] - hw, fxs[i])), y = Math.max((band[2] || 0) + sz * 1.1, fys[i]);
+          const hw = g.measureText(ftx[i]).width / 2 + sz * 0.15, x = Math.max(band[0] + hw, Math.min(band[1] - hw, qx)), y = Math.max((band[2] || 0) + sz * 1.1, qy);
           g.lineJoin = "round"; g.lineWidth = Math.max(2, sz * 0.2); g.strokeStyle = "rgba(10,12,16,.92)"; g.strokeText(ftx[i], x, y); g.fillStyle = fcl[i]; g.fillText(ftx[i], x, y);
-        } else { g.fillStyle = "#1c2128"; g.fillText(ftx[i], fxs[i] + 1.5, fys[i] + 1.5); g.fillStyle = fcl[i]; g.fillText(ftx[i], fxs[i], fys[i]); }
+        } else { g.fillStyle = "#1c2128"; g.fillText(ftx[i], qx + 1.5, qy + 1.5); g.fillStyle = fcl[i]; g.fillText(ftx[i], qx, qy); }
       }
       g.globalAlpha = 1;
-      for (const [nm, tx2, ty2] of mateTags) { const ts = tagSz(), tu = ts / 11; g.font = `600 ${ts.toFixed(2)}px "Barlow Semi Condensed", sans-serif`; const w = g.measureText(nm).width + 10 * tu, tx3 = Math.max(band[0] + w / 2 + 2, Math.min(band[1] - w / 2 - 2, tx2)), ty3 = Math.max(26 * tu, ty2); g.fillStyle = "rgba(14,15,18,0.72)"; g.fillRect(tx3 - w / 2, ty3 - 11 * tu, w, 15 * tu); g.fillStyle = "#c8f0c0"; g.fillText(nm, tx3, ty3 + 0.5); }   // party members' names, crisp in both styles
+      { const placed = [];   // party members' names, crisp in both styles; [fightcam] two that would overlap step apart
+        for (const [nm, tx2, ty2] of mateTags) { const ts = tagSz(), tu = ts / 11; g.font = `600 ${ts.toFixed(2)}px "Barlow Semi Condensed", sans-serif`; const w = g.measureText(nm).width + 10 * tu, tx3 = Math.max(band[0] + w / 2 + 2, Math.min(band[1] - w / 2 - 2, tx2)); let ty3 = Math.max(26 * tu, ty2);
+          for (let n = 0; n < 6; n++) { const q = placed.find((p) => Math.abs(p[0] - tx3) < (p[2] + w) / 2 && Math.abs(p[1] - ty3) < 15.5 * tu); if (!q) break; ty3 = q[1] - 16 * tu < 26 * tu ? q[1] + 16 * tu : q[1] - 16 * tu; }
+          placed.push([tx3, ty3, w]); g.fillStyle = "rgba(14,15,18,0.72)"; g.fillRect(tx3 - w / 2, ty3 - 11 * tu, w, 15 * tu); g.fillStyle = "#c8f0c0"; g.fillText(nm, tx3, ty3 + 0.5); } }
       if (label && labelT > 0) { const a = Math.min(1, labelT * 3), sz = lbl(20); g.globalAlpha = a; g.font = `700 ${sz}px Cinzel, Georgia, serif`; const y = Hh * 0.25 - (1 - a) * 8; g.fillStyle = "rgba(28,33,40,0.7)"; const pu = sz / 20, w = g.measureText(label).width + 18 * pu; g.fillRect(W / 2 - w / 2, y - sz + 2 * pu, w, sz + 8 * pu); g.fillStyle = labelC; g.fillText(label, W / 2, y); }
       g.restore();
       // end banner
@@ -1699,7 +1746,7 @@ x - 0.5, y - 0.5, bw + 1, bh + 1);
     const runner = {
       step(ms) { for (let left = ms; left > 0; left -= 16) update(Math.min(16, left) / 1000); draw(performance.now()); },
       finish() { if (!done) finish(); },   // [OURS] tap anywhere on the fight screen (fastqol.js)
-      get done() { return done; }, get beat() { return bi; }, get cam() { return [zoom, camF, deathK]; }, beats, el,
+      get done() { return done; }, get beat() { return bi; }, get cam() { const v = cam && camMine() ? cam.view() : null; return [v ? v.z : 1, v ? v.cx / W : 0.5, deathK, v ? v.kind : null]; }, beats, el,
     };
     const minGap = FS ? FS.frameMs() : 0;   // the frame-rate cap (Settings → Fights → Frame rate)
     function frame(now) {
@@ -1707,7 +1754,7 @@ x - 0.5, y - 0.5, bw + 1, bh + 1);
       if (minGap && now - lastNow < minGap) { raf = requestAnimationFrame(frame); return; }
       if (!MANUAL) { const dt = Math.min(0.05, Math.max(0, (now - lastNow) / 1000)); update(dt); draw(now); }
       lastNow = now;
-      if (!done) raf = requestAnimationFrame(frame); else { LIVE.delete(runner); idleArt(); }
+      if (!done) raf = requestAnimationFrame(frame); else { LIVE.delete(runner); idleArt(); if (cam && cam.active()) camWake(); }   // [fightcam] a move still easing out finishes on its own
     }
     /* [OURS] a finished scene with a painted backdrop keeps its torches flickering and banners moving (12 frames a second,
        only the newest two scenes, only while on screen); with reduced motion it just redraws once the pictures arrive */
@@ -1742,7 +1789,7 @@ x - 0.5, y - 0.5, bw + 1, bh + 1);
   }
   // for tests: step every playing scene by hand, and read frame times
   const manual = (on) => { MANUAL = !!on; };
-  const advance = (ms) => { for (const r of LIVE) { if (!r.el.isConnected) { LIVE.delete(r); continue; } r.step(ms); } return [...LIVE].map((r) => ({ beat: r.beat, beats: r.beats.length, done: r.done, cam: r.cam })); };
+  const advance = (ms) => { for (const r of LIVE) { if (!r.el.isConnected) { LIVE.delete(r); continue; } r.step(ms); } for (const c of CAMS) { if (!c.cv.isConnected) CAMS.delete(c); else c.step(ms); } return [...LIVE].map((r) => ({ beat: r.beat, beats: r.beats.length, done: r.done, cam: r.cam })); };
   const perf = () => { const n = Math.min(perfN, PERF.length), a = Array.from(PERF.subarray(0, n)).sort((x, y) => x - y); return { frames: perfN, p50: a[Math.floor(n * 0.5)] || 0, p90: a[Math.floor(n * 0.9)] || 0, max: a[n - 1] || 0 }; };
   const resetPerf = () => { perfN = 0; };
   /* [OURS] finish every scene still playing (tap-anywhere on a fight screen, fastqol.js) -> how many were playing */
