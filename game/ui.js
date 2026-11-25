@@ -38,9 +38,12 @@
   // ------------------------------------------------------------ helpers
   const hudIcon = (k, fallback) => (typeof HUD !== "undefined" ? HUD.icon(k) : fallback);
   const CQ = typeof CRAFTQOL !== "undefined" ? CRAFTQOL : null;   // crafting shortcuts (craftqol.js)
-  function toast(text) {
+  /* [notify] loot, gold, skill and quest lines take turns through notify.js (merged, never on top of a blocking screen); plain messages show at once */
+  function toast(text) { if (typeof NOTIFY !== "undefined") NOTIFY.msg(text, showToast); else showToast(text); }
+  function showToast(text, o) {
     let el = $("#toast");
     if (!el) { el = document.createElement("div"); el.id = "toast"; el.className = "toast"; el.setAttribute("role", "status"); document.body.appendChild(el); }
+    if (o && o.replace) el.dataset.last = text;   // a merged line ("×3") replaces itself instead of pushing the old one down the log
     if (typeof HUD !== "undefined") HUD.log(el, text);
     el.textContent = text; el.classList.remove("hide");
     if (typeof POLISH !== "undefined") POLISH.toast(el, text);
@@ -514,6 +517,7 @@
       const escKey = !!(opts && opts.esc);
       if (typeof PAUSEM !== "undefined" && PAUSEM.isOpen()) { PAUSEM.close(); return true; }   // the Esc menu is the very top
       if (typeof BUGREPORT !== "undefined" && BUGREPORT.isOpen()) { BUGREPORT.close(); return true; }   // the report window sits on top of everything
+      if (typeof NOTIFY !== "undefined" && NOTIFY.closeHist()) return true;   // [notify] the message history
       if (S && typeof CHARGEN !== "undefined" && document.querySelector(".cg-over")) { CHARGEN.close(false); return true; }   // [qa-core] the barber / mirror: back = Cancel, never something hidden under it
       { const x = backOutOfGame(); if (x) return x; }   // [qa-core] a mini-game or the rune table: back leaves it (its own Leave / Done button)
       if ($("#title")) { if (titlePage !== "menu" && titlePage !== "press") { titlePage = "menu"; renderTitle(); return true; } return false; }
@@ -624,6 +628,7 @@
     if (typeof RIDING !== "undefined") RIDING.bind($("#rideBtn"), () => S, (m) => { liveCache.key = ""; if (S.trip) S.trip.total = G.minutesLeft(S); kickMap(); toast(m); renderTrip(); publishCard(); persist(true); });   // riding.js: get on / off from the map
     $("#centerBtn").onclick = () => { mapTouchedAt = performance.now(); kickMap(); follow = true; if (zoom === 1) zoom = 2.4; $("#zoomBtn").textContent = "－"; };
     bindMap();
+    if (typeof WAGONS !== "undefined") WAGONS.mount({ S: () => S, Store, toast, persist: () => persist(), livePos: () => livePos(), kick: () => kickMap(), message: (t, x) => showMessage(t, x), canDecide: () => (typeof PARTYPLAY === "undefined" || PARTYPLAY.canDecide(S)), secsTo: (p) => G.minutesTo(S, p) * 60, zoom: () => zoom, zoomAt: (z, x, y) => { mapZoomAt?.(z, x, y); mapTouchedAt = performance.now(); kickMap(); }, go: (cid, intent) => chaseCaravan(cid, intent) });   // tap a caravan's wagons on the map: their card (wagons.js)
     if (typeof GREET !== "undefined") GREET.mount({ S: () => S, Store, toast, persist: () => persist(), others: () => others, party: () => party, otherPos: (o) => otherPos(o), livePos: () => livePos() });   // Strangers until you greet each other (greet.js)
     if (typeof PCMAP !== "undefined") PCMAP.mount({ S: () => S, party: () => party, others: () => others, otherPos: (o) => otherPos(o), livePos: () => livePos(), tab: () => tab, skyPage: () => sky?.page,   // PC: the map is the home screen (pcmap.js)
       view: () => ({ zoom, center, transform: view.transform }), setView: (z, cn) => { zoom = z; center = cn; follow = false; mapTouchedAt = performance.now(); kickMap(); const zb = $("#zoomBtn"); if (zb) zb.textContent = zoom > 1.01 ? "－" : "＋"; },
@@ -787,6 +792,30 @@
     if (!ev || ev.err) { if (!auto) toast(ev?.err || "That caravan has moved on."); return; }
     lastEventAt = Date.now(); SOUND.fx?.("arrive");
     persist(); ppUI?.leaderHalt("event", ev.name, ev.text); openEvent();
+    const intent = typeof WAGONS !== "undefined" ? WAGONS.takeIntent(S, cid) : null;   // what you picked on the wagon's card
+    if (intent && G.eventChoices(S).some((x) => x[0] === intent)) eventAction(intent);
+  }
+  /* the wagon card's Catch up (wagons.js): travel to where you'll meet the caravan; beside it, stop and meet it now */
+  function chaseCaravan(cid, intent) {
+    const t = G.now(), c = CARAVANS.all(t).find((x) => x.id === cid);
+    if (!c) return toast("That caravan has moved on.");
+    if (S.dungeon) return toast("Finish what you're doing first.");
+    if (S.trip && S.trip.status !== "travel") return toast("Deal with what's in front of you first.");
+    if (S.trip?.caravan) return toast("You're already guarding a caravan.");
+    if (typeof PARTYPLAY !== "undefined" && !PARTYPLAY.canDecide(S)) return toast("Only your party's leader can stop for a caravan.");
+    const pos = livePos();
+    if (S.trip) { [S.x, S.y] = pos; }
+    const ic = WAGONS.intercept(c, t, pos, (p) => G.minutesTo(S, p) * 60);
+    WAGONS.chase(S, cid, intent, ic.secs, t);
+    if (ic.near) {
+      if (S.trip?.status !== "travel" || S.trip.carriage || S.trip.boat) { roamSpot = CARAVANS.pos(c, t + 120); travelTo(CARAVANS.roamBlocked(S) ? c.to : "__spot", true); }
+      if (S.trip?.status === "travel") return meetCaravan(cid);
+      return;
+    }
+    if (ic.town) { if (S.location === ic.town) return toast(`${c.line.name} is here in ${ic.town}. Find them in the Area tab.`); return travelTo(ic.town); }
+    if (CARAVANS.roamBlocked(S)) return travelTo(c.to);   // a cart keeps to the roads: follow their road
+    roamSpot = ic.pos; travelTo("__spot");
+    if (S.trip) toast(`You set off after ${c.line.name}. About ${fmtMin(ic.secs / 60)} to catch them.`);
   }
   function maybeCaravan() {
     if (typeof CVROAD === "undefined" || document.hidden || $("#modal") || S.trip?.status !== "travel" || Date.now() - lastEventAt < 8000) return;
@@ -1039,6 +1068,7 @@
       cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), mask: typeof PRIESTS !== "undefined" ? PRIESTS.marker(S)?.pos : null, tmaps: typeof EXPLORE !== "undefined" ? EXPLORE.marks(S) : [], rumours: typeof RUMOURS !== "undefined" ? RUMOURS.marks(S) : [], herbs: typeof GATHER !== "undefined" ? GATHER.marks(S) : [], herbRange: typeof HARVEST !== "undefined" && !S.dungeon && HARVEST.nearPrompt(S) ? { pos: [S.x, S.y], r: GATHER.REACH_PX / 1000 } : null, pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
       routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, led: typeof RIDING !== "undefined" ? RIDING.led(S) : null, gallop: HORSES.riding(S) && S.trip?.status === "travel" && Terrain.speedAt(pos) >= 1.2, cart: CARAVANS.hasCart(S), guards: typeof GUARDS !== "undefined" ? GUARDS.visible(S).map((p) => (p.visible || !myCone || !VISION.inCone(myCone, p.pos) ? p : { ...p, visible: true })) : null, caravans: CARAVANS.all().map((c) => { const cp = CARAVANS.pos(c); return { cp, c }; }).map(({ cp, c }) => ({ pos: cp, visible: G.pxDist(cp, pos) < 160 || (myCone && VISION.inCone(myCone, cp)) || S.discovered.some((n) => WORLD.places[n] && ["city", "town"].includes(WORLD.places[n][2]) && G.pxDist(cp, WORLD.places[n]) < 45), khajiit: c.line.khajiit, moving: c.phase === "road", mine: S.caravanJob?.id === c.id, id: c.id, near: typeof CVROAD !== "undefined" && c.phase === "road" && CVROAD.canMeet(S) && G.pxDist(cp, pos) <= CVROAD.TAP_RANGE, label: c.line.name.replace(/'s caravan$/, "") })).filter((c) => !(c.mine && S.trip?.caravan)), hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
     };
+    if (typeof WAGONS !== "undefined") WAGONS.decorate(view, S);   // hovered wagons, wagons in trouble
     WorldMap.draw($("#map"), view);
     return gap;
   }
@@ -1062,6 +1092,7 @@
     if (k !== lookCache.k) lookCache = { k, v: HEROART.lookOf(S) };
     return lookCache.v;
   }
+  let mapZoomAt = null;   // bindMap's zoom-around-a-point, for wagons.js (a tapped cluster pin zooms in)
   function bindMap() {
     const c = $("#map"), pts = new Map();
     let down = null, moved = false, pinch = null;
@@ -1076,6 +1107,7 @@
       }
       zoom = z; $("#zoomBtn").textContent = zoom > 1.01 ? "－" : "＋";
     };
+    mapZoomAt = setZoom;
     let press = null, pressed = false;
     c.addEventListener("pointerdown", (e) => {
       pts.set(e.pointerId, [e.clientX, e.clientY]); c.setPointerCapture(e.pointerId); mapTouchedAt = performance.now(); kickMap();
@@ -1090,6 +1122,7 @@
       else { down = { x: e.clientX, y: e.clientY, c: [...center] }; moved = false; }
     });
     c.addEventListener("pointermove", (e) => {
+      if (e.pointerType === "mouse" && !pts.size && view.transform && typeof WAGONS !== "undefined") { const r = c.getBoundingClientRect(); WAGONS.hover(view, e.clientX - r.left, e.clientY - r.top, c); }   // PC: wagons light up under the mouse
       if (!pts.has(e.pointerId)) return;
       mapTouchedAt = performance.now(); kickMap();
       pts.set(e.pointerId, [e.clientX, e.clientY]);
@@ -1116,6 +1149,7 @@
       if (typeof GREET !== "undefined") { GREET.close(); if (GREET.tap(view, e.clientX - r.left, e.clientY - r.top)) return; }   // another hero: their card, Greet (greet.js)
       const cvTap = typeof CVROAD !== "undefined" && S.trip?.status === "travel" ? CVROAD.hit(view.caravans, screenToWorld(e.clientX - r.left, e.clientY - r.top), WorldMap.W, WorldMap.H, 24 / view.transform.k) : null;
       if (cvTap) return meetCaravan(cvTap.id);   // tapped a caravan's wagons while travelling: stop and meet them
+      if (typeof WAGONS !== "undefined") { if (WAGONS.tap(view, e.clientX - r.left, e.clientY - r.top, c)) return; if (WAGONS.isOpen()) WAGONS.close(); }   // any other wagon: its card; a cluster pin: zoom in (wagons.js)
       const pin = pinAt(e.clientX - r.left, e.clientY - r.top);
       selected = pin ? "__pin:" + pin.id : WorldMap.placeAt(view, e.clientX - r.left, e.clientY - r.top, known);
       if (!selected) { const w = screenToWorld(e.clientX - r.left, e.clientY - r.top); if (WORLD.onMap(w)) { roamSpot = w; selected = "__spot"; } }
@@ -1241,7 +1275,8 @@
   function openEvent(note) {
     const ev = S.trip?.event;
     if (!ev) return;
-    const shop = ev.shop ? `<div class="list" style="margin:8px 0">${ev.shop.map((i) => { const p = G.buyPrice(S, i, null); return `<div class="item${tiCls(i)}"><div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))} · ${D.ITEMS[i].weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm" data-act="evbuy" data-item="${i}" ${S.gold >= p ? "" : "disabled"}>Buy</button>${tiBox(i)}</div>`; }).join("")}</div><p class="sub">You have ${S.gold} gold.</p>` : "";
+    const cvp = typeof WAGONS !== "undefined" && ev.cid && /^cvmeet_/.test(ev.id || "");   // a caravan's packs: crisis prices (wagons.js)
+    const shop = ev.shop ? `<div class="list" style="margin:8px 0">${ev.shop.map((i) => { const p = cvp ? WAGONS.price(S, ev, i) : G.buyPrice(S, i, null); return `<div class="item${tiCls(i)}"><div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))} · ${D.ITEMS[i].weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm" data-act="evbuy" data-item="${i}" ${S.gold >= p ? "" : "disabled"}>Buy</button>${tiBox(i)}</div>`; }).join("")}</div><p class="sub">You have ${S.gold} gold.</p>` : "";
     const choices = ev.shop ? [["leave", "Say goodbye and move on"]] : G.eventChoices(S);
     openModal(`${typeof EVENTART !== "undefined" ? EVENTART.road(ev) : ""}<p class="sub" style="margin:0">On the road · ${esc(G.holdAt([S.x, S.y]))} · ${esc(Terrain.NAMES[Terrain.typeAtPos([S.x, S.y])])}</p>
       <h2 style="margin:4px 0 8px">${esc(ev.title || "Something by the road")}</h2><p>${esc(ev.text)}</p>
@@ -1565,7 +1600,7 @@
     openModal(`<h2>${what === "xdig" ? " Buried treasure" : " Searching"}</h2><p>${esc(r.text)}</p>${r.book ? `<button class="btn" data-act="xread" data-id="${esc(r.book.id)}" style="width:100%;margin-bottom:6px"> Read "${esc(r.book.title)}"</button>` : ""}<button class="btn pri" data-act="close" style="width:100%">Continue</button>`);
   }
   function dungeonAct(c, replay = false) {
-    if (lvUI && !replay && lvUI.memberLocked()) return toast("In a party only the leader decides. Their choice happens to you too.");
+    if (lvUI && !replay && lvUI.memberLocked()) return toast("In a party, everyone votes on each choice. Wait for the vote to open on your screen.");
     if (replay && typeof PTRAPS !== "undefined" && coopUI && S.dungeon?.run) c = PTRAPS.mine(S, coopUI.runs.find((x) => x.id === S.dungeon.run), c, PTRAPS.docs);   // a party trap: your own result, not the leader's
     const runId = S.dungeon?.run || null, roomType = S.dungeon?.room?.type, hp0 = G.curHealth(S), found0 = S.dungeon?.found.length || 0, gold0 = S.dungeon?.gold || 0;
     const act = () => {   // the party loot pile wraps the room; a fight inside it pauses on the turn-by-turn screen
@@ -2268,7 +2303,8 @@
     const fresh = ACH.check(S);
     if (!fresh.length) return;
     persist(true);
-    fresh.forEach((a, i) => setTimeout(() => { SOUND.fx("levelup"); toast(` Achievement: ${a.icon} ${a.name}`); }, 1200 * i));
+    if (typeof NOTIFY !== "undefined") NOTIFY.ach(fresh);   // [notify] ones earned together share one banner
+    else fresh.forEach((a, i) => setTimeout(() => { SOUND.fx("levelup"); toast(` Achievement: ${a.icon} ${a.name}`); }, 1200 * i));
     for (const a of fresh) if (Store.online) postNews(` ${S.name} earned “${a.name}”.`);
   }
 
@@ -3835,7 +3871,7 @@
       case "dmin": closeDungeon(); tab = "pack"; renderTabs(); renderPanel(true); break;
       case "dleave": { if (S.dungeon?.run && lvUI) { S.lastRun = S.dungeon.run; lvUI.leaderLeaving(); } if (S.dungeon?.run && coopUI) coopUI.left(); if (typeof IMM !== "undefined") IMM.loading("Back to the open road…"); const m = DUNGEONS.leave(S); dunNote = null; persist(true); closeDungeon(); renderPanel(true); showMessage("Back outside", m); break; }
       case "ev": if (b.dataset.c === "pick" && typeof IMM !== "undefined" && IMM.wantsGame()) { IMM.pick("event", eventAction, S); break; } eventAction(b.dataset.c); break;
-      case "evbuy": { const m = G.buyFrom(S, b.dataset.item); persist(); openEvent(m); break; }
+      case "evbuy": { const ev = S.trip?.event, m = typeof WAGONS !== "undefined" && ev?.cid && /^cvmeet_/.test(ev.id || "") ? WAGONS.buy(S, ev, b.dataset.item) : G.buyFrom(S, b.dataset.item); persist(); openEvent(m); break; }
       case "enc": encounterAction(b.dataset.a); break;
       case "close": if (S?.pickTemple && typeof PVPDEATH !== "undefined") PVPDEATH.stay(S); closeModal(); break;
       case "pvptemple": toast(PVPDEATH.goTo(S, b.dataset.id)); persist(true); publishCard(); closeModal(); renderPanel(true); break;

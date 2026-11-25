@@ -305,7 +305,8 @@ const TB = (() => {
       if (/^potion:/.test(a)) this.pots++;
     }
     act(a, tgt, mult, grade) {   // mult: how the minigame went (minigame.js), 1 = normal; grade.cls "perfect" adds a stack
-      if (this.cur?.id !== "me" || this.over) return null;
+      if (this.cur?.id !== "me") return null;
+      if (this.over) { this.apSet = false; this.idx++; return { turn: "next" }; }   // the foe fell outside your moves (a tick, a teammate): any tap wraps the fight up instead of doing nothing
       const f = this.f;
       const al = tgt != null && tgt !== "" ? (+tgt >= 1000 ? (f._downed || [])[+tgt - 1000] : f.allies[+tgt]) : null;
       if (a === "end") return this.endTurn();

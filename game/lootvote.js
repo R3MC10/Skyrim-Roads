@@ -159,7 +159,7 @@ const LOOTVOTE = (() => {
 
     // -- room actions: only the leader chooses
     function memberLocked() { return inPartyRun() && !leader(); }
-    function lockedHTML() { const r = run(); return `<div class="card lv-wait"><h3> ${esc(r?.leaderName || "The leader")} is choosing…</h3><p class="sub">In a party only the leader decides. What they pick happens to you too, and everything found goes into the party's loot pile.</p></div>`; }
+    function lockedHTML() { return `<div class="card lv-wait"><h3> <span>Waiting for the next party vote…</span></h3><p class="sub">In a party, everyone votes on each choice. The vote opens on your screen as soon as the leader starts it. What the party picks happens to you too, and everything found goes into the party's loot pile.</p></div>`; }
     /* wrap the leader's room action: shared pile + record the choice for the others */
     async function aroundAct(c, doAct) {
       const s = S(), r = run();
