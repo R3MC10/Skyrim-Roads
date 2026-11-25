@@ -3,11 +3,17 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b226-eventcards", build: 226, date: "25 Nov 2026", title: "Painted event cards", items: [
+    { id: "b227-eventcards", build: 227, date: "25 Nov 2026", title: "Painted event cards", items: [
       "Dragon attacks on towns now show a hand-painted picture instead of the flat drawing: a dragon breathing fire over the rooftops.",
       "Great events, crises and raids on your house get paintings too: bandits with torches for sieges and outlaws, a vampire lord in the town square, a giant smashing through a farm, and a caravan lost in a blizzard for the Long Winter.",
       "The name of the event sits under the picture, with a small coloured diamond next to it that shows how bad things are: green when it's over, yellow for trouble, orange for danger, red when it's deadly.",
       "Cards fade in gently, and a few faint embers, wisps of red mist or snowflakes drift over them. With reduced motion on they stay still.",
+    ] },
+    { id: "b226-busts", build: 226, date: "25 Nov 2026", title: "Painted faces for every race", items: [
+      "Picking a race now shows a painted portrait of each one on a dark panel, with the race name underneath.",
+      "The Character page shows your race's painted portrait, and the Worn screen in your inventory has a small one in the corner of your paper doll.",
+      "There is one painting per race, of a man or a woman. If your hero is the other sex, the painting shows as a round race crest instead of as your face.",
+      "Fights and the paper doll still show your hero in the gear you wear.",
     ] },
     { id: "b225-heistart", build: 225, date: "25 Nov 2026", title: "Heists you can see", items: [
       "Every heist now shows a painting of the house you're robbing: Battle-Born's farm, the Shatter-Shield house on the icy docks, Erikur's townhouse, the Silver-Blood stone house and Maven's manor on the canal.",

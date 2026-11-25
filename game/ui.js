@@ -2946,7 +2946,7 @@
     /* [menus2] one hero card on top, then sections that fold away (Skills and Perks have their own tabs too) */
     const fold = typeof MENUS2 !== "undefined" ? MENUS2.fold : (id, title, html) => `<div class="panel"><h2>${title}</h2>${html}</div>`;
     const fp = placesFound();
-    const card = `<div class="panel m2-hero"><h2>${esc(S.name)}</h2><div class="m2-herogrid"><div class="herobox">${HEROART.figure(S, 160, 220)}</div><div class="m2-herotxt">
+    const card = `<div class="panel m2-hero"><h2>${esc(S.name)}</h2><div class="m2-herogrid"><div class="herobox">${typeof BUSTART !== "undefined" ? BUSTART.hero(S, HEROART.figure(S, 160, 220)) : HEROART.figure(S, 160, 220)}</div><div class="m2-herotxt">
       ${(S.titles || []).length ? `<p class="sub m2-titles">${S.titles.map(esc).join(" · ")}</p>` : ""}<p class="sub">Level ${S.level} ${esc(D.RACES[S.race].name)} · ${esc(D.RACES[S.race].desc)}</p><p class="sub"> Places discovered: <b>${fp.got}</b> of ${fp.all}${S.horse ? ` · Horse: ${esc(S.horse.name)}` : ""}</p>
       <div class="bar" style="margin-top:8px"><i style="width:${pct(S.charXp, need)}%;background:var(--gold)"></i></div><p class="sub num">${Math.round(S.charXp)}/${need} toward level ${S.level + 1}</p>
       <div class="grid2 m2-attrs"><div class="slot">Health<b class="num">${G.maxHealth(S)}</b></div><div class="slot">Magicka<b class="num">${G.maxMagicka(S)}</b></div><div class="slot">Stamina<b class="num">${G.maxStamina(S)}</b></div></div>
