@@ -5311,6 +5311,45 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 .fj-t .fj-fight{color:#f0a08a;border-color:rgba(240,120,100,.45)}.fj-t .fj-dungeon{color:#b6a6e8;border-color:rgba(170,150,230,.45)}.fj-t .fj-trade{color:#e8cf7a;border-color:rgba(230,200,110,.45)}
 .fj-t .fj-party{display:block;color:#cbb98f}.fj-t .fj-party.full{color:#e39a7c}.fj-t .fj-why{display:block;font-style:italic;opacity:.75}
 .fbtns .btn[data-act=fjoin][disabled]{opacity:.45;cursor:not-allowed}
+/* [dunchoices] the ways at a dungeon fork as cards (dunchoice.js): the room's painting, its name, a risk tag, the reward and
+   what comes next. Phones: one card per row, picture on the left. PC: side by side, picture on top. In a party vote the
+   same cards carry the voters' faces and a vote count on the picture (partyvote.js). */
+.dun .dcol .evc.dcards,.pvote .pvopts.dcards{display:grid;grid-template-columns:1fr;gap:10px}
+.dun .dcol .evc.dcards>.btn.dchoice:nth-child(n),.pvote .pvopts.dcards>.btn.dchoice:nth-child(n){grid-column:auto}
+.btn.dchoice{position:relative;display:grid;grid-template-columns:minmax(112px,36%) minmax(0,1fr);grid-template-areas:"pic tx";align-items:stretch;padding:0;min-height:0;width:100%;text-align:left;overflow:hidden;white-space:normal;text-transform:none;letter-spacing:normal;line-height:1.25;border-color:rgba(236,232,222,.22);background:linear-gradient(90deg,rgba(0,0,0,.55),rgba(0,0,0,.35))}
+.btn.dchoice:hover:not(:disabled),.btn.dchoice:focus-visible{border-color:rgba(226,187,100,.75);background:linear-gradient(90deg,rgba(226,187,100,.10),rgba(0,0,0,.35))}
+.btn.dchoice:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.btn.dchoice.t-boss{border-color:rgba(214,90,74,.62)}
+.dcpic{grid-area:pic;position:relative;display:block;min-height:104px;background:#0c0b0a;overflow:hidden}
+.dcpic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.dcpic.painted::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 100% at 50% 45%,rgba(0,0,0,0) 50%,rgba(0,0,0,.55))}
+.dcpic.drawn,.dcpic.waiting{display:flex;align-items:center;justify-content:center;background:radial-gradient(70% 70% at 50% 50%,rgba(255,170,80,.10),rgba(0,0,0,0)),#0c0b0a}
+.dcpic img.dcmed{position:static;width:44px;height:44px;object-fit:contain}
+.dctx{grid-area:tx;display:flex;flex-direction:column;gap:3px;min-width:0;padding:8px 10px 9px;font-family:var(--sk-ui);font-weight:500;font-size:14px;color:var(--sk-ink)}
+.dchd{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:2px 8px}
+.dcname{font-weight:600;font-size:16px;letter-spacing:.08em;text-transform:uppercase;min-width:0}
+.dcname .dcic{opacity:.85}.dcside{font-size:11px;letter-spacing:.1em;color:var(--sk-mute)}
+.dcrisk{flex:none;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:1px 6px;border:1px solid currentColor;border-radius:2px;line-height:1.35}
+.dcrisk.r0{color:#9fcf8f}.dcrisk.r1{color:#cfd6a0}.dcrisk.r2{color:#e2bb64}.dcrisk.r3{color:#f08a5d}.dcrisk.r4{color:#ff6b5b;background:rgba(176,52,40,.22)}.dcrisk.ru{color:#b9b1d6}
+.dcwhat{color:var(--sk-mute);font-size:13.5px}
+.dcgain{color:#e6cf92;font-size:13.5px}.dcgain.need small{color:var(--sp);font-size:12px}
+.dclab{font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--sk-mute);margin-right:2px}
+.dcthen{font-size:12.5px;color:var(--sk-mute)}.dcthen b{color:var(--sk-ink);font-weight:600}.dcthen .dcsep{font-style:normal;opacity:.6}
+.pvtally{grid-area:pic;align-self:end;justify-self:start;display:flex;align-items:center;gap:6px;margin:6px;z-index:2;pointer-events:none}
+.pvote .dchoice .pvchips{position:static;transform:none;margin-left:9px}
+.pvn{display:inline-block;font-family:var(--sk-ui);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:none;padding:1px 7px;border:1px solid rgba(232,198,106,.7);border-radius:2px;background:rgba(0,0,0,.72);color:#f1e3c0}
+.pvn:empty{display:none}
+.pvote .pvopt.pvlead .pvn{background:#e8c66a;color:#1a150d}
+.pvote .dchoice.pvlead{border-color:rgba(232,198,106,.8)}
+.pvote .pvopt.dchoice.pvmine{outline-offset:2px}
+.pvote .pvrule{margin:0 0 2px;color:#e8c66a}
+@media (max-width:360px){.btn.dchoice{grid-template-columns:minmax(96px,32%) minmax(0,1fr)}.dcname{font-size:15px}.dcwhat{font-size:13px}}
+@media (min-width:900px) and (min-height:520px){
+  .dun .dcol .evc.dcards,.pvote .pvopts.dcards{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+  .btn.dchoice{grid-template-columns:minmax(0,1fr);grid-template-areas:"pic" "tx";align-content:start}
+  .dcpic{aspect-ratio:16/9;min-height:0}
+  .dun .dcol .evc.dcards>.btn.dchoice .dctx{font-size:15px}.dcwhat,.dcgain{font-size:14.5px}.dcthen{font-size:13.5px}
+}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -5498,6 +5537,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="dunart.js"></script>
 <script src="dunrooms.js"></script>
 <script src="dunstrip.js"></script>
+<script src="dunchoice.js"></script>
 <script src="dunfx.js"></script>
 <script src="dollart.js"></script>
 <script src="raidart.js"></script>
@@ -5646,6 +5686,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="i18n_perkkeys.js"></script>
 <script src="i18n_holds.js"></script>
 <script src="i18n_partyvote.js"></script>
+<script src="i18n_dunchoice.js"></script>
 <script src="i18n_deepdelve.js"></script>
 <script src="i18n_dunevents.js"></script>
 <script src="i18n_netsync.js"></script>

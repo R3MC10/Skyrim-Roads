@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b315-dunchoices", build: 315, date: "25 Nov 2026", title: "Dungeon forks show what's ahead", items: [
+      "At a fork every way is now a card: a picture of the room, its name, how risky it is, what it pays, and which rooms come after it.",
+      "Risk goes from Safe to Deadly and follows how dangerous the dungeon is. A Rest room tells you when you could really use it.",
+      "In a party the same cards are the vote: each one shows how many votes it has and who picked it, the leading way lights up, and the vote says plainly that a tie goes the leader's way.",
+    ] },
     { id: "b314-reportname", build: 314, date: "25 Nov 2026", title: "Reports show who sent them", items: [
       "When you report a problem, your player name (your account name, or your hero's name if you're not signed in) now goes with it, so we know who to ask if we need more details.",
       "The report window shows the name it's sent as, right above the Send button.",
