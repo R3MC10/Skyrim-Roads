@@ -3,12 +3,35 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b251-fightpos", build: 251, date: "25 Nov 2026", title: "Everyone stands in the right place", items: [
+    { id: "b254-fightpos", build: 254, date: "25 Nov 2026", title: "Everyone stands in the right place", items: [
       "In a fight your party, followers and summons now stand in neat rows behind you, all of them on screen, even a full party of 8 on a phone. Before, some stood off the edge of the screen.",
       "Foes still waiting their turn now stand behind the one you're fighting, so you can see what's coming.",
       "Big foes like dragons and giants keep their size but always fit on screen, and the foe's health bar sits over its head, even over a dragon's.",
       "When a party member swings at the foe, they step up to it and then go back to their place.",
       "The ring under the one the foe is about to hit is now under the right person.",
+    ] },
+    { id: "b253-wagons", build: 253, date: "25 Nov 2026", title: "Caravans you can talk to", items: [
+      "Tap or click any caravan's wagons on the map to see who they are, where they're going, what they carry and how they're doing: rolling, resting in town, broken down, under attack, guarded or robbed.",
+      "Catch up sends you to where you'll meet them on their road. When you reach them, whatever you picked on the card happens.",
+      "Trade right from the card when you're beside them. Their packs follow their cargo, and when the hold they're heading for is in crisis they carry relief goods and their prices follow that crisis.",
+      "Escorting them pays when they arrive. If that hold's Jarl is paying for supply escorts, it counts as one and helps end the crisis.",
+      "Ask for news: a lead or a new place on your map, and how things stand where they're going.",
+      "Now and then a wagon breaks down or gets attacked on the road. Fix the wheel or fight beside their guards for a reward and a better name in the hold. Everyone sees who helped.",
+      "Robbing wagons is a crime: a bounty, a fight with their guards and a worse name. You can't rob wagons another hero is guarding.",
+      "On a PC the wagons light up under the mouse. Zoomed out, tapping a group pin zooms in on it. In a party the leader decides.",
+      "Caravan Friend (Speech) now also makes caravans on the road sell to you 10% cheaper.",
+      "In Polish, everything about caravans is now in Polish too: their names on the map, meetings on the road, the caravan board in town, your caravan job, your cart and the wares they sell.",
+    ] },
+    { id: "b252-qaside2a", build: 252, date: "25 Nov 2026", title: "Forge and lockpicking fixes", items: [
+      "Fixed: in Polish, the forge was still mostly in English: the Make, Smelt & tan and Improve tabs, batch crafting, what's missing, and the line you get after making something.",
+      "Fixed: in Polish, the lockpicking hint under the lock is translated.",
+      "Fixed: after a festival smithing contest, your next forged item could get a free chance to save a material it never earned.",
+    ] },
+    { id: "b251-perklayout", build: 251, date: "25 Nov 2026", title: "Tidier perk stars", items: [
+      "Perk names in the star trees never sit on top of each other any more, and long names are never cut short with \"…\": they wrap onto a second line instead.",
+      "Each perk now sits right above the perks it needs, with the first ones at the bottom, so the trees read from the ground up.",
+      "On a phone, pinch the stars to zoom in or out and drag to look around. Zoomed far out, only the perks you can take keep their names.",
+      "On a phone, tapping a star shows the perk in a panel at the bottom of the screen instead of a pop-up over the stars.",
     ] },
     { id: "b250-qafight", build: 250, date: "25 Nov 2026", title: "Fight fixes", items: [
       "Fixed: on phones, casting a heal with a follower along asked you to tap a portrait, but the Magic menu covered every portrait. The bar at the top now has a button for each person you can heal.",
