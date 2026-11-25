@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b306-remakeonce", build: 306, date: "25 Nov 2026", title: "Everyone gets to remake their hero once", items: [
+      "Everyone gets to remake their hero once: pick race, sex and look again.",
+      "When you next step onto the map, the character creator opens once for every hero made before this update. Your name, level, trained skills, perks, gear and quests all stay.",
+      "Change race and only the race's starting skill boost moves: what you trained yourself is kept, and you get the new race's power and gifts.",
+      "Happy with your hero? Tap Keep as is. It never pops up in a fight, a dungeon or a party vote: it waits until you're back on the map.",
+    ] },
     { id: "b305-perkkeys", build: 305, date: "25 Nov 2026", title: "Perk stars with the keyboard", items: [
       "On a PC the Skills page now works like Skyrim's: A and D (or the arrows) step through the skills, W and S move up and down the list, and the stars on the right follow the skill you're on.",
       "E, Enter or Space takes you into the stars. There W A S D jump to the nearest star that way (stars joined by a line first), its perk shows on the left, and E takes it if you can.",
