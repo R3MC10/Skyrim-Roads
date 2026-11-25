@@ -9,7 +9,7 @@ async def main():
             ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2)
             await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}'}}))")
             pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(style + " " + str(e)))
-            await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=hb{style}"); await pg.wait_for_timeout(1500)
+            await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=hb{style}&mountcombat"); await pg.wait_for_timeout(1500)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Rider"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
             await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
             await pg.evaluate("""()=>{ const S=window.__dbg.save(); S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; S.level=8; S.hpBonus=60; S.gold=5000; G.setHealth(S,G.maxHealth(S));
