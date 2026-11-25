@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b186-backdrops2", build: 186, date: "25 Nov 2026", title: "Sharper fight backdrops and a town street", items: [
+      "The pine forest, snow pass, tundra road, cave, burial barrow and Dwemer vault behind your fights are painted again, much bigger and with more detail. They stay sharp on big PC screens and ultrawide monitors.",
+      "New: a town street. Fights in a town or city, or on the road right outside one (guards, bounty hunters, brawls, festival duels), now happen among Nordic longhouses with the hold's hall on the hill.",
+      "The ground in front of the fighters has a bit more texture and shade, so it no longer looks like a flat block.",
+    ] },
     { id: "b185-blood2", build: 185, date: "25 Nov 2026", title: "Blood that looks like blood", items: [
       "Blood in fights looks wet and real now: glossy dark red that runs together, see-through and brighter where it's thin, with a shine where the light catches it. No more red pills.",
       "A hit throws blood out of the wound the way the blow went, as ropes that break into drops and a fine mist. The drops fly in an arc, fall, and leave small splats on the ground that slowly fade over the fight.",

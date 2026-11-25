@@ -1,7 +1,7 @@
 """Painted battle scenes (battlescene.js) in the browser at phone size. Usage: python battlescene_ui.py PORT — prints RESULT OK.
 Draws fights in the wide replay stage (dungeon rooms, road fights) and the taller turn-by-turn stage for Embershard Mine,
-another dungeon theme (Burial Barrow at Bleak Falls Barrow), a road encounter (forest/snow/tundra ground) and the
-Windhelm Arena, in both art styles; checks the painted scene is the one the place should get, the fighters' HUD
+another dungeon theme (Burial Barrow at Bleak Falls Barrow), a road encounter (forest/snow/tundra ground), a town
+street (Whiterun) and the Windhelm Arena, in both art styles; checks the painted scene is the one the place should get, the fighters' HUD
 bars are still drawn, the flames keep moving after the replay ends (and not with reduced motion), a real turn-by-turn
 fight in Embershard uses the painted scene, and with pictures off the drawn background comes back.
 Screenshots in tests/bscene/."""
@@ -18,9 +18,10 @@ def ok(c, m):
 # a finished fight drawn as a scene: o = {n, place?, ground?, arena?, tall?}
 MAKE = """(o)=>{ const S=__dbg.save(); S.level=15; G.setHealth(S,G.maxHealth(S)); S.trip=null;
   let pos = WORLD.places.Whiterun.slice(0,2);
-  if (o.ground) { const T=Terrain.T; for (let i=0;i<20000;i++){ const p=[0.05+Math.random()*0.9, 0.05+Math.random()*0.9]; if (Terrain.typeAtPos(p)===T[o.ground]) { pos=p; break; } } }
+  if (o.ground) { const T=Terrain.T; for (let i=0;i<20000;i++){ const p=[0.05+Math.random()*0.9, 0.05+Math.random()*0.9]; if (Terrain.typeAtPos(p)===T[o.ground] && !BSCENE.townAt({x:p[0],y:p[1]})) { pos=p; break; } } }
   if (o.place) pos = WORLD.places[o.place].slice(0,2);
-  [S.x,S.y]=pos; S.location=null;
+  if (o.town) pos = WORLD.places[o.town].slice(0,2);
+  [S.x,S.y]=pos; S.location=o.town||null;
   S.dungeon = o.place && !o.arena ? { place:o.place, theme:DUNGEONS.info(o.place).theme, tier:1, rows:[[{type:'fight',links:[]}]], row:0, col:0, room:null, found:[], gold:0, t:G.now() } : null;
   const e=G.scaleEnemy({name:o.foe||'Bandit',health:90,damage:4,tags:['humanoid'],level:12,danger:'medium',gold:[0,0],text:''},12);
   const f=new G.Fight(S,e); f.allies=[]; TB._origRun.call(f,{trySneak:false});
@@ -37,6 +38,7 @@ CASES = [
     {"n": 4, "name": "road-forest", "ground": "FOREST", "want": "forest", "foe": "Wolf"},
     {"n": 5, "name": "road-snow", "ground": "SNOW", "want": "snow", "foe": "Ice Wraith"},
     {"n": 6, "name": "arena", "place": "Windhelm", "arena": True, "want": "arena"},
+    {"n": 7, "name": "town", "town": "Whiterun", "want": "town", "foe": "Guard"},
 ]
 
 async def scene(pg, o, tall, style, shot=True):
@@ -74,7 +76,7 @@ async def main():
         pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
         await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=bsc1&tb&fightanim&assets"); await pg.wait_for_timeout(1800)
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Painter"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
-        ok(await pg.evaluate("typeof BSCENE!=='undefined' && BSCENE.list().length===20"), "battle scenes loaded")
+        ok(await pg.evaluate("typeof BSCENE!=='undefined' && BSCENE.list().length===21"), "battle scenes loaded")
         for style in ["ink"]:
             for o in CASES:
                 for tall in [False, True]:
