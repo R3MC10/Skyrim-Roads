@@ -15,23 +15,24 @@ const INTROQ = (() => {
   const snap = (s) => ({ smith: sk(s, "Smithing"), pick: picked(s) });
   /* id → [unlock id pattern, recommended level, the line] */
   const LINES = {
-    intro_smith: [/smith|forge/i, 4, { name: "The Blacksmith's Apprentice", giver: "Any town forge", stages: [
+    intro_smith: [/smith|forge/i, 4, { name: "The Blacksmith's Apprentice", story: "hall", icon: "jobs", giver: "Any town forge", stages: [
       { title: "Heat the Forge", text: "Go to a town with a blacksmith (Area tab, Forge) and make or improve one thing. An Iron Dagger is the cheapest start.",
         obj: { test: (s, v) => sk(s, "Smithing") > ((v.snap || {}).smith ?? 0) }, reward: { gold: 40, items: ["mat_iron", "mat_leather"] } }] }],
-    intro_gather: [/gather|harvest|forag/i, 3, { name: "Gifts of the Land", giver: "The wild", stages: [
+    intro_gather: [/gather|harvest|forag/i, 3, { name: "Gifts of the Land", story: "dawn", icon: "angler", giver: "The wild", stages: [
       { title: "Pick Three", text: "Pick three plants or creature parts. Patches show as leaves on the map; walk close and Gather.",
         obj: { test: (s, v) => picked(s) >= ((v.snap || {}).pick ?? 0) + 3 }, reward: { gold: 30, items: ["potion_health_minor"] } }] }],
-    intro_follower: [/follower|hireling|companion/i, 5, { name: "A Sword at Your Side", giver: "Any inn", stages: [
+    intro_follower: [/follower|hireling|companion/i, 5, { name: "A Sword at Your Side", story: "guard", icon: "companions", giver: "Any inn", stages: [
       { title: "Hire a Follower", text: "Find someone to travel with you. Inns and town boards have people looking for work (Area tab).",
         obj: { test: (s) => !!s.follower }, reward: { gold: 50, items: ["potion_health_minor"] } }] }],
-    intro_horse: [/horse|stable|mount/i, 6, { name: "Hooves on the Road", giver: "Any stables", stages: [
+    intro_horse: [/horse|stable|mount/i, 6, { name: "Hooves on the Road", story: "dawn", icon: "travel", giver: "Any stables", stages: [
       { title: "Get a Horse", text: "Buy a horse at the stables outside a city. Riding makes every trip faster and the horse carries more.",
         obj: { test: (s) => !!s.horse }, reward: { gold: 50, items: ["potion_stamina"] } }] }],
-    intro_dungeon: [/dungeon|delve|elite/i, 7, { name: "Into the Dark", giver: "The roads of Skyrim", stages: [
+    intro_dungeon: [/dungeon|delve|elite/i, 7, { name: "Into the Dark", story: "claw", icon: "bounty", giver: "The roads of Skyrim", stages: [
       { title: "Clear a Dungeon", text: "Pick a dungeon on the map and fight your way to its end. Rest rooms let you catch your breath.",
         obj: { test: (s, v) => clearedSince(s, v.t || 0) >= 1 }, reward: { gold: 100, items: ["potion_health"] } }] }],
   };
   const ids = Object.keys(LINES);
+  for (const id of ids) { const L = LINES[id][2], ic = L.icon; L.emblem = (g) => { try { (UIART.QUEST[ic] || UIART.QUEST.bounty)(g); } catch { /* no art yet */ } }; }   // Journal emblem (uiart.js picks up .emblem); .story = eventart.js's scene
   if (typeof QUESTS !== "undefined") for (const id of ids) { QUESTS.L[id] = LINES[id][2]; QUESTS.REC[id] = [LINES[id][1]]; }
   /* the intro quest for an unlock id (or null) */
   const forUnlock = (uid) => ids.find((id) => LINES[id][0].test(String(uid || ""))) || null;
