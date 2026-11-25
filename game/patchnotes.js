@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b285-testsgreen2", build: 285, date: "25 Nov 2026", title: "Coming next, refreshed", items: [
+      "The Coming next list in Patch notes is up to date again.",
+    ] },
     { id: "b284-updaterhard", build: 284, date: "25 Nov 2026", title: "Safer updates on phones", items: [
       "Game updates on the phone never send you to Android's installer any more. If the small update doesn't work, the game downloads the whole game instead, and if that fails too it just tries again a bit later.",
       "Every download is checked before it's unpacked, so a broken or half-finished download can't end up in your game.",
@@ -1909,7 +1912,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 264;
+  const NEXT_AT = 285;
   const NEXT = [
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",
