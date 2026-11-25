@@ -29,7 +29,7 @@
     "Nobody gets hurt for real.": "Nikomu nie dzieje się naprawdę krzywda.",
     "Three arrows at the straw target.": "Trzy strzały do słomianej tarczy.", "Loose when the ring meets the mark.": "Puść cięciwę, gdy pierścień trafi w znak.",
     "Ride at the hanging rings with a lance.": "Szarżuj z kopią na wiszące pierścienie.", "Bring your own horse.": "Przyprowadź własnego konia.",
-    "Forge a blade from the fair's own iron in three strikes.": "Wykuj ostrze z jarmarcznego żelaza w trzech uderzeniach.", "The judges keep it.": "Sędziowie je zatrzymują.",
+    "Forge a blade from the fair's own iron: heat it, hammer it, quench it.": "Wykuj ostrze z jarmarcznego żelaza: rozgrzej je, wykuj i zahartuj.", "The judges keep it.": "Sędziowie je zatrzymują.",
     "Three casts with a borrowed rod.": "Trzy rzuty pożyczoną wędką.", "Rare fish score most.": "Rzadkie ryby dają najwięcej punktów.", "You keep what you catch.": "Złowione ryby zostają u ciebie.",
     "The huntsmen drive a beast past your hide.": "Nagonka pędzi zwierzę obok twojej kryjówki.", "Take one clean shot.": "Masz jeden czysty strzał.", "Bigger game, more points.": "Większa zwierzyna, więcej punktów.",
     "One rock face and a borrowed pick.": "Jedna ściana skalna i pożyczony kilof.", "Ore and gems score points.": "Ruda i klejnoty dają punkty.", "You keep what you dig.": "Wykopane zostaje u ciebie.",
