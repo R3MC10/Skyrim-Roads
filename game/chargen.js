@@ -7,6 +7,8 @@
    The same screen without the Race and Start tabs is the barber at an inn (small fee) and the mirror in your house (free).
      CHARGEN.create(host, { onBegin({ name, race, app, stone }), onBack(), startExtra(), afterRender(root), toast(text) })
      CHARGEN.open({ mode: "barber" | "mirror", save, cost, onDone(app), onCancel(), toast(text) })
+     CHARGEN.open({ mode: "remake", save, onDone({ name, race, app }), onKeep(), toast(text) }): [remake] "Make your hero anew" (remake.js):
+       Race + every look tab, your name (editable), "Keep as is" / "Done"; no Cancel, no Escape: it's shown once per hero
      CHARGEN.barberRow(s) · CHARGEN.mirrorRow(s) → HTML rows for the inn / house panels (data-act="barber" / "mirror") */
 const CHARGEN = (() => {
   const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -32,10 +34,11 @@ const CHARGEN = (() => {
   function fresh(mode, o) {
     const save = o.save || null, race = save ? save.race : o.race || "nord";
     const app = save ? APPEAR.norm(save.app || APPEAR.fromSeed(save.id || save.name || "x", race, save.sex === "f"), race) : APPEAR.fromSeed("cg-" + race, race, false);
-    return { mode, o, save, race, app, app0: JSON.stringify(app), stone: "", tab: mode === "create" ? "race" : "body", undo: [], touched: false,
+    return { mode, o, save, race, app, app0: JSON.stringify(app), stone: "", tab: mode === "create" || mode === "remake" ? "race" : "body", name: mode === "remake" && save ? save.name || "" : "", undo: [], touched: false,
       angle: 0, angleTo: 0, zoom: 0, pose: "idle", gear: true, root: null, can: null, buf: null, raf: 0, ver: 1, drawn: "", prevLook: null, drag: null };
   }
-  const tabs = () => (st.mode === "create" ? TABS : TABS.filter(([id]) => id !== "race" && id !== "start"));
+  const tabs = () => (st.mode === "create" ? TABS : st.mode === "remake" ? TABS.filter(([id]) => id !== "start") : TABS.filter(([id]) => id !== "race" && id !== "start"));
+  const named = () => st.mode === "create" || st.mode === "remake";   // the name box shows
   const raceName = (r) => (D.RACES[r] || {}).name || r;
   const beast = () => APPEAR.beasts(st.race);
   function snapshot() { return JSON.stringify({ race: st.race, app: st.app, stone: st.stone }); }
@@ -156,13 +159,15 @@ const CHARGEN = (() => {
       return `<button class="cgsexb ${on ? "on" : ""}" data-cg="sex" data-v="${v}" role="radio" aria-checked="${on}" tabindex="${on ? 0 : -1}"><span class="cgsexi" aria-hidden="true">${ic}</span> ${esc(L(t))}</button>`; }).join("")}`;
   }
   const namePh = () => (st.app.sx === "f" ? "Your name, e.g. Brynja" : "Your name, e.g. Remigiusz");
-  const nameNow = () => (st.root?.querySelector("#nm")?.value || st.name || "").trim().slice(0, 24);
+  const nmId = () => (st.mode === "remake" ? "rmknm" : "nm");   // [remake] the top bar already has a #nm
+  const nameNow = () => (st.root?.querySelector("#" + nmId())?.value || st.name || "").trim().slice(0, 24);
   const nameProblem = (n) => (typeof NICK !== "undefined" ? NICK.problem(n) : n.length >= 2 ? "" : "Pick a nickname (at least 2 letters).");
 
   function skeleton() {
-    const create = st.mode === "create", cost = st.mode === "barber" ? st.o.cost ?? BARBER_COST : 0;
-    const title = create ? L("Create your character") : st.mode === "barber" ? L("The barber") : L("Your mirror");
+    const create = st.mode === "create", remake = st.mode === "remake", cost = st.mode === "barber" ? st.o.cost ?? BARBER_COST : 0;
+    const title = create ? L("Create your character") : remake ? L("Make your hero anew") : st.mode === "barber" ? L("The barber") : L("Your mirror");
     const sub = create ? L("A shared Skyrim you travel in real time. Walking from Whiterun to Windhelm takes about ten minutes, and the road is rarely empty.")
+      : remake ? L("We've added women heroes and new looks. Pick your race, sex and look again — your level, skills, gear and quests stay.")
       : st.mode === "barber" ? L("A new look for {g} gold. Your race, name and stone stay as they are.", { g: cost }) : L("Change your look for free. Your race, name and stone stay as they are.");
     return `<div class="cg cg-${st.mode}" role="${create ? "main" : "dialog"}" aria-label="${esc(title)}">
       <div class="cgstage cscene">
@@ -186,7 +191,7 @@ const CHARGEN = (() => {
         <div class="cgtabs" role="tablist" aria-label="${esc(L("Character creation"))}"></div>
         <div class="cgpanel" role="tabpanel" tabindex="-1"></div>
         <div class="cgfoot">
-          ${create ? `<div class="cgnm"><label class="sub" for="nm">Your name</label><input id="nm" maxlength="24" autocomplete="off" placeholder="${esc(L(namePh()))}" value="${esc(st.name || "")}"></div>` : ""}
+          ${named() ? `<div class="cgnm"><label class="sub" for="${nmId()}">${esc(L("Your name"))}</label><input id="${nmId()}" maxlength="24" autocomplete="off" placeholder="${esc(L(namePh()))}" value="${esc(st.name || "")}"></div>` : ""}
           <div class="cgbar">
             <button class="btn" data-cg="rand" title="${esc(L("Randomise"))}"><span aria-hidden="true"></span> <span>${esc(L("Randomise"))}</span></button>
             <button class="btn" data-cg="undo" title="${esc(L("Undo"))}"><span aria-hidden="true">↶</span> <span>${esc(L("Undo"))}</span></button>
@@ -194,6 +199,7 @@ const CHARGEN = (() => {
             <button class="btn" data-cg="next" title="${esc(L("Next"))}"><span>${esc(L("Next"))}</span> <span aria-hidden="true">›</span></button>
           </div>
           ${create ? `<button class="btn pri cgbegin" id="begin">Begin in ${esc(D.START_LOCATION)}</button>`
+            : remake ? `<div class="cgbar cgdone"><button class="btn" data-cg="keep">${esc(L("Keep as is"))}</button><button class="btn pri" data-cg="remade">${esc(L("Done"))}</button></div>`
             : `<div class="cgbar cgdone"><button class="btn" data-cg="cancel">${esc(L("Cancel"))}</button><button class="btn pri" data-cg="done">${esc(cost ? L("Done · {g} gold", { g: cost }) : L("Done"))}</button></div>`}
         </div>
       </div></div>`;
@@ -205,7 +211,7 @@ const CHARGEN = (() => {
     const a = document.activeElement, keep = a && R.contains(a) && a.closest(".cgpanel,.cgtabs,.cgsex") ? [a.dataset.cg, a.dataset.k, a.dataset.v, a.dataset.race, a.dataset.stone, a.dataset.tab].join("|") : null;
     R.querySelector(".cgtabs").innerHTML = T.map(([id, t], j) => `<button class="cgtab ${id === st.tab ? "on" : ""}" role="tab" id="cgt-${id}" data-cg="tab" data-tab="${id}" aria-selected="${id === st.tab}" tabindex="${id === st.tab ? 0 : -1}"><span class="cgtn">${j + 1}</span> ${esc(L(t))}</button>`).join("");
     { const tb = R.querySelector(".cgtabs"), on = tb.querySelector(".cgtab.on"); if (on && tb.scrollWidth > tb.clientWidth) tb.scrollLeft = Math.max(0, on.offsetLeft - (tb.clientWidth - on.offsetWidth) / 2); }   // [smallpolish] the open tab stays in sight on a phone
-    { const sb = R.querySelector(".cgsex"); if (sb) sb.innerHTML = sexBar(); const nm = R.querySelector("#nm"); if (nm) nm.placeholder = L(namePh()); }
+    { const sb = R.querySelector(".cgsex"); if (sb) sb.innerHTML = sexBar(); const nm = R.querySelector("#" + nmId()); if (nm) nm.placeholder = L(namePh()); }
     const pane = R.querySelector(".cgpanel");
     pane.setAttribute("aria-labelledby", "cgt-" + st.tab);
     pane.innerHTML = PANES[st.tab]();
@@ -224,7 +230,7 @@ const CHARGEN = (() => {
   }
   function tag() {
     const el = st.root?.querySelector(".cgtag"); if (!el) return;
-    const nm = st.mode === "create" ? nameNow() : st.save?.name || "";
+    const nm = named() ? nameNow() : st.save?.name || "";
     el.innerHTML = `<b>${esc(nm || L("Nameless"))}</b><span>${esc(raceName(st.race))}${st.stone ? " · " + esc(L((POWERS.STONES[st.stone] || [""])[0])) : ""}</span>`;
   }
   /* [chargenrig] the painted figure wears one painted head per race, so on the Head, Face, Hair and Scars tabs a small
@@ -323,6 +329,8 @@ const CHARGEN = (() => {
       case "next": return step(1);
       case "cancel": return close(false);
       case "done": return close(true);
+      case "keep": return remade(false);
+      case "remade": return remade(true);
     }
     if (b.id === "begin") return begin();
     if (b.id === "toTitle") { stop(); st.o.onBack?.(); }
@@ -340,11 +348,11 @@ const CHARGEN = (() => {
     }
     if (t.classList?.contains("cgsexb") && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) { e.preventDefault(); setSex(st.app.sx === "f" ? "m" : "f"); return st.root.querySelector(".cgsexb.on")?.focus(); }
     if (t.classList?.contains("cgarr") && (e.key === "ArrowLeft" || e.key === "ArrowRight")) { e.preventDefault(); return nudge(t.dataset.k, e.key === "ArrowLeft" ? -1 : 1); }
-    if (t.id === "nm" && e.key === "Enter") { e.preventDefault(); return begin(); }
-    if (e.key === "Escape" && st.mode !== "create") { e.preventDefault(); return close(false); }
+    if (t.id === nmId() && e.key === "Enter") { e.preventDefault(); return st.mode === "remake" ? remade(true) : begin(); }
+    if (e.key === "Escape" && st.mode !== "create" && st.mode !== "remake") { e.preventDefault(); return close(false); }
   }
   function onInput(e) {
-    if (e.target.id !== "nm") return;
+    if (e.target.id !== nmId()) return;
     st.name = e.target.value; e.target.classList.remove("nm-bad"); tag();
     const m = st.root.querySelector("#cgnmmsg");
     if (m) { const bad = nameProblem(nameNow()); m.className = "cgnmmsg " + (bad ? "bad" : "good"); m.textContent = bad ? L(bad) : L("Good name: {n}.", { n: nameNow() }); }
@@ -392,7 +400,7 @@ const CHARGEN = (() => {
   /* the barber or the mirror: a full-screen layer over the game */
   function open(o = {}) {
     stop(); document.querySelector(".cg-over")?.remove();
-    const mode = o.mode === "barber" ? "barber" : "mirror";
+    const mode = o.mode === "barber" ? "barber" : o.mode === "remake" ? "remake" : "mirror";
     st = fresh(mode, o);
     const wrap = document.createElement("div"); wrap.className = "cg-over"; wrap.innerHTML = skeleton();
     document.body.appendChild(wrap);
@@ -401,10 +409,24 @@ const CHARGEN = (() => {
     return st;
   }
   function close(ok) {
-    if (!st || st.mode === "create") return;
+    if (!st || st.mode === "create" || st.mode === "remake") return;
     const o = st.o, app = APPEAR.norm(st.app, st.race), same = JSON.stringify(app) === st.app0;
     stop(); document.querySelector(".cg-over")?.remove(); st = null;
     if (ok && !same) o.onDone?.(app); else o.onCancel?.();
+  }
+  /* [remake] "Keep as is" (what you had) or "Done" (your new name, race and look); a bad name keeps the screen open */
+  function remade(ok) {
+    if (!st || st.mode !== "remake") return;
+    const o = st.o;
+    if (ok) {
+      const name = nameNow(), bad = nameProblem(name);
+      if (bad) { o.toast?.(L(bad)); const f = st.root.querySelector("#" + nmId()); if (f) { f.classList.add("nm-bad"); f.focus(); } return; }
+      const out = { name, race: st.race, app: APPEAR.norm(st.app, st.race) };
+      stop(); document.querySelector(".cg-over")?.remove(); st = null;
+      return o.onDone?.(out);
+    }
+    stop(); document.querySelector(".cg-over")?.remove(); st = null;
+    o.onKeep?.();
   }
   /* what the barber does to a save; returns a line for the player (or an error) */
   function pay(s, app, cost = BARBER_COST) {
@@ -415,5 +437,5 @@ const CHARGEN = (() => {
   const barberRow = (s) => `<div class="item"><div class="t">${esc(L("Barber and face-painter"))}<span>${esc(L("Change your hair, beard, face and warpaint. Your race and name stay."))}</span></div><span class="num gold">${BARBER_COST}</span><button class="btn sm" data-act="barber" ${(s.gold || 0) >= BARBER_COST ? "" : "disabled"}>${esc(L("Sit down"))}</button></div>`;
   const mirrorRow = () => `<div class="item"><div class="t">${esc(L("Your mirror"))}<span>${esc(L("Change your look for free."))}</span></div><button class="btn sm" data-act="mirror">${esc(L("Look"))}</button></div>`;
 
-  return { create, open, close, pay, barberRow, mirrorRow, BARBER_COST, TABS, get state() { return st; } };
+  return { create, open, close, remade, pay, barberRow, mirrorRow, BARBER_COST, TABS, get state() { return st; } };
 })();

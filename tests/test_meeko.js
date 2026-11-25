@@ -25,42 +25,42 @@ const eligible = (s) => ENC.eligible(s).ok.some((e) => e.id === "dogback");
 // 1. he exists, the module is in, and an old save keeps him through load, fights, travel and the bond tick
 ok(TOWNS.FOLLOWERS.meeko && TOWNS.FOLLOWERS.meeko[6] === "dog", "Meeko is registered after every script loads");
 ok(typeof MEEKO === "object" && ENC.byId.dogback && ENC.L.includes(ENC.byId.dogback), "the 'Meeko finds you' road event is in");
-{ let s = withMeeko(hero()); s = reload(s); ok(s.follower && s.follower.id === "meeko", "survives a load");
+{ let s = withMeeko(hero()); s = reload(s); ok(s.pet && s.pet.id === "meeko" && !s.follower, "survives a load, in the pet slot");
   ok(MEEKO.where(s) === "with", "where: with you");
   const f = new G.Fight(s, { name: "Bandit", health: 80, hp: 80, damage: 5, tags: ["humanoid"], gold: [0, 0], level: 5 }, null, G.now());
-  const al = f.allies.find((a) => a.follower);
-  ok(al && al.name === "Meeko" && al.kind === "dog", "fights as a dog with the full follower system: " + (al && al.kind));
+  const al = f.allies.find((a) => a.pet);
+  ok(al && al.name === "Meeko" && al.kind === "dog", "fights as a dog, as your pet: " + (al && al.kind));
   f.run({ t: G.now() }); s._test = false;
-  ok(s.follower && s.follower.id === "meeko", "still with you after a fight");
+  ok(s.pet && s.pet.id === "meeko", "still with you after a fight");
   let t = G.now(); G.startTrip(s, "Riverwood", WORLD.places.Riverwood.slice(0, 2), t); s.trip.lastTick = t;
   for (let i = 0; i < 120; i++) { t += 60; G.advance(s, t); if (s.trip && s.trip.status !== "travel") { s.trip.status = "travel"; s.trip.encounter = null; s.trip.event = null; } if (!s.trip) break; IMM.tick(s, t); BONDS2.roadTime(s, 60, t); s = reload(s); }
-  ok(s.follower && s.follower.id === "meeko", "still with you after travel, the bond tick and many reloads");
+  ok(s.pet && s.pet.id === "meeko", "still with you after travel, the bond tick and many reloads");
   ok(!/Meeko got lost/.test(JSON.stringify(s.journal)), "no 'lost' letter while he's with you");
   ok(!eligible(s), "the find-you event never shows while he's with you");
-  const card = PARTY.cardBits ? PARTY.cardBits(s, null) : null; if (card && card.fold) { const fa = FOL2.cardAllies({ id: "u2", ...card }); ok(fa[0] && fa[0].kind === "dog", "a friend's Meeko is a dog in co-op too"); } }
+  const card = PARTY.cardBits ? PARTY.cardBits(s, null) : null; if (card) { const fa = FOL2.cardAllies({ id: "u2", ...card }); ok(fa.some((a) => a.partyPet && a.kind === "dog"), "a friend's Meeko is a dog in co-op too"); } }
 
 // 2. dismissing him: he finds you again on the road
-{ let s = withMeeko(hero()); const f0 = FOL2.st(s, "meeko"); f0.loyal = 66; f0.lvl = 9;
-  const msg = TOWNS.dismiss(s);
-  ok(!s.follower && /find you again/.test(msg), "dismiss: he trots off and will find you: " + msg);
+{ let s = reload(withMeeko(hero())); const f0 = FOL2.st(s, "meeko"); f0.loyal = 66; f0.lvl = 9;
+  const msg = PETS.dismiss(s);
+  ok(!s.pet && /find you again/.test(msg), "dismiss: he trots off and will find you: " + msg);
   ok(MEEKO.where(s) === "away" && MEEKO.canFind(s) && eligible(s), "a dismissed Meeko can find you on the road");
   s = reload(s); ok(MEEKO.canFind(s), "still true after a load");
-  s.follower = { id: "lydia", hp: 100, ts: G.now() }; ok(!eligible(s), "not while someone else is with you"); s.follower = null;
+  s.follower = { id: "lydia", hp: 100, ts: G.now() }; ok(eligible(s), "a follower doesn't stop him: he's a pet"); s.follower = null;
   onEvent(s, "dogback"); const ch = G.eventChoices(s).map((x) => x[0]); ok(ch.includes("take") && ch.includes("wave"), "take him or not: " + ch);
-  const r = G.eventChoice(s, "wave"); ok(!s.follower && /He'll be around/.test(r.text), "wave him off: he stays away");
+  const r = G.eventChoice(s, "wave"); ok(!s.pet && /He'll be around/.test(r.text), "wave him off: he stays away");
   ok(!MEEKO.canFind(s) && MEEKO.canFind(s, G.now() + MEEKO.WAVE_WAIT + 1), "after a wave he comes by again later");
   s.encFlags.meekoNext = 0; onEvent(s, "dogback"); G.eventChoice(s, "take");
-  ok(s.follower && s.follower.id === "meeko", "take him: Meeko is back");
+  ok(s.pet && s.pet.id === "meeko", "take him: Meeko is back");
   const f1 = FOL2.st(s, "meeko"); ok(f1.loyal >= 66 && f1.lvl === 9, "same Meeko: loyalty and level kept (" + f1.loyal + ", lvl " + f1.lvl + ")");
   ok(!s.encFlags.meekoAway && !eligible(s), "once back, the event is gone"); }
 
 // 3. walking out at 0 loyalty: three days of sulking, then he can come back at 30
-{ const s = withMeeko(hero()); BONDS.shift(s, -200, "*growls*");
-  ok(!s.follower, "loyalty 0: he leaves (followerbonds.js)");
+{ const s = reload(withMeeko(hero())); BONDS.shift(PETS.view(s), -200, "*growls*");
+  ok(!s.pet, "loyalty 0: he leaves (followerbonds.js)");
   ok(MEEKO.where(s) === "sulking" && !MEEKO.canFind(s), "sulks for a while");
   const later = G.now() + MEEKO.REJOIN_AFTER + 10; ok(MEEKO.where(s, later) === "away" && MEEKO.canFind(s, later), "after three days he can find you");
   MEEKO.rejoin(s, later); const f = FOL2.st(s, "meeko");
-  ok(s.follower && s.follower.id === "meeko" && f.loyal === 30 && !f.bond.leftAt, "comes back forgiven up to 30 loyalty: " + f.loyal); }
+  ok(s.pet && s.pet.id === "meeko" && f.loyal === 30 && !f.bond.leftAt, "comes back forgiven up to 30 loyalty: " + f.loyal); }
 
 // 4. old saves that already lost him
 { // dismissed before this fix: his follower data is there, no follower, nothing else
@@ -69,11 +69,11 @@ ok(typeof MEEKO === "object" && ENC.byId.dogback && ENC.L.includes(ENC.byId.dogb
   ok(r.journal.filter((j) => /Meeko got lost/.test(j.text)).length === 1, "one journal line says he's out there");
   ok(MEEKO.canFind(r) && eligible(r), "and he can find you");
   const r2 = reload(r); ok(r2.journal.filter((j) => /Meeko got lost/.test(j.text)).length === 1, "the line is written only once");
-  onEvent(r2, "dogback"); G.eventChoice(r2, "take"); ok(r2.follower && r2.follower.id === "meeko" && FOL2.st(r2, "meeko").lvl >= 7, "he rejoins with his old level");
+  onEvent(r2, "dogback"); G.eventChoice(r2, "take"); ok(r2.pet && r2.pet.id === "meeko" && FOL2.st(r2, "meeko").lvl >= 7, "he rejoins with his old level");
   ok(!reload(r2).journal.filter((j) => /Meeko got lost/.test(j.text)).slice(1).length, "no second letter after he's back"); }
-{ // lost him, then hired someone else: no event until you travel alone
+{ // lost him, then hired someone else: he's a pet now, so Lydia doesn't stop him finding you
   const s = hero(); s.encFlags = { dog: true }; s.folData = { meeko: { loyal: 50 } }; s.follower = { id: "lydia", hp: 100, ts: G.now() };
-  const r = reload(s); ok(!eligible(r), "not while Lydia is with you"); TOWNS.dismiss(r); ok(eligible(r), "after Lydia goes home, Meeko can find you"); }
+  const r = reload(s); ok(eligible(r), "Lydia with you: Meeko can still find you"); TOWNS.dismiss(r); ok(eligible(r), "and after Lydia goes home too"); }
 { // only fed him (never followed): nothing
   const s = hero(); s.encFlags = { dog: true, once_dog: true }; const r = reload(s);
   ok(MEEKO.where(r) === "never" && !eligible(r) && !/Meeko/.test(JSON.stringify(r.journal)), "a dog you only fed doesn't turn up"); }

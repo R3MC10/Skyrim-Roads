@@ -3,13 +3,82 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b297-fptravel", build: 297, date: "25 Nov 2026", title: "Through your own eyes", items: [
+    { id: "b309-fptravel", build: 309, date: "25 Nov 2026", title: "Through your own eyes", items: [
       "On the road you now look down the road through your own eyes, in a band at the top of the map. The compass runs along its top edge, and the place you're heading for rises under its marker and grows as you get closer.",
       "The road bends with your route, and the land is the region you're crossing: tundra, pine forest, the Rift's birches, marsh, snow, ash wastes, rocky hills, river fords, bridges, and the open sea on a ship.",
       "The sky is the real time of day and weather: sun, moon, stars, the aurora, snow, rain, lightning, fog and ash.",
       "Riding, you see your horse's ears and your hands on the reins, in your own gloves. On foot the view sways with your steps.",
       "Your follower's lines show at the bottom of the view.",
       "Route, time left, the places you'll pass, Walk/Ride and Stop sit in one slim bar under the view. The arrow button folds the view away (it remembers your choice).",
+    ] },
+    { id: "b307-fighttipstop", build: 307, date: "25 Nov 2026", title: "Fight tooltips show in full", items: [
+      "In a fight, the cards in the Magic and Items lists now show their whole tooltip right next to the card: above it, below it or beside it, wherever it fits.",
+      "Tooltips in fights are never cut off, never hidden under the list or the top bar, and never cover the card you're pointing at. A very long one scrolls inside instead.",
+      "Tooltips now always sit on top of everything else on the screen, minigames and damage numbers included.",
+    ] },
+    { id: "b306-remakeonce", build: 306, date: "25 Nov 2026", title: "Everyone gets to remake their hero once", items: [
+      "Everyone gets to remake their hero once: pick race, sex and look again.",
+      "When you next step onto the map, the character creator opens once for every hero made before this update. Your name, level, trained skills, perks, gear and quests all stay.",
+      "Change race and only the race's starting skill boost moves: what you trained yourself is kept, and you get the new race's power and gifts.",
+      "Happy with your hero? Tap Keep as is. It never pops up in a fight, a dungeon or a party vote: it waits until you're back on the map.",
+    ] },
+    { id: "b305-perkkeys", build: 305, date: "25 Nov 2026", title: "Perk stars with the keyboard", items: [
+      "On a PC the Skills page now works like Skyrim's: A and D (or the arrows) step through the skills, W and S move up and down the list, and the stars on the right follow the skill you're on.",
+      "E, Enter or Space takes you into the stars. There W A S D jump to the nearest star that way (stars joined by a line first), its perk shows on the left, and E takes it if you can.",
+      "Tab, Esc or Backspace (or S at the bottom) go back to the skills. A bright ring shows where you are, and a small key hint sits at the bottom. The mouse and phones work as before.",
+    ] },
+    { id: "b304-foepanel", build: 304, date: "25 Nov 2026", title: "A cleaner look at your foe", items: [
+      "The foe's name and health float above its head as a thin Skyrim-style bar with no dark box, and never cover the foe or anyone else. Its statuses are small icons in one row under the bar.",
+      "The exact numbers and the rest of its moves show when you hover over it on a PC or tap it on the phone. A boss keeps its big bar at the top, with its icons and next move just under it.",
+      "A boss's big attack warning is one slim line now. Hover or hold it to read how to answer it.",
+      "The fight log holds the whole fight: scroll it with your finger or the mouse wheel. It stays on the newest line unless you scrolled up, and a small \"newest\" button takes you back down.",
+      "The log finds a corner where nobody is standing, and its help bubble no longer covers the lines.",
+    ] },
+    { id: "b303-pcupdates", build: 303, date: "25 Nov 2026", title: "The PC game updates itself", items: [
+      "On Windows the game now updates by itself in the background, the installed and the portable version alike: no more downloading a new setup for every build.",
+      "Usually only the files that changed get downloaded, so an update is often just a few megabytes. A card in the corner shows how far along it is.",
+      "When it's ready the card says Restart to update. On the title screen it switches over by itself, and otherwise the new version starts the next time you open the game. Your saves stay.",
+      "If a new version ever fails to start, the game goes back to the one before by itself and skips the broken one.",
+      "The title screen's Update page now works on PC too. The whole app only downloads again when the app itself changes.",
+      "Older PC copies need the new version once (from the GitHub page); after that they keep themselves up to date.",
+    ] },
+    { id: "b302-hotbardnd", build: 302, date: "25 Nov 2026", title: "Drag and drop on the hotbar, single or dual cast", items: [
+      "In Edit hotbar you can now drag moves, spells, potions and poisons from the list onto a slot, drag one slot onto another to swap them, or drag a slot off the bar to empty it. With a mouse just drag; on a phone hold a row for a moment until it lifts, then drag. Tapping still works too.",
+      "Every spell slot has a small 1× / 2× switch: 1× casts with one hand, 2× casts with both hands (stronger, costs more, with your dual casting perks). The same spell can sit in two slots, once each way, and the key or a tap uses the slot's way. The rune game plays for both.",
+      "A spell that can't be dual cast (like a summon) can't be switched to 2×, and an old 2× slot of one shows greyed out and says why.",
+      "The list shows each spell once now; your bar keeps what it had (old Dual slots stay 2×).",
+    ] },
+    { id: "b301-gatherarea", build: 301, date: "25 Nov 2026", title: "Gathering moved to the Area tab", items: [
+      "Gathering no longer floats over the map. It's now its own section in the Area tab: the plants around you, which ones are ripe and when picked ones grow back, Gather or Quick pick for each, Forage here (with how long until you can search again), Herbalist's notes and the Auto-pick switch.",
+      "The how-it-works text hides behind a small \"?\" next to the heading.",
+      "On the map a ripe plant in reach still shows its own Gather button, so you can pick it without leaving the map. In a party everyone still picks their own share.",
+    ] },
+    { id: "b300-pets", build: 300, date: "25 Nov 2026", title: "Pets: Meeko walks with your follower", items: [
+      "Meeko is a pet now, not a follower. You can have a follower and a pet with you at the same time.",
+      "The Follower tab has two parts, Follower and Pet, and each one has its own Dismiss.",
+      "Pets don't wear gear. If Meeko was holding anything, it's back in your pack. His loyalty, his quest and his Pounce stay.",
+      "In fights Meeko has his own turn and his own health bar next to your follower. He's a bit weaker than a follower, gets knocked down and never dies, and carries a little for you.",
+      "New Etiquette perk, Pack Leader: your pet bites harder, takes less and gets up stronger.",
+      "Your party sees your pet and it fights beside them too. Pets never count toward the 8 players.",
+    ] },
+    { id: "b299-netfix", build: 299, date: "25 Nov 2026", title: "Players can see each other again", items: [
+      "Players can see each other again. Since accounts came in, players who signed in and players who didn't were in two separate worlds, so friends vanished from each other's map, Social tab and parties.",
+      "Signed in, your phone now joins both: the account world and the phone-to-phone world. Signed in or not, you see each other, chat, trade and team up like before.",
+      "A friend who signed in on an older version still only sees players who signed in. If someone is missing, ask them to update the game.",
+    ] },
+    { id: "b298-mapheroanim", build: 298, date: "25 Nov 2026", title: "Your hero moves on the map", items: [
+      "Your horse on the world map is alive now: standing, it breathes, shifts its weight, tosses its head now and then and flicks its tail.",
+      "On the road its legs swing as it walks or gallops, its body bobs and rocks, and you sit into each stride in the saddle.",
+      "Little puffs of dust kick up behind the hooves (or your boots) while you travel, and walking and standing on foot look smoother too.",
+      "Your friends' figures on the map move the same way. Reduce motion in Settings still keeps everyone still.",
+    ] },
+    { id: "b297-weaponfx", build: 297, date: "25 Nov 2026", title: "Weapon hits that fit the weapon", items: [
+      "Weapon effects in fights are much smaller now and match what you swing: a sword leaves a thin slash, an axe a short chop, a mace or warhammer a heavy thud with a puff of dust (no slash), a dagger a quick little stab, a spear a thrust.",
+      "The hit now shows up the moment the weapon actually connects, right where it meets the body, instead of a big white swoosh popping up early in front of the foe.",
+      "A dagger's two stabs each get their own quick trail, and every hit plays once. A miss is just a faint swish, with no sparks.",
+      "A staff's spell now gathers and flies from the top of the staff, not from your chest.",
+      "When your follower steps in and hits the foe, you now see the blow land.",
+      "Power attacks get a small gleam on the blade instead of a star floating in the air, and only they crack the ground.",
     ] },
     { id: "b296-nomountfight", build: 296, date: "25 Nov 2026", title: "Horses are for travel", items: [
       "Horses are for travel now: fights always happen on foot.",
@@ -1985,7 +2054,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 285;
+  const NEXT_AT = 297;
   const NEXT = [
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",

@@ -1,8 +1,8 @@
 """The shared world through the server (phase 2), in the browser. Usage: python world_ui.py GAME_PORT SERVER_PORT — prints RESULT OK.
 Start the server first: (cd server && PORT=8788 node src/index.js)
 Two devices on two accounts (Remi, Kacper) sign in: both use the server world, see each other online, and a chat line
-and a public card written on one show up on the other. A third device that never signed in stays phone-to-phone and
-doesn't see them. Remi takes over on a new device: the old one gets the "playing on another device" notice at once
+and a public card written on one show up on the other. A third device that never signed in stays phone-to-phone, and
+still sees them (signed-in phones are on both lines). Remi takes over on a new device: the old one gets the "playing on another device" notice at once
 (the server closes its world connection; no waiting for the heartbeat). Signing out switches back to phone-to-phone."""
 import asyncio, sys, os
 from playwright.async_api import async_playwright
@@ -67,6 +67,9 @@ async def main():
         # a device that never signed in stays phone-to-phone: no server world
         await make(X, "wX" + TAG, "Loner", None, srv=False)
         ok(not await X.evaluate("typeof SERVERNET!=='undefined' && SERVERNET.on()"), "a signed-out device stays phone-to-phone")
+        # …but signed-in and signed-out players still see each other (signed in = server world + phone-to-phone)
+        ok(await until(X, "(()=>{ let o=[]; Store.watch('players', d=>o=d); return o.some(x=>x.name==='Hrolf'); })()"), "the signed-out device sees Hrolf (signed in)")
+        ok(await until(R, "(()=>{ let o=[]; Store.watch('players', d=>o=d); return o.some(x=>x.name==='Loner'); })()"), "Remi (signed in) sees Loner (signed out)")
         # Remi takes over on a new device: the old one is told at once
         N = await page()
         await N.goto(url("wN" + TAG)); await menu(N)

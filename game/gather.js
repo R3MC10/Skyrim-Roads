@@ -341,22 +341,8 @@ const GATHER = (() => {
     return fx.map((e, i) => k[i] ? `<em class="${TOWNS.EFFECTS[e]?.[4] ? "fx-good" : "fx-bad"}">${esc(e)}</em>` : '<em class="fx-unk">?</em>').join(", ");
   }
 
-  // ------------------------------------------------------------------ the Travel card
-  function card(s, t = G.now()) {
-    if (!Number.isFinite(s.x) || s.dungeon) return "";
-    const list = nearby(s, t), f = canForage(s, t);
-    if (!list.length && !f.ok && !f.left) return "";
-    const H = typeof HARVEST !== "undefined" ? HARVEST : null;
-    const rows = list.map((n) => `<div class="item gnode ${n.ripe ? "" : "gdone"}">${ICONART.item(n.ing, 30)}<div class="t">${esc(name(n.ing))}<span>${n.ripe ? `${Math.round(n.d)} paces away · ${D.ITEMS[n.ing].weight} wt each${H ? ` · ${esc(H.howTo(n.ing))}` : ""}` : `Picked · grows back in ~${Math.ceil(growsIn(s, n, t) / 300)} in-game h`}</span></div>${n.ripe ? `${H && H.canQuick(s, n.ing) ? `<button class="btn sm" data-act="gquick" data-id="${n.id}" title="Quick Gather: no mini-game, a little less">Quick pick</button>` : ""}<button class="btn sm pri" data-act="gpick" data-id="${n.id}">Gather</button>` : ""}</div>`).join("");
-    const ripeN = list.filter((n) => n.ripe).length;
-    return `<div class="panel gcard"><h2> Gathering</h2>
-      ${rows || '<p class="sub">No plants spotted right here. Patches you pass on the road show on the map as leaves.</p>'}
-      <div class="gbtns">${ripeN > 1 ? `<button class="btn" data-act="gpickall">Gather all (${ripeN})</button>` : ""}
-      <button class="btn" data-act="gforage" ${f.ok ? "" : "disabled"} title="${esc(f.why || "Search the ground for whatever grows here")}"> Forage here</button>
-      <button class="btn" data-act="gnotes"> Herbalist's notes</button></div>
-      <div class="gauto"><button class="btn ${st(s).auto ? "pri" : ""}" data-act="gauto" aria-pressed="${st(s).auto}">${st(s).auto ? "Auto-pick: On" : "Auto-pick: Off"}</button></div>
-      ${!f.ok && f.why ? `<p class="sub">${esc(f.why)}</p>` : ""}${H ? H.cardFoot(s) : ""}</div>`;
-  }
+  // ------------------------------------------------------------------ the Gathering section (drawn by gatherui.js, shown in the Area tab)
+  function card(s, t = G.now()) { return typeof GATHERUI !== "undefined" ? GATHERUI.html(s, t) : ""; }
 
   /* Herbalist's notes: every ingredient, how many you've got, where it grows, what you know */
   function notesHTML(s) {
@@ -392,5 +378,5 @@ const GATHER = (() => {
 
   dungeonHooks(); gardenHooks();
   return { NEW_ING, BIOME, HOLD_EXTRA, CAVE, WATER, COAST, WHERE, RESPAWN, SPOT_PX, REACH_PX, FORAGE_COOLDOWN, nodes, byId, around, plantsAt, pxd, onStep, nearby, pick, pickAll, canForage, forage,
-    creatureParts, plant, unplant, beds, plantable, gardenHTML, fxHTML, card, notesHTML, marks, act, st, ripe };
+    creatureParts, plant, unplant, beds, plantable, gardenHTML, fxHTML, card, notesHTML, marks, act, st, ripe, growsIn, name };
 })();
