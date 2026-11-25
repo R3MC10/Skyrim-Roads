@@ -359,13 +359,20 @@ const TIP = (() => {
     box.innerHTML = body;
     cur = hit; hit.rect = rect;
     const dock = !rect && hit.el?.closest?.("#tbf.c2 .tbdock");
+    /* [phonelayout] a finger on a phone: the tip is a bottom sheet (35-45% of the screen), not a box over the list, and the
+       list underneath keeps its place. Not on the fight screen (its buttons sit at the bottom). */
+    const sheet = !dock && !rect && !!press && sheetFits() && !hit.el?.closest?.("#tbf, .tbf, #fight");
     box.classList.toggle("tt-dock", !!dock);
+    box.classList.toggle("tt-sheet", sheet);
     if (dock) dockLine(dock);
+    else if (sheet) { box.style.left = "0px"; box.style.top = "auto"; box.style.width = "100%"; box.style.maxWidth = "none"; box.classList.remove("tt-above", "tt-below"); box.scrollTop = 0; }
     else place(rect || anchor(hit.el));
     box.classList.add("on");
     if (hit.el?.id) hit.el.setAttribute("aria-describedby", "tip");
     clearInterval(watchT); watchT = setInterval(watch, 300);
   }
+  const sheetFits = () => (window.visualViewport ? window.visualViewport.width : innerWidth) < 700;
+  const isSheet = () => !!box && box.classList.contains("tt-sheet") && box.classList.contains("on");
   function hide() {
     clearTimeout(showT); clearTimeout(hideT); clearInterval(watchT);
     if (cur?.el?.getAttribute?.("aria-describedby") === "tip") cur.el.removeAttribute("aria-describedby");
@@ -374,7 +381,7 @@ const TIP = (() => {
   /* screens redraw often: follow the thing to its new copy, or let go */
   function watch() {
     if (!cur) return clearInterval(watchT);
-    if (cur.rect || cur.el.isConnected) return;
+    if (cur.rect || cur.el.isConnected || isSheet()) return;   // a sheet keeps its words when the screen redraws
     const at = press ? [press.x, press.y] : lastXY;   // the finger still held, or the mouse resting
     if (at) { const t = document.elementFromPoint(at[0], at[1]), h = t && find(t); if (h) { if (press) press.h = h; return show(h); } }
     hide();
@@ -410,6 +417,7 @@ const TIP = (() => {
   // finger: hold
   const HOLD = 450;
   function down(e) {
+    if (isSheet() && e.target?.closest?.("#tip")) { clearTimeout(hideT); return; }   // scrolling the sheet itself keeps it
     if (!isTouch(e)) { clearTimeout(showT); if (cur) hide(); return; }
     if (cur) hide();
     clearTimeout(press?.timer); press = null;
@@ -436,7 +444,7 @@ const TIP = (() => {
   function up(e) {
     if (!press || e.pointerId !== press.id) return;
     clearTimeout(press.timer);
-    if (press.shown) { swallowUntil = Date.now() + 700; clearTimeout(hideT); hideT = setTimeout(hide, 1800); }   // the lift doesn't press what's under it; the box stays a moment to finish reading
+    if (press.shown) { swallowUntil = Date.now() + 700; clearTimeout(hideT); if (!isSheet()) hideT = setTimeout(hide, 1800); }   // a sheet stays till the next tap   // the lift doesn't press what's under it; the box stays a moment to finish reading
     press = null;
   }
   function eatClick(e) {

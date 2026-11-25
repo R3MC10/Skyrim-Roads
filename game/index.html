@@ -4527,6 +4527,61 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 .mapbtns .ridebtn{display:grid;place-items:center}
 .mapbtns .ridebtn.hide{display:none}
 .mapbtns .ridebtn.on{color:#ffe2a8;background:rgba(58,40,18,.88);box-shadow:inset 0 0 0 1px rgba(226,187,100,.7),0 0 10px rgba(226,187,100,.35)}
+/* [phonelayout] Area, Company and Items on a phone: 12px edges, 44px taps, 15-16px text */
+.au-tile b{overflow-wrap:normal;word-break:normal;hyphens:none}
+.au-closed{margin:0 0 6px}
+.au-closed>summary{list-style:none;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;cursor:pointer;user-select:none;border:1px dashed var(--sk-line,#3a3a3a);border-radius:6px;color:var(--sk-mute,#9d978a);font-family:var(--sk-ui,system-ui);font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+.au-closed>summary::-webkit-details-marker{display:none}
+.au-closed>summary::after{content:"";margin-left:auto;width:7px;height:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
+.au-closed[open]>summary::after{transform:rotate(45deg) translate(-2px,-2px)}
+.au-closed[open]>summary{margin-bottom:6px}
+.au-closed .au-tiles{padding-bottom:0}
+@media (max-width:699px){
+  html:not(.pcmap) body:not(.tw-char) #side[data-tab=town],html:not(.pcmap) body:not(.tw-char) #side[data-tab=social]{margin-left:-12px;margin-right:-12px}
+  #side[data-tab=town] .panel,#side[data-tab=social] .panel{padding-left:12px;padding-right:12px}
+  #side[data-tab=town] .panel .panel,#side[data-tab=social] .panel .panel{padding-left:10px;padding-right:10px}
+  .au-tiles,.au-tiles.au-two{grid-template-columns:minmax(0,1fr);gap:6px}
+  .au-tiles.au-two{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #side .au-tile{grid-template-columns:28px minmax(0,1fr);column-gap:12px;min-height:52px;padding:7px 12px}
+  .au-tile .au-ic{font-size:22px;width:28px}
+  .au-tile b,.au-tile small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .au-tile b{font-size:16px;line-height:1.2;-webkit-line-clamp:unset}
+  .au-tile small{font-size:13px;line-height:1.25}
+  .au-g>summary{min-height:44px}
+  .au-gh{font-size:13px}
+  /* Social: the hall right under the tab row; More folds to one line */
+  .soc-co .lng-in{margin-top:10px}
+  .soc-co .lng-banner{margin-top:0}
+}
+.socmore-d{margin:6px 0 2px}
+.socmore-d>summary{list-style:none;display:flex;align-items:center;gap:10px;min-height:44px;padding:0 4px;cursor:pointer;user-select:none;border-bottom:1px solid rgba(236,232,222,.1)}
+.socmore-d>summary::-webkit-details-marker{display:none}
+.socmore-d>summary .socmore-l{grid-column:auto}
+.socmore-s{flex:1;min-width:0;font-size:13px;color:var(--sk-mute,#8f8a7e);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.socmore-n{min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--gold,#e2bb64);color:#1a1408;font-size:12px;line-height:20px;text-align:center}
+.socmore-d>summary::after{content:"";width:7px;height:7px;margin-right:6px;border-right:1.5px solid var(--sk-mute,#8f8a7e);border-bottom:1.5px solid var(--sk-mute,#8f8a7e);transform:rotate(45deg) translate(-2px,-2px);transition:transform .15s}
+.socmore-d[open]>summary::after{transform:rotate(-135deg)}
+.socmore-d .socmore{margin-top:6px}
+.lng-in{position:relative}
+/* Items: one Sort button (a picker underneath) and the direction toggle on a phone; chips on wider screens */
+.m2-one{display:none;position:relative;flex:1;min-width:0;align-items:center;gap:8px;min-height:44px;padding:0 12px;background:rgba(0,0,0,.3);border:1px solid rgba(228,220,200,.22);color:#ece8de;cursor:pointer}
+.m2-one .m2-ol{font-family:var(--sk-ui,system-ui);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--sk-mute,#9d978a)}
+.m2-one b{flex:1;min-width:0;font-family:var(--sk-ui,system-ui);font-weight:600;font-size:15px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m2-one i{font-style:normal;font-size:12px;color:#f3d98b}
+.m2-one select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;cursor:pointer;-webkit-appearance:none;appearance:none}
+.m2-one:focus-within{border-color:rgba(236,232,222,.7)}
+@media (max-width:600px){
+  .m2-sort .m2-sc,.m2-sort .m2-sl{display:none}
+  .m2-one{display:flex}
+  .m2-dir{min-height:44px;padding:0 12px}
+  .m2-dir span{display:inline;font-size:13px}
+}
+/* the phone tooltip as a bottom sheet */
+.tip.tt-sheet{position:fixed;left:0;right:0;top:auto;bottom:0;width:100%;max-width:none;min-height:35vh;max-height:45vh;overflow-y:auto;overscroll-behavior:contain;padding:14px 16px calc(16px + env(safe-area-inset-bottom,0px));font-size:16px;line-height:1.4;border-radius:0;border-left:0;border-right:0;border-bottom:0;border-top:1px solid rgba(226,187,100,.7);box-shadow:0 -12px 32px rgba(0,0,0,.7);pointer-events:auto;transform:translateY(12px);transition:opacity .14s,transform .14s}
+.tip.tt-sheet.on{transform:none}
+.tip.tt-sheet::after{display:none}
+.tip.tt-sheet::before{content:"";display:block;width:40px;height:4px;margin:-4px auto 10px;border-radius:2px;background:rgba(236,230,214,.28)}
+@media (prefers-reduced-motion:reduce){.tip.tt-sheet{transition:none;transform:none}.au-closed>summary::after,.socmore-d>summary::after{transition:none}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>

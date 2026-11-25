@@ -21,6 +21,8 @@
     "Players' houses": "Domy graczy", "Build a hall": "Zbuduj dwór", "Everyone builds it": "Budują go wszyscy", "Duel for a stake": "Pojedynek o stawkę", "Cast a line": "Zarzuć wędkę",
     "Open": "Otwarte", "Night prices": "Nocne ceny", "Closed till 08:00": "Zamknięte do 08:00", "You have a follower": "Masz towarzysza", "None left this level": "Brak lekcji na tym poziomie",
     "Garden ripe": "Ogród dojrzał", "Your horse": "Twój koń",
+    // phone layout: shut places fold away; Social's More line
+    "Closed": "Zamknięte", "Messages, trades, chat": "Wiadomości, wymiany, czat", "Sort by": "Sortuj według",
     // map panel
     "What to do next": "Co dalej", "Show less": "Pokaż mniej", "Towns": "Miasta", "Dungeons": "Lochy", "Not visited": "Nieodwiedzone", "Other": "Inne", "All": "Wszystko",
     "No places of this kind yet. Tap All to see every place.": "Na razie brak takich miejsc. Dotknij Wszystko, by zobaczyć wszystkie.",

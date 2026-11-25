@@ -2536,6 +2536,8 @@
   }
   function publishFriends() { if (Store.online) Store.put("friends", S.id, SOCIAL.record(S)); }
   function friendCard(id) { return cardOf(id) || (SOCIAL.friends(S)[id] ? { id, name: SOCIAL.friends(S)[id].name } : null); }
+  let socMoreOpen = false;   // the folded More row on Social, opened by hand
+  document.addEventListener("toggle", (e) => { if (e.target?.classList?.contains("socmore-d")) socMoreOpen = e.target.open; }, true);
   function panelSocial() {
     const nDm = SOCIAL.unread(S, dmDocs), nAdd = SOCIAL.addedMe(friendDocs, S).length, inc = myIncoming(), nParty = partyNews(), nChat = chatUnread();
     /* [lightmenus] four big tabs (Party, Company, Friends, Realm); Messages, Trades, Chat and Faction sit in a small "More" row
@@ -2544,7 +2546,9 @@
     const cnt = (n) => n ? `<span class="socn"> (${n})</span>` : "";   // the counter sits in its own span so the label still translates
     const prim = [["party", `Party${cnt(nParty)}`], ...(typeof LONGHOUSE !== "undefined" ? [["company", `Company${cnt(LONGHOUSE.badge(S) ? "!" : 0)}`]] : []), ["friends", `Friends${cnt(nAdd)}`], ["realm", "Realm"]];
     const more = [["msgs", `Messages${cnt(nDm)}`], ["trades", `Trades${cnt(inc.length)}`], ["chat", `Chat${cnt(nChat)}`], ...(typeof SIDEUI !== "undefined" ? [["faction", `Faction${cnt(SIDEUI.badge() ? "!" : 0)}`]] : [])];
-    const chips = `<div class="seg socseg" role="group" aria-label="Social">${prim.map(tabBtn).join("")}</div><div class="socmore" role="group" aria-label="More"><span class="socmore-l">More</span>${more.map(tabBtn).join("")}</div>`;
+    /* [phonelayout] the More row folds under one "More" line (its badges add up on it) and opens by itself when you're on one of its screens */
+    const moreN = nDm + inc.length + nChat + (typeof SIDEUI !== "undefined" && SIDEUI.badge() ? 1 : 0), inMore = more.some(([k]) => k === socTab);
+    const chips = `<div class="seg socseg" role="group" aria-label="Social">${prim.map(tabBtn).join("")}</div><details class="socmore-d"${inMore || socMoreOpen ? " open" : ""}><summary><span class="socmore-l">More</span><span class="socmore-s">Messages, trades, chat</span>${moreN ? `<b class="socmore-n">${moreN}</b>` : ""}</summary><div class="socmore" role="group" aria-label="More">${more.map(tabBtn).join("")}</div></details>`;
     const off = Store.online ? "" : `<p class="sub">You're playing offline. Go online (Map tab) to see friends and messages.</p>`;
     let body = "";
     if (socTab === "friends") {
@@ -2575,7 +2579,7 @@
           + (more.length ? `<h3 style="margin-top:10px">Write to a friend</h3>${more.map(([id, f]) => `<div class="item"><div class="t">${esc(f.name)}</div><button class="btn sm" data-act="fmsg" data-id="${esc(id)}"> Write</button></div>`).join("")}` : "");
       }
     } else if (socTab === "company" && typeof LONGHOUSE !== "undefined") {
-      return `<div class="panel"><h2> Friends & messages</h2>${chips}${off}</div>${LONGHOUSE.panel()}`;   // longhouse.js: the adventuring company
+      return `<div class="panel soc-co"><h2> Friends & messages</h2>${chips}${LONGHOUSE.panel({ inner: true })}${off}</div>`;   // longhouse.js: the adventuring company, its hall right under the tab row
     } else if (socTab === "faction" && typeof SIDEUI !== "undefined") {
       return `<div class="panel"><h2> Friends & messages</h2>${chips}${off}</div>${idPanel("faction", SIDEUI.panel())}`;   // sides.js: your side, rank, cloaks, the war
     } else if (socTab === "party" || socTab === "chat" || socTab === "realm") {
@@ -2890,6 +2894,7 @@
     if (typeof TABMENU !== "undefined") TABMENU.afterPanel(tab);
     if (typeof MENUS !== "undefined") MENUS.afterPanel(tab);
     if (typeof MENUS2 !== "undefined") MENUS2.afterPanel(tab, side);   // menus2.js: Find a quest
+    if (tab === "town" && typeof AREAUI !== "undefined") AREAUI.fitSoon(side);   // areaui.js: one or two columns of places
     if (!force) { side.querySelectorAll("details").forEach((d, i) => { if (openD[i] != null) d.open = openD[i]; }); scrollTo(0, y); }
     const cl = $("#chatlog"); if (cl) cl.scrollTop = cl.scrollHeight;
   }
