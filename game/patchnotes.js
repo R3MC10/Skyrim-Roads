@@ -3,6 +3,20 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b217-mapread", build: 217, date: "25 Nov 2026", title: "An easier map to read", items: [
+      "Land you've already explored now sits under a light mist instead of the heavy one. Places you've never been stay dark.",
+      "Names no longer pile up: your party and your objective always show first, then towns, then everything else. A town's name steps aside instead of vanishing.",
+      "Zoomed out, guard patrols and passing wagons that stand close together turn into one pin with a number. Zoom in and they split up again.",
+      "Crisis signs find a free spot next to their town, with a thin line back to it if they had to move.",
+      "Map names have a thinner dark outline, so the painting shows through more.",
+      "Everyday world news (prices, rebuilding, battles far away) now folds into one World news button. Tap it to read it all. Things you can act on right now, like a reward to claim or a ringleader to fight, stay open.",
+    ] },
+    { id: "b216-dungeonphone", build: 216, date: "25 Nov 2026", title: "Dungeons fit your phone better", items: [
+      "A strip above the room shows how deep you are and the rooms you can go to next. Tap one to go there, or tap Map for the whole chart.",
+      "The room's choices sit two to a row, so Fight, Sneak, Run and your potion fit on the screen without scrolling.",
+      "No more snow or rain inside caves and ruins. Instead you see dust in the torchlight in barrows, water dripping in caves, and sparks drifting in Dwemer ruins and by campfires.",
+      "The foe waiting in a room now stands in the painting, so a draugr that opens its eyes is really there.",
+    ] },
     { id: "b214-daedric", build: 214, date: "25 Nov 2026", title: "Daedric bargains and artifacts that wake up", items: [
       "Black shrines by the road can now carry an offer from one of six Daedric princes: Mehrunes Dagon, Azura, Nocturnal, Hircine, Boethiah and Meridia (from level 8).",
       "Accept a contract and do three things your prince likes, counted from how you really play: slaying foes, winning at night, picking pockets and locks, hunting beasts, fighting alone or putting the dead to rest.",
