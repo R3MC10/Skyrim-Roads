@@ -12,7 +12,7 @@
         BUSTART.SEX[race]                  → "m" | "f": the sex of the painted bust
         BUSTART.pick(race, fallbackHtml)   → race-picker face: the bust on a dark panel, or the fallback until it loads
         BUSTART.hero(src, fallbackHtml)    → Hero page portrait: the bust on a dark panel (crest when the sex differs)
-        BUSTART.crest(src, size)           → a small round crest (inventory); "" until the picture loads */
+        BUSTART.crest(src, size)           → a small round crest (inventory); "" until the picture loads, and "" when the bust is the other sex */
 const BUSTART = (() => {
   const SEX = { nord: "m", imperial: "f", breton: "f", redguard: "m", altmer: "f", bosmer: "m", dunmer: "f", orc: "m", khajiit: "f", argonian: "m" };
   const key = (r) => (SEX[r] ? "bust-" + r : null);
@@ -40,7 +40,9 @@ const BUSTART = (() => {
     return slot("hero", r, u ? img(r, u, "bustimg") : fallback, !!u, other ? " bust-crest" : "");
   }
   function crest(src, size = 60) {
-    const r = raceOf(src), u = url(r);
+    const r = raceOf(src);
+    if (sexOf(src) !== SEX[r]) return "";   // [herocard] the race's only bust is the other sex: no face next to your figure that isn't yours
+    const u = url(r);
     return `<span class="bustslot bust-badge${u ? " ok" : ""}" data-bust="${esc(r)}" data-bk="badge" style="--bs:${size | 0}px" aria-hidden="true">${u ? img(r, u, "bustimg") : ""}</span>`;
   }
   /* pictures that arrive later: swap them into the slots still showing the old drawing */

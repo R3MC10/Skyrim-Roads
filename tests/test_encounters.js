@@ -5,7 +5,7 @@ const fs = require("fs"), vm = require("vm");
 const W = process.env.W || __GAME + "";
 const c = { process: { env: process.env }, console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String };
 vm.createContext(c);
-const F = ["data.js", "world.js", "terrain.js", "solworld.js", "formulas.js", "perks.js", "perkfx.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "guilds.js", "priests.js", "civilwar.js", "daedric.js", "horses.js", "horseback.js", "hall.js", "bounty.js", "cooking.js", "curses.js", "smithing.js", "craftfair.js", "roam.js", "encounters.js", "solstheim.js", "explore.js", "ammo.js", "tomes.js", "magic.js", "combatai.js", "shouts2.js"];
+const F = ["data.js", "world.js", "terrain.js", "solworld.js", "formulas.js", "perks.js", "perkfx.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "guilds.js", "priests.js", "civilwar.js", "daedric.js", "horses.js", "horsetravel.js", "hall.js", "bounty.js", "cooking.js", "curses.js", "smithing.js", "craftfair.js", "roam.js", "encounters.js", "solstheim.js", "explore.js", "ammo.js", "tomes.js", "magic.js", "combatai.js", "shouts2.js"];
 for (const f of F) if (fs.existsSync(W + f)) { try { vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c); } catch (e) { if (!/shouts2/.test(f)) throw e; } }
 vm.runInContext(`
 let fails = 0, n = 0; const ok = (cnd, m) => { n++; if (!cnd) { fails++; console.log("FAIL", m); } };

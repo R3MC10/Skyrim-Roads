@@ -8,7 +8,7 @@ const RUNS = +(process.env.RUNS || process.argv[2] || 30);
 const c = { process: { env: process.env }, console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String, RUNS, structuredClone };
 globalThis.__lang = "en"; c.localStorage = { getItem: () => JSON.stringify({ lang: c.__lang }), setItem() {} };
 vm.createContext(c);
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "guilds.js", "priests.js", "horses.js", "horseback.js", "mountfight.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "market.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "craftfair.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "followers2.js", "followerai.js", "combo.js", "combatai.js", "foeintent.js", "tbfight.js", "encounters.js", "partyplay.js", "followerbonds.js", "hunting.js", "bonds.js", "i18n_story.js", "i18n_bonds.js", "i18n_bonds2.js", "i18n.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "guilds.js", "priests.js", "horses.js", "horsetravel.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "market.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "craftfair.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "followers2.js", "followerai.js", "combo.js", "combatai.js", "foeintent.js", "tbfight.js", "encounters.js", "partyplay.js", "followerbonds.js", "hunting.js", "bonds.js", "i18n_story.js", "i18n_bonds.js", "i18n_bonds2.js", "i18n.js"])
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 const tb = fs.readFileSync(path.join(__dirname, "test_tbfight.js"), "utf8");
 const helpers = tb.slice(tb.indexOf("const LEVELS"), tb.indexOf("if (!process.env.SIMONLY)"));
@@ -117,17 +117,12 @@ const horse = (s, breed = "bay") => { at(s, "Whiterun"); s.gold = 99999; HORSES.
   OK(mo > base * 1.15, "mountain: faster off the road: " + mo + " (road " + mr + ")");
   s.trip = null; }
 
-// 8. warhorse: harder charge, horse takes less, still no one-shots
+// 8. warhorse: fewer road fights while you ride (horses are for travel; fights are on foot)
 { const s = fresh("warrior", 20); horse(s); s.horse.mounted = true;
-  const chargeOf = () => { const fx = new G.Fight(s, enc("Bandit outlaw", 20)); HORSEBACK.engage(fx, G.now()); const r = HORSEBACK.strike(fx, false, false); return [r, fx]; };
-  const [r0, f0] = chargeOf(); BONDS2.hgain(s, 350); BONDS2.pickSpec(s, "warhorse"); const [r1, f1] = chargeOf();
-  OK(r0 && r1 && r1.mult > r0.mult * 1.2, "warhorse charge is harder: " + (r0 && r0.mult) + " -> " + (r1 && r1.mult) + " " + (r1 && r1.label));
-  OK(f1.mount.guard > f0.mount.guard, "the warhorse shrugs off more: " + f0.mount.guard + " -> " + f1.mount.guard);
-  OK(r1.mult < 2.5, "a charge is never a one-shot multiplier: " + r1.mult);
-  // winning a fight in the saddle builds the bond
-  const s2 = fresh("warrior", 20); horse(s2); s2.horse.mounted = true; const x0 = BONDS2.hb(s2).xp;
-  const fx = new G.Fight(s2, enc("Wolf", 5)); HORSEBACK.engage(fx, G.now()); fx.won = true; HORSEBACK.after(fx, G.now());
-  OK(BONDS2.hb(s2).xp === x0 + BONDS2.XP.fight, "a fight won in the saddle: +" + (BONDS2.hb(s2).xp - x0)); }
+  const m0 = HORSETRAVEL.encounterMult(s); BONDS2.hgain(s, 350); BONDS2.pickSpec(s, "warhorse"); const m1 = HORSETRAVEL.encounterMult(s);
+  OK(m0 === 1 && m1 < 0.95 && m1 >= 0.5, "warhorse: fewer road fights while riding: " + m0 + " -> " + m1);
+  s.horse.mounted = false; OK(HORSETRAVEL.encounterMult(s) === 1, "walking beside it: no change");
+  OK(!("fight" in BONDS2.XP), "no bond from fights in the saddle any more"); }
 
 // 9. hunter's horse: almost no hunting slowdown, more animals, sometimes an extra hide
 { const s = fresh("warrior", 20); horse(s); s.hunting = true; s.trip = { status: "travel" };
@@ -165,7 +160,7 @@ globalThis.__lang = "en";
     let w = 0, r = 0, hp = 0;
     for (let i = 0; i < RUNS; i++) { const s = fresh("warrior", L); hireAs(s, ["lydia", "faendal", "marcurio"][i % 3]).loyal = loy;
       if (war) { horse(s); s.horse.mounted = true; BONDS2.hgain(s, 350); BONDS2.pickSpec(s, "warhorse"); }
-      const f = new G.Fight(s, groups[g](L)); if (war) HORSEBACK.engage(f, G.now());
+      const f = new G.Fight(s, groups[g](L));
       try { const ss = TB.simulate(f, { t: G.now() }); r += ss.round; } catch (e) { err++; if (err < 3) console.log(e.stack); }
       if (f.won && !f.escaped) w++; hp += Math.max(0, f.hp) / G.maxHealth(s); }
     rows[label + g + L] = r / RUNS;
