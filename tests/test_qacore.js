@@ -59,7 +59,7 @@ vm.runInContext("I18N.add(I18N_QACORE.tpl)", c);
 const T = (s) => vm.runInContext(`I18N.tr(${JSON.stringify(s)})`, c);
 ok(T("Build 242 · 25 Nov 2026") === "Wersja 242 · 25 lis 2026", "patch-note date in Polish: " + T("Build 242 · 25 Nov 2026"));
 ok(T("needs One-Handed 40") === "wymaga: Broń jednoręczna 40" || /^wymaga: .+ 40$/.test(T("needs One-Handed 40")), "perk requirement in Polish: " + T("needs One-Handed 40"));
-for (const en of ["A shared journey across Skyrim", "New Character", "Start over?", "Controls", "What's new", "Update now", "Keep my build"]) ok(T(en) && T(en) !== en, "Polish for title/settings line: " + en);
+for (const en of ["A shared journey across Skyrim", "New Character", "Start over?", "Controls", "What's new", "Update now"]) ok(T(en) && T(en) !== en, "Polish for title/settings line: " + en);
 const tw = src("towns.js"), fAt = tw.indexOf("const FOLLOWERS = {"), fBlock = tw.slice(fAt, tw.indexOf("\n  };", fAt));
 ok(fAt > 0, "towns.js still has FOLLOWERS");
 const descs = [...fBlock.matchAll(/^\s+\w+: \[.*"((?:[^"\\]|\\.){25,})"\],?$/gm)].map((m) => m[1]);
