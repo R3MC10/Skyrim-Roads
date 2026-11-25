@@ -2,7 +2,7 @@
 var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 (() => {
   Object.assign(I18N_EXTRA.words, {
-    // patch note b258
+    // patch note b259
     "Every blow and shout has its own look": "Każdy cios i okrzyk wygląda po swojemu",
     "Every weapon swings its own way now: a sword leaves a diagonal slash, a greatsword a wide sweep, axes and warhammers chop down from above, maces and clubs crack in with a dust ring, daggers stab twice and spears drive straight through.":
       "Każda broń tnie teraz po swojemu: miecz zostawia ukośne cięcie, miecz dwuręczny szeroki zamach, topory i młoty bojowe rąbią z góry, buzdygany i pałki uderzają z kręgiem kurzu, sztylety dźgają dwa razy, a włócznie przebijają na wylot.",

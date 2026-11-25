@@ -3,11 +3,18 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b258-movefx2", build: 258, date: "25 Nov 2026", title: "Every blow and shout has its own look", items: [
+    { id: "b259-movefx2", build: 259, date: "25 Nov 2026", title: "Every blow and shout has its own look", items: [
       "Every weapon swings its own way now: a sword leaves a diagonal slash, a greatsword a wide sweep, axes and warhammers chop down from above, maces and clubs crack in with a dust ring, daggers stab twice and spears drive straight through.",
       "Power attacks wind up with a gleam along the blade, hit bigger and leave a gouge or cracks in the ground. A critical flashes white, a sneak attack leaves a dark second cut, and an enchanted weapon sprays fire, frost or sparks.",
       "Combos show too: Shatter bursts into ice, Overload forks with lightning, Steam puffs up and an opening rings gold.",
       "Shield bash knocks stars around the foe's head. Every shout rolls out of your mouth in its own colour (Unrelenting Force kicks up a dust wave, Fire Breath is a stream of flame), and every race power, werewolf move and Vampire Lord power has its own look.",
+    ] },
+    { id: "b258-fightpos", build: 258, date: "25 Nov 2026", title: "Everyone stands in the right place", items: [
+      "In a fight your party, followers and summons now stand in neat rows behind you, all of them on screen, even a full party of 8 on a phone. Before, some stood off the edge of the screen.",
+      "Foes still waiting their turn now stand behind the one you're fighting, so you can see what's coming.",
+      "Big foes like dragons and giants keep their size but always fit on screen, and the foe's health bar sits over its head, even over a dragon's.",
+      "When a party member swings at the foe, they step up to it and then go back to their place.",
+      "The ring under the one the foe is about to hit is now under the right person.",
     ] },
     { id: "b257-qaside2b", build: 257, date: "25 Nov 2026", title: "Halls, inns and festivals in Polish", items: [
       "Fixed: a festival in a hold's capital said the place twice, like \"Falkreath, Falkreath\".",
