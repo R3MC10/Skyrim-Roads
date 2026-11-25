@@ -4591,6 +4591,18 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 .mapbtns .ridebtn{display:grid;place-items:center}
 .mapbtns .ridebtn.hide{display:none}
 .mapbtns .ridebtn.on{color:#ffe2a8;background:rgba(58,40,18,.88);box-shadow:inset 0 0 0 1px rgba(226,187,100,.7),0 0 10px rgba(226,187,100,.35)}
+/* perklayout (skyui.js): the perk sky at real size in a box you pan with a finger and pinch to zoom; names never overlap */
+.skc.skv{overflow:auto;overscroll-behavior:contain;touch-action:pan-x pan-y;max-height:62vh;scrollbar-width:thin}
+.skc.skv{display:flex}.skc.skv>svg{max-width:none;flex:none;margin:auto}
+.skc .lbl{font-size:var(--skfs,11px);font-weight:500;paint-order:stroke;stroke:rgba(4,8,16,.85);stroke-width:3px;stroke-linejoin:round}
+.skc .st.sel .lbl{fill:#ffe7a8}
+.skc.far .st:not(.can):not(.sel) .lbl{display:none}
+.tw-starp>.tw-bigw .tw-big.skv{max-height:none}
+@media (max-width:899.98px){
+  .tw-starp>.tw-sdet{position:sticky;bottom:0;z-index:3;min-height:150px;max-height:180px;overflow:auto;overscroll-behavior:contain;margin:0 -2px;padding:0 2px 6px;background:linear-gradient(180deg,rgba(7,11,18,.9),rgba(7,11,18,.98))}
+  .tw-starp>.tw-sdet .tw-perk{margin-top:6px}
+  .tw-starp .skc.tw-big.skv{max-height:max(260px,calc(100vh - 330px))}
+}
 /* chargenrig.js: character creation drawn with the painted fight figure; a small drawn close-up of the face details on
    the Head / Face / Hair / Scars tabs (the painted head is one per race); the race card shows the painted bust */
 .cgdetail{display:none}
@@ -4959,6 +4971,7 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 <script src="i18n_caravans.js"></script>
 <script src="i18n_qacore.js"></script>
 <script src="i18n_gptqa.js"></script>
+<script src="i18n_perklayout.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

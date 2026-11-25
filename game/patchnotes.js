@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b251-wagons", build: 251, date: "25 Nov 2026", title: "Caravans you can talk to", items: [
+    { id: "b252-wagons", build: 252, date: "25 Nov 2026", title: "Caravans you can talk to", items: [
       "Tap or click any caravan's wagons on the map to see who they are, where they're going, what they carry and how they're doing: rolling, resting in town, broken down, under attack, guarded or robbed.",
       "Catch up sends you to where you'll meet them on their road. When you reach them, whatever you picked on the card happens.",
       "Trade right from the card when you're beside them. Their packs follow their cargo, and when the hold they're heading for is in crisis they carry relief goods and their prices follow that crisis.",
@@ -14,6 +14,12 @@ const PATCHNOTES = (() => {
       "On a PC the wagons light up under the mouse. Zoomed out, tapping a group pin zooms in on it. In a party the leader decides.",
       "Caravan Friend (Speech) now also makes caravans on the road sell to you 10% cheaper.",
       "In Polish, everything about caravans is now in Polish too: their names on the map, meetings on the road, the caravan board in town, your caravan job, your cart and the wares they sell.",
+    ] },
+    { id: "b251-perklayout", build: 251, date: "25 Nov 2026", title: "Tidier perk stars", items: [
+      "Perk names in the star trees never sit on top of each other any more, and long names are never cut short with \"…\": they wrap onto a second line instead.",
+      "Each perk now sits right above the perks it needs, with the first ones at the bottom, so the trees read from the ground up.",
+      "On a phone, pinch the stars to zoom in or out and drag to look around. Zoomed far out, only the perks you can take keep their names.",
+      "On a phone, tapping a star shows the perk in a panel at the bottom of the screen instead of a pop-up over the stars.",
     ] },
     { id: "b250-qafight", build: 250, date: "25 Nov 2026", title: "Fight fixes", items: [
       "Fixed: on phones, casting a heal with a follower along asked you to tap a portrait, but the Magic menu covered every portrait. The bar at the top now has a button for each person you can heal.",
