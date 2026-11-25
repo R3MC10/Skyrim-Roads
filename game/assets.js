@@ -25,6 +25,11 @@
                                          facing right, 2x Lanczos of the trimmed cut-outs, WebP q84. who: nordm nordf · set: leather
                                          iron steel (nordf: leather) · part: head torso pelvis uparm forearm hand-open hand-fist thigh
                                          shin foot leg-bent. A set is used once all 11 parts load; until then the ink figure stays.
+     rig-w-<pic>              ~200-460   painted weapons and shields the painted fighters hold (riggear.js; grip points in its
+                                         PIV table): transparent, trimmed, WebP q86. Weapons lie flat, point right: sword
+                                         sword-iron dagger greatsword axe battleaxe mace staff (360/330/200/460/320/440/330/460
+                                         wide). bow bow-drawn arrow, shield shield-side shield-kite shield-kite-side (200-300 tall).
+                                         Missing ones (warhammer spear club crossbow) use the shaded drawings.
      shop-<id>                1200×375   painted banners for town sections (shown above each shop's list)
        ids: general forge (also blacksmith) inn (also cook) alchemy wizard (also enchanter) market stables home hall
             fence arena mine — raw 3:2 paintings go through art/conv: crop the middle band, WebP q80
