@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b252-wagons", build: 252, date: "25 Nov 2026", title: "Caravans you can talk to", items: [
+    { id: "b253-wagons", build: 253, date: "25 Nov 2026", title: "Caravans you can talk to", items: [
       "Tap or click any caravan's wagons on the map to see who they are, where they're going, what they carry and how they're doing: rolling, resting in town, broken down, under attack, guarded or robbed.",
       "Catch up sends you to where you'll meet them on their road. When you reach them, whatever you picked on the card happens.",
       "Trade right from the card when you're beside them. Their packs follow their cargo, and when the hold they're heading for is in crisis they carry relief goods and their prices follow that crisis.",
@@ -14,6 +14,11 @@ const PATCHNOTES = (() => {
       "On a PC the wagons light up under the mouse. Zoomed out, tapping a group pin zooms in on it. In a party the leader decides.",
       "Caravan Friend (Speech) now also makes caravans on the road sell to you 10% cheaper.",
       "In Polish, everything about caravans is now in Polish too: their names on the map, meetings on the road, the caravan board in town, your caravan job, your cart and the wares they sell.",
+    ] },
+    { id: "b252-qaside2a", build: 252, date: "25 Nov 2026", title: "Forge and lockpicking fixes", items: [
+      "Fixed: in Polish, the forge was still mostly in English: the Make, Smelt & tan and Improve tabs, batch crafting, what's missing, and the line you get after making something.",
+      "Fixed: in Polish, the lockpicking hint under the lock is translated.",
+      "Fixed: after a festival smithing contest, your next forged item could get a free chance to save a material it never earned.",
     ] },
     { id: "b251-perklayout", build: 251, date: "25 Nov 2026", title: "Tidier perk stars", items: [
       "Perk names in the star trees never sit on top of each other any more, and long names are never cut short with \"…\": they wrap onto a second line instead.",
