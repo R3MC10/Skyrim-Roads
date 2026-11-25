@@ -8,6 +8,31 @@ const PATCHNOTES = (() => {
       "The foe's health shows as numbers under its bar on a phone, so you can see how close it is to falling without tapping it.",
       "Every status icon in a fight shows its number: how many stacks of burning, poison, bleeding, vulnerable, winded and the rest, or how many turns a spell has left. On the foe, on you and on your party. Hold or hover an icon for the full text.",
     ] },
+    { id: "b319-partyinvites", build: 319, date: "25 Nov 2026", title: "Your party goes in together", items: [
+      "When your party leader starts a co-op dungeon run, everyone in the party is in it straight away: no separate invites and no Accept cards for people already in your party.",
+      "Invites in the co-op lobby are only for friends and others outside your party, and only while there's room (up to 8 heroes in all; followers don't count).",
+      "In a party, only the leader starts co-op runs. If you step out of your party's run, a Rejoin button takes you back in.",
+      "Friends and travellers who are already in your party show \"In your party\" instead of an Invite or Ask to join button.",
+      "Old invites and join requests for someone who has since joined your party are cleared away, with no leftover pop-ups.",
+    ] },
+    { id: "b318-partytrain", build: 318, date: "25 Nov 2026", title: "Your party walks in a line", items: [
+      "Travelling as a party, everyone now walks in a line on the map so you can see each of you: the leader in front, the rest following one behind another along the road.",
+      "Standing in a town, your party lines up in a row next to the town instead of all on one spot, so every name is readable.",
+    ] },
+    { id: "b317-dunchoices", build: 317, date: "25 Nov 2026", title: "Dungeon forks show what's ahead", items: [
+      "At a fork every way is now a card: a picture of the room, its name, how risky it is, what it pays, and which rooms come after it.",
+      "Risk goes from Safe to Deadly and follows how dangerous the dungeon is. A Rest room tells you when you could really use it.",
+      "In a party the same cards are the vote: each one shows how many votes it has and who picked it, the leading way lights up, and the vote says plainly that a tie goes the leader's way.",
+    ] },
+    { id: "b316-menutop", build: 316, date: "25 Nov 2026", title: "Menus open at the top", items: [
+      "On a phone, every tab and sub-tab (Character, Map, Journal, Social, Area and the rest) now opens at its top, instead of half way down an old list or on the map above it.",
+      "The compass's Area, Journal and Social links take you straight to that screen, and the full-screen Character page always starts at the top.",
+      "In Items and Magic a new category starts at the top, while picking or equipping something keeps the list where you were.",
+      "Windows like the patch notes and the guide open at their top.",
+    ] },
+    { id: "b315-hourlyupdates", build: 315, date: "25 Nov 2026", title: "Updates arrive on time", items: [
+      "New versions now reach the app reliably within about an hour of a change, instead of sometimes waiting many hours.",
+    ] },
     { id: "b314-reportname", build: 314, date: "25 Nov 2026", title: "Reports show who sent them", items: [
       "When you report a problem, your player name (your account name, or your hero's name if you're not signed in) now goes with it, so we know who to ask if we need more details.",
       "The report window shows the name it's sent as, right above the Send button.",
