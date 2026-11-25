@@ -37,7 +37,8 @@ const RULES = [
   [/^ui-compass3d$/, 2240, 2240, 1, 0], [/^ui-(compass|frame|panel|parchment)$/, 1024, 1024, 1, 0],
   [/^fest-/, 1600, 600, 8 / 3, 0.01],
   [/^lock-(iron|steel|nordic|dwemer|noble)$/, 700, 700, 1, 0.01], [/^tool-lockpick$/, 900, 70, null], [/^tool-tension-wrench$/, 680, 100, null],
-  [/^room-/, 1280, 720, null], [/^icon-192/, 192, 192, 1, 0], [/^icon-/, 256, 256, 1, 0],
+  [/^room-/, 1280, 720, null],
+  [/^rig-w-(bow|bow-drawn|shield|shield-side|shield-kite|shield-kite-side)$/, 30, 190, null], [/^rig-w-/, 190, 20, null], [/^icon-192/, 192, 192, 1, 0], [/^icon-/, 256, 256, 1, 0],
 ];
 const files = fs.readdirSync(W).filter((f) => /\.(webp|png|jpe?g)$/i.test(f));
 const keys = new Set();

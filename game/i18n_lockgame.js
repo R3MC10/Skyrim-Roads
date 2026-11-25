@@ -18,7 +18,7 @@
   };
   for (const k in PL) if (!(k in I18N_STORY.ex)) I18N_STORY.ex[k] = PL[k];
 })();
-// the patch note (patchnotes.js b193-lockgame)
+// the patch note (patchnotes.js b194-lockgame)
 var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 Object.assign(I18N_EXTRA.words, {
   "Painted lockpicking": "Malowane otwieranie zamków",

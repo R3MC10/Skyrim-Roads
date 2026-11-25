@@ -79,6 +79,9 @@ const RIGDATA = (() => {
        dy, ox   the body's offset (dy > 0 crouches)                      rot   the whole body turned (knocked down)
        tilt     the head                                                 fn/ff near / far foot on the ground [x, y]
        draw     bow string (0..1)    cast  spell glow (0..1)    hipx  hips pushed forward    hand  "open" | "fist"
+       hk/hx/hy the weapon hand on its own path: at hx,hy (units, from the shoulder) with weight hk (0 = follow aim)
+       twist    shoulders turned away from the foe (-) or into the blow (+)    loose  the string hand flying back after a shot
+       arms: true on a clip = in fights the clip moves the arms too (not just the body), so its own arc plays
      Each key is [t, controls, ease]; ease is how the move arrives at that key ("in" speeds up into a blow,
      "out" brakes after it, "io" both, "back" overshoots a little). hit = the contact moment (0..1): the fight scene
      plays its hit effects (gorefx2, sparks, numbers) then, and the clip is time-warped so its contact lands there. */
@@ -89,44 +92,69 @@ const RIGDATA = (() => {
     ready: { len: 1.6, loop: true, keys: [K(0, { aim: -0.6, back: -0.45, lean: 0.08, dy: 1.2, hipx: 0.6, ...WIDE }), K(0.5, { aim: -0.52, back: -0.4, lean: 0.1, dy: 1.6, hipx: 0.8, ...WIDE }), K(1, { aim: -0.6, back: -0.45, lean: 0.08, dy: 1.2, hipx: 0.6, ...WIDE })] },
     walk: { len: 1.0, loop: true, walk: true, keys: [0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => { const p = i / 8 * Math.PI * 2, s = Math.sin(p), c = Math.cos(p);
       return K(i / 8, { fn: [1 + 7.2 * s, -Math.max(0, c) * 3], ff: [1 - 7.2 * s, -Math.max(0, -c) * 3], dy: 0.9 * Math.abs(s) - 0.4, lean: 0.06, aim: 0.95 - 0.38 * s, back: -0.35 + 0.42 * s, tilt: 0.02 * c, cape: 0.6 + 0.4 * Math.abs(c) }, "lin"); }) },
-    /* one-handed swing: settle, wind up high behind (anticipation), cut through fast, follow through low, recover */
-    swing: { len: 0.95, hit: 0.44, keys: [K(0, { aim: -0.55, back: 0.1, lean: 0.02, ...ST }), K(0.14, { aim: -1.0, back: -0.2, lean: -0.02, dy: 0.8, ...ST }, "out"),
-      K(0.3, { aim: -2.3, back: 0.45, lean: -0.14, dy: 1.4, tilt: -0.06, fn: [7, 0], ff: [-6, 0] }, "io"),
-      K(0.44, { aim: 0.95, back: -0.35, lean: 0.24, dy: 1.8, hipx: 2.2, tilt: 0.08, fn: [10.5, 0], ff: [-5, 0] }, "in"),
-      K(0.6, { aim: 1.15, back: -0.25, lean: 0.2, dy: 1.6, hipx: 2, fn: [10.5, 0], ff: [-5, 0] }, "out"), K(1, { aim: -0.55, back: 0.1, lean: 0.02, ...ST }, "io")] },
+    /* one-handed swing, with the arm on its own path (hk/hx/hy: the hand at hx,hy from the shoulder): the hand lifts
+       up past the face to above and behind the head while the blade lays back over the shoulder (never across the head),
+       the shoulders turn away (twist) and the weight sinks onto the back foot; then the hand goes up over the head and
+       down in front, the blade turning through upright to forward-down, the shoulders and hips turning in and the weight
+       driving onto the front foot; a short follow-through, then back to guard */
+    swing: { len: 0.95, hit: 0.44, arms: true, keys: [K(0, { aim: -0.55, back: 0.1, lean: 0.02, ...ST }),
+      K(0.14, { aim: -1.0, hk: 0.9, hx: 6, hy: -20, back: -0.3, lean: -0.04, twist: -0.4, hipx: -0.6, dy: 0.8, tilt: -0.02, fn: [6, 0], ff: [-6, 0] }, "out"),
+      K(0.3, { aim: -2.8, hk: 1, hx: -4, hy: -16, back: -0.6, lean: -0.12, twist: -1, hipx: -1.4, dy: 1.4, tilt: -0.06, fn: [7, 0], ff: [-6.5, 0] }, "io"),
+      K(0.37, { aim: -0.97, hk: 1, hx: 4, hy: -20, back: -0.3, lean: 0.04, twist: -0.2, hipx: 0.4, dy: 1.5, fn: [9, 0], ff: [-6, 0] }, "in"),
+      K(0.41, { aim: 0.19, hk: 1, hx: 15, hy: -10, back: 0.1, lean: 0.18, twist: 0.5, hipx: 1.6, dy: 1.7, tilt: 0.04, fn: [10.5, 0], ff: [-5.5, 0] }, "lin"),
+      K(0.44, { aim: 0.95, hk: 1, hx: 14, hy: 5, back: 0.35, lean: 0.24, twist: 0.8, hipx: 2.2, dy: 1.8, tilt: 0.08, fn: [10.5, 0], ff: [-5, 0] }, "lin"),
+      K(0.6, { aim: 1.25, hk: 0.6, hx: 10, hy: 10, back: 0.25, lean: 0.2, twist: 0.6, hipx: 2, dy: 1.6, fn: [10.5, 0], ff: [-5, 0] }, "out"), K(1, { aim: -0.55, back: 0.1, lean: 0.02, ...ST }, "io")] },
     /* a thrust (dagger, spear, fists): a short coil, a long step in, back out */
     thrust: { len: 0.85, hit: 0.32, keys: [K(0, { aim: -0.55, back: 0.1, lean: 0.02, ...ST }), K(0.18, { aim: -0.9, back: 0.2, lean: -0.06, dy: 1.4, fn: [5, 0], ff: [-7, 0] }, "out"),
       K(0.32, { aim: 0.2, back: -0.3, lean: 0.26, dy: 2, hipx: 3, tilt: 0.06, fn: [12, 0], ff: [-5, 0] }, "in"), K(0.5, { aim: -0.2, back: -0.2, lean: 0.16, dy: 1.6, hipx: 2.2, fn: [12, 0], ff: [-5, 0] }, "out"),
       K(1, { aim: -0.55, back: 0.1, lean: 0.02, ...ST }, "io")] },
-    /* power attack: a step back to load, a long wind-up, a lunging blow with the whole body, a heavy recovery */
-    power: { len: 1.25, hit: 0.5, keys: [K(0, { aim: -0.55, back: 0.1, lean: 0.02, ...ST }), K(0.16, { aim: -1.4, back: 0.2, lean: -0.08, dy: 1.6, fn: [4, 0], ff: [-8, 0] }, "out"),
-      K(0.36, { aim: -2.8, back: 0.7, lean: -0.22, dy: 2.4, tilt: -0.1, hipx: -1, fn: [5, 0], ff: [-9, 0] }, "io"),
-      K(0.5, { aim: 1.25, back: -0.5, lean: 0.4, dy: 3.2, hipx: 4, tilt: 0.12, fn: [14, 0], ff: [-6, 0] }, "in"),
-      K(0.7, { aim: 1.35, back: -0.4, lean: 0.34, dy: 3, hipx: 3.6, fn: [14, 0], ff: [-6, 0] }, "out"), K(1, { aim: -0.55, back: 0.1, lean: 0.02, ...ST }, "io")] },
-    /* two-handed swing: both hands on the grip, an overhead load, a falling cut */
-    swing2h: { len: 1.15, hit: 0.5, two: true, keys: [K(0, { aim: -0.8, lean: 0.02, ...ST }), K(0.18, { aim: -1.6, lean: -0.06, dy: 1, ...WIDE }, "out"),
-      K(0.36, { aim: -2.7, lean: -0.2, dy: 1.8, tilt: -0.08, fn: [8, 0], ff: [-8, 0] }, "io"),
-      K(0.5, { aim: 1.0, lean: 0.36, dy: 3, hipx: 3, tilt: 0.1, fn: [12, 0], ff: [-7, 0] }, "in"),
-      K(0.72, { aim: 1.1, lean: 0.3, dy: 2.6, hipx: 2.6, fn: [12, 0], ff: [-7, 0] }, "out"), K(1, { aim: -0.8, lean: 0.02, ...ST }, "io")] },
+    /* power attack: the same path as the swing but loaded harder: a step back, a deeper coil, a lunging blow with the
+       whole body, a heavy recovery */
+    power: { len: 1.25, hit: 0.5, arms: true, keys: [K(0, { aim: -0.55, back: 0.1, lean: 0.02, ...ST }),
+      K(0.16, { aim: -1.0, hk: 0.85, hx: 6, hy: -17, back: -0.3, lean: -0.08, twist: -0.5, hipx: -0.8, dy: 1.6, fn: [4, 0], ff: [-8, 0] }, "out"),
+      K(0.36, { aim: -3.0, hk: 1, hx: -5, hy: -15, back: -0.7, lean: -0.22, twist: -1.1, hipx: -1.8, dy: 2.4, tilt: -0.1, fn: [5, 0], ff: [-9, 0] }, "io"),
+      K(0.43, { aim: -0.97, hk: 1, hx: 4, hy: -21, back: -0.3, lean: 0.06, twist: -0.2, hipx: 0.8, dy: 2.4, fn: [9, 0], ff: [-8, 0] }, "in"),
+      K(0.47, { aim: 0.2, hk: 1, hx: 15, hy: -10, back: 0.1, lean: 0.26, twist: 0.6, hipx: 2.6, dy: 2.8, tilt: 0.06, fn: [13, 0], ff: [-6.5, 0] }, "lin"),
+      K(0.5, { aim: 1.25, hk: 1, hx: 14, hy: 7, back: 0.5, lean: 0.4, twist: 1, hipx: 4, dy: 3.2, tilt: 0.12, fn: [14, 0], ff: [-6, 0] }, "lin"),
+      K(0.7, { aim: 1.35, hk: 0.6, hx: 10, hy: 11, back: 0.4, lean: 0.34, twist: 0.7, hipx: 3.6, dy: 3, fn: [14, 0], ff: [-6, 0] }, "out"), K(1, { aim: -0.55, back: 0.1, lean: 0.02, ...ST }, "io")] },
+    /* two-handed swing: both hands on the grip, the same overhead path with a wider stance and a falling cut */
+    swing2h: { len: 1.15, hit: 0.5, two: true, arms: true, keys: [K(0, { aim: -0.8, lean: 0.02, ...ST }),
+      K(0.18, { aim: -1.0, hk: 0.85, hx: 6, hy: -17, lean: -0.06, twist: -0.4, hipx: -0.6, dy: 1, ...WIDE }, "out"),
+      K(0.36, { aim: -2.9, hk: 1, hx: -5, hy: -15, lean: -0.2, twist: -1, hipx: -1.6, dy: 1.8, tilt: -0.08, fn: [8, 0], ff: [-8, 0] }, "io"),
+      K(0.43, { aim: -0.97, hk: 1, hx: 3, hy: -21, lean: 0.05, twist: -0.2, hipx: 0.6, dy: 2, fn: [10, 0], ff: [-7.5, 0] }, "in"),
+      K(0.47, { aim: 0.2, hk: 1, hx: 14, hy: -11, lean: 0.22, twist: 0.5, hipx: 2, dy: 2.6, tilt: 0.05, fn: [12, 0], ff: [-7, 0] }, "lin"),
+      K(0.5, { aim: 1.0, hk: 1, hx: 13, hy: 6, lean: 0.36, twist: 0.9, hipx: 3, dy: 3, tilt: 0.1, fn: [12, 0], ff: [-7, 0] }, "lin"),
+      K(0.72, { aim: 1.2, hk: 0.6, hx: 9, hy: 11, lean: 0.3, twist: 0.6, hipx: 2.6, dy: 2.6, fn: [12, 0], ff: [-7, 0] }, "out"), K(1, { aim: -0.8, lean: 0.02, ...ST }, "io")] },
     block: { len: 0.6, hit: 0.3, front: true, keys: [K(0, { aim: -0.55, back: 0.1, ...ST }), K(0.3, { aim: -0.6, back: -1.6, lean: -0.08, dy: 1.6, hipx: -0.6, ...WIDE }, "out"), K(1, { aim: -0.6, back: -1.55, lean: -0.06, dy: 1.4, ...WIDE })] },
     /* shield bash: tuck the shield, drive the shoulder in, punch it out */
     bash: { len: 0.85, hit: 0.42, front: true, keys: [K(0, { aim: -0.55, back: 0.1, ...ST }), K(0.25, { aim: -0.5, back: -0.7, lean: -0.1, dy: 1.6, fn: [5, 0], ff: [-8, 0] }, "out"),
       K(0.42, { aim: -0.5, back: -1.75, lean: 0.3, dy: 2, hipx: 3, fn: [12, 0], ff: [-5, 0] }, "in"), K(0.6, { aim: -0.5, back: -1.6, lean: 0.2, dy: 1.6, hipx: 2.4, fn: [12, 0], ff: [-5, 0] }, "out"), K(1, { aim: -0.55, back: 0.1, ...ST })] },
-    /* bow: raise, nock, draw to the cheek, hold, loose (the string hand flies back), lower */
-    bow: { len: 1.05, hit: 0.53, bow: true, keys: [K(0, { aim: 0, back: 0, draw: 0, ...ST }), K(0.15, { aim: -0.05, back: -0.9, draw: 0.1, lean: 0, ...WIDE }),
-      K(0.42, { aim: -0.06, back: -1.0, draw: 1, lean: -0.05, dy: 0.8, tilt: 0.06, ...WIDE }), K(0.5, { aim: -0.06, back: -1.0, draw: 1, lean: -0.05, dy: 0.8, tilt: 0.06, ...WIDE }),
-      K(0.53, { aim: -0.12, back: -0.75, draw: 0, lean: -0.1, dy: 0.6, ...WIDE }, "out"), K(1, { aim: 0, back: 0, draw: 0, ...ST })] },
+    /* bow: raise the bow on a straight arm, nock, draw the string hand back to the cheek, hold, loose (the string hand
+       flies back past the ear), lower. back < -0.25 raises the bow arm (rig.js lines the arrow up with the cheek);
+       the times match the fight replay's bow move, so no time-warp (nowarp) */
+    bow: { len: 1.05, hit: 0.53, bow: true, arms: true, nowarp: true, keys: [K(0, { aim: 0, back: 0, draw: 0, ...ST }),
+      K(0.15, { aim: -0.05, back: -0.9, draw: 0.08, lean: 0, twist: -0.2, ...WIDE }),
+      K(0.42, { aim: -0.06, back: -1.0, draw: 1, lean: -0.06, dy: 0.8, tilt: 0.04, twist: -0.6, hipx: -0.4, ...WIDE }), K(0.5, { aim: -0.06, back: -1.0, draw: 1, lean: -0.06, dy: 0.8, tilt: 0.04, twist: -0.6, hipx: -0.4, ...WIDE }),
+      K(0.53, { aim: -0.1, back: -1.0, draw: 0, loose: 1, lean: -0.1, dy: 0.7, twist: -0.7, hipx: -0.6, ...WIDE }, "out"),
+      K(0.7, { aim: -0.08, back: -0.95, draw: 0, loose: 0.8, lean: -0.06, dy: 0.6, twist: -0.4, ...WIDE }, "out"), K(1, { aim: 0, back: 0, draw: 0, ...ST })] },
     /* spell: gather in both hands, thrust the casting hand out */
     cast: { len: 1.0, hit: 0.64, hand: "open", keys: [K(0, { aim: -0.55, back: 0.1, ...ST }), K(0.3, { aim: -1.5, back: -1.4, lean: -0.1, dy: 1, cast: 0.6, ...WIDE }, "out"),
       K(0.44, { aim: -1.6, back: -1.5, lean: -0.12, dy: 1.2, cast: 1, ...WIDE }), K(0.64, { aim: -0.2, back: -0.3, lean: 0.16, dy: 1.4, hipx: 1.6, cast: 1, fn: [10, 0], ff: [-6, 0] }, "in"),
       K(0.8, { aim: -0.3, back: -0.2, lean: 0.08, dy: 1, cast: 0.3, fn: [10, 0], ff: [-6, 0] }, "out"), K(1, { aim: -0.55, back: 0.1, ...ST })] },
-    /* hit: the blow lands, the body snaps back, the head whips, a half step back, then settles */
-    hit: { len: 0.5, hit: 0, keys: [K(0, { aim: -0.55, back: 0.1, ...ST }), K(0.18, { aim: -1.6, back: 0.9, lean: -0.3, tilt: -0.3, ox: -3, dy: 0.8, fn: [4, 0], ff: [-8, 0] }, "out"),
-      K(0.45, { aim: -1.3, back: 0.7, lean: -0.2, tilt: -0.16, ox: -3.2, dy: 1, fn: [4, 0], ff: [-8.5, 0] }), K(1, { aim: -0.55, back: 0.1, ...ST })] },
-    /* stagger: knocked off balance, two stumbling steps back */
-    stagger: { len: 0.9, hit: 0, keys: [K(0, { aim: -0.55, back: 0.1, ...ST }), K(0.15, { aim: -1.9, back: 1.1, lean: -0.4, tilt: -0.3, ox: -4, dy: 1.6, fn: [3, -2], ff: [-8, 0] }, "out"),
-      K(0.4, { aim: -1.5, back: 0.9, lean: -0.3, tilt: -0.2, ox: -8, dy: 2.2, fn: [-2, 0], ff: [-10, -1.5] }), K(0.65, { aim: -1, back: 0.5, lean: -0.1, ox: -9, dy: 1.6, fn: [-1, 0], ff: [-12, 0] }),
-      K(1, { aim: -0.55, back: 0.1, ox: -9, ...ST })] },
+    /* hit (played by real time after the blow, ~0.4 s): the head snaps back first, the body follows and the near foot
+       steps back to catch the weight, the head comes forward a touch past upright (the follow-through), then settles */
+    hit: { len: 0.42, hit: 0, keys: [K(0, { aim: -0.55, back: 0.1, ...ST }),
+      K(0.1, { aim: -0.85, back: 0.6, lean: -0.16, tilt: -0.5, dy: 0.5, ...ST }, "out"),
+      K(0.32, { aim: -1.05, back: 0.95, lean: -0.32, tilt: -0.34, dy: 1.2, hipx: -1.2, fn: [2.5, 0], ff: [-8.5, 0] }, "out"),
+      K(0.62, { aim: -0.7, back: 0.4, lean: 0.06, tilt: 0.08, dy: 1, hipx: -0.6, fn: [3, 0], ff: [-8, 0] }, "io"),
+      K(1, { aim: -0.55, back: 0.1, lean: 0.02, tilt: 0.02, dy: 0.3, fn: [4.5, 0], ff: [-6.5, 0] }, "io")] },
+    /* stagger (a hard blow, ~0.6 s): the head whips, the body is thrown back, two stumbling steps, then it rights itself */
+    stagger: { len: 0.6, hit: 0, keys: [K(0, { aim: -0.55, back: 0.1, ...ST }),
+      K(0.08, { aim: -0.95, back: 0.8, lean: -0.24, tilt: -0.6, dy: 0.8, ...ST }, "out"),
+      K(0.3, { aim: -1.2, back: 1.1, lean: -0.42, tilt: -0.36, ox: -2, dy: 1.8, hipx: -1.6, fn: [2, -2], ff: [-9, 0] }, "out"),
+      K(0.55, { aim: -1.05, back: 0.9, lean: -0.26, tilt: -0.2, ox: -4, dy: 2.2, hipx: -1, fn: [-2, 0], ff: [-10, -1.5] }),
+      K(0.78, { aim: -0.75, back: 0.4, lean: 0.08, tilt: 0.1, ox: -5, dy: 1.4, fn: [-1, 0], ff: [-11, 0] }),
+      K(1, { aim: -0.55, back: 0.1, ox: -5, lean: 0.02, ...ST }, "io")] },
     /* knocked down: buckle at the knees, fall back, lie there (followers, horses and you only ever go down) */
     down: { len: 0.9, hold: true, hand: "open", keys: [K(0, { aim: -0.55, back: 0.1, ...ST }), K(0.25, { aim: -1.4, back: 1, lean: -0.3, tilt: -0.25, dy: 4, ox: -2, fn: [4, 0], ff: [-6, 0] }, "out"),
       K(1, { rot: -Math.PI / 2, aim: 1.4, back: 0.5, fn: [4, -4], ff: [-1, 0], tilt: 0.25 }, "in")] },
