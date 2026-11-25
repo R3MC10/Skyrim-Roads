@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b269-mysteryrooms", build: 269, date: "25 Nov 2026", title: "Mystery rooms with real choices", items: [
+      "Unknown rooms in dungeons can now hold six new things: a sealed passage, a collapsed tunnel, a wounded traveller, a patrol (draugr in barrows), a cursed offering and an unstable rope bridge.",
+      "Each choice shows the skill it uses and your chance, like \"Lockpicking · 62%\", and what it can bring: a shortcut past the next rooms (never past the boss), gold and loot, a blessing for the rest of the dungeon, or an ambush where the foe is staggered and you move first.",
+      "Failing never leaves you stuck: you lose some health, the next foe hears you coming, or you end up in a fight on the way round. A curse fades when you leave.",
+      "In a party the whole party votes, and the best of you at that skill makes the attempt. Everyone sees how it went.",
+      "Patient Shadow (Sneak) now also makes these checks 10% easier.",
+    ] },
     { id: "b268-npcportraits", build: 268, date: "25 Nov 2026", title: "Painted faces for the people you meet", items: [
       "The smiths, innkeepers, court wizards and merchants of Whiterun, Riverwood, Solitude, Windhelm and Riften now have painted portraits, and so do four Jarls, Whiterun's steward and the Greybeard who greets you.",
       "Guards, and Nord innkeepers and merchants who don't have their own painting yet, get a painted face too. Guards keep their hold's colours around the picture.",
