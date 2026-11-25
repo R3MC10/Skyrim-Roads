@@ -3,11 +3,21 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b180-mappolish", build: 180, date: "25 Nov 2026", title: "Map polish: a clearer close-up and tidier cards", items: [
+    { id: "b182-mappolish", build: 182, date: "25 Nov 2026", title: "Map polish: a clearer close-up and tidier cards", items: [
       "Zoomed in close, the hand-inked chart now uses the painting's own colours, so going from the painting to the chart is smooth. Plains, forests, snow and mountains each get their own calm wash on soft paper, with a gentle shade on the hills.",
       "Sun rays, cloud shadows, mist and town glows fade as you zoom in, so the close-up stays easy to read.",
       "On a PC the world event card, its notices (a town rebuilding, a reward waiting), the dragon raid card and the caravan card now sit in one column at the left edge instead of over the middle of the map. The card still folds into a pill. Phones keep the old layout.",
       "Names on the map no longer pile on top of each other: a camp's or a patrol's name moves aside or waits until you zoom in, and nothing is written under the cards at the left.",
+    ] },
+    { id: "b181-comingnext", build: 181, date: "25 Nov 2026", title: "A fresh Coming next list", items: [
+      "The Coming next list in Patch notes is up to date: werewolf paths, follower quests, legendary hunts, festivals, deep expeditions, treasure maps and the big fight screen are all in the game now, so they're off the list.",
+      "New on the list: painted fighters and blood, makeovers for the fishing, hunting, mining and lockpicking mini-games, afflictions, a longhouse for your adventuring company, Daedric bargains and more.",
+    ] },
+    { id: "b180-deepdelve-bal", build: 180, date: "25 Nov 2026", title: "Fairer deep expeditions and difficulty tiers", items: [
+      "Veteran, Legendary and Mythic are fairer when you go alone: a careful hero with a follower now beats the legendary lair about 1 time in 3 on Legendary and now and then even on Mythic.",
+      "A full party has it tougher on Legendary and Mythic: the foes grow more for every extra player, so four friends still need to work for the deepest hoard.",
+      "Going higher in level no longer makes the depths harder. A level 40 hero now does better down there than a level 30 one.",
+      "The master of the legendary lair at the very bottom has a little less health, so that fight is long but winnable.",
     ] },
     { id: "b179-leghuntpolish", build: 179, date: "25 Nov 2026", title: "Legendary hunts: painted beasts and fairer fights", items: [
       "The Jarl's posters, your hunt card and the bestiary now show each legendary beast as a proper painting in a gold frame, in its own colours: the White Ghost is snow white, Grimfang and Ashtusk are black as soot, Bloodmoon has a blood-red tint.",
@@ -1264,11 +1274,14 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 180;
+  const NEXT_AT = 181;
   const NEXT = [
-    "Followers with their own quests, opinions and banter",
-    "Townsfolk with their own day: work, the inn at night, home to sleep",
-    "Faster on older phones, and kinder to the battery",
+    "Painted fighters with realistic fight animations, and realistic blood and splatter",
+    "Makeovers for fishing, hunting, mining and lockpicking, plus painted festival and arena pictures",
+    "Afflictions with an upside and a downside: lycanthropy, the Draugr curse and the Daedric mark",
+    "An adventuring company longhouse: a shared base with a treasury, a trophy hall and stables",
+    "Daedric bargains and artifacts that awaken, plus regional crises and heists",
+    "Combat combos (frost + heavy = Shatter, oil + fire), follower and horse bonds, and spell crafting",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];

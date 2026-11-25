@@ -26,14 +26,23 @@ const DEEPDELVE = (() => {
   // [OURS] balanced with tests/test_deepdelve_bal_sim.js: foes grow +15% health / +6% damage per depth level
   const DEPTH_HP = 0.15, DEPTH_DMG = 0.06;
   const DEPTH_GOLD = [1, 1.6, 2.6, 4, 6, 10];          // gold you find, by depth (rewards rise steeply)
-  const MAJOR_HP = [1, 1.1, 1.05, 1.1, 1.15, 1.35];     // the major fight that ends each level
+  const MAJOR_HP = [1, 2.2, 1.35, 1.2, 1.15, 1.15];     // the major fight that ends each level (the first two were over in under 10 turns)
   const HIT_CAP = 0.4;                                   // no deep or tiered foe takes more than 40% of your health in one blow
+  /* re-balanced for 4-moves-per-turn fights (depth V major fight, level 30): solo + follower about 90 / 65 / 30 / 10% wins,
+     a 4-player party about 100 / 100 / 80 / 55%. Modifiers (1 / 2 / 3) do much of the work, so the numbers stay modest.
+     party: [health, damage] the foe gains per extra party member on top of coop.js FOE_BONUS (see partyFoe) */
   const TIERS = {
-    normal: { name: "Normal", n: 0, hp: 1, dmg: 1, gold: 1 },
-    veteran: { name: "Veteran", n: 1, hp: 1.2, dmg: 1.08, gold: 1.5 },
-    legendary: { name: "Legendary", n: 2, hp: 1.45, dmg: 1.16, gold: 2.25 },
-    mythic: { name: "Mythic", n: 3, hp: 1.75, dmg: 1.25, gold: 3.5 },
+    normal: { name: "Normal", n: 0, hp: 1, dmg: 1, gold: 1, party: null },
+    veteran: { name: "Veteran", n: 1, hp: 1.12, dmg: 1.04, gold: 1.5, party: [0.08, 0.03] },
+    legendary: { name: "Legendary", n: 2, hp: 1.33, dmg: 1.1, gold: 2.25, party: [0.22, 0.06] },
+    mythic: { name: "Mythic", n: 3, hp: 1.43, dmg: 1.13, gold: 3.5, party: [0.12, 0.09] },
   };
+  /* [OURS] engine.js grows foe health faster than your damage past level 30 (x1.6 at 30, x2.2 at 40), so deep and tiered
+     foes stacked on top took ever longer to kill: a level-40 hero won fewer deep fights than a level-30 one (63% vs 93%).
+     Past level 30 they give some of that back: -5.5% health and -1% damage per level over 30 (divided, never below zero). */
+  const LV_BASE = 30, LV_EASE = 0.055, LV_EASE_DMG = 0.01;
+  const lvOver = (s) => Math.max(0, (typeof G !== "undefined" && G.fightLevel ? G.fightLevel(s) : s?.level || 1) - LV_BASE);
+  const lvEase = (s, k = LV_EASE) => 1 / (1 + k * lvOver(s));
   const TIER_KEYS = ["normal", "veteran", "legendary", "mythic"];
   const MODS = {
     frost: { icon: "", name: "Frozen Depths", desc: "Frost builds up on you every turn and drains stamina; at 5 stacks it bites for 5% of your health. Fire spells thaw you." },
@@ -126,10 +135,18 @@ const DEEPDELVE = (() => {
     const d = dun(s); if (!d || !e) return e;
     const T = tierOf(d), L = depth(s);
     if (T === TIERS.normal && !L) return e;
-    const hp = T.hp * (1 + DEPTH_HP * L) * (major ? MAJOR_HP[L] : 1), dm = T.dmg * (1 + DEPTH_DMG * L);
+    const hp = T.hp * (1 + DEPTH_HP * L) * (major ? MAJOR_HP[L] : 1) * lvEase(s), dm = T.dmg * (1 + DEPTH_DMG * L) * lvEase(s, LV_EASE_DMG);
     e.health = Math.round(e.health * hp); e.hp = e.health; e.damage = Math.round(e.damage * dm * 10) / 10;
     e.hitCap = Math.min(e.hitCap || HIT_CAP, HIT_CAP);   // engine.js: never more than this share of your health in one blow
     e.deep = L; e.dtier = d.dtier || "normal";
+    return e;
+  }
+  /* a party in a Veteran / Legendary / Mythic run: per extra member the foe gets this much more health and damage on top of
+     coop.js FOE_BONUS (four heroes shrug off what kills a lone one). Called by coop.js once the party size is known. */
+  function partyFoe(s, e, n) {
+    const d = dun(s), P = d && e ? tierOf(d).party : null, k = Math.max(0, Math.min(7, (n || 1) - 1));
+    if (!P || !k) return e;
+    e.health = Math.round(e.health * (1 + P[0] * k)); e.hp = e.health; e.damage = Math.round(e.damage * (1 + P[1] * k) * 10) / 10;
     return e;
   }
   const trapMult = (s) => { const d = dun(s); return d ? (1 + 0.08 * depth(s)) * (1 + 0.1 * (tierOf(d).n || 0)) : 1; };
@@ -433,7 +450,7 @@ const DEEPDELVE = (() => {
   // labels for the dungeon screens
   if (typeof DUNGEONS !== "undefined") { DUNGEONS.ICON.camp = ""; DUNGEONS.LABEL.camp = "Camp"; }
 
-  return { MAX_DEPTH, TIER_LEVEL, MAX_INJ, TIERS, TIER_KEYS, MODS, MOD_KEYS, CURSES, DEPTH_NAME, ROMAN, DEPTH_HP, DEPTH_DMG, DEPTH_GOLD, MAJOR_HP, HIT_CAP, PERK_ADD, PERK_ADJ,
+  return { MAX_DEPTH, TIER_LEVEL, MAX_INJ, TIERS, TIER_KEYS, MODS, MOD_KEYS, CURSES, DEPTH_NAME, ROMAN, DEPTH_HP, DEPTH_DMG, DEPTH_GOLD, MAJOR_HP, HIT_CAP, LV_BASE, LV_EASE, LV_EASE_DMG, lvEase, partyFoe, PERK_ADD, PERK_ADJ,
     deepable, tiersOpen, modsFor, modsAt, picked, pick, runFields, onEnter, scaleFoe, trapMult, goldMult, healMult, layout, seedKey, bossRoom, campRoom, offer,
     campChoices, campAct, majorDown, knockout, onLeave, unsecured, strip, gains, fight, tick, vetFactor, hasPath, placeCard, bannerHTML, campHTML, depth };
 })();
