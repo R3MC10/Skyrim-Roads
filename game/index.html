@@ -2789,16 +2789,6 @@ html.art-pixel .lvk-p,html.art-pixel .lvlprompt,html.art-pixel .lvn-xb{border-ra
 @media (min-width:900px){#lvln{top:calc(16vh + env(safe-area-inset-top))}.lvn{min-width:440px;padding:12px 60px 14px}.lvk-p{min-height:250px}.lvn-t{font-size:19px}.lvn-big{font-size:36px}.lvn-level{padding:22px 90px}}
 @media (max-width:380px){.lvk-p{min-height:176px;padding:14px 3px 12px}.lvk-p b{font-size:14px}.lvk-v{font-size:13px}.lvn-big{font-size:21px}}
 @media (prefers-reduced-motion:reduce){.lvn,.lvk,.lvn-n,.lvlprompt,.tw-dir .tw-lvlready{animation:none}.lvn-xb>i,.lvn-sb>i{transition:none}}
-/* [mountfight] your horse's health bar in a fight (mountfight.js) */
-#tbf .mfhorse{position:relative;height:14px;margin-top:3px;border-radius:7px;background:rgba(120,80,40,.18);border:1px solid rgba(200,160,110,.45);overflow:hidden}
-#tbf .mfhorse i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,rgba(150,100,50,.6),rgba(210,170,110,.85));transition:width .45s ease}
-#tbf .mfhorse span{position:relative;display:block;font-size:10.5px;line-height:13px;text-align:center;color:#fff4e2;text-shadow:0 1px 2px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#tbf .mfhorse.by{opacity:.75}
-#tbf .mfhorse.down{border-color:rgba(200,90,70,.6)}
-#tbf .mfhorse.down i{background:rgba(160,60,50,.5)}
-#tbf .mfst{margin-top:2px;font-size:10.5px}
-#tbf .mfst .st{font-style:normal;padding:0 5px;border-radius:6px;background:rgba(230,200,90,.18);border:1px solid rgba(230,200,90,.45);color:#f3e2a8}
-#tbf .tbact.mount{border-color:rgba(200,160,110,.6)}
 /* [OURS] gore.js: a red flash round the screen edges when you take a big hit */
 .gorevig{position:fixed;inset:0;pointer-events:none;z-index:9000;opacity:0;background:radial-gradient(ellipse at center,rgba(90,0,0,0) 52%,rgba(110,6,6,.55) 82%,rgba(70,0,0,.85) 100%)}
 .gorevig.on{animation:gorevig .75s ease-out forwards}
@@ -4997,8 +4987,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="civilwar.js"></script>
 <script src="daedric.js"></script>
 <script src="horses.js"></script>
-<script src="horseback.js"></script>
-<script src="mountfight.js"></script>
+<script src="horsetravel.js"></script>
 <script src="hall.js"></script>
 <script src="bounty.js"></script>
 <script src="visits.js"></script>
@@ -5254,6 +5243,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_levelup.js"></script>
 <script src="i18n_mountfight.js"></script>
 <script src="i18n_mountcombat.js"></script>
+<script src="i18n_horsetravel.js"></script>
 <script src="i18n_fighthotfix.js"></script>
 <script src="i18n_herorig.js"></script>
 <script src="i18n_folsex.js"></script>

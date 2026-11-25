@@ -1273,15 +1273,14 @@ const G = (() => {
         if (ce) { const e = scaleEnemy(ce, fightLevel(s)); tr.status = "encounter"; tr.encounter = e; out.encounter = e; note(s, ` Caravan ambush: ${e.name}`); return out; }
         continue;
       }
-      const rate = tr.carriage || tr.follow ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1) * (typeof SNEAKMODE !== "undefined" ? SNEAKMODE.encounterMult(s) : 1) * (typeof CRISES !== "undefined" ? CRISES.encounterMult(s, [s.x, s.y], stepT) : 1) * (typeof CVROAD !== "undefined" ? CVROAD.ambushMult(s, stepT) : 1);   // nobody robs a carriage on a Jarl's road; party members following their leader leave the road to them (partyplay.js)
+      const rate = tr.carriage || tr.follow ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1) * (typeof SNEAKMODE !== "undefined" ? SNEAKMODE.encounterMult(s) : 1) * (typeof CRISES !== "undefined" ? CRISES.encounterMult(s, [s.x, s.y], stepT) : 1) * (typeof CVROAD !== "undefined" ? CVROAD.ambushMult(s, stepT) : 1) * (typeof HORSETRAVEL !== "undefined" ? HORSETRAVEL.encounterMult(s) : 1);   // nobody robs a carriage on a Jarl's road; party members following their leader leave the road to them (partyplay.js)
       if (Math.random() < 1 - (1 - rate) ** (dt / 60)) {
         const e = rollEncounter(s, stepT);
         if (e.danger === "low" && e.kind === "event") {   // every fight is yours to play: the trip stops for it (no auto fighting)
           const g = rint(...e.gold); s.gold += g;
           tripLog(s, e.text + (g ? ` (+${g} gold)` : ""));
         } else {
-          const hm = typeof HORSES !== "undefined" ? HORSES.hurt(s, e, stepT, 0.25) : null;   // horses go down, they never die
-          if (hm) tripLog(s, hm);
+          // your horse is never hurt by a road fight: it waits beside you, safe (horses are for travel)
           tr.status = "encounter"; tr.encounter = e;
           out.encounter = e;
           note(s, ` Encounter: ${e.name}`);
@@ -1330,7 +1329,7 @@ const G = (() => {
       enemyFirst = true; lines.unshift(`A twig snaps. ${theFoe(e, true)} spots you!`);
     }
     const f = new Fight(s, e, null, t);
-    if (typeof HORSEBACK !== "undefined" && (typeof MOUNTCOMBAT === "undefined" || MOUNTCOMBAT.enabled)) HORSEBACK.engage(f, t);   // [OURS] riding? you fight from the saddle (mountcombat.js: off for now, everyone fights on foot)
+    // [OURS] no mounted combat: riding into a fight, you get down and fight on foot; your horse waits, safe (horsetravel.js)
     f.canFlee = true;   // a "flee" tactic can break off a road fight
     f.run({ enemyFirst, t, hidden: opts.hidden ?? null });
     const skillMsgs = f.apply(t);

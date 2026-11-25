@@ -8,7 +8,7 @@ const c = { process: { env: process.env }, console, Math, Date, JSON, Float64Arr
 vm.createContext(c);
 const tbsrc = fs.readFileSync(path.join(__dirname, "test_tbfight.js"), "utf8");
 const list = JSON.parse(tbsrc.match(/for \(const f of (\[[^\]]*"tbfight\.js"[^\]]*\])/)[1]);
-const EXTRA = ["guilds.js", "priests.js", "horseback.js", "market.js", "craftfair.js", "followers2.js", "followerai.js", "combo.js", "dragons.js", "foekit.js", "fightread.js", "foeintent.js", "tbfight.js", "sharedfight.js", "fightctl.js", "hotbar.js"];
+const EXTRA = ["guilds.js", "priests.js", "horsetravel.js", "market.js", "craftfair.js", "followers2.js", "followerai.js", "combo.js", "dragons.js", "foekit.js", "fightread.js", "foeintent.js", "tbfight.js", "sharedfight.js", "fightctl.js", "hotbar.js"];
 for (const f of [...new Set(list.filter((x) => x !== "tbfight.js").concat(EXTRA))]) if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 const helpers = tbsrc.slice(tbsrc.indexOf("const LEVELS"), tbsrc.indexOf("if (!process.env.SIMONLY)"));
 vm.runInContext(helpers + `

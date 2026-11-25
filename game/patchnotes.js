@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b288-nomountfight", build: 288, date: "25 Nov 2026", title: "Horses are for travel", items: [
+      "Horses are for travel now: fights always happen on foot.",
+      "Riding when a fight starts on the road? You get down and fight on foot. Your horse waits beside you, safe: nobody goes for it and a fight never hurts it. You ride on afterwards.",
+      "No more Mount and Dismount moves, charges or trampling in fights, and no horse health bar in the fight.",
+      "The old saddle perks help on the road instead: Cavalry Charge lets you ride 8% faster, Horse Archer means 20% fewer fights find you while you ride, Steady Steed lets your horse carry 25/50 more, Trample makes it 10% faster off the road, and Saddle Caster makes dual-cast destruction spells 5% cheaper.",
+      "Ranger now makes you travel 3% faster, and Lance makes spear power attacks 10% stronger.",
+      "The warhorse speciality now means fewer fights find you while you ride.",
+      "An ambush on the road no longer hurts your horse.",
+    ] },
     { id: "b287-chargensex", build: 287, date: "25 Nov 2026", title: "Pick man or woman first", items: [
       "Character creation now starts with a big Male / Female switch at the top, above the tabs, so it's the first thing you pick.",
       "Switching keeps your race and everything else you chose; a woman just loses the beard. Randomise now keeps the one you picked.",
