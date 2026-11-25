@@ -80,5 +80,28 @@ const HEISTSCENE = (() => {
     /* pause the ambience while the game is in the background */
     document.addEventListener("visibilitychange", () => document.documentElement.classList.toggle("hz-paused", document.hidden));
   }
-  return { SPOTS, grade, tension, bg, card, wrap, patch };
+  /* Polish: the close button and the patch note */
+  const PL = {
+    Close: "Zamknij",
+    "Close (carry on later from the town)": "Zamknij (dokończysz później w mieście)",
+    "Heists you can see":
+      "Skoki, które widać",
+    "Every heist now shows a painting of the house you're robbing: Battle-Born's farm, the Shatter-Shield house on the icy docks, Erikur's townhouse, the Silver-Blood stone house and Maven's manor on the canal.":
+      "Każdy skok pokazuje teraz obraz domu, który okradasz: farmę Battle-Bornów, dom Shatter-Shieldów na oblodzonych dokach, kamienicę Erikura, kamienny dom Srebrnokrwistych i dwór Maven nad kanałem.",
+    "On phones the heist takes the whole screen. The house sits at the top and your choices at the bottom, within thumb reach. The X in the corner closes it, and you carry on later from the town.":
+      "Na telefonie skok zajmuje cały ekran. Dom jest na górze, a twoje wybory na dole, w zasięgu kciuka. X w rogu zamyka okno, a skok dokończysz później z poziomu miasta.",
+    "The picture changes mood with each step: cold and quiet while you look around, darker while you sneak, amber at the edges when people grow suspicious, and cold and grey on the way out.":
+      "Obraz zmienia nastrój z każdym krokiem: zimny i cichy, gdy się rozglądasz, ciemniejszy, gdy się skradasz, bursztynowy na brzegach, gdy ludzie nabierają podejrzeń, i zimny, szary podczas ucieczki.",
+    "When the alarm goes up, the edges glow red and pulse, and the picture gives a short jolt. Your buttons stay put.":
+      "Gdy podniesie się alarm, brzegi świecą na czerwono i pulsują, a obraz krótko drga. Przyciski zostają na miejscu.",
+    "Lanterns flicker, the lit window glows softly and a few snowflakes drift by on phones. If your phone is set to reduce motion, all of that stays still.":
+      "Latarnie migoczą, oświetlone okno delikatnie się żarzy, a na telefonie przelatuje kilka płatków śniegu. Jeśli telefon ma ustawione ograniczenie ruchu, wszystko stoi w miejscu.",
+    "The heist loot and tools have new painted icons: the signet ring, gold compass, jewelled goblet, torc, ruby brooch, forged papers and the Draught of Shadows.":
+      "Łupy i narzędzia ze skoków mają nowe malowane ikony: sygnet, złoty kompas, puchar z klejnotami, naszyjnik, rubinowa brosza, fałszywe dokumenty i Wywar cieni.",
+  };
+  /* i18n.js loads after this file: add the lines once every script has run */
+  const addPL = () => { if (typeof I18N !== "undefined" && I18N.PL) for (const [k, v] of Object.entries(PL)) if (!(k in I18N.PL)) I18N.PL[k] = v; };
+  addPL();
+  if (typeof document !== "undefined" && typeof document.addEventListener === "function") document.addEventListener("DOMContentLoaded", addPL);
+  return { SPOTS, PL, grade, tension, bg, card, wrap, patch };
 })();

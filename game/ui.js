@@ -177,12 +177,14 @@
   const getPref = (k, d) => { try { const v = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}")[k]; return v === undefined ? d : v; } catch { return d; } };
   const setPref = (k, v) => { try { const p = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}"); p[k] = v; localStorage.setItem(PREFS_KEY, JSON.stringify(p)); } catch { /* storage blocked */ } };
   let titlePage = "press", titleAnim = 0, update = null, updateMsg = "", updatePct = -1, updateBusy = false, gameStarted = false;
-  const EMBLEM = `<svg class="emb" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="eg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3e7c4"/><stop offset=".6" stop-color="#c9a75e"/><stop offset="1" stop-color="#7d6230"/></linearGradient></defs>
-    <circle cx="50" cy="50" r="45" fill="none" stroke="url(#eg)" stroke-width="1.6"/><circle cx="50" cy="50" r="39" fill="none" stroke="url(#eg)" stroke-width=".8" stroke-dasharray="2 4"/>
-    <path d="M14 70 L36 38 L45 50 L58 28 L86 70 Z" fill="none" stroke="url(#eg)" stroke-width="2.4" stroke-linejoin="round"/>
-    <path d="M52 37 L58 28 L64 37" fill="none" stroke="#f3e7c4" stroke-width="2.2" stroke-linejoin="round"/>
-    <path d="M50 92 C47 80 56 76 50 70" fill="none" stroke="url(#eg)" stroke-width="2" stroke-dasharray="3 3"/>
-    <path d="M50 8 l2.2 5 5 .6 -3.8 3.4 1 5 -4.4-2.6 -4.4 2.6 1-5 -3.8-3.4 5-.6z" fill="url(#eg)"/></svg>`;
+  /* [smallpolish] the title emblem is the app icon (icon.svg) inked in gold: a horned Nord helm under the northern star */
+  const EMBLEM = `<svg class="emb" viewBox="0 0 1024 1024" aria-hidden="true"><defs><linearGradient id="eg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3e7c4"/><stop offset=".6" stop-color="#c9a75e"/><stop offset="1" stop-color="#7d6230"/></linearGradient></defs>
+    <circle cx="512" cy="512" r="470" fill="rgba(10,14,20,.35)" stroke="url(#eg)" stroke-width="16"/><circle cx="512" cy="512" r="418" fill="none" stroke="url(#eg)" stroke-width="7" stroke-dasharray="18 34"/>
+    <path d="M512 130 L529 214 L613 231 L529 248 L512 332 L495 248 L411 231 L495 214 Z" fill="url(#eg)"/>
+    <g fill="url(#eg)"><path d="M352 540 C236 546 162 456 172 292 C210 390 264 442 364 436 Z"/><path d="M672 540 C788 546 862 456 852 292 C814 390 760 442 660 436 Z"/>
+    <path d="M332 610 C332 434 412 332 512 332 C612 332 692 434 692 610 L692 726 Q692 796 632 812 L590 822 C590 750 574 700 540 690 L540 810 L484 810 L484 690 C450 700 434 750 434 822 L392 812 Q332 796 332 726 Z"/></g>
+    <g fill="#141a22"><path d="M394 610 Q452 574 494 600 L494 656 Q446 670 400 644 Z"/><path d="M630 610 Q572 574 530 600 L530 656 Q578 670 624 644 Z"/></g>
+    <path d="M342 558 Q512 516 682 558" fill="none" stroke="#141a22" stroke-width="14"/><path d="M512 344 L512 534" fill="none" stroke="#141a22" stroke-width="12"/></svg>`;
   const versionText = async () => { try { if (window.__app) { const c = await window.__app.current(); return `Build ${c.build}`; } } catch { /* ignore */ } return APP ? "App" : "Web version"; };
   function worldText() {
     if (Store.mode === "p2p") return Store.peers ? `The world · ${Store.peers} other ${Store.peers === 1 ? "player" : "players"} online` : "The world · looking for friends…";
@@ -194,7 +196,7 @@
     let el = $("#title");
     if (!el) {
       el = document.createElement("div"); el.id = "title"; el.className = "title";
-      el.innerHTML = `<canvas id="tanim" class="tanim" aria-hidden="true"></canvas><canvas id="tfog"></canvas><div class="vign"></div><div class="inner" id="tinner"></div><div class="foot" id="tfoot"></div>`;
+      el.innerHTML = `<canvas id="tanim" class="tanim" aria-hidden="true"></canvas><canvas id="tfog"></canvas><div class="vign"></div><div class="inner" id="tinner"></div>`;
       document.body.appendChild(el);
       el.addEventListener("click", onTitleClick);
       el.addEventListener("input", onSettingsInput);
@@ -202,7 +204,8 @@
       const fog = startFog();   // the fog and snow are painted in step with the panorama behind them (one wake-up per frame)
       try { titleStop = TITLEART.start($("#tanim"), { reduce: reduceMotion, onFrame: fog }); } catch (e) { console.warn("title art", e); fog.loop(); }
       setTimeout(shineRest, 300);
-      const foot = async () => { if (!$("#title")) return; $("#tfoot").textContent = `${await versionText()} · ${worldText()}`; setTimeout(foot, 3000); };
+      /* [smallpolish] the version and world line lives in Settings now, not under the title */
+      const foot = async () => { if (!$("#title")) return; const t = `${await versionText()} · ${worldText()}`, v = $("#tver"); if (v) v.textContent = t; setTimeout(foot, 3000); };
       foot();
     }
     tabsEl.classList.add("hide");
@@ -263,7 +266,7 @@
   }
   const backBtn = `<button class="btn" data-t="menu">Back</button>`;
   function titleSubpage() {
-    if (titlePage === "settings") return `<h2>Settings</h2>${settingsHTML()}${typeof PATCHNOTES !== "undefined" ? `<button class="btn" data-t="notes" style="width:100%;margin-top:12px"> Patch notes</button>` : ""}${backBtn}`;
+    if (titlePage === "settings") return `<h2>Settings</h2><p class="sub tver" id="tver">${APP ? "App" : "Web version"} · ${esc(worldText())}</p>${settingsHTML()}${typeof PATCHNOTES !== "undefined" ? `<button class="btn" data-t="notes" style="width:100%;margin-top:12px"> Patch notes</button>` : ""}${backBtn}`;
     if (titlePage === "notes") { PATCHNOTES.markSeen(); return `${PATCHNOTES.barHTML("page", 'data-t="menu"')}${PATCHNOTES.html()}${backBtn}`; }
     if (titlePage === "account" && typeof ACCOUNT !== "undefined") return `${ACCOUNT.pageHTML()}${backBtn}`;
     if (titlePage === "confirmNew") return `<h2>Start over?</h2><p>${(typeof ACCOUNT !== "undefined" && ACCOUNT.newCharText(S)) || `${esc(S.name)} (level ${S.level}) and everything they carry will be gone for good. Other players' worlds aren't affected.`}</p>
@@ -1661,7 +1664,7 @@
     const [k, a] = String(id).split(":");
     if (k === "spell") return UIART.spell(a, size);
     if (k === "shout") return UIART.shout(a, size);
-    if (k === "power") return a === "stone" && S.stone ? UIART.stone(S.stone, size) : a === "race" ? UIART.power(S.race, size) : UIART.action(a === "lord" ? "power:lord" : "power:beast", size);
+    if (k === "power") return a === "stone" && S.stone ? UIART.stone(S.stone, size) : a === "race" ? (UIART.racePower ? UIART.racePower(S.race, size) : UIART.power(S.race, size)) : UIART.action(a === "lord" ? "power:lord" : "power:beast", size);
     if (k === "fx" && a === "stone" && S.stone) return UIART.stone(S.stone, size);
     return "";
   }
@@ -1804,7 +1807,7 @@
       <div class="sky-cats" role="tablist">${cats.map(([k, l]) => `<button class="sky-cat ${k === sky.cat ? "on" : ""}" data-act="skycat" data-id="${k}" role="tab" aria-selected="${k === sky.cat}" aria-label="${l}">${svgI(k)}<span>${l}</span>${M2c && cnt ? MENUS2.badge(k === "gear" ? 0 : cnt[k]) : ""}</button>`).join("")}</div>
       <div class="sky-mid">${sky.page !== "skills" && !(sky.page === "items" && sky.cat === "gear") ? `<input id="skysearch" class="uxsearch sky-search" type="search" placeholder="${sky.page === "magic" ? " Find a spell by name" : " Find an item by name"}" value="${esc(sky.q || "")}" autocomplete="off" aria-label="${sky.page === "magic" ? "Find a spell" : "Find an item"}">` : ""}
       ${head}<div class="sky-list">${list}</div></div>${detail || (M2c && !(sky.page === "items" && sky.cat === "gear") ? MENUS2.pickHint(sky.page) : "")}
-      <div class="sky-foot"><span>Armor <b class="num">${armor}</b></span><span>Damage <b class="num">${dmg}</b></span><span>Weight <b class="num">${G.carried(S).toFixed(0)}/${G.capacity(S)}</b></span><span class="gold">${S.gold} gold</span></div>
+      <div class="sky-foot">${sky.page === "magic" ? `<span>Magicka <b class="num">${G.maxMagicka(S)}</b></span><span title="Magicka that comes back each fight round">Regen a round <b class="num">+${Math.round((f.regenMp || 0) * 3.2)}</b></span>` : `<span>Armor <b class="num">${armor}</b></span><span>Damage <b class="num">${dmg}</b></span><span>Weight <b class="num">${G.carried(S).toFixed(0)}/${G.capacity(S)}</b></span>`}<span class="gold">${S.gold} gold</span></div>
       <div class="sky-vitals"><div class="bar"><i style="width:${pct(hp, mh)}%;background:var(--hp)"></i></div><div class="bar"><i style="width:100%;background:var(--mp)"></i></div><div class="bar"><i style="width:100%;background:var(--sp)"></i></div></div>
     </div>`;
     if (typeof FAVWHEEL !== "undefined") FAVWHEEL.afterMenu(el, S, sky);   // ★ Favourite in the details

@@ -4336,7 +4336,7 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
 .hz-box{position:absolute;left:0;top:0;width:100%;aspect-ratio:16/9;overflow:hidden}
 .hz-cam{position:absolute;inset:0;will-change:transform;animation:hzbreath 14s ease-in-out infinite alternate}
 .hz-img{position:absolute;inset:0;background:radial-gradient(ellipse at 60% 28%,rgba(240,184,90,.10),transparent 30%),linear-gradient(180deg,#141b2c 0%,#1c2333 55%,#0d0f14 100%);background-size:cover;background-position:center;transition:opacity .6s}
-.hz-img.none{opacity:.9}
+.hz-img.none{opacity:.9}.hz-img.none~i{display:none}
 .hz-glow{width:9%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,190,110,.9),rgba(255,180,92,0) 68%);mix-blend-mode:screen;opacity:.08;animation:hzwin 4.6s ease-in-out infinite alternate}
 .hz-lamp{width:6%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,#FFB45C,rgba(255,180,92,0) 70%);mix-blend-mode:screen;opacity:.14;animation:hzlamp 1.1s steps(1,end) infinite}
 .hz-lamp.l1{animation-duration:1.55s;animation-delay:-.4s}.hz-lamp.l2{animation-duration:.85s;animation-delay:-.7s}
@@ -4404,6 +4404,34 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
 @keyframes hzsnow{from{transform:translate(0,0)}50%{transform:translate(14px,450px)}to{transform:translate(-6px,900px)}}
 .hz-paused .hz-bg,.hz-paused .hz-bg *{animation-play-state:paused!important}
 @media (prefers-reduced-motion:reduce){.hz-bg,.hz-bg *{animation:none!important}.hz-snow{display:none!important}.hz-tint,.hz-vig,.hz-tense,.hz-red{transition:none}}
+/* [smallpolish] title: the version / world line moved into Settings */
+.title .tver{margin:-4px 0 10px;text-align:center;font-size:13px;color:#b5ad9a}
+/* [smallpolish] chargen on a phone: tabs fit (no step numbers, tighter, a fade where more scroll in), a lower stage and a
+   two-row footer (name + Randomise/Undo/Back/Next on one row, Begin under), so the race card shows */
+@media (max-width:599.98px){
+  .cg{grid-template-rows:minmax(200px,33vh) minmax(0,1fr)}
+  .cghead{padding:8px 12px 2px;align-items:center}.cghead h2{font-size:1.05rem}.cghead .btn{min-height:36px;padding:0 10px;font-size:12px;letter-spacing:.08em}
+  .cgtabs{padding:2px 6px 0;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+  .cgtab{padding:0 8px;font-size:.8rem;letter-spacing:.03em}.cgtab .cgtn{display:none}
+  .cgpanel{padding:8px 12px 12px}
+  .cg-create .cgfoot{grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px}
+  .cg-create .cgfoot .cgnm label{display:none}.cg-create .cgfoot .cgnm input{min-height:42px}
+  .cg-create .cgfoot .cgbar{grid-template-columns:repeat(4,42px);gap:4px}.cg-create .cgfoot .cgbar .btn{min-height:42px;padding:0}
+  .cg-create .cgfoot .cgbegin{grid-column:1/-1;min-height:44px}
+}
+/* [smallpolish] Magic: all six tier chips fit on a phone */
+@media (max-width:599.98px){.sb-tiers{gap:4px}.sb-tier{flex:1 1 auto;min-width:0;padding:7px 5px;letter-spacing:0;font-size:11px}}
+/* [smallpolish] Company: four main tabs on one row, Plan / Trophies / Log in a small More row (like Social) */
+.seg.lng-seg{flex-wrap:nowrap;margin-bottom:0}
+.lng-seg button{flex:1 1 0;min-width:0;min-height:46px;padding:4px 2px;font-size:14px;letter-spacing:.06em;line-height:1.15;white-space:normal;overflow-wrap:anywhere}
+.socmore.lng-more{grid-template-columns:repeat(3,minmax(0,1fr));margin:8px 0 10px}
+@media (max-width:420px){.lng-seg button{font-size:12.5px;letter-spacing:.02em}}
+/* [smallpolish] PC map on big screens: the docked cards and the quest tracker read 10% larger */
+@media (min-width:1600px){
+  html.pcmap #topcards,html.pcmap div:has(> #mapwrap) > #topcards{zoom:1.1;max-height:calc(var(--dock-max,calc(100vh - 220px)) / 1.1)}
+  html.pcmap .pcquest{zoom:1.1}
+  html.pcmap .pcb-clock,html.pcmap .pcb-stat,html.pcmap .pcb-btn{font-size:14.5px}
+}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -4704,6 +4732,7 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
 <script src="i18n_chargen.js"></script>
 <script src="i18n_gore.js"></script>
 <script src="i18n_appicon.js"></script>
+<script src="i18n_smallpolish.js"></script>
 <script src="i18n_tourney.js"></script>
 <script src="i18n_partytraps.js"></script>
 <script src="i18n_fishhunt.js"></script>
