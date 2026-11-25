@@ -12,6 +12,15 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Podwójne rzucanie z siodła nie kosztuje dodatkowej magii, a twoje podwójne czary zadają o 10% więcej, gdy jedziesz konno. [OURS]",
     "Your horse takes 20/40% less damage in fights, foes pull you out of the saddle half as often, foot soldiers miss you 5/10% more, and getting on takes one move instead of two and 5 stamina less. [OURS]":
       "Twój koń otrzymuje w walce o 20/40% mniej obrażeń, wrogowie ściągają cię z siodła o połowę rzadziej, piechota pudłuje o 5/10% częściej, a wsiadanie zajmuje jeden ruch zamiast dwóch i kosztuje o 5 wytrzymałości mniej. [OURS]",
+    // patch note b237
+    "Fight from the saddle": "Walka z siodła",
+    "Mounted combat is back: ride into a fight and stay in the saddle, or get on and off with the new Mount and Dismount moves.":
+      "Walka konna wraca: wjedź do walki i zostań w siodle albo wsiadaj i zsiadaj nowymi ruchami Dosiądź i Zsiądź.",
+    "Getting on takes 2 moves and 20 stamina. You can dual cast from the saddle for a bit more magicka.":
+      "Wsiadanie zajmuje 2 ruchy i 20 wytrzymałości. Z siodła możesz rzucać podwójne czary za trochę więcej magii.",
+    "New Destruction perk: Saddle Caster.": "Nowy atut Zniszczenia: Mag w Siodle.",
+    "Your horse can be knocked down in a fight, but it always gets back up afterwards.":
+      "Twój koń może zostać powalony w walce, ale zawsze potem wstaje.",
     // patch note
     "Riding on the map": "Jazda konna na mapie",
     "The map has a ride button next to zoom: tap it to get on or off your horse. You see the horse walk up and you climb into the saddle, or slide down.":

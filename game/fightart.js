@@ -1179,12 +1179,18 @@ const FIGHTART = (() => {
       if (GS) GS.drawMarks(wg, "hero", hx0 + (heroP.dx - heroKnock - hdg * 18) * s, heroChest - (onHorse ? 30 * s : 0), s, hpD / hpMax, meDown || !!st.invis);
       if (rec.hero.ench && !meDown && heroP.wt !== "fist" && !heroP.flask) {   // [OURS] an enchanted weapon glows in its colour and sheds motes
         const c = rec.hero.ench; tipOf(1, heroP, heroP.wt, 24);
-        const hxH = handX(1, heroP) - (heroKnock + hdg * 18) * s, hyH = handY(1), tx2 = TR[24] - (heroKnock + hdg * 18) * s, ty2 = TR[25];
+        let hxH = handX(1, heroP) - (heroKnock + hdg * 18) * s, hyH = handY(1), tx2 = TR[24] - (heroKnock + hdg * 18) * s, ty2 = TR[25], glowOn = true;
+        if (heroRig) {   // [herorig] the painted figure holds its weapon somewhere else than the ink one: glow along the real blade (PAINTRIG.tip), or not at all (no stray blob in the air)
+          const T = PAINTRIG.tip ? PAINTRIG.tip("me") : null; glowOn = false;
+          if (T && T.gx != null) { try { const M = wg.getTransform().inverse(), g0 = M.transformPoint({ x: T.gx, y: T.gy }), t0 = M.transformPoint({ x: T.x, y: T.y }); hxH = g0.x; hyH = g0.y; tx2 = t0.x; ty2 = t0.y; glowOn = true; } catch (e) { glowOn = false; } }
+        }
+        if (glowOn) {
         const pulse = 0.55 + 0.25 * Math.sin(tt * 4);
-        wg.save(); additive(); wg.globalAlpha = pulse;
-        for (let i = 1; i <= 4; i++) { const q = i / 4, x = hxH + (tx2 - hxH) * q, y = hyH + (ty2 - hyH) * q, r = (5 + q * 6) * s; wg.drawImage(glowSprite(c[i & 1]), x - r, y - r, r * 2, r * 2); }
+        wg.save(); additive(); wg.globalAlpha = pulse * (heroRig ? 0.55 : 1);
+        for (let i = 1; i <= 4; i++) { const q = i / 4, x = hxH + (tx2 - hxH) * q, y = hyH + (ty2 - hyH) * q, r = (heroRig ? 2.5 + q * 3.5 : 5 + q * 6) * s; wg.drawImage(glowSprite(c[i & 1]), x - r, y - r, r * 2, r * 2); }   // on the painted blade: a slim glow hugging the steel
         wg.restore();
         if (Math.random() < 0.45 * pmul) { const q = 0.3 + Math.random() * 0.7, x = hxH + (tx2 - hxH) * q, y = hyH + (ty2 - hyH) * q; spawn(c === COMBATFX.GLOW.shock ? 1 : 4, c[(Math.random() * c.length) | 0], x, y, (Math.random() - 0.5) * 20 * s, (c === COMBATFX.GLOW.frost ? 14 : -26) * s, 0.7, 1.7, 0); }
+        }
       }
       if (b && b.drain && b.who === "me" && typeof BEASTART !== "undefined") BEASTART.drain(wg, hx0 + 24 * s, heroChest - 8 * s, fx0, foeChest, u, tt);   // a Vampire Lord's drain
       // auras on you: ward, cloak, armor, bound

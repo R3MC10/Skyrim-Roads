@@ -106,7 +106,7 @@ const LONGHOUSE = (() => {
   }
 
   // ---------------------------------------------------------------- the shared records
-  let docs = {}, api = null, loopT = null, tab = "rooms", draft = { gold: "", name: "" }, seenInv = new Set();
+  let docs = {}, api = null, loopT = null, tab = "rooms", draft = { gold: "", name: "" }, seenInv = new Set(), busy = false;
   const cache = typeof WeakMap !== "undefined" ? new WeakMap() : null;
   function setDocs(list) {
     const nx = {};
@@ -417,19 +417,52 @@ const LONGHOUSE = (() => {
   /* the longhouse itself (longhouse-plate), with light painted over it for every room the company has built.
      Spots are in the plate's own 1024x576 frame: windows, the door, the gable, the fence posts. */
   const WIN = [[587, 343], [676, 343], [747, 343], [866, 343]];
-  function hallView(x) {
+  /* [longhousegrow] every room has its own painted patch on the plate (lhgrow-<room>-<level>, cut from paint-overs of
+     longhouse-plate), in a fixed box of the 1024x576 frame so no two overlap. Only the highest level shows; a room whose
+     picture hasn't loaded keeps the older drawn light below. The same boxes are the tap areas that jump to the room. */
+  const GROW = { forge: [8, 226, 228, 212], trophy: [238, 158, 244, 152], plan: [286, 310, 174, 114], library: [500, 300, 288, 92], stables: [790, 246, 234, 216] };
+  const growKey = (r, l) => `lhgrow-${r}-${l}`;
+  const FADE = 550;
+  let shownLv = null, shownCo = "", fresh = {};   // what the hall showed last time, and rooms that just grew (crossfade)
+  function noteGrowth(x, co) {
+    const R = x.rooms || {}, t = Date.now();
+    if (shownCo !== co) fresh = {};   // another company's hall: nothing to fade
+    if (shownLv && shownCo === co) for (const r of ROOM_IDS) if ((R[r] || 0) > (shownLv[r] || 0)) fresh[r] = { t, from: shownLv[r] || 0 };
+    shownLv = { ...R }; shownCo = co;
+    for (const r of Object.keys(fresh)) if (t - fresh[r].t > FADE + 100) delete fresh[r];
+  }
+  function growLayer(x) {
+    const R = x.rooms || {}, t = Date.now(), have = {};
+    let h = "";
+    for (const r of ROOM_IDS) {
+      const lv = R[r] || 0; if (!lv || !GROW[r]) continue;
+      const u = pic(growKey(r, lv), ""); if (!u) continue;
+      have[r] = 1;
+      const [bx, by, bw, bh] = GROW[r], f = fresh[r];
+      const im = (src, cls, st) => `<image class="${cls}" href="${src}" x="${bx}" y="${by}" width="${bw}" height="${bh}" preserveAspectRatio="none"${st ? ` style="${st}"` : ""}/>`;
+      if (f) {
+        const d = `animation-delay:-${Math.min(FADE, t - f.t)}ms`, old = f.from ? pic(growKey(r, f.from), "") : "";
+        if (old) h += im(old, "lng-ov lng-out", d);
+        h += im(u, "lng-ov lng-in", d);
+      } else h += im(u, "lng-ov", "");
+    }
+    return { h, have };
+  }
+  function hallView(x, co = "") {
     const u = pic("longhouse-plate", ""); if (!u) return "";
-    const R = x.rooms || {}, f = R.forge || 0, lib = R.library || 0, tr = R.trophy || 0, st = R.stables || 0, pl = R.plan || 0;
+    noteGrowth(x, co);
+    const lay = growLayer(x), H = lay.have;
+    const R = x.rooms || {}, f = H.forge ? 0 : R.forge || 0, lib = H.library ? 0 : R.library || 0, tr = H.trophy ? 0 : R.trophy || 0, st = H.stables ? 0 : R.stables || 0, pl = H.plan ? 0 : R.plan || 0;
     const glow = (cx, cy, rx, ry, o, c = "lngW") => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#${c})" opacity="${o.toFixed(2)}"/>`;
     let g = "";
     // library: more windows lit (the rest shuttered), and their light spills out
     const lit = Math.min(4, 1 + lib);
-    WIN.forEach(([cx, cy], i) => {
+    if (!H.library) WIN.forEach(([cx, cy], i) => {
       if (i >= lit) g += `<g class="lng-shut"><rect x="${cx - 13}" y="${cy - 14}" width="26" height="29" rx="2" fill="#17131a" opacity=".9"/><path d="M${cx - 13} ${cy - 5}h26M${cx - 13} ${cy + 5}h26" stroke="#3a2c22" stroke-width="2"/></g>`;
       else if (lib) g += glow(cx, cy + 4, 34 + 6 * lib, 26 + 4 * lib, 0.3 + 0.15 * lib);
     });
     // forge: the doorway burns brighter (cold and dim until it's built), embers above the smoke hole
-    g += f ? glow(360, 372, 70 + 25 * f, 46 + 12 * f, 0.25 + 0.17 * f, "lngF") : `<ellipse cx="360" cy="368" rx="44" ry="44" fill="#0c0a10" opacity=".5"/>`;
+    if (!H.forge) g += f ? glow(360, 372, 70 + 25 * f, 46 + 12 * f, 0.25 + 0.17 * f, "lngF") : `<ellipse cx="360" cy="368" rx="44" ry="44" fill="#0c0a10" opacity=".5"/>`;
     if (f >= 2) g += [[505, 178, 3], [520, 160, 2.4], [498, 146, 2], [530, 132, 1.8], [512, 118, 1.5]].slice(0, f === 3 ? 5 : 3).map(([cx, cy, r]) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#ffb347" opacity=".85"/>`).join("") + glow(510, 190, 30, 18, 0.35, "lngF");
     // trophy hall: an antlered skull on the gable, then shields on the wall
     if (tr) g += `<g class="lng-trophy" transform="translate(358 270)"><path d="M-6 0c-10-6-14-16-12-26M-12-16l-8-4M-14-24l-6-8M6 0c10-6 14-16 12-26M12-16l8-4M14-24l6-8" stroke="#efe2c4" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M-7-2h14l-2 14-5 6-5-6z" fill="#e9dcc0"/><circle cx="-3" cy="4" r="1.6" fill="#2a2018"/><circle cx="3" cy="4" r="1.6" fill="#2a2018"/></g>`;
@@ -445,10 +478,10 @@ const LONGHOUSE = (() => {
     if (pl) g += flag(196);
     if (pl >= 2) g += flag(496);
     if (pl >= 3) g += `<path d="M846 186v-34l28 9-28 9" fill="#8e2a22" stroke="#d6b25e" stroke-width="1.5"/>`;
-    return `<div class="lng-view"><img src="${u}" alt="${T("Your longhouse")}" loading="lazy"><svg viewBox="0 0 1024 576" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    return `<div class="lng-view"><img src="${u}" alt="${T("Your longhouse")}" loading="lazy"><svg viewBox="0 0 1024 576" preserveAspectRatio="xMidYMid slice">
       <defs><radialGradient id="lngW"><stop offset="0" stop-color="#ffcf7a" stop-opacity=".95"/><stop offset="1" stop-color="#ff9a3c" stop-opacity="0"/></radialGradient>
-      <radialGradient id="lngF"><stop offset="0" stop-color="#ffb04a" stop-opacity="1"/><stop offset=".6" stop-color="#ff6a1f" stop-opacity=".35"/><stop offset="1" stop-color="#ff5a10" stop-opacity="0"/></radialGradient></defs>${g}</svg>
-      <p class="lng-vcap">${T("Every room you build shows on the hall.")}</p></div>`;
+      <radialGradient id="lngF"><stop offset="0" stop-color="#ffb04a" stop-opacity="1"/><stop offset=".6" stop-color="#ff6a1f" stop-opacity=".35"/><stop offset="1" stop-color="#ff5a10" stop-opacity="0"/></radialGradient></defs>${lay.h}${g}${ROOM_IDS.map((r) => { const [bx, by, bw, bh] = GROW[r]; return `<rect class="lng-tap" data-lng="room" data-id="${r}" x="${bx}" y="${by}" width="${bw}" height="${bh}"><title>${T(ROOMS[r].name)}</title></rect>`; }).join("")}</svg>
+      <p class="lng-vcap">${T("Every room you build shows on the hall. Tap one to find it.")}</p></div>`;
   }
   function banner(d, x) {
     return `<div class="lng-banner">${bannerImg()}<div class="lng-bt"><div class="lng-name">${esc(d.name)}</div>
@@ -456,10 +489,10 @@ const LONGHOUSE = (() => {
       <div class="lng-purse"> ${x.gold} ${T("gold in the treasury")}</div></div></div>`;
   }
   function roomsHTML(S, d, x) {
-    return `${hallView(x)}<div class="lng-rooms">${ROOM_IDS.map((r) => {
+    return `${hallView(x, d.id)}<div class="lng-rooms">${ROOM_IDS.map((r) => {
       const R = ROOMS[r], lv = x.rooms[r], c = lv < 3 ? costOf(r, lv + 1, x.n, S) : null;
       const okG = c && x.gold >= c.g, okM = c && Object.entries(c.m).every(([k, q]) => (x.mats[k] || 0) >= q), may = can(d, S.id, "build");
-      return `<div class="lng-room${lv ? " built" : ""}"><div class="lng-rh"><span class="lng-ic">${R.icon}</span><b>${T(R.name)}</b>${pips(lv)}</div>
+      return `<div class="lng-room${lv ? " built" : ""}" id="lng-room-${r}"><div class="lng-rh"><span class="lng-ic">${R.icon}</span><b>${T(R.name)}</b>${pips(lv)}</div>
         <p class="lng-fx">${lv ? T(R.fx[lv - 1]) : `<i>${T("Not built yet.")}</i>`}</p>
         ${c ? `<div class="lng-next"><span class="lng-lbl">${T("Next: level {n}", { n: lv + 1 })}</span> ${T(R.fx[lv])}</div>
         <div class="lng-cost"><span class="${okG ? "" : "lng-short"}">${c.g} ${T("gold")}</span>, ${matLine(c.m, x.mats)}</div>
@@ -554,6 +587,19 @@ const LONGHOUSE = (() => {
     const amt = document.getElementById("lng-amt"); if (amt) draft.gold = amt.value;
     const nm = document.getElementById("lng-name"); if (nm) draft.name = nm.value;
     if (a === "tab") { tab = id; api.render(); return; }
+    if (a === "room") { roomFocus(id); return; }   // a tap on the hall picture: show that room's card
+    /* one action at a time: a quick double tap used to found twice, deposit twice (gold below zero) or give the
+       same ingots twice (the checks run before the shared record answers) */
+    if (busy) return;
+    busy = true;
+    try { await act(S, a, id, b); } finally { busy = false; }
+  }
+  function roomFocus(id) {
+    const el = typeof document !== "undefined" && document.getElementById(`lng-room-${id}`); if (!el) return;
+    try { el.scrollIntoView({ behavior: "smooth", block: "center" }); } catch { el.scrollIntoView?.(); }
+    el.classList.remove("lng-flash"); void el.offsetWidth; el.classList.add("lng-flash");
+  }
+  async function act(S, a, id, b) {
     let err = null, ok = "";
     if (a === "found") { err = await found(S, draft.name); ok = T("Your longhouse is founded."); if (!err) draft.name = ""; }
     else if (a === "dep") { err = await deposit(S, draft.gold); ok = T("Gold put in."); if (!err) draft.gold = ""; }
@@ -590,6 +636,6 @@ const LONGHOUSE = (() => {
   return { COL, MAXM, FOUND, ROOMS, ROOM_IDS, PLANS, FAMS, LEG, SLOTS, MATS, sizeMult, costOf, foundCost, famOf, trophyInfo, trophyHits,
     setDocs, mine, derive, can, capOf, takenToday, fold, found, deposit, withdraw, giveMat, build, setPlan, invite, invitesFor, join, decline, leave,
     setRole, setPerm, rename, badge: (s) => (s ? invitesFor(s).length : 0), addTrophy, onFight, pollTrophies, pfx, xpMult, horseMult, horseCarry, onBook, runeOpen, hook, panel, mount,
-    hallView, _api: (a) => { api = a; }, _tab: (t) => { tab = t; } };
+    hallView, GROW, growKey, _api: (a) => { api = a; }, _tab: (t) => { tab = t; } };
 })();
 if (typeof module !== "undefined") module.exports = LONGHOUSE;
