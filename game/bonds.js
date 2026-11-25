@@ -185,7 +185,7 @@ const BONDS2 = (() => {
   function hgain(s, x, why) {
     const b = hb(s); if (!b || !(x > 0)) return "";
     const l0 = hlevel(s);
-    b.xp = Math.round((b.xp + x * (1 + Math.min(1, pnum(s, "horsebond")))) * 10) / 10;
+    b.xp = Math.round((b.xp + x * (1 + Math.min(1, pnum(s, "horsebond"))) * (typeof LONGHOUSE !== "undefined" ? LONGHOUSE.horseMult(s) : 1)) * 10) / 10;   // the company stables (longhouse.js)
     const l1 = hlevel(s);
     if (l1 <= l0) return "";
     const n = s.horse.name;

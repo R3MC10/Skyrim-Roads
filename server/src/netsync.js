@@ -53,6 +53,7 @@ const NETSYNC = (() => {
     runs: { members: { arr: "id" }, invites: { arr: "id" }, at: {}, claims: {}, acts: {}, "chest.killers": { set: 1 }, "vote.votes": {}, "vote.bonus": {}, "vote.done": {}, deepKO: {} },
     lvotes: { votes: {}, bonus: {}, done: {} },
     pshare: { claims: {} },
+    longhouse: { members: {}, invites: {}, tx: {} },
   };
   const META = new Set(["_v", "_by", "_f", "id"]);
   const parts = (P) => { const i = P.indexOf("."); return i < 0 ? [null, P] : [P.slice(0, i), P.slice(i + 1)]; };

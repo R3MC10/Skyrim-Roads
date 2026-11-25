@@ -634,6 +634,7 @@
     if (typeof BLACKREACH !== "undefined") BLACKREACH.mount({ S: () => S, persist, toast, showFightResult, showMessage, renderPanel, tb: tbCall });   // the cavern under Alftand (blackreach.js)
     if (typeof GREATEV !== "undefined") GREATEV.mount({ S: () => S, persist, toast, showFightResult, showMessage, openModal, closeModal, postNews, click: onPanelClick, party: () => party });   // great world events: banner + countdown (greatevents.js)
     if (typeof CRISES !== "undefined") CRISES.mount({ S: () => S, persist, toast, showFightResult, showMessage, openModal, closeModal, postNews, party: () => party });   // regional crises: hold status, contracts, bosses (crises.js)
+    if (typeof LONGHOUSE !== "undefined") LONGHOUSE.mount({ S: () => S, persist, toast, render: () => renderPanel(true), party: () => party });   // the adventuring company longhouse (longhouse.js)
     if (typeof HOLDUI !== "undefined") HOLDUI.mount({ S: () => S, persist, toast, showFightResult, postNews, refresh: () => { bump(); renderPanel(true); }, party: () => party });   // player-run holds: Jarl, tax, raids (holdui.js)
     if (typeof TOURNEYUI !== "undefined") TOURNEYUI.mount({ S: () => S, persist, toast, showFightResult, postNews, tbCall, refresh: () => { bump(); renderPanel(true); }, party: () => party, allies: () => allies() });   // festivals, contests and the Grand Arena (tourneyui.js)
     Store.watch("trades", (docs) => onTrades(docs));
@@ -1271,7 +1272,7 @@
   function showFightResult(r) {
     shareSpoils(r);
     if (r.fight) { const inf = CURSE.maybeInfect(S, r.fight.e); if (inf) { persist(); setTimeout(() => toast(inf), 1800); } }
-    if (r.fight && !r.died && !r.fled && !r.fight.nonlethal) { tally("foes"); warPoint("fight", G.holdAt(livePos())); if (typeof CRISES !== "undefined") CRISES.onFight(S, r.fight.e, G.holdAt(livePos())); if ((r.fight.e?.tags || []).includes("undead")) festCount("undead"); }
+    if (r.fight && !r.died && !r.fled && !r.fight.nonlethal) { tally("foes"); warPoint("fight", G.holdAt(livePos())); if (typeof CRISES !== "undefined") CRISES.onFight(S, r.fight.e, G.holdAt(livePos())); if (typeof LONGHOUSE !== "undefined") LONGHOUSE.onFight(S, r.fight.e); if ((r.fight.e?.tags || []).includes("undead")) festCount("undead"); }
     if (r.fight || r.died) SOUND.fight(r); else if (/potion|drink/i.test(r.text || "")) SOUND.fx("potion");
     const skills = skillsHTML(r.skills);
     if (r.died) {
@@ -2497,7 +2498,7 @@
   function friendCard(id) { return cardOf(id) || (SOCIAL.friends(S)[id] ? { id, name: SOCIAL.friends(S)[id].name } : null); }
   function panelSocial() {
     const nDm = SOCIAL.unread(S, dmDocs), nAdd = SOCIAL.addedMe(friendDocs, S).length, inc = myIncoming(), nParty = partyNews(), nChat = chatUnread();
-    const chips = `<div class="seg socseg">${[["friends", `Friends${nAdd ? ` (${nAdd})` : ""}`], ["msgs", `Messages${nDm ? ` (${nDm})` : ""}`], ["trades", `Trades${inc.length ? ` (${inc.length})` : ""}`], ["party", `Party${nParty ? ` (${nParty})` : ""}`], ["chat", `Chat${nChat ? ` (${nChat})` : ""}`], ...(typeof SIDEUI !== "undefined" ? [["faction", `Faction${SIDEUI.badge() ? " (!)" : ""}`]] : []), ["realm", "Realm"]].map(([k, l]) => `<button class="${socTab === k ? "on" : ""}" data-act="soctab" data-id="${k}">${l}</button>`).join("")}</div>`;
+    const chips = `<div class="seg socseg">${[["friends", `Friends${nAdd ? ` (${nAdd})` : ""}`], ["msgs", `Messages${nDm ? ` (${nDm})` : ""}`], ["trades", `Trades${inc.length ? ` (${inc.length})` : ""}`], ["party", `Party${nParty ? ` (${nParty})` : ""}`], ["chat", `Chat${nChat ? ` (${nChat})` : ""}`], ...(typeof SIDEUI !== "undefined" ? [["faction", `Faction${SIDEUI.badge() ? " (!)" : ""}`]] : []), ...(typeof LONGHOUSE !== "undefined" ? [["company", `Company${LONGHOUSE.badge(S) ? " (!)" : ""}`]] : []), ["realm", "Realm"]].map(([k, l]) => `<button class="${socTab === k ? "on" : ""}" data-act="soctab" data-id="${k}">${l}</button>`).join("")}</div>`;
     const off = Store.online ? "" : `<p class="sub">You're playing offline. Go online (Map tab) to see friends and messages.</p>`;
     let body = "";
     if (socTab === "friends") {
@@ -2527,6 +2528,8 @@
         body = (conv.length ? conv.map((c) => { const n = SOCIAL.unreadFrom(S, dmDocs, c.id); return `<div class="item ${n ? "on" : ""}" data-act="fmsg" data-id="${esc(c.id)}" role="button" tabindex="0"><div class="t">${esc(c.name)}${n ? ` <b class="gold">· ${n} new</b>` : ""}<span>${c.mine ? "You: " : ""}${esc(c.last.slice(0, 70))}</span></div><span class="num sub">${new Date(c.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span></div>`; }).join("") : `<p class="sub">No messages yet.</p>`)
           + (more.length ? `<h3 style="margin-top:10px">Write to a friend</h3>${more.map(([id, f]) => `<div class="item"><div class="t">${esc(f.name)}</div><button class="btn sm" data-act="fmsg" data-id="${esc(id)}"> Write</button></div>`).join("")}` : "");
       }
+    } else if (socTab === "company" && typeof LONGHOUSE !== "undefined") {
+      return `<div class="panel"><h2> Friends & messages</h2>${chips}${off}</div>${LONGHOUSE.panel()}`;   // longhouse.js: the adventuring company
     } else if (socTab === "faction" && typeof SIDEUI !== "undefined") {
       return `<div class="panel"><h2> Friends & messages</h2>${chips}${off}</div>${idPanel("faction", SIDEUI.panel())}`;   // sides.js: your side, rank, cloaks, the war
     } else if (socTab === "party" || socTab === "chat" || socTab === "realm") {

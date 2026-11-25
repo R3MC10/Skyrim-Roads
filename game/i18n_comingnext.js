@@ -6,6 +6,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "14 nowych malowanych teł bitew",
     "Daedric bargains and artifacts that awaken":
       "Daedryczne układy i artefakty, które się budzą",
+    "Mentoring: play side by side with friends of any level":
+      "Mentorowanie: graj ramię w ramię z przyjaciółmi na dowolnym poziomie",
     "Regional crises and heists":
       "Kryzysy w regionach i skoki",
     "Follower and horse bonds, and spell crafting":
@@ -26,8 +28,6 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Nowy wygląd łowienia, polowania, górnictwa i otwierania zamków oraz malowane obrazy festiwali i areny",
     "Afflictions with an upside and a downside: lycanthropy, the Draugr curse and the Daedric mark":
       "Przypadłości z plusem i minusem: likantropia, klątwa draugra i znamię daedr",
-    "An adventuring company longhouse: a shared base with a treasury, a trophy hall and stables":
-      "Długi dom kompanii poszukiwaczy przygód: wspólna baza ze skarbcem, salą trofeów i stajniami",
     "Daedric bargains and artifacts that awaken, plus regional crises and heists":
       "Daedryczne układy i artefakty, które się budzą, a do tego kryzysy w regionach i skoki",
     "Combat combos (frost + heavy = Shatter, oil + fire), follower and horse bonds, and spell crafting":

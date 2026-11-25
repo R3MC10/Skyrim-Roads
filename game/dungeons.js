@@ -449,7 +449,7 @@ const DUNGEONS = (() => {
     if (r.m === "book") {
       const sk = s.skills[r.skill];
       if (sk.lvl >= 100) return done({ text: "There's nothing in it you don't already know." });
-      const msgs = G.raiseSkill(s, r.skill);
+      const msgs = [...G.raiseSkill(s, r.skill), ...(typeof LONGHOUSE !== "undefined" ? LONGHOUSE.onBook(s, r.skill) : [])];   // the company library
       return done({ text: `You read "${r.title}". ${r.skill} increased to ${sk.lvl}.`, skills: msgs });   // [Skyrim] skill books +1
     }
     if (r.m === "shrine") { G.setHealth(s, Math.max(G.curHealth(s), G.maxHealth(s) * (typeof DEEPDELVE !== "undefined" ? DEEPDELVE.healMult(s) : 1))); return done({ text: "You kneel. Your wounds close." }); }
