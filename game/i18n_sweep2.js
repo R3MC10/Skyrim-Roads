@@ -138,7 +138,7 @@ const I18N_SWEEP2 = (() => {
     [/^Level (\d+) (Nord|Imperial|Breton|Redguard|High Elf|Wood Elf|Dark Elf|Orc|Khajiit|Argonian)$/, (m) => `${T(m[2])}, poziom ${m[1]}`],
     // the Journal
     [/^Recommended level (\d+)$/, (m) => `Zalecany poziom ${m[1]}`], [/^Reward: (.+)$/, (m) => `Nagroda: ${m[1].split(", ").map(T).join(", ")}`],
-    [/^(.+) \(from level (\d+)\)$/, (m) => `${T(m[1])} (od poziomu ${m[2]})`],
+    [/^(.+) \(from level (\d+)\)$/, (m) => { const w = T(m[1]); return `${w !== m[1] ? w : m[1].split(", ").map(T).join(", ")} (od poziomu ${m[2]})`; }],   // "Sam Guevenne, the Bannered Mare, Whiterun": piece by piece
     // the inn and the market
     [/^The inn, (\d+) people inside$/, (m) => `Karczma, osób w środku: ${m[1]}`], [/^Steward of (.+)$/, (m) => `Zarządca: ${m[1]}`], [/^Jarl of (.+)$/, (m) => `Jarl: ${m[1]}`],
     [/^No player stalls in (.+) right now\.$/, (m) => `Teraz nie ma tu straganów graczy (${m[1]}).`],
@@ -154,7 +154,7 @@ const I18N_SWEEP2 = (() => {
     [/^(.+) \(dual\)(: \d+)?$/, (m) => `${T(m[1])} (podwójnie)${m[2] || ""}`], [/^(.+) \(blocked\)(: \d+)?$/, (m) => `${T(m[1])} (zablokowany)${m[2] || ""}`],
     [/^([\uE000-\uF8FF]?\s*\S[^—]*?) — (\[[\s\S]+)$/, (m) => { const a = T(m[1]), b = T(m[2]); return a !== m[1] || b !== m[2] ? `${a} — ${b}` : null; }],
     [/^· they come back in(\s*[\uE000-\uF8FF]?\s*)Settings → Help & tips$/, (m) => `· wrócą po włączeniu w${m[1]}Ustawienia → Pomoc i porady`],
-    [/^(.+?): the (.+) flees in terror$/, (m) => `${T(m[1])}: ${cap(m[2])} ucieka w przerażeniu`],
+    [/^(.+?): the (.+) flees in terror$/, (m) => `${T(m[1])}: ${cap(T(cap(m[2])) ?? m[2])} ucieka w przerażeniu`],
   ];
   I18N_EXTRA.pat.push(...PAT);
 

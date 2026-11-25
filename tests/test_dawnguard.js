@@ -153,7 +153,7 @@ OK(Object.keys(DAWNGUARD.PERK_SIDE).every((id) => PFX.FX[id]), "every side perk 
     OK(/^\uE103 Straż Świtu: Łowy na noc: „.+” ukończone \\(200 złota, tytuł .+\\)\\.$/.test(done), "stage-done line in Polish: " + done);
     const both = I18N.tr("Awakening \uE103 Dawnguard: Hunt the Night: “Awakening” done. New objective: Prophet.");
     OK(/ukończone/.test(both) && /Nowy cel/.test(both) && !/ done/.test(both), "stage-done line after a stage title in Polish: " + both);
-    OK(/^Znajdziesz ich tu: /.test(I18N.tr("Find them at Fort Dawnguard.")), "where to find a quest giver in Polish");
+    OK(/^Gdzie szukać: /.test(I18N.tr("Find them at Fort Dawnguard.")), "where to find a quest giver in Polish");
     OK(I18N.tr("They're here. Ask to join.") === "Są tutaj. Poproś, żeby cię przyjęli.", "quest giver here, in Polish"); }
   __lang = "en"; }
 
