@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b297-pets", build: 297, date: "25 Nov 2026", title: "Pets: Meeko walks with your follower", items: [
+      "Meeko is a pet now, not a follower. You can have a follower and a pet with you at the same time.",
+      "The Follower tab has two parts, Follower and Pet, and each one has its own Dismiss.",
+      "Pets don't wear gear. If Meeko was holding anything, it's back in your pack. His loyalty, his quest and his Pounce stay.",
+      "In fights Meeko has his own turn and his own health bar next to your follower. He's a bit weaker than a follower, gets knocked down and never dies, and carries a little for you.",
+      "New Etiquette perk, Pack Leader: your pet bites harder, takes less and gets up stronger.",
+      "Your party sees your pet and it fights beside them too. Pets never count toward the 8 players.",
+    ] },
     { id: "b289-followersize", build: 289, date: "25 Nov 2026", title: "Followers at full size, softer glows", items: [
       "In fights your follower and your party now stand as tall as you do (women and some races a touch shorter, like in Skyrim) instead of looking like dwarves next to you. Everyone still fits on screen, and name tags sit just above their heads.",
       "Enchanted weapons no longer hide under a big glowing blob. Now a thin shine runs along the blade's edges in the enchantment's colour (fire orange, frost pale blue, shock violet, absorb purple) and gently pulses; axes and maces glow faintly around the head, bows along the limb.",

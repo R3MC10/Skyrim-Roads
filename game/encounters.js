@@ -185,10 +185,10 @@ const ENC = (() => {
     escort: (s) => { const g = addGold(s, rint(10, 30)); return { text: `You walk them to the next crossroads. They pool ${g} gold for you, and pray for your road.`, delay: 15, skills: xp(s, "Etiquette", 15) }; } });
 
   add({ id: "dog", title: "A stray dog", weight: 1.5, once: true,
-    when: (s) => !s.follower && typeof TOWNS !== "undefined" && TOWNS.FOLLOWERS.meeko,
+    when: (s) => !s.pet && typeof TOWNS !== "undefined" && TOWNS.FOLLOWERS.meeko,   // he's a pet (pets.js): a follower doesn't stop him
     make: () => ({ text: "A scruffy dog sits by a dead campfire, tail thumping. It follows a few steps when you move." }),
     choices: () => [["take", " \"Come on, then.\" (take him along)"], ["feed", " Feed him and go"], ["leave", "Shoo him away"]],
-    take: (s) => { if (s.follower) return { text: "You already have someone with you." }; s.follower = { id: "meeko", hp: TOWNS.followerMax(s, "meeko"), ts: G.now() }; flags(s).dog = true; return { text: "The dog barks once and falls in beside you. You call him Meeko. He'll fight with you and carry a little." }; },
+    take: (s) => { if (s.pet) return { text: "You already have a pet with you." }; s.pet = { id: "meeko", hp: typeof PETS !== "undefined" ? PETS.maxHp(s, "meeko") : TOWNS.followerMax(s, "meeko"), ts: G.now() }; flags(s).dog = true; return { text: "The dog barks once and falls in beside you. You call him Meeko. He'll fight with you and carry a little." }; },
     feed: (s) => { const g = addGold(s, rint(5, 25)); flags(s).dog = true; return { text: `He wolfs it down, then trots off and comes back with a muddy purse: ${g} gold. Good dog.` }; } });
 
   add({ id: "thugs", title: "Hired thugs", weight: 6,

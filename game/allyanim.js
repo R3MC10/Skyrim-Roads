@@ -59,7 +59,7 @@ const ALLYANIM = (() => {
   }
   /* who is already down before these lines play: down now, minus those knocked down in them, plus those revived in them */
   function downAtStart(f, lines, names) {
-    const now = new Set([...(f?._downed || []).map((a) => a && a.name).filter(Boolean), ...(f?.followerDown ? [f.followerDown] : [])]);
+    const now = new Set([...(f?._downed || []).map((a) => a && a.name).filter(Boolean), ...(f?.followerDown ? [f.followerDown] : []), ...(f?.petDown ? [f.petDown] : [])]);
     for (const l of lines || []) {
       const fo = foeOn(l.them, names); if (fo && fo.clip === "down") now.delete(fo.name);
       for (const n of revivedIn(l.me, names)) now.add(n);
