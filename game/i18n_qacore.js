@@ -18,8 +18,8 @@ const I18N_QACORE = (() => {
       "Idziesz. Podróż trwa, nawet gdy aplikacja jest zamknięta, a przy drodze może się coś wydarzyć: jeśli to walka, grasz ją turami (albo naciśnij Auto). Później możesz jeździć konno albo brać powóz między miastami.",
     "You're walking. Trips keep going even when the app is closed, and something may happen by the road. You can ride a horse later, or take a carriage between cities.":
       "Idziesz. Podróż trwa, nawet gdy aplikacja jest zamknięta, a przy drodze może się coś wydarzyć. Później możesz jeździć konno albo brać powóz między miastami.",
-    "Open the <b>Area</b> tab. In towns and cities it has shops, the inn, trainers, the forge, jobs and more.":
-      "Otwórz zakładkę <b>Okolica</b>. W miastach i miasteczkach są tam sklepy, karczma, trenerzy, kuźnia, zlecenia i więcej.",
+    "Open the <b>Area</b> tab. In towns and cities it has shops, the inn, trainers, jobs and more.":
+      "Otwórz zakładkę <b>Okolica</b>. W miastach i miasteczkach są tam sklepy, karczma, trenerzy, zlecenia i więcej.",
     "Open the <b>Area</b> tab. This spot is out in the wilds, so it shows what you can do here.":
       "Otwórz zakładkę <b>Okolica</b>. To miejsce leży w dziczy, więc zakładka pokazuje, co możesz tu zrobić.",
     "Now open the <b>Journal</b>. Your quests are there, and the gold diamond on the map shows where to go next. Chat and other players are under <b>Social</b>.":

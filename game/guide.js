@@ -9,10 +9,10 @@ const GUIDE = (() => {
     ["trade", "Buy and sell", "In a town, open Area → General goods. Switch between Buy and Sell at the top. Your most valuable things are listed first.", (s) => flag(s, "trade"), { tab: "town", shop: "general" }],
     ["dungeon", "Clear a dungeon", "Travel to a dungeon (the list shows how far) and press Go inside. Pick your way room by room down to the boss. You can leave between rooms.", (s) => Object.keys(s.cleared || {}).length > 0, { tab: "map" }],
     ["level", "Level up and pick a perk", "Skills grow as you use them. When you level up, a dot appears on Hero: choose Health, Magicka or Stamina, then spend your perk point.", (s) => s.level >= 2 && Object.keys(s.perks || {}).length > 0, { tab: "hero" }],
-    ["smith", "Mine, smelt and smith", "Buy a pickaxe, mine ore (Area →  Mine in mining towns), smelt it at the Forge, then make or improve your gear.", (s) => flag(s, "smith") || Object.keys(s.mined || {}).length > 0, { tab: "town", shop: "forge" }],
-    ["cook", "Cook or fish", "In towns with an inn, use the  Cooking pot for food that heals and buffs. Near water, try  Fishing.", (s) => flag(s, "cook") || flag(s, "fish"), { tab: "town", shop: "cook" }],
+    ["smith", "Mine, smelt and smith", "Buy a pickaxe, mine ore (Area →  Mine in mining towns), smelt it at the Forge, then make or improve your gear.", (s) => flag(s, "smith") || Object.keys(s.mined || {}).length > 0, { tab: "town", shop: "forge" }, "smithing"],
+    ["cook", "Cook or fish", "In towns with an inn, use the  Cooking pot for food that heals and buffs. Near water, try  Fishing.", (s) => flag(s, "cook") || flag(s, "fish"), { tab: "town", shop: "cook" }, "cooking"],
     ["friends", "Make a friend", "Tap  at the top. Add other players, send private messages, and trade with friends from anywhere by courier.", (s) => Object.keys(s.friends || {}).length > 0, { tab: "social" }],
-    ["home", "Buy a house", "Every city has a house for sale (Area → Buy …). Your chest keeps things safe when you die, and you can run a  market stall in that town.", (s) => Object.keys(s.homes || {}).length > 0, { tab: "town", shop: "home" }],
+    ["home", "Buy a house", "Every city has a house for sale (Area → Buy …). Your chest keeps things safe when you die, and you can run a  market stall in that town.", (s) => Object.keys(s.homes || {}).length > 0, { tab: "town", shop: "home" }, "housing"],
     ["arena", "Fight in the Arena", "In Windhelm, challenge another player to a bout (Area →  The Arena). Nobody dies; the winner takes the stake.", (s) => !!s.arena && (s.arena.w || 0) + (s.arena.l || 0) > 0, { tab: "town", shop: "arena" }],
   ];
   const FAQ = [
@@ -25,6 +25,8 @@ const GUIDE = (() => {
     ["Do my bows need arrows?", "Yes. Bows shoot arrows and crossbows shoot bolts; the best ones you carry are used automatically. Buy them at blacksmiths and general stores, or make them at the forge."],
     ["Where do I learn new spells?", "Read spell tomes. Every court wizard sells Novice and some Apprentice tomes (and staffs); each court wizard has a few rarer ones (Farengar in Whiterun, Wuunferth in Windhelm, Calcelmo in Markarth…); the College in Winterhold has them all, up to Master, which it only teaches once your skill in that school is 90. Spells above your level cost more magicka and sometimes fizzle. Utility spells like Candlelight, Transmute and Clairvoyance are cast from the Magic menu, outside fights."],
   ];
-  const progress = (s) => { const done = STEPS.filter((st) => st[3](s)).length; return { done, total: STEPS.length }; };
-  return { STEPS, FAQ, mark, flag, progress };
+  /* steps whose feature hasn't opened yet (unlocks.js, 6th field) stay out of the guide until it does */
+  const avail = (s) => STEPS.filter((st) => !st[5] || typeof UNLOCKS === "undefined" || !s || UNLOCKS.open(s, st[5]));
+  const progress = (s) => { const list = avail(s), done = list.filter((st) => st[3](s)).length; return { done, total: list.length }; };
+  return { STEPS, FAQ, mark, flag, progress, avail };
 })();

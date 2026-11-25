@@ -305,7 +305,7 @@ const HEROART = (() => {
     const blade = [MAT.wood, MAT.forsworn, MAT.hide, MAT.leather].includes(m) ? { c: "#d8cdb0", d: "#a89a78", trim: "#e8dfc8" } : m;   // wood, bone and stone blades
     if (ench) glow(g, hx - 14, hy - 40, 30, ELEMENT[ench] || "#c9b6ff");
     else if (m.f?.glow) glow(g, hx - 14, hy - 40, 26, m.f.glow, 0.3);
-    g.save(); g.translate(hx, hy); g.rotate(-0.35);
+    g.save(); g.translate(hx, hy); g.rotate(wk === "spear" ? -0.12 : Math.PI + 0.3);   // [dollrig2] hanging at the side, the head below the fist (a spear stands up)
     const grip = (len) => { H.poly(g, [[-2.5, 6], [2.5, 6], [2.5, -len], [-2.5, -len]], MAT.leather.c, ink, 1.1); };
     if (wk === "dagger") { grip(6); H.poly(g, [[-7, -6], [7, -6], [7, -9], [-7, -9]], blade.d, ink, 1); H.poly(g, [[-3.5, -9], [3.5, -9], [0, -30]], blade.trim, ink, 1.2); }
     else if (wk === "sword" || wk === "greatsword") {
@@ -325,7 +325,7 @@ const HEROART = (() => {
     } else if (wk === "spear") {
       H.poly(g, [[-2, 30], [2, 30], [2, -84], [-2, -84]], MAT.wood.c, ink, 1.1); H.poly(g, [[-5, -84], [5, -84], [0, -104]], blade.trim, ink, 1.2);
     } else if (wk === "crossbow") {   // held level, pointing out to the side
-      g.rotate(0.35);
+      g.rotate(-Math.PI - 0.3);
       const pc = /dwarven/.test(id) ? MAT.dwarven : MAT.iron;
       H.poly(g, [[6, -4], [-34, -4], [-34, 3], [6, 3]], /dwarven/.test(id) ? MAT.dwarven.d : MAT.wood.c, ink, 1.2);
       g.strokeStyle = ink; g.lineWidth = 5; g.beginPath(); g.moveTo(-30, -20); g.quadraticCurveTo(-40, 0, -30, 20); g.stroke();
@@ -368,43 +368,35 @@ const HEROART = (() => {
   }
 
   // ---------------------------------------------------------------- public
-  /* [herocard] the standing figure on the paper doll, Hero page, title cards and player cards is the painted fight figure
-     (rig.js, the same one fights and character creation use: sex, race head and skin, hair, the gear you wear). Until its
-     painted parts have loaded it is the ink figure, marked data-hfk; when the pictures arrive (ASSETS.on) every marked
-     figure still on screen is drawn again, painted. Cached by look (race, sex, chosen look, every worn item, enchant), so a
-     change of gear, look or sex is a new picture, never a stale one. */
+  /* [herocard] [dollrig2] the standing figure on the paper doll, Hero page, title cards, loadout previews and the race
+     showcase is your hero face-on (dollfront.js: the painted rig's parts stood up front-on, your painted portrait's head,
+     your gear held by its grip). Until its pictures have loaded it is the ink figure, marked data-hfk; when they arrive
+     (ASSETS.on) every marked figure still on screen is drawn again, painted. Cached by look (race, sex, chosen look and
+     portrait, every worn item, enchant), so a change of gear, look or sex is a new picture, never a stale one. */
   const PEND = new Map(); let pendN = 0;
-  function paintState(L) {
-    if (typeof CGRIG === "undefined" || typeof PAINTRIG === "undefined" || typeof FIGART === "undefined") return "no";
+  const front = () => (typeof DOLLFRONT !== "undefined" ? DOLLFRONT : null);
+  const extraOf = (src) => (src && typeof src.avatar === "string" ? { avatar: src.avatar } : null);
+  function paintState(L, src) {
+    const F = front(); if (!F || typeof document === "undefined") return "no";
     try {
-      if (!CGRIG.ok(L)) return PAINTRIG.broken || L.ww || L.id == null || L.id === "x" || typeof document === "undefined" ? "no" : "wait";
-      const sp = FIGART.specOf(FIGART.lookFor({ look: L }));
-      try { PAINTRIG.raceHead(sp); } catch { /* fine */ }
-      return CGRIG.headState(sp) === "wait" ? "wait" : "ok";
+      if (F.ok(L, extraOf(src))) return "ok";
+      return L.ww || (typeof PAINTRIG !== "undefined" && PAINTRIG.broken) ? "no" : "wait";
     } catch { return "no"; }
-  }
-  function paintFig(g, L, w, h) {
-    const sp = FIGART.specOf(FIGART.lookFor({ look: L })), bh = Math.max(0.8, sp.bh || 1);
-    let up = null; try { up = CGRIG.reach(L, "idle", { doll: true }); } catch { /* can't tell */ }   // a raised blade stays inside the card
-    // the weapon hand reaches ~28 units in front (right) of the feet: a touch left of centre, and never past the right edge
-    const k = Math.min((h * 0.74) / (61 * bh), (w * 0.9) / 44, (w * 0.5) / 28, up > 0 ? (h * 0.89) / up : Infinity);
-    g.save(); g.translate(w * 0.45, h * 0.93); g.scale(k, k);
-    try { return !!PAINTRIG.draw(g, L, { clip: "idle", u: 0, doll: true, glow: !!(L.gl && L.gl.w) }); } finally { g.restore(); }   // [dollrig] the calm stance: weapon in the fist, shield and helmet showing
   }
   function figure(src, w = 160, h = 220, opts = {}) {
     if (w && typeof w === "object") return rigged() ? FIGART.sprite(src, w) : null;   // the new form: a posed frame as a canvas
-    const L = lookFrom(src), ps = opts.ink ? "no" : paintState(L), painted = ps === "ok";
+    const L = lookFrom(src), ex = extraOf(src), ps = opts.ink ? "no" : paintState(L, ex), painted = ps === "ok";
     let html = ART.html(w, h, (g, H) => {
       if (!opts.bare) {
         H.parchment(g, w, h, 7); g.fillStyle = "rgba(59,44,30,0.10)"; g.fillRect(0, h * 0.86, w, h * 0.14);
       }
-      if (painted) { try { if (paintFig(g, L, w, h)) return; } catch (e) { console.warn("herocard", e); } }
-      if (rigged()) { const fh = Math.min(h * 0.7, w * 1.05); FIGART.draw(g, { look: L }, w / 2 - fh * 0.04, h * 0.93, { pose: "idle", frame: 0, h: fh }); return; }
+      if (opts.back) return;   // the card alone (the Pack tab's moving figure stands on it)
+      if (painted) { try { if (front().paint(g, L, w, h, ex)) return; } catch (e) { console.warn("herocard", e); } }
       const k = Math.min(w / 160, h / 220); g.translate((w - 160 * k) / 2, h - 220 * k); g.scale(k, k);
-      draw(g, H, L);
-    }, { key: "hero4|" + keyOf(L) + (opts.bare ? "|b" : "") + (painted ? "|p" : "|i"), alt: `${D.RACES[L.r]?.name || ""} character`, cls: (opts.cls || "herofig") + (painted ? " hfig-p" : "") });
-    if (ps === "wait" && html) {   // ink for now: swapped for the painted figure once its pictures arrive
-      const id = "h" + (++pendN); PEND.set(id, { src: { look: L }, w, h, opts }); if (PEND.size > 200) PEND.delete(PEND.keys().next().value);
+      draw(g, H, L);   // the ink figure, face-on too
+    }, { key: "hero5|" + keyOf(L) + "|" + (ex ? ex.avatar : "") + (opts.bare ? "|b" : "") + (opts.back ? "|k" : painted ? "|p" : "|i"), alt: `${D.RACES[L.r]?.name || ""} character`, cls: (opts.cls || "herofig") + (painted && !opts.back ? " hfig-p" : "") });
+    if (ps === "wait" && html && !opts.back) {   // ink for now: swapped for the painted figure once its pictures arrive
+      const id = "h" + (++pendN); PEND.set(id, { src: ex ? { look: L, ...ex } : { look: L }, w, h, opts }); if (PEND.size > 200) PEND.delete(PEND.keys().next().value);
       html = html.replace("<img ", `<img data-hfk="${id}" `);
     }
     return html;
@@ -414,7 +406,7 @@ const HEROART = (() => {
     try {
       for (const el of document.querySelectorAll("img[data-hfk]")) {
         const p = PEND.get(el.dataset.hfk); if (!p) { el.removeAttribute("data-hfk"); continue; }
-        if (paintState(p.src.look) !== "ok") continue;
+        if (paintState(p.src.look, extraOf(p.src)) !== "ok") continue;
         const t = document.createElement("template"); t.innerHTML = figure(p.src, p.w, p.h, p.opts);
         const n = t.content.firstElementChild; PEND.delete(el.dataset.hfk);
         if (n) el.replaceWith(n); else el.removeAttribute("data-hfk");

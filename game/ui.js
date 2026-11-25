@@ -349,6 +349,7 @@
       <h3>Look</h3>
       ${typeof LIGHTFX !== "undefined" ? LIGHTFX.settingsHTML(seg) : ""}
       ${typeof PAINTEDMAP !== "undefined" ? PAINTEDMAP.settingsHTML(seg) : ""}
+      ${typeof LOCINTRO !== "undefined" ? LOCINTRO.settingsHTML(seg) : ""}
       ${typeof MOTION !== "undefined" ? `<div class="setrow"><span>Motion</span>${seg("motion", [["full", "Full"], ["lite", "Lite"], ["off", "Off"]], MOTION.pref())}</div>` : ""}
       ${typeof TB !== "undefined" ? `<h3>Fights</h3>${typeof GORE !== "undefined" ? GORE.settingsHTML(seg) : typeof COMBATFX !== "undefined" ? `<div class="setrow"><span>Blood</span>${seg("gore", [[true, "On"], [false, "Off"]], getPref("gore", true))}</div>` : ""}` : ""}${typeof FIGHTCTL !== "undefined" && typeof TB !== "undefined" ? FIGHTCTL.settingsHTML(seg) : ""}${typeof COMBAT2 !== "undefined" && typeof TB !== "undefined" ? COMBAT2.settingsHTML(seg) : ""}${typeof FIGHTSET !== "undefined" && typeof TB !== "undefined" ? FIGHTSET.settingsHTML(seg) : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.settingsHTML(seg) : ""}
       ${typeof ACCESS !== "undefined" ? ACCESS.settingsHTML(seg) : ""}
@@ -378,6 +379,7 @@
     if (typeof FASTQOL !== "undefined" && FASTQOL.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // replay speed, carry on after road events
     if (k === "survival") { if (S) { S.survival = v; if (!v) S.coldV = 0; persist(); try { renderPanel(true); } catch { /* title */ } } SOUND.fx("click"); return true; }
     if (typeof PAINTEDMAP !== "undefined" && PAINTEDMAP.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }   // Graphics → Roads on the map (paintedmap.js)
+    if (typeof LOCINTRO !== "undefined" && LOCINTRO.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Look → Location introductions (locintro.js)
     if (typeof PCMAP !== "undefined" && PCMAP.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Map → Map quality (pcmap.js, mapfx.js)
     if (typeof LIGHTFX !== "undefined" && LIGHTFX.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }   // Graphics → Lighting
     if (k === "motion") { MOTION.setPref(b.dataset.v); SOUND.fx("click"); return true; }
@@ -579,6 +581,7 @@
       { const x = backOutOfGame(); if (x) return x; }   // [qa-core] a mini-game or the rune table: back leaves it (its own Leave / Done button)
       if ($("#title")) { if (titlePage !== "menu" && titlePage !== "press") { titlePage = "menu"; renderTitle(); return true; } return false; }
       if (!S && $("#toTitle")) { app.innerHTML = ""; showTitle("menu"); return true; }
+      if (typeof LOCINTRO !== "undefined" && LOCINTRO.close()) return true;   // the arrival picture: Back skips it
       if (typeof TB !== "undefined" && TB.open) { if ($("#modal.pm-top")) { closeModal(); return true; } return !escKey; }   // a turn-based fight is on: finish it (or Flee); Esc pauses
       if (typeof FAVWHEEL !== "undefined" && FAVWHEEL.open) { FAVWHEEL.hide(); return true; }
       if (typeof LEVELUP !== "undefined" && LEVELUP.isOpen) { LEVELUP.close(); return true; }   // the level-up pillars: decide later
@@ -741,6 +744,7 @@
     Store.watch("stalls", (docs) => onStalls(docs));
     if (typeof TB !== "undefined") {   // turn-based fights: toasts, and live turns for real players in your party
       TB.init({ toast: (t) => toast(t), remote: TB.remoteFor(Store, S.id) });   // only used while you're online with party members
+      if (typeof CHANNEL !== "undefined") CHANNEL.mount({ store: Store });   // [channel] teammates' moves being prepared (channel.js)
       if (typeof SHAREDFIGHT !== "undefined") SHAREDFIGHT.mount({ store: Store, S: () => S, persist, toast: (t) => t && toast(t), after: () => renderPanel(true) });   // the leader's fight on your own full fight screen (sharedfight.js)
       TB.watchTurns(Store, () => S?.id);
     }
@@ -910,6 +914,10 @@
     persist(true); SOUND.fx("coin"); showMessage("Caravan", " " + m);
   }
 
+  /* locintro.js: friends and party members standing at a place (for its "what's new" lines), and saving the visit */
+  function locIntroCtx() {
+    return { persist: () => persist(), players: (l) => others.filter((o) => o && o.id !== S.id && o.loc === l && !o.hiding && !o.moving).map((o) => ({ name: o.name, party: !!party?.members?.some((m) => m.id === o.id), friend: typeof SOCIAL !== "undefined" && SOCIAL.isFriend(S, o.id) })) };
+  }
   function tick() {
     if (!S) return;
     if (typeof TB !== "undefined" && TB.open) return;   // the world waits while you play out a turn-by-turn fight
@@ -948,6 +956,7 @@
       } else { Store.save(S); maybeRoadEvent(); maybeCaravan(); }
     }
     caravanEscortPay();
+    if (typeof LOCINTRO !== "undefined") LOCINTRO.tick(S, locIntroCtx());   // locintro.js: every arrival fills the screen with the place for a moment
     followParty(); ppUI?.tick(); checkAmbush(); renderRaid(); soundTick();
     if (S.tut?.step > 0 && TUT[S.tut.step]?.done()) bump();
     if (Math.floor(t) % 5 === 0) { checkAch(); bloodTick(); }
@@ -1004,7 +1013,7 @@
     $("#sub").textContent = typeof HUD !== "undefined" ? `${D.RACES[S.race].name} · ${where}` : `Level ${S.level} ${D.RACES[S.race].name} · ${where}`;
     const lb = $("#lvlb"); if (typeof MOTION !== "undefined") MOTION.count(lb, S.level, "", { pop: false }); else if (lb && lb.textContent !== String(S.level)) lb.textContent = S.level;
     if (typeof UNLOCKS !== "undefined") { const top = $(".top"), h = UNLOCKS.teaserHTML(S, "ul-tz-top", 1); let z = top && top.querySelector("#ultz"); if (!h) z?.remove(); else if (top) { if (!z) { z = document.createElement("div"); z.id = "ultz"; top.appendChild(z); } if (z._h !== h) { z._h = h; z.innerHTML = h; } } }   // unlocks.js: "Next unlock · Level 4 · Smithing" under the level bar
-    if (typeof MOTION !== "undefined") { MOTION.xp($(".top"), S.charXp / F.charXpNeeded(S.level), S.level); MOTION.place(S.location, !!(S.location && WORLD.places[S.location] && ["city", "town"].includes(WORLD.places[S.location][2]))); }
+    if (typeof MOTION !== "undefined") { MOTION.xp($(".top"), S.charXp / F.charXpNeeded(S.level), S.level); }   // arriving somewhere: locintro.js shows the place
     const wx = WEVENTS.weather(livePos()), dt = WEVENTS.date();
     const clk = $("#clock"), when = `${dt.day} ${dt.month}, ${G.clockText().split(", ")[1]}`;
     if (typeof SKY !== "undefined") {   // a small drawn sky: sun or moon phase, clouds, rain, snow
@@ -2145,7 +2154,7 @@
     null,
     { title: "Your first trip", text: () => ppUI && party && !ppUI.canDecide() ? LT("Welcome to Skyrim, {name}. You're in a party: the leader picks where to go and you travel with them. Watch the map; the next step starts when you set off.", { name: esc(S.name) }) : LT("Welcome to Skyrim, {name}. Everything happens in real time. Tap <b>Whiterun</b> on the map and press <b>Travel</b>, or press <b>Go</b> next to it in the list below.", { name: esc(S.name) }) + (party ? " " + LT("Your party comes along.") : ""), done: () => !!S.trip || S.location === "Whiterun" },
     { title: "On the road", text: () => typeof TB !== "undefined" && TB.enabled() ? LT("You're walking. Trips keep going even when the app is closed, and something may happen by the road: if it's a fight, you play it turn by turn (or press Auto). You can ride a horse later, or take a carriage between cities.") : LT("You're walking. Trips keep going even when the app is closed, and something may happen by the road. You can ride a horse later, or take a carriage between cities."), done: () => !S.trip },
-    { title: "You've arrived", text: () => S.location && TOWNS.isTown(S.location) ? LT("Open the <b>Area</b> tab. In towns and cities it has shops, the inn, trainers, the forge, jobs and more.") : LT("Open the <b>Area</b> tab. This spot is out in the wilds, so it shows what you can do here."), done: () => tab === "town" },   // [qa-core] the tab is called Area now
+    { title: "You've arrived", text: () => S.location && TOWNS.isTown(S.location) ? LT("Open the <b>Area</b> tab. In towns and cities it has shops, the inn, trainers, jobs and more.") : LT("Open the <b>Area</b> tab. This spot is out in the wilds, so it shows what you can do here."), done: () => tab === "town" },   // [qa-core] the tab is called Area now
     { title: "Quests", text: () => LT("Now open the <b>Journal</b>. Your quests are there, and the gold diamond on the map shows where to go next. Chat and other players are under <b>Social</b>."), done: () => tab === "log" },
   ];
   const TAB_TIPS = {
@@ -3106,7 +3115,7 @@
     const openD = [...side.querySelectorAll("details")].map((d) => d.open), y = scrollY;
     const twp = typeof TABMENU !== "undefined" ? { stars: () => TABMENU.stars(S), perks: () => TABMENU.perks(S) } : {};
     const mnp = typeof MENUS !== "undefined" ? MENUS.panels({ S, ach: achPanel, settings: settingsHTML, fest: festPanel, idPanel, update: updNewer() ? { ...(update || {}), newer: true } : update }) : {};   // menus.js: tab homes
-    side.innerHTML = tutTip() + (typeof MENUS !== "undefined" ? MENUS.subnav(tab) : "") + screenHead() + ({ ...mnp, map: panelTravel, hero: panelHero, pack: panelPack, town: () => { const t = panelTown(); return (townCtx && typeof LOCSCREEN !== "undefined" ? LOCSCREEN.sceneBtn() : "") + (typeof ARRIVEAREA !== "undefined" ? ARRIVEAREA.gatherHTML(S) : "") + t; }, log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, follower: () => typeof FOLTAB !== "undefined" ? FOLTAB.panel(S, esc, svgI) : "", ...twp }[tab] || panelTravel)();
+    side.innerHTML = tutTip() + (typeof MENUS !== "undefined" ? MENUS.subnav(tab) : "") + screenHead() + ({ ...mnp, map: panelTravel, hero: panelHero, pack: panelPack, town: () => { const t = panelTown(); return (townCtx && typeof LOCSCREEN !== "undefined" ? LOCSCREEN.sceneBtn() : "") + (typeof LOCINTRO !== "undefined" && LOCINTRO.placeOf(S) ? LOCINTRO.viewBtn(true) : "") + (typeof ARRIVEAREA !== "undefined" ? ARRIVEAREA.gatherHTML(S) : "") + t; }, log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, follower: () => typeof FOLTAB !== "undefined" ? FOLTAB.panel(S, esc, svgI) : "", ...twp }[tab] || panelTravel)();
     if (typeof TABMENU !== "undefined") TABMENU.afterPanel(tab);
     if (typeof MENUS !== "undefined") MENUS.afterPanel(tab);
     if (typeof MENUS2 !== "undefined") MENUS2.afterPanel(tab, side);   // menus2.js: Find a quest
@@ -3137,7 +3146,7 @@
     if (S.location && !S.trip && (TOWNS.isTown(S.location) || G.shopTypes(S.location).length)) row("", `You're in ${esc(S.location)}`, "Shops, the inn, trainers and jobs are in the Area tab.", `<button class="btn sm" data-act="uxtab" data-id="town">Area</button>`, { kind: "town", key: "town" });
     const ob = typeof ONBOARD !== "undefined" ? ONBOARD.rows(S, { here, eta, known, quest: a?.id, online: Store.online, party: !!party, max: 4 - rows.length }) : null;   // [onboard] 1-3 ideas from your state
     if (ob) { rows.push(...ob); ob.forEach((html, i) => { const place = MP ? MP.placeOf(html) : null; R.push({ kind: "idea", key: `idea${i}`, place, dist: dist(place), html }); }); }
-    const g = !ob && typeof GUIDE !== "undefined" && S.level < 15 ? GUIDE.STEPS.find((st) => !st[3](S)) : null;
+    const g = !ob && typeof GUIDE !== "undefined" && S.level < 15 ? GUIDE.avail(S).find((st) => !st[3](S)) : null;
     if (g) row("", `Next step: ${esc(g[1])}`, esc(g[2]), `<button class="btn sm" data-act="guidego" data-id="${g[0]}">Show me</button>`, { kind: "guide", key: "guide" });
     if (!S.trip) {
       const near = Object.keys(WORLD.places).filter((n) => known(n) && n !== S.location && !S.discovered.includes(n)).map((n) => [n, G.pxDist(here, WORLD.places[n])]).sort((x, y) => x[1] - y[1])[0];
@@ -3266,7 +3275,7 @@
     const pr = GUIDE.progress(S);
     return `<h2> Guide</h2><p class="sub">Your first hour in Skyrim, step by step. Steps tick off by themselves. ${pr.done} of ${pr.total} done.</p>
       <div class="bar" style="margin:6px 0 10px"><i style="width:${Math.round(pr.done / pr.total * 100)}%;background:var(--gold)"></i></div>
-      <div class="list guide">${GUIDE.STEPS.map(([id, title, text, done], i) => { const d = done(S); return `<div class="item gstep ${d ? "done" : ""}" style="flex-wrap:wrap">${UIART.guide(id, 30)}<div class="t"><b>${d ? "✓" : i + 1}.</b> ${esc(title)}<span>${esc(text)}</span></div>${d ? "" : `<button class="btn sm pri" data-act="guidego" data-id="${id}">Show me</button>`}</div>`; }).join("")}</div>
+      <div class="list guide">${GUIDE.avail(S).map(([id, title, text, done], i) => { const d = done(S); return `<div class="item gstep ${d ? "done" : ""}" style="flex-wrap:wrap">${UIART.guide(id, 30)}<div class="t"><b>${d ? "✓" : i + 1}.</b> ${esc(title)}<span>${esc(text)}</span></div>${d ? "" : `<button class="btn sm pri" data-act="guidego" data-id="${id}">Show me</button>`}</div>`; }).join("")}</div>
       <h3 style="margin-top:14px">Questions</h3>${GUIDE.FAQ.map(([q, a]) => `<details class="faq"><summary>${esc(q)}</summary><p class="sub">${esc(a)}</p></details>`).join("")}
       <button class="btn pri" data-act="close" style="width:100%;margin-top:12px">Close</button>`;
   }
@@ -3800,6 +3809,7 @@
     const a = b.dataset.act, L = G.loadout(S);
     if (typeof UNLOCKS !== "undefined" && S) { const lk = UNLOCKS.act(S, a) || (a === "shop" && !UNLOCKS.section(S, b.dataset.id) ? UNLOCKS.sectionFeature(b.dataset.id) : null) || (a === "tabgo" && !UNLOCKS.tab(S, b.dataset.id) ? "x" : null); if (lk) { if (lk !== "x") toast(UNLOCKS.lockedLine(lk)); return; } }   // unlocks.js: a locked feature reached by an old button or link
     if (a.startsWith("coop") && coopUI) return void coopUI.act(b);
+    if (a === "locview" && typeof LOCINTRO !== "undefined") { SOUND.fx("click"); return void LOCINTRO.view(S, locIntroCtx()); }   // Area tab: the place's picture again (never counts as arriving)
     if (/^loc(sheet|mode|leave)$/.test(a) && typeof LOCSCREEN !== "undefined") { SOUND.fx("click"); return void LOCSCREEN.act(b, { S, refresh: () => { townShop = ""; renderPanel(true); }, leave: () => { tab = "map"; bump(); renderTabs(); renderPanel(true); } }); }
     if ((a === "lvpick" || a === "lvsend") && lvUI) return void lvUI.act(b);
     if (/^pp(ready|go|cancel|kick|catch|vote|vhide)$/.test(a) && ppUI) return void ppUI.act(b);

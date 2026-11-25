@@ -82,7 +82,7 @@ const ONBOARD = (() => {
     if ((typeof HOMESTEAD !== "undefined") && !HOMESTEAD.owned(s).length && (gold >= 4000 || lv >= 12) && UL(s, "housing"))
       add({ id: "homestead", pri: 30, ico: "", title: "Build your own house", sub: "Buy land near Falkreath, Morthal or Dawnstar from the Jarl's steward and build a home stage by stage. A deed costs about 5000 gold.", btn: s.location !== "Falkreath" ? go("Falkreath") : tabBtn("town", "Area") });
     // the next guide step as a fallback
-    if ((typeof GUIDE !== "undefined")) { const g = GUIDE.STEPS.find((x) => !x[3](s)); if (g) add({ id: "guide-" + g[0], pri: 20, ico: "", title: `Next step: ${esc(g[1])}`, sub: esc(g[2]), btn: { label: "Show me", act: "guidego", attrs: `data-id="${g[0]}"` } }); }
+    if ((typeof GUIDE !== "undefined")) { const g = (GUIDE.avail ? GUIDE.avail(s) : GUIDE.STEPS).find((x) => !x[3](s)); if (g) add({ id: "guide-" + g[0], pri: 20, ico: "", title: `Next step: ${esc(g[1])}`, sub: esc(g[2]), btn: { label: "Show me", act: "guidego", attrs: `data-id="${g[0]}"` } }); }
     return out.sort((a, b) => b.pri - a.pri);
   }
   /* 1-3 ideas, or [] when switched off / for veterans / during the guided first trip */
