@@ -71,11 +71,11 @@ const AFFL = (() => {
   /* every number an affliction has at a stage, after perks */
   function nums(s, id, st = stage(s, id)) {
     const U = up(s), Dn = down(s);
-    if (id === "draugr") return { frost: Math.min(0.5, at([0.15, 0.25, 0.35], st) * U), dun: at([0.05, 0.08, 0.12], st) * U, sneak: Math.round(at([5, 10, 15], st) * U),
+    if (id === "draugr") return { frost: Math.min(0.4, at([0.1, 0.17, 0.25], st) * U), dun: at([0.05, 0.08, 0.12], st) * U, sneak: Math.round(at([5, 10, 15], st) * U),
       potion: at([0.12, 0.2, 0.28], st) * Dn, price: at([0.05, 0.1, 0.15], st) * Dn };
-    if (id === "daedric") return { dae: at([0.1, 0.15, 0.2], st) * U, favour: Math.round(at([150, 250, 400], st) * U),
-      luck: at([0.1, 0.15, 0.2], st) * Dn, omen: at([0.08, 0.12, 0.16], st) * Dn };
-    if (id === "dwemer") return { shock: at([0.1, 0.15, 0.2], st) * U, cOut: at([0.1, 0.15, 0.2], st) * U, cIn: Math.min(0.4, at([0.06, 0.1, 0.14], st) * U),
+    if (id === "daedric") return { dae: at([0.08, 0.12, 0.15], st) * U, favour: Math.round(at([150, 250, 400], st) * U),
+      luck: at([0.1, 0.15, 0.2], st) * Dn, omen: at([0.1, 0.15, 0.2], st) * Dn };
+    if (id === "dwemer") return { shock: at([0.1, 0.15, 0.2], st) * U, cOut: at([0.08, 0.12, 0.15], st) * U, cIn: Math.min(0.3, at([0.05, 0.08, 0.1], st) * U),
       sun: at([0.03, 0.04, 0.05], st) * Dn, drain: at([0.015, 0.02, 0.025], st) * Dn, regen: Math.round(at([15, 25, 35], st) * Dn) };
     return {};
   }
@@ -86,9 +86,9 @@ const AFFL = (() => {
     if (id === "draugr") return [[T("Frost hurts you {n}% less.", { n: pct(n.frost) }), T("You see in the dark of dungeons: {n}% more damage there and +{k} Sneak.", { n: pct(n.dun), k: n.sneak })],
       [T("Potions heal you {n}% less.", { n: pct(n.potion) }), T("Shops charge you {n}% more: they don't like the grave smell.", { n: pct(n.price) })]];
     if (id === "daedric") return [[T("Daedra take {n}% more damage from you.", { n: pct(n.dae) }), T("Once a week your prince grants a favour (about {n} gold's worth).", { n: n.favour })],
-      [T("Bad luck follows you on the road ({n}% of road events go wrong).", { n: pct(n.luck) }), T("A {n}% chance to stumble at the start of a fight and lose a quarter of your stamina.", { n: pct(n.omen) })]];
+      [T("Bad luck follows you on the road ({n}% of road events go wrong).", { n: pct(n.luck) }), T("A {n}% chance to stumble at the start of a fight and lose a third of your stamina.", { n: pct(n.omen) })]];
     if (id === "dwemer") return [[T("Shock spells hit {n}% harder.", { n: pct(n.shock) }), T("Dwarven machines take {n}% more damage from you and hit you {k}% softer.", { n: pct(n.cOut), k: pct(n.cIn) })],
-      [T("Outside Dwemer ruins you lose {n}% of your magicka every round of a fight ({k}% under the open sun).", { n: (n.drain * 100).toFixed(1).replace(/\.0$/, ""), k: pct(n.sun) }), T("Outside the ruins your magicka comes back {n}% slower.", { n: n.regen })]];
+      [T("Outside Dwemer ruins you lose {n}% of your magicka every round of a fight ({k}% under the open sun); with no magicka left it eats your stamina instead.", { n: (n.drain * 100).toFixed(1).replace(/\.0$/, ""), k: pct(n.sun) }), T("Outside the ruins your magicka comes back {n}% slower.", { n: n.regen })]];
     if (id === "wolf") return [[T("Beast Form once a day: you hit much harder and shrug off blows."), T("You can't catch diseases.")],
       [T("Beds no longer make you Rested."), T("No potions while you're changed, and silver bites harder.")]];
     if (id === "vamp") return [[T("Destruction and Illusion grow stronger with your hunger, and so do your night-time blows."), T("Frost and poison barely touch you.")],
@@ -173,6 +173,7 @@ const AFFL = (() => {
   const isBeast = (f) => tagsOf(f).has("beast");
   const isUndead = (f) => tagsOf(f).has("undead") || /draugr|skeleton|wight|deathlord|lich|ghost|wraith/i.test(nameOf(f));
   function frostFoe(f) {
+    if (/draugr|deathlord|wight|scourge|frost|ice wraith/i.test(nameOf(f))) return true;   // the barrow dead carry the barrow's cold
     if (typeof CURSE !== "undefined" && CURSE.incomingEl && CURSE.incomingEl(f) === "frost") return true;
     if (typeof PFX !== "undefined" && PFX.foeElement && f.e) { const x = PFX.foeElement(f.e); return !!(x && x.el === "frost" && x.ch > 0); }
     return false;
@@ -240,14 +241,14 @@ const AFFL = (() => {
     if (!f._afflT) {
       f._afflT = 1;
       if (a.daedric && Math.random() < nums(s, "daedric").omen) {
-        const lost = Math.round(0.25 * G.maxStamina(s)); f.sp = Math.max(0, (f.sp || 0) - lost);
+        const lost = Math.round(0.35 * G.maxStamina(s)); f.sp = Math.max(0, (f.sp || 0) - lost);
         if (line) line.me += T(" · bad omen: you stumble (−{n} stamina)", { n: lost });
       }
     }
-    if (a.dwemer && !inRuin(s) && (f.mp || 0) > 0) {
-      const n = nums(s, "dwemer"), d = Math.max(1, Math.round((sunOut(f) ? n.sun : n.drain) * G.maxMagicka(s)));
-      f.mp = Math.max(0, f.mp - d);
-      if (line) line.me += T(" · the hum drains {n} magicka", { n: d });
+    if (a.dwemer && !inRuin(s)) {   // the hum: magicka first; once that's gone it gnaws at your stamina (half as hard)
+      const n = nums(s, "dwemer"), r = sunOut(f) ? n.sun : n.drain;
+      if ((f.mp || 0) > 0) { const d = Math.max(1, Math.round(r * G.maxMagicka(s))); f.mp = Math.max(0, f.mp - d); if (line) line.me += T(" · the hum drains {n} magicka", { n: d }); }
+      else if ((f.sp || 0) > 0) { const d = Math.max(1, Math.round(r / 2 * G.maxStamina(s))); f.sp = Math.max(0, f.sp - d); if (line) line.me += T(" · the hum drains {n} stamina", { n: d }); }
     }
   }
   /* after a fight you won: deeds, the vow, a barrow's cold */
@@ -257,7 +258,7 @@ const AFFL = (() => {
     if (isUndead(f)) addDeeds(s, "draugr", 1, out);
     if (isConstruct(f)) addDeeds(s, "dwemer", 1, out);
     if (isDaedra(f)) {
-      if (a.daedric && a.vow != null) { a.vow++; if (a.vow >= 3) out.push(" " + cure(s, "daedric")); else out.push(" " + T("The Vow of Cleansing: {n} of 3 daedra slain.", { n: a.vow })); }
+      if (a.daedric && a.daedric.vow != null) { const v = ++a.daedric.vow; if (v >= 3) out.push(" " + cure(s, "daedric")); else out.push(" " + T("The Vow of Cleansing: {n} of 3 daedra slain.", { n: v })); }
       else addDeeds(s, "daedric", 1, out);
     }
     const d = s.dungeon;   // the deepest barrows: levels IV-V or the Cursed Sanctuary
@@ -310,7 +311,7 @@ const AFFL = (() => {
       choices: () => [["calm", "Talk to the farmer"], ["leave", "Keep your distance"]],
       calm: (s) => {
         const ch = Math.min(0.9, 0.3 + G.skill(s, "Speechcraft") / 150), skills = G.useSkill(s, "Speechcraft", 4);
-        if (Math.random() < ch) { G.give(s, "bread", 1); return { text: T("You keep your voice low and steady. He lowers the fork and even gives you some bread for the road."), skills }; }
+        if (Math.random() < ch) { G.give(s, "potion_health_minor", 1); return { text: T("You keep your voice low and steady. He lowers the fork and even hands you a small healing draught for the road."), skills }; }
         return { text: T("\"Barrow-stink! Get away from my farm!\" You leave with the dogs at your heels."), skills, delay: 40 };
       },
     },
@@ -358,10 +359,11 @@ const AFFL = (() => {
     const r = f(s, e) || { text: "" }; if (r.text) r.text = T(r.text); return r;
   }
   /* an affliction event draws on one of the existing road pictures */
-  const ART = { aff_black_shrine: "daedra", aff_dae_luck: "daedra", aff_dae_cultist: "pilgrims", aff_draugr_dogs: "dog", aff_draugr_crone: "stranger", aff_dwemer_hum: "wreck", aff_wolf_hunters: "hunters" };
+  const ART = { aff_black_shrine: "daedra", aff_dae_luck: "wisp", aff_dae_cultist: "cultists", aff_draugr_dogs: "dog", aff_draugr_crone: "stranger", aff_dwemer_hum: "wreck", aff_wolf_hunters: "hunters" };
   function hookArt() {
     if (typeof EVENTART === "undefined" || !EVENTART.ROAD) return;
-    for (const [id, k] of Object.entries(ART)) if (!EVENTART.ROAD[id]) EVENTART.ROAD[id] = (...a) => (EVENTART.ROAD[k] || EVENTART.ROAD.road || (() => {}))(...a);
+    const S0 = EVENTART.STORY || {}, none = () => {};   // a road picture, or a full story scene (the black shrine is the Daedric shrine at night)
+    for (const [id, k] of Object.entries(ART)) if (!EVENTART.ROAD[id]) EVENTART.ROAD[id] = (g, H, w, h, ev) => (EVENTART.ROAD[k] || S0[k] || none)(g, H, w, h, ev || {});
   }
 
   // ---------------------------------------------------------------- town: barks and prices

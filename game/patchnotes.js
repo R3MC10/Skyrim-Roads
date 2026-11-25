@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b191-afflictions", build: 191, date: "25 Nov 2026", title: "Afflictions", items: [
+      "Dark gifts with an upside and a downside: catch the Draugr Curse in the deepest barrows, take a Daedric Mark at a black shrine by the road, or pick up the Dwemer Resonance in Dwemer ruins.",
+      "Each grows in three stages with what you do, and works in every fight: frost hurts a Draugr-cursed hero less but potions heal them less, the marked hit daedra harder but bad luck follows them, the Dwemer hum boosts shock but drains your magicka outside the ruins.",
+      "Lycanthropy and Vampirism show up in the same place on the Character screen, with their stage.",
+      "Cures: a priest at a temple, the Vow of Cleansing (slay three daedra), or two Void Salts.",
+      "People on the road and in town notice, and your party sees your afflictions and feels a little of them in a fight together.",
+      "New perks: Embrace the Curse (Illusion, upsides stronger) and Warding Rites (Restoration, downsides weaker).",
+    ] },
     { id: "b190-festart", build: 190, date: "25 Nov 2026", title: "Painted festival headers", items: [
       "Every festival now has a painted picture on top of its screen: the Harvest Fair, the Burning of King Olaf, the Jarl's Tourney, the Fishing Derby, the Great Hunt, Forgefire Days and the Midwinter Feast.",
       "The Grand Arena in Windhelm has its own painting too: the sand pit, the crowd on the stone tiers and two duellists.",
@@ -1323,11 +1331,10 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 190;
+  const NEXT_AT = 191;
   const NEXT = [
     "Painted riders on the road and on the map",
     "Makeovers for fishing, hunting, mining and lockpicking",
-    "Afflictions with an upside and a downside: lycanthropy, the Draugr curse and the Daedric mark",
     "An adventuring company longhouse: a shared base with a treasury, a trophy hall and stables",
     "Daedric bargains and artifacts that awaken, plus regional crises and heists",
     "Combat combos (frost + heavy = Shatter, oil + fire), follower and horse bonds, and spell crafting",
