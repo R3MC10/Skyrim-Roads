@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b247-testsgreen", build: 247, date: "25 Nov 2026", title: "Coming next, tidied", items: [
+      "Picking herbs by hand is out now, so it left the Coming next list.",
+    ] },
     { id: "b246-gathering", build: 246, date: "25 Nov 2026", title: "Picking herbs by hand", items: [
       "Gathering is now a short hands-on mini-game: snip flowers at the stem, dig roots up slowly, scrape fungus in one stroke, pick only the ripe berries, lift eggs gently and ease a fragile Nirnroot out of the mud. Do it well and you get more; even a clumsy try gives you something.",
       "Picked a plant three times by hand? A Quick pick button lets you skip the mini-game for a slightly smaller handful.",
@@ -1696,9 +1699,8 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 240;
+  const NEXT_AT = 247;
   const NEXT = [
-    "Hands-on gathering: a little harvest game for every kind of plant",
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",
   ];
