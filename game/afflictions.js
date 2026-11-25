@@ -102,11 +102,11 @@ const AFFL = (() => {
     if (!IDS.includes(id) || has(s, id) || newCount(s) >= MAX_NEW) return null;
     A(s)[id] = { at: t, deeds: 0 };
     if (typeof G !== "undefined" && G.note) G.note(s, ` ${DEF[id].icon} ${T(DEF[id].name)}`);
-    const why = { draugr: "A cold that isn't the barrow's settles in your chest and doesn't leave. You carry the Draugr Curse now (see Character).",
-      daedric: "The altar burns cold under your palm. When you pull it away, a black sigil is left on your skin. You carry a Daedric Mark now (see Character).",
-      dwemer: "Your teeth start to hum along with the old machines, and the hum doesn't stop when you leave. You carry the Dwemer Resonance now (see Character)." }[id];
-    return `${DEF[id].icon} ${T(why)}`;
+    return `${DEF[id].icon} ${T(WHY[id])}`;
   }
+  const WHY = { draugr: "A cold that isn't the barrow's settles in your chest and doesn't leave. You carry the Draugr Curse now (see Character).",
+    daedric: "The altar burns cold under your palm. When you pull it away, a black sigil is left on your skin. You carry a Daedric Mark now (see Character).",
+    dwemer: "Your teeth start to hum along with the old machines, and the hum doesn't stop when you leave. You carry the Dwemer Resonance now (see Character)." };
   /* a chance to catch it; Wolfsbane, Bosmer and Argonian blood and Hevnoraak keep it off */
   function roll(s, id, p) {
     if (has(s, id) || newCount(s) >= MAX_NEW) return null;
@@ -118,10 +118,12 @@ const AFFL = (() => {
     if (!s.affl?.[id]) return null;
     delete s.affl[id];
     s.afflCured = { ...(s.afflCured || {}), [id]: (s.afflCured?.[id] || 0) + 1 };
-    return T({ draugr: "The priest's prayer to Arkay is long and the incense is thick. The cold drains out of your bones. The Draugr Curse is gone.",
-      daedric: "The third daedra falls and the sigil on your skin flakes away like ash. The Daedric Mark is gone.",
-      dwemer: "The salts fizz and taste of lightning. The hum in your skull winds down and stops. The Dwemer Resonance is gone." }[id]);
+    return T(CURED[id]);
   }
+  const CURED = { draugr: "The priest's prayer to Arkay is long and the incense is thick. The cold drains out of your bones. The Draugr Curse is gone.",
+    daedric: "The third daedra falls and the sigil on your skin flakes away like ash. The Daedric Mark is gone.",
+    dwemer: "The salts fizz and taste of lightning. The hum in your skull winds down and stops. The Dwemer Resonance is gone." };
+  const VOW = "You kneel before the priests and swear to slay three daedra in the Divines' name. Your prince's favours stop until you break free.";
   const templeAt = (s) => (s.location && TEMPLES[s.location]) || null;
   const cureCost = (s) => at(CURE_GOLD, stage(s, "draugr"));
   const salts = (s) => (s.inv || []).filter((r) => r.item === "ing_void_salts").reduce((a, r) => a + (r.qty || 1), 0);
@@ -135,7 +137,7 @@ const AFFL = (() => {
     const a = s.affl?.daedric; if (!a) return T("You don't carry a Daedric Mark.");
     if (a.vow != null) return T("You've already sworn the vow.");
     if (!templeAt(s)) return T("Find a temple first: Whiterun, Riften, Solitude, Markarth, Windhelm or Falkreath.");
-    a.vow = 0; return T("You kneel before the priests and swear to slay three daedra in the Divines' name. Your prince's favours stop until you break free.");
+    a.vow = 0; return T(VOW);
   }
   function drinkSalts(s) {
     if (!s.affl?.dwemer) return T("You don't carry the Dwemer Resonance.");
@@ -360,10 +362,35 @@ const AFFL = (() => {
   }
   /* an affliction event draws on one of the existing road pictures */
   const ART = { aff_black_shrine: "daedra", aff_dae_luck: "wisp", aff_dae_cultist: "cultists", aff_draugr_dogs: "dog", aff_draugr_crone: "stranger", aff_dwemer_hum: "wreck", aff_wolf_hunters: "hunters" };
+  /* [afflart] painted scenes (gev-<name>.webp, 1280x480): the drawings stay as the fallback until they load.
+     Road events, and story popups: catching a curse (the dungeon note), the temple cure and vow, the beast blood. */
+  const PAINT = {
+    road: { aff_black_shrine: "gev-black-shrine", aff_dwemer_hum: "gev-dwemer-pipe", aff_wolf_hunters: "gev-werewolf-moon" },
+    story: { affDraugr: "gev-draugr-altar", affDwemer: "gev-dwemer-pipe", affDaedric: "gev-black-shrine", affTemple: "gev-arkay-temple", wolf: "gev-werewolf-moon" },
+  };
+  const STORY_FALLBACK = { affDraugr: "dgCrypt", affDwemer: "dwRuin", affDaedric: "daedra", affTemple: "dawn" };
+  /* which painted story scene (if any) a popup's words call for: a curse caught, or the priests' rites */
+  function storyKind(title, text) {
+    const x = String(text || "");
+    if (!x) return null;
+    if (x.includes(T(WHY.draugr))) return "affDraugr";
+    if (x.includes(T(WHY.dwemer))) return "affDwemer";
+    if (x.includes(T(WHY.daedric))) return "affDaedric";
+    if (x.includes(T(CURED.draugr)) || x.includes(T(VOW))) return "affTemple";
+    return null;
+  }
+  /* the picture for a dungeon note that gave you a curse ("" when it didn't) */
+  function scene(text) {
+    const k = storyKind("", text);
+    if (!k || typeof EVENTART === "undefined" || !EVENTART.story) return "";
+    try { return EVENTART.story("", "", { kind: k }); } catch (e) { return ""; }
+  }
   function hookArt() {
     if (typeof EVENTART === "undefined" || !EVENTART.ROAD) return;
     const S0 = EVENTART.STORY || {}, none = () => {};   // a road picture, or a full story scene (the black shrine is the Daedric shrine at night)
     for (const [id, k] of Object.entries(ART)) if (!EVENTART.ROAD[id]) EVENTART.ROAD[id] = (g, H, w, h, ev) => (EVENTART.ROAD[k] || S0[k] || none)(g, H, w, h, ev || {});
+    for (const [k, f] of Object.entries(STORY_FALLBACK)) if (!S0[k]) S0[k] = (g, H, w, h, o) => (S0[f] || S0.road || none)(g, H, w, h, o || {});
+    if (EVENTART.PAINTED) for (const kind of ["road", "story"]) for (const [id, a] of Object.entries(PAINT[kind])) if (!EVENTART.PAINTED[kind][id]) EVENTART.PAINTED[kind][id] = a;
   }
 
   // ---------------------------------------------------------------- town: barks and prices
@@ -485,11 +512,13 @@ const AFFL = (() => {
   function act(s, b, c) {
     const a = b.dataset.act;
     const m = a === "afflcure" ? priestCure(s) : a === "afflvow" ? takeVow(s) : a === "afflsalts" ? drinkSalts(s) : a === "afflfavour" ? favour(s) : null;
-    if (m != null && c && c.say) c.say(m);
+    if (m != null && c && c.show && storyKind("", m) === "affTemple") c.show(T("At the temple"), m);   // the priests' rites: a popup with the temple
+    else if (m != null && c && c.say) c.say(m);
     return m;
   }
 
   install();
   return { DEF, IDS, ALL, NEED, WEEK, TEMPLES, has, list, stage, deeds, nextAt, nums, lines, give, roll, cure, priestCure, takeVow, drinkSalts, favour, favourLeft,
-    outMult, inMult, shockMult, potionMult, priceMult, tick, after, onClear, rollEvent, EV, cardBits, badge, mates, setMates, mount, panel, act, install, isDaedra, isConstruct };
+    outMult, inMult, shockMult, potionMult, priceMult, tick, after, onClear, rollEvent, EV, cardBits, badge, mates, setMates, mount, panel, act, install, isDaedra, isConstruct,
+    storyKind, scene, PAINT };
 })();
