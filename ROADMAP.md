@@ -72,6 +72,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: read stored player reports (reportsread; server/src/reportsread.js new, app.js, store-pg.js, store-memory.js, scripts/reports.mjs new, tests/test_reportsread.js new): GET /api/reports + POST /api/reports/:id/done behind REPORTS_READ_KEY (Bearer header, constant-time compare, wrong keys rate limited, off = 404). **Owner must set REPORTS_READ_KEY on Railway** (see server/PLAN.md). Branch claude/reportsread.
 - Claude: painted event cards (critique task 8; new eventcards.js; ui.js raid box, greatevents.js, worldevents.js, crises.js, hsrooms.js): five GPT paintings (raid-dragon, raid-bandits, raid-vampire, raid-giant, raid-blizzard) on dragon raids, the dragon assault and siege, migrations, the Long Winter / Outlaw Roads / Beasts crises and raids on your house; title under the painting, severity diamond, 220 ms fade, faint embers / crimson mist / snow, still with reduced motion. Branch claude/eventcards.
 - Claude: painted race busts (bustart.js new, i18n_busts.js; chargen.js, dollart.js, ui.js, assets.js): bust-<race> pictures in the race picker (dark panel, name under), the Hero page portrait (round race crest when your sex differs from the painted one) and a small crest on the paper doll; drawn portraits stay as the fallback, fight rig unchanged. Branch claude/busts (b226).
 - Claude: painted heist art (heistart; heistscene.js new, heists.js, assets.js, index.html): each house's night painting behind the heist screen, one colour grade per step over the picture only (scout/sneak/suspicious/alarm/escape), red edge pulse + short shake on the alarm (buttons never move), lantern flicker, window glow, a few snowflakes on phones, reduced motion honoured; full screen on phones; painted icons for the heist loot and tools. Branch claude/heistart (b225).
@@ -272,6 +273,7 @@ Player reports: GitHub issues labelled player-report; Claude picks them up and f
 - In the game: F12 on a PC, or Settings → Report a problem on a phone. The kind (bug, balance, art, text, idea) is a second label.
 - The server (server/src/reports.js) needs the env var GITHUB_REPORT_TOKEN on Railway: a fine-grained token for R3MC10/Skyrim-Roads with Issues: read and write. Without it reports are kept in the server's database (reports table) and the log says "report stored (no token)".
 - Limits: 5 reports an hour per IP, 20 KB description, 300 KB whole report. Offline reports wait on the device and send themselves later.
+- Stored reports can be read back with `REPORTS_READ_KEY=… node scripts/reports.mjs` once the owner sets the env var REPORTS_READ_KEY on Railway (a long random secret; unset = the read routes are off).
 
 ## Standing rules
 - Perk trees grow with the game: every new system (gathering, magic, encounters, crafting, party play...) adds or adjusts perks with real effects in the matching trees (perkfx.js), keeping old perk ids and a clean star layout.
