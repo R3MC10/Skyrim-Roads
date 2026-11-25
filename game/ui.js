@@ -765,7 +765,8 @@
     if (typeof PARTYVOTE !== "undefined" && coopUI) {   // dungeon choices are a party vote, faces by the picks (partyvote.js)
       pvUI = PARTYVOTE.ui({ S: () => S, runs: () => coopUI.runs, Store, toast, esc, cardOf, persist, renderDungeon,
         online: (id) => { const c = cardOf(id); return !!c && (typeof SOCIAL === "undefined" || SOCIAL.status(c).online); },
-        choose: (kind, key) => (kind === "way" ? dungeonRoom(key) : dunChoice(key)) });
+        choose: (kind, key) => (kind === "way" ? dungeonRoom(key) : dunChoice(key)),
+        optHTML: (pv, key, mine) => (pv.kind === "way" && typeof DUNCHOICE !== "undefined" ? DUNCHOICE.voteHTML(S, key, mine) : "") });   // a way to vote on is the same card as solo (dunchoice.js)
       Store.watch("runs", () => pvUI.onRuns());
     }
     if (typeof DUNEVENTS !== "undefined") DUNEVENTS.mount({ mates: () => others });   // mystery rooms: the party's best hero at a skill rolls (dunevents.js)
@@ -1581,12 +1582,12 @@
     } else {
       const nx = DUNGEONS.nextChoices(S), row = d.rows[d.row + 1];
       main = `<div class="card">${d.row < 0 ? `<div class="dentrance">${PLACEART.scene(d.place, { indoor: true })}</div>` : ""}<h3>${d.row < 0 ? "The entrance" : "Which way?"}</h3><p class="sub">${d.row < 0 ? `You light a torch and step into ${esc(d.place)}.` : "The passage splits."} Tap a glowing room on the map, or pick here:</p>
-        <div class="evc">${nx.map((c) => `<button class="btn ${row[c].type === "boss" ? "danger" : ""}" data-act="droom" data-c="${c}">${DUNGEONS.ICON[row[c].type]} ${DUNGEONS.LABEL[row[c].type]}</button>`).join("")}</div></div>`;
+        ${typeof DUNCHOICE !== "undefined" ? DUNCHOICE.listHTML(S) : `<div class="evc">${nx.map((c) => `<button class="btn ${row[c].type === "boss" ? "danger" : ""}" data-act="droom" data-c="${c}">${DUNGEONS.ICON[row[c].type]} ${DUNGEONS.LABEL[row[c].type]}</button>`).join("")}</div>`}</div>`;   // each way as a card: picture, risk, reward, what's next (dunchoice.js)
     }
     const lvRun = lvUI && d.run && LOOTVOTE.partyRun(coopUI?.runs.find((x) => x.id === d.run));
     const pvOn = !!(pvUI && d.run && pvUI.showing());   // a party vote is open: everyone sees the choices and votes
     if (coopUI && d.run) { if (!d.done && !r && coopUI.waiting() && !pvOn) main = coopUI.waitHTML(); else if (!d.done && !r) main = coopUI.behindHTML() + main; if (d.done) main += lvRun ? `<div class="card coop"><h3>\uE177 Party loot</h3><p class="sub">Everything the party found is in one pile. The vote opens for everyone now: tap Want on what you'd like. Gold is split evenly.</p></div>` : coopUI.chestHTML(); }
-    if (lvRun && r && !d.done && lvUI.memberLocked() && !pvOn) main = lvUI.lockedHTML() + main.replace(/<div class="evc">[\s\S]*?<\/div>/, "");
+    if (lvRun && r && !d.done && lvUI.memberLocked() && !pvOn) main = lvUI.lockedHTML() + main.replace(/<div class="evc(?: [^"]*)?">[\s\S]*?<\/div>/, "");
     if (pvOn) main = pvUI.main(main);
     el.innerHTML = `<div class="in dgrid"><div class="dcol">
       <div class="hd"><h2>\uE10E ${esc(d.place)}</h2><button class="btn sm" data-act="dmin">\uE152 Pack</button>${d.done || r?.type === "boss" ? "" : `<button class="btn sm" data-act="dleave">Leave</button>`}</div>

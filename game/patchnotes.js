@@ -14,6 +14,11 @@ const PATCHNOTES = (() => {
       "Travelling as a party, everyone now walks in a line on the map so you can see each of you: the leader in front, the rest following one behind another along the road.",
       "Standing in a town, your party lines up in a row next to the town instead of all on one spot, so every name is readable.",
     ] },
+    { id: "b317-dunchoices", build: 317, date: "25 Nov 2026", title: "Dungeon forks show what's ahead", items: [
+      "At a fork every way is now a card: a picture of the room, its name, how risky it is, what it pays, and which rooms come after it.",
+      "Risk goes from Safe to Deadly and follows how dangerous the dungeon is. A Rest room tells you when you could really use it.",
+      "In a party the same cards are the vote: each one shows how many votes it has and who picked it, the leading way lights up, and the vote says plainly that a tie goes the leader's way.",
+    ] },
     { id: "b316-menutop", build: 316, date: "25 Nov 2026", title: "Menus open at the top", items: [
       "On a phone, every tab and sub-tab (Character, Map, Journal, Social, Area and the rest) now opens at its top, instead of half way down an old list or on the map above it.",
       "The compass's Area, Journal and Social links take you straight to that screen, and the full-screen Character page always starts at the top.",
