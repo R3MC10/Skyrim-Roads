@@ -1,7 +1,7 @@
 """One overlay at a time (overlays.js + the fight hints in onboard.js), on a phone (390x844) and a PC (1920x1080).
   node serve.js 8765 &   then   python overlays_ui.py 8765 [outdir]   — prints RESULT OK.
-Checks: the first fight shows short hints pinned to the turn order and the moves (no tip card), none of them covers a
-button, a move swaps them for the End turn hint, the VICTORY card shows with no tip or hint on top, a tip that comes up
+Checks: the first fight shows one short hint at a time (Attack first, no tip card), none of them covers a
+button, a move swaps it for what the foe does next (or Guard when it winds up a huge blow; first30), the VICTORY card shows with no tip or hint on top, a tip that comes up
 while a window is open waits under it and shows once the window closes, and the courier's letter waits while a PC menu
 is open. Screenshots go to outdir (default: overlays_shots in the temp folder)."""
 import asyncio, os, sys, tempfile, time
@@ -12,7 +12,7 @@ OUT = sys.argv[2] if len(sys.argv) > 2 else os.path.join(tempfile.gettempdir(), 
 os.makedirs(OUT, exist_ok=True)
 START = """()=>{ document.querySelectorAll('#modal').forEach(m=>m.remove());
   const S=window.__dbg.save(); S.level=20; for (const k of ['One-Handed','Destruction','Restoration']) S.skills[k].lvl=45;
-  G.give(S,'potion_health',2); S.dungeon=null; S.trip=null; S.sideAsked=true; S.onb={seen:{welcome:1},hid:{}};
+  G.give(S,'potion_health',2); S.dungeon=null; S.trip=null; S.sideAsked=true; S.onb={seen:{},hid:{}};
   [S.x,S.y]=WORLD.places.Whiterun; S.location=null; G.startTrip(S,'Riverwood',WORLD.places.Riverwood.slice(0,2));
   const d=ENC.byId.banditToll; S.trip.status='event'; S.trip.event={id:d.id,title:d.title,enc:true,...d.make(S,ENC.ctx(S))}; window.__dbg.openEvent(); }"""
 MYTURN = "(()=>{const b=document.querySelector('#tbf [data-tba=end]'); return !!b && !b.disabled && !(typeof FIGHTART!=='undefined' && FIGHTART.playing && FIGHTART.playing()) && !TB.session?.done})()"
@@ -44,7 +44,7 @@ async def run(b, w, h):
         if await pg.evaluate(MYTURN): break
         await pg.wait_for_timeout(250)
     await pg.mouse.move(1, 1); await pg.wait_for_timeout(1200); await shot("1_first_turn")
-    check(await pg.evaluate(HINTS) == "order,moves", "first turn: turn-order and moves hints (" + await pg.evaluate(HINTS) + ")")
+    check(await pg.evaluate(HINTS) == "attack", "first turn: the Attack hint (" + await pg.evaluate(HINTS) + ")")
     check(not await pg.evaluate(f"({SHOWN})('#obtip')"), "no tip card over the fight")
     cov = await pg.evaluate(COVER); check(not cov, f"hints cover nothing {cov}")
     await pg.evaluate("document.querySelector('#tbf [data-tba=attack]').click()")
@@ -52,9 +52,9 @@ async def run(b, w, h):
         await pg.wait_for_timeout(250)
         if await pg.evaluate(MYTURN): break
     await pg.mouse.move(1, 1); await pg.wait_for_timeout(800); await shot("2_after_move")
-    check(await pg.evaluate(HINTS) == "end", "after a move: only the End turn hint (" + await pg.evaluate(HINTS) + ")")
-    cov = await pg.evaluate(COVER); check(not cov, f"End turn hint covers nothing {cov}")
-    check(await pg.evaluate("!!__dbg.save().onb.seen['tbf-order'] && !!__dbg.save().onb.seen['tbf-moves']"), "used hints are remembered")
+    check(await pg.evaluate(HINTS) in ("intent", "guard"), "after a move: what the foe does next, or Guard (" + await pg.evaluate(HINTS) + ")")
+    cov = await pg.evaluate(COVER); check(not cov, f"the second hint covers nothing {cov}")
+    check(await pg.evaluate("!!__dbg.save().onb.seen['tbf-attack']"), "used hints are remembered")
     for _ in range(160):
         if await pg.query_selector("#tbf .tbdone"): break
         await pg.evaluate("(()=>{const s=TB.session; if(s){ s.f.ehp=Math.min(s.f.ehp,1); s.f.hp=Math.max(s.f.hp,50); s.f.sp=Math.max(s.f.sp,200); }})()")
@@ -69,7 +69,7 @@ async def run(b, w, h):
         if await pg.query_selector("#modal [data-act=close]"): await pg.click("#modal [data-act=close]"); await pg.wait_for_timeout(300)
         else: await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
     # a tip that comes up under an open window waits
-    await pg.evaluate("(()=>{const s=__dbg.save(); s.trip=null; s.location='Whiterun'; s.level=3; s.pendingLevels=1; s.onb.seen={welcome:1}; __dbg.message('A courier arrives','A letter for you.');})()")
+    await pg.evaluate("(()=>{const s=__dbg.save(); s.trip=null; s.location='Whiterun'; s.level=3; s.pendingLevels=1; s.onb.seen={}; __dbg.message('A courier arrives','A letter for you.');})()")
     await pg.wait_for_timeout(1800); await shot("4_window")
     check(not await pg.evaluate(f"({SHOWN})('#obtip')"), "the level-up tip waits under the window")
     # closing it may open the next window (a quest update); the tip keeps waiting until the screen is clear

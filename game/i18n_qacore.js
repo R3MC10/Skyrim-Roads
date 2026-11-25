@@ -1,32 +1,11 @@
 /* i18n_qacore.js: Polish for the first minutes of play that still showed in English (core-loop QA sweep):
-   the guided first trip (ui.js TUT, translated whole through I18N.t because its sentences hold <b> words),
-   the first-time tips (onboard.js), the "set off" and "arrived" toasts, and the qa-core patch notes.
+   the first-time tips (onboard.js, translated whole through I18N.t because their sentences hold <b> words), the "set off" and "arrived" toasts, and the qa-core patch notes.
    Loaded before i18n.js: exact lines go in I18N_EXTRA.words, lines with names in I18N_EXTRA.pat; whole sentences for
    I18N.t live in I18N_QACORE.tpl (ui.js adds them once I18N is up). */
 var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 const I18N_QACORE = (() => {
   const TPL = {
-    // the guided first trip
-    "Your first trip": "Twoja pierwsza podróż", "On the road": "W drodze", "You've arrived": "Jesteś na miejscu", "Quests": "Zadania",
-    "{n} of {m}": "{n} z {m}", "Skip the tutorial": "Pomiń samouczek",
-    "Welcome to Skyrim, {name}. Everything happens in real time. Tap <b>Whiterun</b> on the map and press <b>Travel</b>, or press <b>Go</b> next to it in the list below.":
-      "Witaj w Skyrim, {name}. Wszystko dzieje się na żywo. Dotknij <b>Whiterun</b> na mapie i naciśnij <b>Podróż</b> albo naciśnij <b>Idź</b> obok tej nazwy na liście poniżej.",
-    "Welcome to Skyrim, {name}. You're in a party: the leader picks where to go and you travel with them. Watch the map; the next step starts when you set off.":
-      "Witaj w Skyrim, {name}. Jesteś w drużynie: przywódca wybiera, dokąd iść, a ty podróżujesz z nim. Patrz na mapę; następny krok zacznie się, gdy wyruszycie.",
-    "Your party comes along.": "Twoja drużyna idzie z tobą.",
-    "You're walking. Trips keep going even when the app is closed, and something may happen by the road: if it's a fight, you play it turn by turn (or press Auto). You can ride a horse later, or take a carriage between cities.":
-      "Idziesz. Podróż trwa, nawet gdy aplikacja jest zamknięta, a przy drodze może się coś wydarzyć: jeśli to walka, grasz ją turami (albo naciśnij Auto). Później możesz jeździć konno albo brać powóz między miastami.",
-    "You're walking. Trips keep going even when the app is closed, and something may happen by the road. You can ride a horse later, or take a carriage between cities.":
-      "Idziesz. Podróż trwa, nawet gdy aplikacja jest zamknięta, a przy drodze może się coś wydarzyć. Później możesz jeździć konno albo brać powóz między miastami.",
-    "Open the <b>Area</b> tab. In towns and cities it has shops, the inn, trainers, the forge, jobs and more.":
-      "Otwórz zakładkę <b>Okolica</b>. W miastach i miasteczkach są tam sklepy, karczma, trenerzy, kuźnia, zlecenia i więcej.",
-    "Open the <b>Area</b> tab. This spot is out in the wilds, so it shows what you can do here.":
-      "Otwórz zakładkę <b>Okolica</b>. To miejsce leży w dziczy, więc zakładka pokazuje, co możesz tu zrobić.",
-    "Now open the <b>Journal</b>. Your quests are there, and the gold diamond on the map shows where to go next. Chat and other players are under <b>Social</b>.":
-      "Teraz otwórz <b>Dziennik</b>. Są tam twoje zadania, a złoty romb na mapie pokazuje, dokąd iść dalej. Czat i inni gracze są w zakładce <b>Społeczność</b>.",
     // first-time tips (onboard.js)
-    "The gold card under the map (<b>Your first trip</b>) shows you what to do, one step at a time. Tips like this one pop up the first time something new happens.":
-      "Złota karta pod mapą (<b>Twoja pierwsza podróż</b>) pokazuje, co robić, krok po kroku. Takie wskazówki wyskakują, gdy pierwszy raz dzieje się coś nowego.",
     "Open <b>Character</b>: pick Health, Magicka or Stamina, then spend your perk point on a skill you use. Skills rise by using them.":
       "Otwórz <b>Postać</b>: wybierz Zdrowie, Magię albo Wytrzymałość, potem wydaj punkt atutu na umiejętność, której używasz. Umiejętności rosną, gdy ich używasz.",
     "You're carrying more than you can, so you walk slowly. Sell loot in a town, keep things in a house chest, or let a horse or follower carry them.":
@@ -39,7 +18,7 @@ const I18N_QACORE = (() => {
       "Plotki są zaznaczone na mapie i wypisane w Dzienniku → Różne. Idź tam i sprawdź, czy to prawda: niektóre to tylko gadanie.",
   };
   Object.assign(I18N_EXTRA.words, {
-    "Welcome to Skyrim": "Witaj w Skyrim", "Too heavy": "Za ciężko", "Your first dungeon": "Twój pierwszy loch", "A party invite": "Zaproszenie do drużyny",
+    "Too heavy": "Za ciężko", "Your first dungeon": "Twój pierwszy loch", "A party invite": "Zaproszenie do drużyny",
     // patch note b239
     "Back button and first-trip fixes": "Poprawki przycisku Wstecz i pierwszej podróży",
     "Fixed: the phone's back button did nothing in fishing, hunting, mining, lockpicking and the other mini-games, and pressing it again could close the app. Now it leaves the game, like its Done or Leave button.":
@@ -53,12 +32,6 @@ const I18N_QACORE = (() => {
     "Fixed: in Polish, the first-trip guide, the first-time tips and the \"you set off\" and \"you arrived\" messages were still in English.":
       "Naprawione: po polsku samouczek pierwszej podróży, wskazówki na start i komunikaty o wyruszeniu i dotarciu były jeszcze po angielsku.",
     "You've got a lead": "Masz trop", "Open Character": "Otwórz Postać", "Got it": "Rozumiem", "Don't show tips": "Nie pokazuj wskazówek", "Close tip": "Zamknij wskazówkę",
-    // tab tips (ui.js TAB_TIPS)
-    "Start with the “What to do next” card. Press Go to travel; tap any place on the map to see how far it is.": "Zacznij od karty „Co dalej”. Naciśnij Idź, żeby ruszyć; dotknij dowolnego miejsca na mapie, żeby zobaczyć, jak daleko jest.",
-    "Your level, skills and perks. A dot on this tab means you can level up or spend a perk point.": "Twój poziom, umiejętności i atuty. Kropka na tej zakładce znaczy, że możesz awansować albo wydać punkt atutu.",
-    "Everything you carry. Tap an item to wear or use it; search by name at the top of the list.": "Wszystko, co niesiesz. Dotknij przedmiotu, żeby go założyć albo użyć; szukaj po nazwie na górze listy.",
-    "Places in town are grouped: Shops, Services, Guilds & jobs. Each town has different ones; shops close at night.": "Miejsca w mieście są pogrupowane: Sklepy, Usługi, Gildie i zlecenia. Każde miasto ma inne; sklepy zamyka się na noc.",
-    "Only your quests live here: Active, Misc and Completed. ☆ Track the one you're on and the compass and map follow it.": "Tu są tylko twoje zadania: Aktywne, Różne i Ukończone. ☆ Śledź to, które robisz, a kompas i mapa będą za nim iść.",
   });
   // the title screen, its pages and the in-app updater (qa-core batch 2)
   Object.assign(I18N_EXTRA.words, {
@@ -382,7 +355,6 @@ const I18N_QACORE = (() => {
     [/^You need ([\d,]+) gold\.$/, (m) => `Potrzebujesz ${m[1].replace(/,/g, " ")} złota.`],
     [/^Respec · ([\d,]+) gold$/, (m) => `Nowy rozwój · ${m[1].replace(/,/g, " ")} złota`],
     [/^Sure\? This takes back (\d+) perk points? and (\d+) level-up choices? for ([\d,]+) gold\.$/, (m) => `Na pewno? Odbierze to punkty atutów: ${m[1]} i wybory przy awansie: ${m[2]} za ${m[3].replace(/,/g, " ")} złota.`],
-    [/^Play the guided tutorial with (.+)$/, (m) => `Zagraj w samouczek jako ${m[1]}`],
     [/^build (\d+)$/, (m) => `wersja ${m[1]}`],
     [/^\. You have build (\d+)\.$/, (m) => `. Masz wersję ${m[1]}.`],
     [/^Shared world · (\d+) other travellers$/, (m) => `Wspólny świat · innych podróżnych: ${m[1]}`],

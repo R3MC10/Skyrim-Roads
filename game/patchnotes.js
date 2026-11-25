@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b341-first30", build: 341, date: "25 Nov 2026", title: "A guided start for new heroes", items: [
+      "New characters no longer get a welcome popup and a pile of tips. Instead there's one short quest line, Before the Storm, with one goal at a time and one button that does it.",
+      "Your first fight starts a minute after you make your hero: a bandit at Riverwood's mill. While you fight, one short hint at a time shows you how to attack, how to read what the foe does next, and how to guard when it winds up a huge blow.",
+      "Then you put on the armour he drops, walk to Whiterun, meet the Jarl, reach level 2, pick your first perk, and face a tougher bandit chief. The last step pays well and tells you what comes next.",
+      "Losing one of these fights costs nothing: you get back up at full health and try again.",
+      "On a PC the goal, its button and Skip sit in the quest tracker at the top right of the map.",
+      "Don't need it? Tap Skip the tutorial on the goal card and the main quest carries on as before. Heroes you already have aren't affected.",
+    ] },
     { id: "b340-rewards", build: 340, date: "25 Nov 2026", title: "Rewards that feel like rewards", items: [
       "Loot, gold and skill practice now share one quiet line at the top, like \"+24 gold · +15 One-Handed · Iron Dagger ×2\". What comes together is added up, and during a fight it waits and comes out as one line after.",
       "Better items on that line show their name in their rarity colour.",

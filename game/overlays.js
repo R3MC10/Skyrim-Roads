@@ -97,8 +97,10 @@ const OVERLAYS = (() => {
 
   // ------------------------------------------------------------ Polish
   const PL = {
-    "Turn order: the highest number acts first. A foe can act twice a round.": "Kolejność tur: najwyższa liczba działa pierwsza. Wróg może działać dwa razy w rundzie.",
-    "Up to 4 moves a turn. Blows cost stamina, spells magicka.": "Do 4 ruchów na turę. Ciosy kosztują wytrzymałość, czary magię.",
+    // [first30] the fight hints, one at a time (onboard.js HINTS)
+    "Tap Attack to hit. You get a few moves each turn.": "Dotknij Atak, żeby uderzyć. W każdej turze masz kilka ruchów.",
+    "This is what your foe does next. Plan around it.": "Tak wygląda następny ruch wroga. Zaplanuj swoje pod niego.",
+    "A huge blow is coming! Bash or guard now, or end your turn: unused moves guard.": "Nadchodzi potężny cios! Uderz tarczą albo się zasłoń, albo zakończ turę: niewykorzystane ruchy to osłona.",
     "Done? End turn. Moves you don't make become guard.": "Gotowe? Zakończ turę. Niewykonane ruchy stają się gardą.",
     "Tap to hide": "Dotknij, by ukryć",
     // the patch note
