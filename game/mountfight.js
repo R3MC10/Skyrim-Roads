@@ -88,6 +88,7 @@ const MOUNTFIGHT = (() => {
     const m = fresh(Math.max(1, +hp || N.allyHp), Math.max(1, +max || N.allyHp), name || `${al.name}'s horse`, al.ride);
     m.up = true; return m;
   }
+  const mcOn = () => typeof MOUNTCOMBAT === "undefined" || !!MOUNTCOMBAT.enabled;   // mountcombat.js: the switch (off: every fight on foot)
   const origEngage = HB?.engage;
   /* a road fight starts: riding = in the saddle (horseback.js); walking beside your horse = it stands by */
   function engage(f, t) {
@@ -269,12 +270,13 @@ const MOUNTFIGHT = (() => {
   const out = (m) => (m && m.ok !== false ? { up: !!m.up, hp: Math.max(0, Math.round(m.hp || 0)), max: Math.round(m.max || 1), down: !!(m.down || m.hp <= 0), name: m.name || null, coat: m.coat || null } : null);
   /* tbfight.js shared(): the leader's horse on the host entry, each riding teammate's on theirs */
   function roster(f, all, list) {
-    if (!list?.length) return;
+    if (!list?.length || !mcOn()) return;
     if (f.mount?.ok && !f.mount.foot || f.mount?.rode) list[0].mt = out(f.mount);
     for (const r of list.slice(1)) { const a = all.find((x) => x.tbk === r.k); if (a?.mt) r.mt = out(a.mt); }
   }
   /* sharedfight.js Mirror.sync: your own horse as the leader's phone keeps it, and your teammates' for the picture */
   function mirror(sess, d) {
+    if (!mcOn()) { if (sess.f?.mount) sess.f.mount = null; return; }   // mounted combat off (mountcombat.js): a stray record from an older phone draws no horse
     const f = sess.f, me = sess.me, list = d?.roster || [];
     for (const r of list) {
       const mine = r.k === "p:" + me || (r.pid && r.pid === me);
@@ -390,6 +392,7 @@ const MOUNTFIGHT = (() => {
   }
   /* a teammate's horse for the picture (their colour), or null */
   function allyHorse(f, name) {
+    if (!mcOn()) return null;
     const a = (f?.allies || []).find((x) => x && x.name === name);
     return a?.mt?.up ? a.mt.coat || "#6b4a2e" : null;
   }

@@ -63,6 +63,9 @@
      map-world                2000×1400  hand-painted world map, exact 10:7, covering the world bounds edge to edge (x·width,
                                          y·height); replaces the procedural map ground (paintedmap.js). Reference to paint over:
                                          scripts/map_reference.py. Optional map-world-2x (3000×2100) for close zoom.
+     mapt-<L>-<col>-<row>     512×512    zoom pyramid of map-world for close zoom (maptiles.js): level 1 = 4000×2800 (8×6 tiles),
+                                         level 2 = 8000×5600 (16×11 tiles), edge tiles smaller, WebP q78. Cut (and upscaled with
+                                         painted detail) from map-world by scripts/map_tiles.py; loaded only for the part in view.
      mg-mining-bg             2048×1152  painted mine wall for the mining mini-game (minegame.js), WebP q80. The stones are cut from
                                          its middle square (x 550-1450, y 110-1010, the iron vein); blurred behind them as the cave.
      ore-<iron|silver|gold|ebony> ~320   painted ore chunks, transparent, trimmed (minegame.js). Other ores borrow one, tinted.
