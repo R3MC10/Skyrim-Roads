@@ -204,29 +204,29 @@ const AISET = (() => {
   const end = (rules) => [...rules.filter((r) => r.do && D.CONDITIONS[r.if]), R("always", "attack")];
   const PRESETS = {
     warrior: { name: "Warrior", desc: "Potions when hurt, power attacks while you have the stamina and on a staggered foe.", build: (s) => ({ mode: "custom", ai: { prefer: "melee", w: { ...PREFER.melee } },
-      rules: end([R("hp_below", "potion:health", 40), makeRule({ if: "enemy_staggered" }, [{ if: "sp_above", pct: 25 }], "and"), R("sp_above", "power_attack", 60)]).map((r) => (r.conds && r.do === "attack" ? { ...r, do: "power_attack" } : r)) }) },
+      rules: end([R("hp_below", "potion:health", 50), makeRule({ if: "enemy_staggered" }, [{ if: "sp_above", pct: 25 }], "and"), R("sp_above", "power_attack", 60)]).map((r) => (r.conds && r.do === "attack" ? { ...r, do: "power_attack" } : r)) }) },
     archer: { name: "Archer", desc: "Opens with a power shot, keeps shooting, drinks when hurt.", build: () => ({ mode: "custom", ai: { prefer: "ranged", w: { ...PREFER.ranged } },
-      rules: end([R("hp_below", "potion:health", 40), R("first_turn", "power_attack"), R("sp_above", "power_attack", 75)]) }) },
+      rules: end([R("hp_below", "potion:health", 50), R("first_turn", "power_attack"), R("sp_above", "power_attack", 75)]) }) },
     battlemage: { name: "Battlemage", desc: "The right element for the foe's weakness, a sword when magicka runs low.", build: (s) => {
       const fire = bestSpell(s, (sp) => sp.kind === "damage" && sp.element === "fire"), frost = bestSpell(s, (sp) => sp.kind === "damage" && sp.element === "frost"), shock = bestSpell(s, (sp) => sp.kind === "damage" && sp.element === "shock");
       const any = bestSpell(s, (sp) => sp.kind === "damage" && sp.school === "Destruction"), arm = bestSpell(s, (sp) => sp.kind === "armor");
-      return { mode: "custom", ai: { prefer: "magic", w: { ...PREFER.magic } }, rules: end([R("hp_below", "potion:health", 35), arm && R("no_armor_spell", "spell:" + arm),
+      return { mode: "custom", ai: { prefer: "magic", w: { ...PREFER.magic } }, rules: end([R("hp_below", "potion:health", 45), arm && R("no_armor_spell", "spell:" + arm),
         fire && R("enemy_weak_fire", "spell:" + fire), frost && R("enemy_weak_frost", "spell:" + frost), shock && R("enemy_caster", "spell:" + shock), any && R("mp_above", "spell:" + any, 30)].filter(Boolean)) }; } },
     healer: { name: "Healer", desc: "Keeps friends and yourself standing; wards against casters.", build: (s) => {
       const heal = bestSpell(s, (sp) => sp.kind === "heal"), ally = bestSpell(s, (sp) => sp.kind === "healally"), ward = bestSpell(s, (sp) => sp.kind === "ward"), arm = bestSpell(s, (sp) => sp.kind === "armor");
-      return { mode: "custom", ai: { style: "careful", support: true }, rules: end([ally && D.CONDITIONS.ally_hp_below && R("ally_hp_below", "spell:" + ally, 50), heal ? R("hp_below", "spell:" + heal, 55) : R("hp_below", "potion:health", 45),
+      return { mode: "custom", ai: { style: "careful", support: true }, rules: end([ally && D.CONDITIONS.ally_hp_below && R("ally_hp_below", "spell:" + ally, 50), heal ? R("hp_below", "spell:" + heal, 55) : R("hp_below", "potion:health", 55),
         ward && R("enemy_caster", "spell:" + ward), arm && R("no_armor_spell", "spell:" + arm)].filter(Boolean)) }; } },
     necro: { name: "Necromancer", desc: "A summon or a raised corpse first, then curses and spells from behind it.", build: (s) => {
       const sum = bestSpell(s, (sp) => sp.kind === "summon"), dmg = bestSpell(s, (sp) => sp.kind === "damage"), arm = bestSpell(s, (sp) => sp.kind === "armor");
-      return { mode: "custom", ai: { prefer: "magic", w: { ...PREFER.magic } }, rules: end([R("hp_below", "potion:health", 40), sum && R("no_summon", "spell:" + sum), arm && R("no_armor_spell", "spell:" + arm), dmg && R("mp_above", "spell:" + dmg, 40)].filter(Boolean)) }; } },
+      return { mode: "custom", ai: { prefer: "magic", w: { ...PREFER.magic } }, rules: end([R("hp_below", "potion:health", 50), sum && R("no_summon", "spell:" + sum), arm && R("no_armor_spell", "spell:" + arm), dmg && R("mp_above", "spell:" + dmg, 40)].filter(Boolean)) }; } },
     mage: { name: "Mage", desc: "Heals when hurt, drinks magicka when low, and casts your strongest spell; the staff or sword only when magicka runs dry.", build: (s) => {
       const heal = bestSpell(s, (sp) => sp.kind === "heal"), dmg = bestSpell(s, (sp) => sp.kind === "damage"), arm = bestSpell(s, (sp) => sp.kind === "armor");
-      return { mode: "custom", ai: { prefer: "magic", w: { ...PREFER.magic } }, rules: end([heal ? R("hp_below", "spell:" + heal, 40) : R("hp_below", "potion:health", 40), R("mp_below", "potion:magicka", 25),
+      return { mode: "custom", ai: { prefer: "magic", w: { ...PREFER.magic } }, rules: end([heal ? R("hp_below", "spell:" + heal, 40) : R("hp_below", "potion:health", 50), R("mp_below", "potion:magicka", 25),
         arm && R("no_armor_spell", "spell:" + arm), dmg && R("always", "spell:" + dmg)].filter(Boolean)) }; } },
     thief: { name: "Thief", desc: "Always tries to sneak up first, opens with a power attack, drinks early.", build: () => ({ mode: "custom", ai: { sneak: "always" },
-      rules: end([R("hp_below", "potion:health", 50), R("first_turn", "power_attack")]) }) },
+      rules: end([R("hp_below", "potion:health", 60), R("first_turn", "power_attack")]) }) },
     trainer: { name: "Skill trainer", desc: "Hybrid + Spread practice: in easy fights it rotates weapons, blocks and every school you know, so all your skills grow. Dangerous fights it plays to win.", build: () => ({ mode: "hybrid", ai: { train: true },
-      rules: end([R("hp_below", "potion:health", 35)]) }) },
+      rules: end([R("hp_below", "potion:health", 45)]) }) },
   };
   function applyPreset(s, L, id) {
     const p = PRESETS[id]; if (!p) return null;

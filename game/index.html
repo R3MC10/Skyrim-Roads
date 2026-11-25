@@ -3569,6 +3569,9 @@ html.pcmap .compass{left:50%;right:auto;width:min(980px,52vw);transform:translat
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
 html.pcmap .compass::before,html.pcmap .compass::after{left:3%;right:3%;background:linear-gradient(90deg,transparent,rgba(214,182,110,.7) 18%,rgba(214,182,110,.7) 82%,transparent)}
 html.pcmap .compass i.cl{left:5%}html.pcmap .compass i.cr{right:5%}
+/* [mappolish] mapdock.js: on a PC the event card, its notices, the raid card and the caravan strips sit in one column at the left edge */
+html.pcmap div:has(> #mapwrap) > #topcards,html.pcmap #topcards{position:fixed;z-index:6;left:14px;top:var(--dock-top,12px);transform:none;width:min(380px,30vw);max-height:var(--dock-max,calc(100vh - 220px));align-items:flex-start}
+html.pcmap #topcards #wev{margin:0}
 /* Legendary hunts (leghunt.js): Jarl contract posters, the hunt card, the bestiary */
 .lh-poster,.lh-card{display:flex;gap:10px;align-items:flex-start;padding:10px;margin:8px 0;border:1px solid var(--line);border-radius:10px;background:rgba(40,30,18,.35)}
 .lh-poster.here{border-color:var(--gold);box-shadow:inset 0 0 0 1px rgba(226,187,100,.25)}
@@ -3798,6 +3801,7 @@ html.art-pixel .lh-paint{border-radius:0;image-rendering:pixelated}html.art-pixe
 <script src="worldevents.js"></script>
 <script src="gevstack.js"></script>
 <script src="greatevents.js"></script>
+<script src="mapdock.js"></script>
 <script src="economy.js"></script>
 <script src="bards.js"></script>
 <script src="skillinfo.js"></script>
@@ -3865,6 +3869,7 @@ html.art-pixel .lh-paint{border-radius:0;image-rendering:pixelated}html.art-pixe
 <script src="i18n_partytraps.js"></script>
 <script src="i18n_fishhunt.js"></script>
 <script src="i18n_esckey.js"></script>
+<script src="i18n_comingnext.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

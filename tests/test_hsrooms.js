@@ -10,7 +10,8 @@ const files = ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "
 for (const f of files) if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 let fails = 0, n = 0;
 c.ok = (cond, msg) => { n++; if (!cond) { fails++; console.log("FAIL", msg); } else console.log("ok  ", msg); };
-const SIM = fs.readFileSync(__dirname + "/test_bal_sim.js", "utf8");
+// raids were tuned with the old "drink at 40%" rule; keep it here so this balance check is unchanged
+const SIM = fs.readFileSync(__dirname + "/test_bal_sim.js", "utf8").replace('pct: 50, do: "potion:health"', 'pct: 40, do: "potion:health"');
 vm.runInContext(SIM.slice(SIM.indexOf("const LEVELS"), SIM.indexOf("const BUILDS")) + `
 var ART = { html: () => "<img>" }; var NPCART = { follower: () => "" };
 const H = HOMESTEAD, X = HSROOMS, DAY = H.DAY;

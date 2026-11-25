@@ -11,8 +11,8 @@
    - kills: a bigger burst and a pool spreading under the body; a strong finisher now and then knocks a helmet or a
      weapon flying, or takes a limb off a beast or a skeleton (ink silhouettes).
    - followers, party members and horses get hit effects too, but they are knocked down, never killed: no kill effects.
-   Settings → Fights → Blood and gore: Off / Low / Full (prefs key "gore": false / "low" / true; default Full).
-   Low = fewer particles, no flourishes and no beheading. Reduced motion and the Low lighting/Lite motion settings
+   Settings → Fights → Gore: Off / Reduced / Full (prefs key "gore": false / "low" / true; default Full).
+   Reduced = fewer particles, no flourishes and no beheading. Reduced motion and the Low lighting/Lite motion settings
    cut the particle count; Off draws nothing at all.
    In sync: every spray, splat and streak comes from a seeded random (the fight, the turn, the blow), never the phone's own dice,
    so the same blow looks the same on every phone in a shared fight. Purely visual: it never touches a result.
@@ -35,7 +35,7 @@ const GORE = (() => {
   const on = () => level() !== "off";
   const full = () => level() === "full";
   function pref(k, v) { if (k !== "gore") return false; setLevel(v === "true" ? "full" : v === "false" ? "off" : v); return true; }
-  const settingsHTML = (seg) => `<div class="setrow"><span>Blood and gore</span>${seg("gore", [["off", "Off"], ["low", "Low"], ["full", "Full"]], level())}</div>`;
+  const settingsHTML = (seg) => `<div class="setrow"><span>Gore</span>${seg("gore", [["off", "Off"], ["low", "Reduced"], ["full", "Full"]], level())}</div>`;
   const sysReduce = () => { try { return typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; } };
   /* how many particles this phone gets: the setting, reduced motion, and the Low graphics settings */
   function budget(o = {}) {
@@ -44,6 +44,8 @@ const GORE = (() => {
     let cap = lv === "low" ? 90 : 220;
     const lowGfx = o.lowGfx ?? ((typeof LIGHTFX !== "undefined" && LIGHTFX.level && LIGHTFX.level() !== "high") || (typeof MOTION !== "undefined" && MOTION.lite && MOTION.lite()));
     if (lowGfx) cap = Math.round(cap * 0.6);
+    const fq = o.quality ?? (typeof FIGHTSET !== "undefined" && FIGHTSET.quality ? FIGHTSET.quality() : "high");   // Settings → Fights → Fight quality
+    if (fq === "low") cap = Math.round(cap * 0.55); else if (fq === "med") cap = Math.round(cap * 0.8);
     if (o.reduce ?? sysReduce()) cap = Math.round(cap * 0.5);
     return Math.max(24, cap);
   }
@@ -57,13 +59,14 @@ const GORE = (() => {
   // [main colour, dark colour, kind]  kind: blood · bone · oil · spirit · ichor · essence
   const MAT = {
     blood: ["#8e1010", "#4a0606", "blood"], dragon: ["#6a0a0a", "#300303", "blood"], green: ["#7a9a2a", "#3e5214", "blood"],
-    ichor: ["#3a1240", "#16061a", "ichor"], bone: ["#e8e0c8", "#a89e84", "bone"], oil: ["#1e1c16", "#3e3a2c", "oil"],
+    ichor: ["#3a1240", "#16061a", "ichor"], sap: ["#9a6414", "#5a3a08", "ichor"], bone: ["#e8e0c8", "#a89e84", "bone"], oil: ["#1e1c16", "#3e3a2c", "oil"],
     spirit: ["#bfeee0", "#7fc8c0", "spirit"], essence: ["#ffb347", "#ff7a2a", "essence"],
   };
   const BLEEDS = new Set(["blood", "ichor"]);   // these leave red (or green, or black) drops; the rest never bleed
   /* the material from the foe's kind (fightart.foeOf) and name */
   function matOf(kind, name = "", tags = []) {
     const n = String(name || "").toLowerCase(), tg = new Set(tags || []);
+    if (/spriggan/.test(n) || kind === "sol_spriggan" || kind === "spriggan") return "sap";   // [blood2] spriggans bleed amber sap
     if (/ghost|spectral|spectre|wraith|shade|spirit|wisp|apparition/.test(n) || kind === "wisp") return "spirit";
     if (/dremora|daedr|seeker|lurker|xivilai|scamp|clannfear|spider daedra/.test(n) || kind === "sol_seeker" || kind === "sol_lurker") return "ichor";
     if (kind === "atronach" || /atronach/.test(n)) return "essence";
@@ -71,7 +74,7 @@ const GORE = (() => {
     if (["sphere", "centurion", "dspider"].includes(kind) || /dwarven|dwemer|centurion|sphere|construct|automaton/.test(n) || tg.has("construct")) return "oil";
     if (kind === "dragon" || tg.has("dragon")) return "dragon";
     if (kind === "falmer" || kind === "spider" || /falmer|chaurus|frostbite|spider/.test(n)) return "green";
-    if (/ash spawn|ash hopper|spriggan/.test(n) || kind === "sol_spawn" || kind === "sol_spriggan") return "bone";   // ash and bark: dust and chips
+    if (/ash spawn|ash hopper/.test(n) || kind === "sol_spawn") return "bone";   // ash: dust and chips
     return "blood";
   }
   /* the kind of blow, from a fight beat (fightart.beatsOf) and its move */
@@ -133,6 +136,7 @@ const GORE = (() => {
     if (!st) { st = { spl: [], marks: { foe: mk(seed0, 1), hero: mk(seed0, 2), ally: mk(seed0, 3) } }; if (fightKey) STAINS.set(fightKey, st); }
     const spl = st.spl, flyers = [], status = { foe: {}, hero: {} };
     let dripT = 0, dripR = rng(seed0 ^ 0x5bd1e995), tSince = 0;
+    let liq = null;   // [blood2] gorefx2.js can draw the drops, their splats and the streaks as rendered liquid (null: ink)
     function mk(sd, k) { const r = rng((sd ^ (k * 0x9e3779b1)) >>> 0), streaks = []; for (let i = 0; i < 6; i++) streaks.push([(r() - 0.5) * 14, -8 + r() * 22, 5 + r() * 9, r()]); return { streaks, arrows: [], char: 0, col: null }; }
 
     function spawn(t, c, px, py, pvx, pvy, l, size, g, ly) {
@@ -145,6 +149,7 @@ const GORE = (() => {
     }
     function stain(px, py, r, c, kind, a = 0.85, grow = 0) {   // kind 0 splat · 1 pool · 2 scorch · 3 oil
       if (lv === "off") return;
+      if (liq && liq.stain && liq.stain(px, py, r, c, kind, a, grow)) return;
       if (spl.length >= SPL) { const j = spl.findIndex((q) => q.k !== 1); spl.splice(j < 0 ? 0 : j, 1); }   // pools stay; the oldest splat goes
       spl.push({ x: px / W, y: (py - gy) / s, r: r / s, c, k: kind, a, g: grow, rr: grow ? 0 : 1, e: 0.22 + (spl.length % 5) * 0.03 });
     }
@@ -197,7 +202,7 @@ const GORE = (() => {
       if (!k.instant && death !== "ash" && death !== "shatter" && death !== "fade") { hit(t, { type: k.type || "slash", frac: 0.6, final: true, crit: !!k.crit, power: !!k.power, from: dir, key: `kill${k.key ?? 0}` }); res.burst = true; }
       if ((BLEEDS.has(kind) || kind === "oil") && !["ash", "shatter", "fade"].includes(death) && k.type !== "fire") {
         stain(bx, ground + 1.5 * s, (16 + r() * 4) * s * Math.min(1.8, size) * (mat === "dragon" ? 1.6 : 1), kind === "oil" ? "#141210" : M[1], 1, 0.78, k.instant ? 0 : 1.4);
-        if (k.instant) spl[spl.length - 1].rr = 1;
+        if (k.instant && spl.length) spl[spl.length - 1].rr = 1;
         res.pool = true;
       } else if (kind === "bone" && death !== "fade") { stain(bx, ground + 1.5 * s, 12 * s * Math.min(1.6, size), "#cfc6ae", 0, 0.35); }   // a little heap of grave dust
       const strong = k.crit || k.power || k.slowmo || k.boss;
@@ -236,7 +241,7 @@ const GORE = (() => {
         x[i] += vx[i] * dt; y[i] += vy[i] * dt; rot[i] += vr[i] * dt;
         if (t === PUFF) sz[i] += dt * 5;
         if ((t === DROP || t === CHIP || t === SHARD || t === GEAR) && vy[i] > 0 && y[i] >= land[i]) {   // it lands
-          if (t === DROP) { stain(x[i], land[i], sz[i] * s * (1.1 + Math.min(1.4, Math.abs(vx[i]) / (200 * s))), col[i], col[i] === MAT.oil[0] || col[i] === MAT.oil[1] ? 3 : 0, 0.82); life[i] = 0; }
+          if (t === DROP) { if (!(liq && liq.land(x[i], land[i], sz[i] * s, col[i], vx[i]))) stain(x[i], land[i], sz[i] * s * (1.1 + Math.min(1.4, Math.abs(vx[i]) / (200 * s))), col[i], col[i] === MAT.oil[0] || col[i] === MAT.oil[1] ? 3 : 0, 0.82); life[i] = 0; }
           else { y[i] = land[i]; vy[i] = 0; vx[i] *= 0.3; vr[i] = 0; grav[i] = 0; life[i] = Math.min(life[i], 0.6); }
         }
       }
@@ -290,6 +295,7 @@ const GORE = (() => {
         const [dx, dy, len, w] = m.streaks[i], X = fx + dx * sc, Y = fy + dy * sc;
         g.globalAlpha = 0.85; g.strokeStyle = i % 2 ? M[1] : M[0]; g.fillStyle = g.strokeStyle;
         if (pixel) { g.fillRect(snap(X), snap(Y), 3, Math.max(3, snap(len * sc))); continue; }
+        if (liq && liq.streak && liq.streak(g, X, Y, len * sc, w, i, mat)) continue;
         g.lineWidth = Math.max(1, (1.1 + w) * sc * 0.7); g.beginPath(); g.moveTo(X, Y); g.quadraticCurveTo(X + (w - 0.5) * 2 * sc, Y + len * sc * 0.5, X, Y + len * sc); g.stroke();
         g.beginPath(); g.arc(X, Y + len * sc, Math.max(1, 1.3 * sc * 0.7), 0, 6.283); g.fill();   // the drop at the end of the run
       }
@@ -325,6 +331,7 @@ const GORE = (() => {
         const t = typ[i], a = Math.max(0, Math.min(1, life[i] / max[i] * 1.6)), r = sz[i] * s;
         g.globalAlpha = t === PUFF ? a * 0.4 : t === WISP ? a * 0.55 : a; g.fillStyle = col[i];
         if (pixel) { const q = Math.max(3, snap(r * 1.4)); g.fillRect(snap(x[i]), snap(y[i]), q, q); continue; }
+        if (t === DROP && liq && liq.drop(g, x[i], y[i], vx[i], vy[i], r, col[i], g.globalAlpha, i)) continue;
         if (t === DROP) {   // a drop stretches along its flight: ink spray
           const sp = Math.hypot(vx[i], vy[i]); g.strokeStyle = col[i]; g.lineCap = "round";
           if (sp > 60 * s) { g.lineWidth = Math.max(1, r); g.beginPath(); g.moveTo(x[i], y[i]); g.lineTo(x[i] - vx[i] * 0.025, y[i] - vy[i] * 0.025); g.stroke(); }
@@ -338,6 +345,7 @@ const GORE = (() => {
     }
     const S = {
       hit, kill, spurt, statusOf, update, settle, clear, drawGround, drawMarks, drawFront,
+      setLiquid(o2) { liq = pixel ? null : o2 || null; }, liquid: () => liq,
       level: lv, mat: foeMat, cap: CAP,
       count: () => { let n = 0; for (let i = 0; i < CAP; i++) if (life[i] > 0) n++; return n; },
       stains: () => spl.length, flyers: () => flyers.map((f) => f.shape), marks: (side) => st.marks[side],
