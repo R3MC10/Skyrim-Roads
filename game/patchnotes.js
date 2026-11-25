@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b232-glowfix", build: 232, date: "25 Nov 2026", title: "No more glowing blob next to your weapon", items: [
+      "An enchanted weapon used to leave a big glowing blob floating in the air beside your hero in fights. The glow now sits on the weapon itself, as a slim shine along the blade.",
+    ] },
     { id: "b231-nomountfight", build: 231, date: "25 Nov 2026", title: "Horses wait at the edge of the fight", items: [
       "Horses now wait at the edge of the fight; you always fight on foot. That goes for solo fights, parties and co-op.",
       "Nobody goes for your horse and it never gets knocked down in a fight. If you rode in, you're back in the saddle when it's over.",
