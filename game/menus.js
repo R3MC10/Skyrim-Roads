@@ -69,6 +69,13 @@ const MENUS = (() => {
   function afterPanel() {
     if (!live) return;
     for (const on of document.querySelectorAll("#side .mn-sub button.on, #twbar .twbar-t.on")) { const row = on.parentElement; row.scrollLeft = Math.max(0, on.offsetLeft - row.offsetLeft - (row.clientWidth - on.offsetWidth) / 2); }
+    for (const row of document.querySelectorAll("#side .mn-sub, #twbar .twbar-tabs")) edges(row);
+  }
+  /* a strip wider than the screen fades out at the end(s) that hide more tabs (layout-3) */
+  function edges(row) {
+    const upd = () => { const m = row.scrollWidth - row.clientWidth; row.classList.toggle("mn-fl", m > 2 && row.scrollLeft > 2); row.classList.toggle("mn-fr", m > 2 && row.scrollLeft < m - 2); };
+    if (!row.dataset.mnfade) { row.dataset.mnfade = "1"; row.addEventListener("scroll", upd, { passive: true }); }
+    upd();
   }
   /* the SkyUI item/spell menu opened or closed: light its bottom tab, and offer the plain pack list */
   function skyOn(page, el) {
