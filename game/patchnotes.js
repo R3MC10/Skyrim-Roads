@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b293-locscreen", build: 293, date: "25 Nov 2026", title: "Every place opens full screen", items: [
+      "Arriving in a town, a farm, a camp, a cave mouth, a shrine or any other place now opens it full screen: a painted picture of the place, its name in big letters, the hold, a short line about it, the time and the weather.",
+      "Everything you can do there stands on the picture as a signpost (blacksmith, inn, general goods, the jarl, the notice board, caravans, gathering...) with a few words on what's going on: open or closed, a job to hand in, a caravan in town. Tap one to open it; its back button brings you back to the place.",
+      "People here (other players, your follower, the townsfolk you can talk to) sit as small portraits along the bottom. Pictures drift slowly, nights are darker, and snow or rain falls when the weather turns.",
+      "On a phone the signposts turn into a readable list over the lower half of the picture. On a PC, arrows or WASD walk between them, Enter opens one and Esc leaves to the map.",
+      "Prefer the old plain list? Press List; the game remembers it, and Scene view brings the picture back.",
+    ] },
     { id: "b292-caravanpanel", build: 292, date: "25 Nov 2026", title: "Caravans open in a panel", items: [
       "Tapping a caravan on the map now opens a proper panel instead of a small floating card. On a PC it sits on the right side of the screen, full height, and the map stays visible beside it; on a phone it slides up from the bottom and sits above the menu bar.",
       "Every button (Catch up, Trade, Escort, Ask for news, Help, Rob) is always reachable now: nothing hides under the bottom bar any more, and a long list of their wares scrolls inside the panel.",
