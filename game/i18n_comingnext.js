@@ -23,10 +23,22 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Ręczne zbieranie ziół już jest w grze, więc zniknęło z listy „Wkrótce”.",
     "Hands-on gathering: a little harvest game for every kind of plant":
       "Zbieranie na serio: mała gra przy zbiorze każdego rodzaju rośliny",
-    "Mentoring: play side by side with friends of any level":
-      "Mentorowanie: graj ramię w ramię z przyjaciółmi na dowolnym poziomie",
-    "Shrines of your own: build a Daedric altar at your longhouse":
-      "Własne kapliczki: zbuduj daedryczny ołtarz w swojej siedzibie",
+    "A turn order you can read at a glance: who acts next, and in what order":
+      "Kolejność tur czytelna na pierwszy rzut oka: kto rusza się następny i w jakiej kolejności",
+    "A fight camera that leans in on the big hits":
+      "Kamera w walce, która przybliża się przy mocnych ciosach",
+    "New things open up step by step as you play, and better rewards after fights and dungeons":
+      "Nowe rzeczy odblokowują się krok po kroku w trakcie gry, a po walkach i lochach czekają lepsze nagrody",
+    "A guided first half hour for new heroes":
+      "Pierwsze pół godziny z przewodnikiem dla nowych bohaterów",
+    "The menus in five simple tabs":
+      "Menu w pięciu prostych zakładkach",
+    "Small fixes and a fresh Coming next":
+      "Drobne poprawki i świeża lista „Wkrótce”",
+    "Character creation: the Male / Female switch now just says Male and Female, so it no longer shows phone emoji on some phones.":
+      "Tworzenie postaci: przełącznik Mężczyzna / Kobieta pokazuje teraz tylko napisy, więc na niektórych telefonach nie wyświetla już emoji.",
+    "The Coming next list in Patch notes shows what's really being built now: turn order, a fight camera, things that open up as you play, better rewards, a guided start and simpler menus.":
+      "Lista „Wkrótce” w informacjach o aktualizacjach pokazuje, nad czym naprawdę teraz pracujemy: kolejność tur, kamera w walce, rzeczy odblokowywane w trakcie gry, lepsze nagrody, start z przewodnikiem i prostsze menu.",
     "Regional crises and heists":
       "Kryzysy w regionach i skoki",
     "Follower and horse bonds, and spell crafting":

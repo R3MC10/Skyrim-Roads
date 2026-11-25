@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b337-redtests", build: 337, date: "25 Nov 2026", title: "Small fixes and a fresh Coming next", items: [
+      "Character creation: the Male / Female switch now just says Male and Female, so it no longer shows phone emoji on some phones.",
+      "The Coming next list in Patch notes shows what's really being built now: turn order, a fight camera, things that open up as you play, better rewards, a guided start and simpler menus.",
+    ] },
     { id: "b336-channel", build: 336, date: "25 Nov 2026", title: "See your friends get ready", items: [
       "In a party fight, when a friend casts a spell, swings, draws a bow or uses a skill from an item, you now see them get ready for it: their hero raises a hand with embers, gathers frost or sparks, pulls back their weapon or draws the bowstring, and a small bar over their head fills while they play their minigame.",
       "Each kind of move has its own colour: fire orange, frost ice blue, shock violet, healing gold, blows steel grey, bows green.",
@@ -2225,10 +2229,13 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 297;
+  const NEXT_AT = 337;
   const NEXT = [
-    "Mentoring: play side by side with friends of any level",
-    "Shrines of your own: build a Daedric altar at your longhouse",
+    "A turn order you can read at a glance: who acts next, and in what order",
+    "A fight camera that leans in on the big hits",
+    "New things open up step by step as you play, and better rewards after fights and dungeons",
+    "A guided first half hour for new heroes",
+    "The menus in five simple tabs",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];
