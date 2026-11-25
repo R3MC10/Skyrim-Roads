@@ -26,8 +26,11 @@ const RIGGEAR = (() => {
   const SPAN = { sword: 33, dagger: 16, greatsword: 46, axe: 29, battleaxe: 40, mace: 28, warhammer: 30, spear: 62, staff: 52, club: 32, crossbow: 26 };
   const BOW_H = 36, BRACE = 5.6;
   /* the painted pictures: grip point (measured on the leather wrap) */
-  const PIV = { sword: [0.167, 0.505], "sword-iron": [0.145, 0.522], dagger: [0.23, 0.489], greatsword: [0.155, 0.493], axe: [0.17, 0.428],
+  /* [dollrig2] the grip of each picture comes from the one table (gripdata.js), shared with the paper doll */
+  const PIV0 = { sword: [0.167, 0.505], "sword-iron": [0.145, 0.522], dagger: [0.23, 0.489], greatsword: [0.155, 0.493], axe: [0.17, 0.428],
     battleaxe: [0.15, 0.495], mace: [0.2, 0.502], staff: [0.33, 0.548] };
+  const GD = typeof GRIPDATA !== "undefined" ? GRIPDATA : typeof require !== "undefined" ? (() => { try { return require("./gripdata.js"); } catch { return null; } })() : null;
+  const PIV = Object.fromEntries(Object.keys(PIV0).map((k) => [k, (GD && GD.TABLE[k] && GD.TABLE[k].grip) || PIV0[k]]));
   const BOWPIC = { bow: { riser: 0.68, nock: 0.04 }, "bow-drawn": { riser: 0.69, nock: 0.02, y: 0.48 } };
   const SHPIC = { shield: [15, 19.5], "shield-side": [4.6, 19.5], "shield-kite": [13.4, 21], "shield-kite-side": [3.6, 21] };
 
@@ -399,6 +402,6 @@ const RIGGEAR = (() => {
     if (f.translucent) { g.globalAlpha = 0.32; g.fillStyle = "#fff"; g.beginPath(); g.ellipse(0.6, -5.4, 1, 1.8, -0.6, 0, TAU); g.fill(); g.globalAlpha = 1; }
     g.restore();
   }
-  return { weapon, shield, helmet, sprite, tone, TIP, GRIP, SPAN, BOW_H, BRACE };
+  return { weapon, shield, helmet, sprite, tone, picFor, metalOf, TIP, GRIP, SPAN, BOW_H, BRACE, PIV, SHPIC };
 })();
 if (typeof module !== "undefined") module.exports = RIGGEAR;

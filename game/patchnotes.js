@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b334-dollrig2", build: 334, date: "25 Nov 2026", title: "Your hero stands face-on on the Items screen", items: [
+      "On the Items screen your hero now faces you, like in Skyrim's inventory, and stands relaxed with their gear: they breathe, sway a little, their cape and hair lag behind, and now and then they shift their grip.",
+      "A one-handed weapon hangs from the right hand, a two-hander rests point-down in both hands, a bow sits in the left hand and a staff or spear stands planted by the right foot.",
+      "Your shield sits on your left arm in front of your body, and every weapon is held by its handle with the fist closed round it.",
+      "In fights the same goes for your fighter: the main weapon is always in the right hand and the shield or second weapon in the left, each drawn in its own layer, so arms, shields and blades don't overlap into weird shapes anymore.",
+      "Reduce motion in Settings keeps your hero still, and they stop moving while the game is in the background.",
+    ] },
     { id: "b331-partyfoeturns", build: 331, date: "25 Nov 2026", title: "Foes take proper turns in party fights", items: [
       "In a party fight the foe now says who its next move goes for, and that's who it really hits. Before, it could say \"you\" and then hit a teammate.",
       "When a fast foe moves twice in a round, its 1st move always comes before its 2nd in the turn strip.",
