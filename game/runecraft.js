@@ -44,7 +44,7 @@ const RUNECRAFT = (() => {
   const DELIVERIES = {
     bolt: { name: "Bolt", dmg: ["damage", 1, 1], heal: ["heal", 1, 1], ward: ["ward", 1, 1] },
     touch: { name: "Touch", dmg: ["damage", 1, 0.95], heal: ["heal", 1, 0.95], ward: ["ward", 1, 0.95] },
-    rune: { name: "Rune trap", dmg: ["rune", 1.4, 1.45] },
+    rune: { name: "Rune trap", dmg: ["rune", 0.95, 1] },
     cloak: { name: "Cloak", dmg: ["cloak", 0.15, 1.6, 10], heal: ["regen", 0.12, 1.7, 9], ward: ["ward", 0.6, 1.3] },
     area: { name: "Area", dmg: ["damage", 0.8, 1.35], area: true },
     over: { name: "Over time", dmg: ["dot", 0.4, 1.7, 4], heal: ["regen", 0.2, 1.6, 5] },
@@ -71,7 +71,7 @@ const RUNECRAFT = (() => {
     ward: "A shield against spells, breath and enchanted blows.",
     bolt: "One hit at range.",
     touch: "A hit up close. Costs a little less magicka than a bolt.",
-    rune: "A trap on the ground. Hits hard when the foe moves onto it.",
+    rune: "A trap on the ground. Goes off when the foe moves onto it, before it can strike.",
     cloak: "Wraps around you and works every round.",
     area: "A burst that also reaches the foes waiting behind.",
     over: "Works every round for a few rounds.",

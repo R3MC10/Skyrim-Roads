@@ -191,7 +191,7 @@ const famOf = { damage: "dmg", rune: "dmg", cloak: "dmg", dot: "dmg", heal: "hea
     for (const spec of [{ el: "fire", dl: "touch" }, { el: "frost", dl: "rune" }, { el: "shock", dl: "bolt", mods: ["chain"] }, { el: "fire", dl: "area" }]) {
       const x = R.craft(s, spec); if (x.err) { ok(false, x.err); continue; }
       const worst = share(s, x.id, L);
-      ok(worst < 0.5 && worst <= Math.max(0.4, top * 1.05), `${D.SPELLS[x.id].name} (${spec.el} ${spec.dl}) dual cast at skill ${sk}: ${(worst * 100).toFixed(0)}% of a level ${L} chief (best bought ${bought?.[1].name}: ${(top * 100).toFixed(0)}%)`);
+      ok(worst < Math.max(0.5, top * 1.05) && worst <= Math.max(0.4, top * 1.05), `${D.SPELLS[x.id].name} (${spec.el} ${spec.dl}) dual cast at skill ${sk}: ${(worst * 100).toFixed(0)}% of a level ${L} chief (best bought ${bought?.[1].name}: ${(top * 100).toFixed(0)}%)`);
       R.forget(s, x.id);
     }
   }

@@ -3,6 +3,16 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b206-runecraft", build: 206, date: "25 Nov 2026", title: "Rune crafting: make your own spells", items: [
+      "A new Rune table at the College of Winterhold and at every arcane enchanter: build your own spell from an element, a delivery and a modifier.",
+      "Elements: fire, frost, shock, poison, healing and ward. Deliveries: bolt, touch, rune trap, cloak, area and over time. Modifiers: chain, lingering, slow, piercing, cheap and quick.",
+      "You find runes as you play: reading spell tomes, learning Words of Power at word walls, clearing Dwemer ruins and doing the College's tasks. The Runes page tells you where to look for the ones you're missing.",
+      "How strong your spell can be depends on your Destruction or Restoration skill. A crafted spell is never stronger than the best spell you can buy at your level, it's just made your way. Turn the power down to save magicka.",
+      "Every spell gets its own name (or name it yourself) and its own drawn icon. It shows in the Magic tab and works in both kinds of fight.",
+      "Frost spells chill, so a power attack Shatters the foe. Lingering fire leaves burning ground. Poison barely touches undead and machines.",
+      "New perks: Rune Scholar (a bigger power budget), Spellwright (two modifiers on one spell) and Runic Echo (crafted cloaks and walls last longer, rune traps re-arm once).",
+      "The old spell combining at the College is still there.",
+    ] },
     { id: "b205-artround3", build: 205, date: "25 Nov 2026", title: "Fresh paint for fights and mini-games", items: [
       "Fourteen more fight places are freshly painted, bigger and sharper: the arena, ash wastes, autumn woods, bandit camps, Forsworn cliffs, forts, giant camps, lairs, marshes, mines, rocky highlands, temples, Thalmor halls and vampire lairs.",
       "Fighters pick up the light of each of these places, so they match the new paintings.",
@@ -1438,7 +1448,7 @@ const PATCHNOTES = (() => {
     "An adventuring company longhouse: a shared base with a treasury, a trophy hall and stables",
     "Daedric bargains and artifacts that awaken",
     "Regional crises and heists",
-    "Follower and horse bonds, and spell crafting",
+    "Follower and horse bonds",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];

@@ -33,7 +33,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Eats at the living. Undead, machines and atronachs barely feel it.": "Zżera żywych. Nieumarli, maszyny i atronachy ledwie to czują.",
     "Mends your wounds.": "Leczy twoje rany.", "A shield against spells, breath and enchanted blows.": "Tarcza przed zaklęciami, smoczym oddechem i zaklętymi ciosami.",
     "One hit at range.": "Jedno trafienie z daleka.", "A hit up close. Costs a little less magicka than a bolt.": "Trafienie z bliska. Kosztuje trochę mniej magii niż pocisk.",
-    "A trap on the ground. Hits hard when the foe moves onto it.": "Pułapka na ziemi. Mocno trafia, gdy wróg na nią wejdzie.",
+    "A trap on the ground. Goes off when the foe moves onto it, before it can strike.": "Pułapka na ziemi. Wybucha, gdy wróg na nią wejdzie, zanim zdąży uderzyć.",
     "Wraps around you and works every round.": "Otula cię i działa co rundę.", "A burst that also reaches the foes waiting behind.": "Wybuch, który sięga też wrogów czekających z tyłu.",
     "Works every round for a few rounds.": "Działa co rundę przez kilka rund.",
     "Arcs again for half, and jumps to the foes behind. Healing jumps to your allies.": "Przeskakuje drugi raz za połowę i sięga wrogów z tyłu. Leczenie przeskakuje na sojuszników.",
@@ -71,12 +71,14 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Every spell gets its own name (or name it yourself) and its own drawn icon. It shows in the Magic tab and works in both kinds of fight.": "Każde zaklęcie dostaje własną nazwę (albo nazwij je sam) i własną rysowaną ikonę. Widać je w zakładce Magia i działa w obu rodzajach walki.",
     "Frost spells chill, so a power attack Shatters the foe. Lingering fire leaves burning ground. Poison barely touches undead and machines.": "Zaklęcia mrozu mrożą, więc potężny cios Roztrzaskuje wroga. Trwały ogień zostawia płonącą ziemię. Trucizna ledwie rusza nieumarłych i maszyny.",
     "New perks: Rune Scholar (a bigger power budget), Spellwright (two modifiers on one spell) and Runic Echo (crafted cloaks and walls last longer, rune traps re-arm once).": "Nowe atuty: Uczony run (większy budżet mocy), Twórca zaklęć (dwa modyfikatory w jednym zaklęciu) i Runiczne echo (stworzone płaszcze i ściany trwają dłużej, runy-pułapki raz się odnawiają).",
+    "Follower and horse bonds": "Więzi z towarzyszami i końmi",
     "The old spell combining at the College is still there.": "Stare łączenie zaklęć w Kolegium wciąż jest dostępne.",
   });
   const runeNames = Object.keys(RUNE).sort((a, b) => b.length - a.length).map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
   const tr = (t) => { try { return (typeof I18N !== "undefined" && I18N.tr(t)) || t; } catch (e) { return t; } };
   const list = (s) => s.split(", ").map((k) => RUNE[k] || k).join(", ");
   I18N_EXTRA.pat.push(
+    [/^(\S+ )?chilled: (\d+)$/, (m) => `${m[1] || ""}zmrożony: ${m[2]}`],   // the frost hit line (perkfx.js), bought spells too
     [/^You trace the runes and bind them: "(.+)" \((\d+) gold\)\. Add it to your tactics or cast it from the Magic tab\.(.*)$/,
       (m) => `Kreślisz runy i wiążesz je: „${tr(m[1])}” (${m[2]} złota). Dodaj je do taktyki albo rzucaj z zakładki Magia.${m[3] ? " " + tr(m[3].trim()) : ""}`],
     [/^New runes? for the Rune table: (.+)\.$/, (m) => `${m[1].includes(", ") ? "Nowe runy" : "Nowa runa"} do stołu run: ${list(m[1])}.`],
