@@ -41,7 +41,7 @@ const DUNROOMS = (() => {
     bear: 0.62, icewraith: 0.62, ashspawn: 0.74, giant: 0.92, troll: 0.86, frosttroll: 0.86, mammoth: 0.9, centurion: 0.92 };
   function foeKeyOf(type, foe) {
     if (!foe || !FOE_ROOMS[type] || !has() || !ASSETS.foeKey) return "";
-    const k = ASSETS.foeKey(foe.name, foe.kind || (foe.tags || [])[0]) || "";
+    const k = ASSETS.foeKey(foe.name, foe.kind || (foe.tags || [])[0], foe.arch) || "";
     return k === "foe-dragon" ? "" : k;   // a dragon doesn't fit under a ceiling
   }
   function foeHTML(fk, type) {

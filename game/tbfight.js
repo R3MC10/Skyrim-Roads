@@ -83,6 +83,43 @@ const TB = (() => {
     const b = base(f, a), n = (sess && sess.used && sess.used[a]) || 0, m = 1 + REPEAT * n, st = (sess && sess.st) || {};
     return { sp: Math.round((b.sp || 0) * m * (1 - (st.spCut || 0))), mp: Math.round((b.mp || 0) * m * (1 - (st.mpCut || 0))), hp: Math.round((b.hp || 0) * m), n, eng: b.eng || null, acts: b.acts > 1 ? b.acts : 1 };   // acts: moves it takes (getting on a horse: two)
   }
+  /* [movepreview] what a move will do before you make it: { lo, hi } damage to the foe (the low and high end of the
+     dice), { heal } for you, plus its cost. The fight tooltips (tbtips.js) and the striped "could lose" piece on the
+     foe's bar (movepreview.js) both read this one function, so the words and the bar always agree. It keeps the
+     no-one-shot rule: one blow takes at most 40% of a strong foe's health unless it finishes it (capFoe below). */
+  function preview(f, a, sess) {
+    const out = { a, lo: 0, hi: 0, heal: 0, guard: 0, c: cost(f, a, sess) };
+    if (!f) return out;
+    if (a === "end") { out.guard = sess && sess.guardLeft ? sess.guardLeft() : 0; return out; }
+    const [k, arg] = String(a).split(":"), [s0, s1] = typeof F !== "undefined" && F.DAMAGE_SPREAD ? F.DAMAGE_SPREAD : [0.8, 1.2];
+    const cut = (d) => (f.e && f.e.red ? d * (1 - f.e.red) : d);
+    let lo = 0, hi = 0;
+    if (a === "attack" || a === "power_attack") {
+      let d = 0; try { d = f.weaponDamage(); } catch (e) { d = 0; }
+      d = cut(d * (a === "power_attack" ? (typeof F !== "undefined" ? F.POWER_ATTACK_DAMAGE : 2) : 1));
+      lo = d * s0; hi = d * s1;
+    } else if (k === "spell" || k === "dual" || k === "scroll") {
+      const sp = spellOf(a);
+      if (sp && sp.kind === "damage") {
+        const MG = typeof MAGIC !== "undefined" ? MAGIC : null;
+        let d = typeof G.spellDamage === "function" ? G.spellDamage(f.s, sp) : sp.amount || 0;
+        if (k === "dual") d *= ((MG && MG.DUAL_POWER) || 2.2) * (typeof MOUNTFIGHT !== "undefined" && MOUNTFIGHT.dualPow ? MOUNTFIGHT.dualPow(f) : 1);
+        if (MG && MG.elem && sp.element !== "sun" && f.tags) { try { d *= MG.elem(f, sp.element); } catch (e) { /* no foe tags */ } }
+        if (f.fp && f.fp.ward) d *= 1 - f.fp.ward;
+        if (sp.element === "sun" && f.tags && !f.tags.has("undead")) d = 0;
+        lo = hi = d;
+      } else if (sp && sp.kind === "heal") {
+        out.heal = Math.round((typeof G.spellHeal === "function" ? G.spellHeal(f.s, sp) : sp.amount || 0) * (k === "dual" ? ((typeof MAGIC !== "undefined" && MAGIC.DUAL_POWER) || 2.2) : 1));
+      }
+    }
+    lo = Math.max(lo > 0 ? 1 : 0, Math.round(lo)); hi = Math.max(lo, Math.round(hi));
+    out.raw = [lo, hi];
+    // the foe can't lose more than it has, nor more than the blow cap (a finishing blow on a nearly beaten foe is fine)
+    const before = Math.max(0, f.ehp || 0), max = (sess && sess.ehpMax) || before, cap = HIT_CAP * max, trash = sess ? sess.trash : false;
+    const capped = (d) => { d = Math.min(d, before); if (!sess || trash || before <= cap || d <= cap) return d; return d >= before && before <= cap * 1.2 ? d : Math.round(cap); };
+    out.lo = capped(lo); out.hi = capped(hi); out.capped = out.hi < Math.min(hi, before);
+    return out;
+  }
   /* "9 stamina", "24 magicka · 4 health", "free" */
   function costTxt(c) {
     const out = []; if (!c) return "free";
@@ -1121,5 +1158,5 @@ const TB = (() => {
 
   /* sharedfight.js: open a teammate's view of a fight, and redraw it when the leader's phone sends news */
   function redraw(sess, state) { if (ui && ui.sess === sess && open) render(state || sess.advance()); }
-  return { T, stats, cost, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, play, redraw, fightState, voice, FOE_KEYS, BUFF_KEYS, costTxt, costHTML, base, close: () => { if (open) close(); }, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, ATK_SP, MAX_ACTS, MAX_POTS, REPEAT, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
+  return { T, stats, cost, preview, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, play, redraw, fightState, voice, FOE_KEYS, BUFF_KEYS, costTxt, costHTML, base, close: () => { if (open) close(); }, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, ATK_SP, MAX_ACTS, MAX_POTS, REPEAT, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
 })();
