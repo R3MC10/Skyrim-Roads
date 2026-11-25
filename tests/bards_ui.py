@@ -20,7 +20,7 @@ async def main():
             await pg.evaluate("()=>{const S=window.__dbg.save(); S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; S.dragons=1; S.cleared={'Bleak Falls Barrow':G.now()-100};}")
             await clear(pg); return pg
         async def inn(pg):
-            await click(pg, "[data-tab=map]"); await click(pg, "[data-tab=town]"); await pg.wait_for_timeout(200); await click(pg, "[data-act=shop][data-id=inn]"); await pg.wait_for_timeout(300)
+            await click(pg, "[data-tab=world]"); await click(pg, "[data-tab=town]"); await pg.wait_for_timeout(200); await click(pg, "[data-act=shop][data-id=inn]"); await pg.wait_for_timeout(300)
         A = await phone("ba", "Alfa"); B = await phone("bb", "Beta")
         await inn(A)
         await click(A, "[data-act=deedpick][data-id='0']"); await A.wait_for_timeout(200)

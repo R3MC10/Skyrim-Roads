@@ -12,7 +12,7 @@ async def main():
             return pg
         async def log(pg):
             while await pg.query_selector("#modal [data-act=close]"): await pg.click("#modal [data-act=close]"); await pg.wait_for_timeout(200)
-            await pg.click("[data-tab=map]"); await pg.click("[data-tab=log]"); await pg.wait_for_timeout(300)
+            await pg.click("[data-tab=world]"); await pg.click("[data-tab=log]"); await pg.wait_for_timeout(300)
         A = await phone("ba", "Alfa"); B = await phone("bb", "Beta")
         k = await A.evaluate("BOUNTY.goalsFor(BOUNTY.week())[0]"); T = await A.evaluate(f"BOUNTY.GOALS['{k}'].target")
         await A.evaluate(f"window.__dbg.tally('{k}', {T-1})"); await B.evaluate(f"window.__dbg.tally('{k}', 1)")

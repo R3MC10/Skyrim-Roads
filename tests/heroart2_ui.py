@@ -52,7 +52,7 @@ async def main():
             # hero tab with real gear on the save
             await pg.evaluate("()=>{const S=window.__dbg.save(); const lo=G.loadout(S); lo.equipment={}; for(const id of ['steel_armor','steel_helmet','steel_gauntlets','steel_boots','steel_shield','ench|steel_sword|fire|20|800']){ const r=G.give(S,id); G.equip(S,r);} }")
             await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
-            await pg.click("[data-tab=map]"); await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(250)
+            await pg.click("[data-tab=world]"); await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(250)
             el = await pg.query_selector(".herobox")
             if not el:   # the hero panel content, if the tab is behind a menu on this screen size
                 await pg.evaluate("()=>{ const d=document.createElement('div'); d.className='herobox'; d.id='hb2'; d.style.cssText='position:fixed;left:0;top:0;z-index:99999;width:160px;background:#222'; d.innerHTML=HEROART.figure(window.__dbg.save(),160,220); document.body.appendChild(d); }")

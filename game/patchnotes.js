@@ -3,6 +3,16 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b344-tabs5", build: 344, date: "26 Nov 2026", title: "Five tabs instead of seven", items: [
+      "The bar at the bottom now has five tabs: World, Area, Hero, Journal and Social.",
+      "World is the map: under it you see the one thing to do next and a big Where to? button for every place you know. World news has its own page there once world events are open for you.",
+      "Hero holds everything about your hero in one place: your gear, items, magic, skills, perks, stats, your follower and Settings, in the strip on top.",
+      "Journal holds your quests, discoveries, achievements and diary. Social holds your friends, party and clan.",
+      "Under the map there's less clutter: the World news drawer and event cards wait on the World news page, and the weather shows only in the line at the top.",
+      "Back works the same as before: from a page inside a tab it goes to that tab's first page, then to the map.",
+      "On a PC: the bottom bar has the same five tabs, the open one lights up, and keys 1 to 5 open them (or M, A, C, J, O; I and P still open Items and Magic, L opens Where to?). Hover a tab to see its keys.",
+      "On a PC, Hero, Journal and Social use the whole screen: the pages of a tab are listed down the left and the cards sit in two columns. Places and World news open beside the map so you can still see it.",
+    ] },
     { id: "b343-perkreset", build: 343, date: "26 Nov 2026", title: "Reset your perks at a shrine", items: [
       "Want a different build? Kneel at any wayside shrine, or visit the temple in Whiterun, Riften, Solitude, Markarth, Windhelm or Falkreath (Area tab → Services), and reset your perks.",
       "Every perk point comes back, and so does every Health, Magicka or Stamina choice. Your skills and level stay.",

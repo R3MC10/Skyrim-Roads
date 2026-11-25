@@ -194,7 +194,7 @@ async def main():
         await pg.evaluate(CLEAR)
         await pg.wait_for_timeout(1000); await pg.evaluate(CLEAR)
         await scene("hub")
-        await pg.evaluate("()=>{ if (typeof TABMENU!=='undefined' && TABMENU.closeHub) TABMENU.closeHub(); const t=document.querySelector('[data-tab=map]'); t && t.click(); scrollTo(0,0); }")
+        await pg.evaluate("()=>{ if (typeof TABMENU!=='undefined' && TABMENU.closeHub) TABMENU.closeHub(); const t=document.querySelector('[data-tab=world]'); t && t.click(); scrollTo(0,0); }")
         await pg.wait_for_timeout(1500); await pg.evaluate(CLEAR)
         await scene("map_idle")
         box = await pg.evaluate("(()=>{const r=document.querySelector('#map').getBoundingClientRect(); return [r.x+r.width/2, r.y+r.height/2, r.width, r.height]})()")

@@ -22,7 +22,7 @@ async def main():
         for pg in (A, B):
             await pg.evaluate("()=>{const S=window.__dbg.save(); S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; S.trip=null; S.gold=60000; if(!S.discovered.includes('Whiterun')) S.discovered.push('Whiterun'); for(const [m,n] of [['mat_iron',30],['mat_firewood',60],['mat_steel',20],['mat_leather',10],['mat_moonstone',10],['mat_silver',5],['mat_gold',2],['dragon_bone',1]]) G.give(S,m,n);}")
         async def halls(pg):
-            await click(pg, "[data-tab=map]"); await click(pg, "[data-tab=town]"); await click(pg, "[data-act=shop][data-id=halls]")
+            await click(pg, "[data-tab=world]"); await click(pg, "[data-tab=town]"); await click(pg, "[data-act=shop][data-id=halls]")
         await halls(A)
         await clear(A); await A.fill("#hname", "Skyforge Hall"); await click(A, "[data-act=hplot]")
         for r in ["forge", "shrine", "trophy", "storage", "counter"]: await click(A, f"[data-act=hbuild][data-id={r}]")

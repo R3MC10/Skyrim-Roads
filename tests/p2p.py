@@ -33,13 +33,13 @@ async def main():
         await A.click("[data-act=invite] >> nth=0"); await A.wait_for_timeout(600)
         await B.click("[data-tab=log]"); await B.wait_for_timeout(300)
         await B.click("[data-act=accept]"); await B.wait_for_timeout(600)
-        await A.click("[data-tab=map]"); await A.click("[data-tab=log]"); await A.wait_for_timeout(300)
+        await A.click("[data-tab=world]"); await A.click("[data-tab=log]"); await A.wait_for_timeout(300)
         t_=await A.inner_text("#side"); print("party on A:", t_[t_.find("Party"):t_.find("Party")+260].replace("\n"," | "))
         # news synced?
         print("news on B:", await B.evaluate("Object.values((JSON.parse(localStorage.getItem('bsk.w.'+Store.worldCode))||{}).news||{}).map(n=>n.text)"))
         # B goes offline -> A shouldn't list B
         await B.close(); await A.wait_for_timeout(800)
-        await A.click("[data-tab=map]"); await A.click("[data-tab=log]"); await A.wait_for_timeout(300)
+        await A.click("[data-tab=world]"); await A.click("[data-tab=log]"); await A.wait_for_timeout(300)
         print("A peers after B left:", await A.evaluate("Store.peers"), "| travellers listed:", await A.evaluate("document.querySelectorAll('[data-act=attack],[data-act=invite]').length"))
         # C joins later and gets world copy from A
         C = await phone("c", "Cyra", code); await C.wait_for_timeout(1500)

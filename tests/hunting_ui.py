@@ -19,7 +19,7 @@ async def main():
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Hunter"); await pg.click("#begin"); await pg.wait_for_timeout(2500)
         for _ in range(4):
             await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove()); document.querySelectorAll('.toast,#toast').forEach(m=>m.remove())"); await pg.wait_for_timeout(300)
-        await pg.evaluate("document.querySelector('[data-tab=map]').click()"); await pg.wait_for_timeout(400)
+        await pg.evaluate("document.querySelector('[data-tab=world]').click()"); await pg.wait_for_timeout(400)
         ok(await pg.query_selector("#huntBtn") is not None, "the hunt button is on the map")
         await pg.evaluate("document.querySelector('#huntBtn').click()"); await pg.wait_for_timeout(300)
         ok(await pg.evaluate("window.__dbg.save().hunting") is True, "hunting is on")
@@ -27,7 +27,7 @@ async def main():
         await pg.evaluate("""()=>{ const S=window.__dbg.save(); G.startTrip(S,'Riverwood',WORLD.places.Riverwood);
           const e=G.scaleEnemy(HUNT.pick(S,()=>0.05),S.level); e.hold='Whiterun'; S.trip.status='encounter'; S.trip.encounter=e; }""")
         await pg.evaluate("document.querySelector('[data-tab=town]').click()"); await pg.wait_for_timeout(200)
-        await pg.evaluate("document.querySelector('[data-tab=map]').click()"); await pg.wait_for_timeout(900)
+        await pg.evaluate("document.querySelector('[data-tab=world]').click()"); await pg.wait_for_timeout(900)
         txt = await pg.evaluate("document.body.innerText")
         ok("Deer" in txt, "a deer on the road")
         await pg.evaluate("scrollTo(0,0)"); await pg.wait_for_timeout(300)

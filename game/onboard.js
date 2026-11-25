@@ -2,7 +2,7 @@
    Builds on the opening quest line (first30.js) and the newbie guide (guide.js):
    - ideas(s, ctx): 1-3 "what to do next" ideas picked from the player's real state (road fights near Whiterun while low
      level, a dungeon, the main quest, a horse when rich, a party, rumours, homesteads and world events once they matter).
-     They show as rows in the Travel tab's "What to do next" card; each can be hidden (✕), all can be switched off
+     They show as rows in the World tab's "What to do next" card; each can be hidden (✕), all can be switched off
      (Settings → Help & tips), and they stop for veterans (level 15+).
    - first-time tips: a small card at the top of the screen the first time something happens (over-encumbered, level-up,
      a dungeon, a party invite, a rumour; no level-up tip while the opening quest walks you through it). One at a time, never blocks a tap elsewhere, with "Don't show tips". A tip
@@ -98,7 +98,7 @@ const ONBOARD = (() => {
   // ------------------------------------------------------------------ first-time tips
   /* id, applies(s, ctx), title, text (may depend on ctx) */
   const TIPS = [
-    ["level", (s) => s.pendingLevels > 0 && (s.level || 1) <= 4 && !inTutorial(s), "Level up!", () => "Open <b>Character</b>: pick Health, Magicka or Stamina, then spend your perk point on a skill you use. Skills rise by using them.", { btn: ["hero", "Open Character"] }],
+    ["level", (s) => s.pendingLevels > 0 && (s.level || 1) <= 4 && !inTutorial(s), "Level up!", () => "Open <b>Hero</b>: pick Health, Magicka or Stamina, then spend your perk point on a skill you use. Skills rise by using them.", { btn: ["hero", "Open Hero"] }],
     ["heavy", (s) => typeof G.overweight === "function" && G.overweight(s), "Too heavy", () => "You're carrying more than you can, so you walk slowly. Sell loot in a town, keep things in a house chest, or let a horse or follower carry them."],
     ["dungeon", (s) => !!s.dungeon && !cleared(s), "Your first dungeon", () => "Go room by room. Each room may hold foes, a trap or loot; you can leave between rooms and come back later. The boss and the best chest wait at the end."],
     ["invite", (s, c) => c.invites > 0, "A party invite", () => (typeof INVITES !== "undefined" ? "Someone wants you in their party. Tap Accept on the card at the top to join, or Decline. The leader picks where to go and you travel together; gold is split evenly." : "Someone wants you in their party. Open \uE106 <b>Friends → Party</b> to join. The leader picks where to go and you travel together; gold is split evenly."), { btn: ["social", "Friends"] }],

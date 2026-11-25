@@ -86,7 +86,7 @@ async def main():
                 ok(await snap(".fol2", f"{name}_bond_done.png"), f"{name}: finished quest shot")
                 # her speech bubble over the map
                 await clean()
-                await pg.evaluate("() => { document.querySelector('[data-tab=map]')?.click(); }"); await pg.wait_for_timeout(500)
+                await pg.evaluate("() => { document.querySelector('[data-tab=world]')?.click(); }"); await pg.wait_for_timeout(500)
                 await pg.evaluate("() => { const S = window.__dbg.save(); BONDS.say(S, 'Keep your eyes on the treeline. Bandits love this stretch.', { mood: 'force' }); }")
                 await pg.wait_for_timeout(500)
                 ok(await pg.query_selector("#folbark") is not None, f"{name}: speech bubble shows")

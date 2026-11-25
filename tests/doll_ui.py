@@ -27,7 +27,7 @@ async def main():
         for style in ["ink"]:
             await pg.evaluate("()=>{const S=window.__dbg.save(); for (const sl of G.SLOTS) G.unequip(S, sl);}")
             await pg.evaluate("document.querySelector('#sky')?.remove()")
-            await click("[data-tab=pack]"); await pg.wait_for_timeout(300)
+            await pg.evaluate("__ui.go('items')"); await pg.wait_for_timeout(300)
             print(style, "doll in menu:", await pg.evaluate("!!document.querySelector('#sky .doll')"))
             await click("[data-act=dollslot][data-slot=weapon]"); await pg.wait_for_timeout(250)
             print(style, "picker:", (await pg.inner_text("#modal"))[:160].replace("\n", " | "))

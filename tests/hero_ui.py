@@ -41,7 +41,7 @@ async def main():
                 await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(150)
                 row.append(img_of(await pg.get_attribute(".herobox img", "src")))
             sheets["gear_" + st] = row
-        await pg.evaluate("()=>{const S=window.__dbg.save(); S.vampire={since:1,fedAt:1};}"); await pg.click("[data-tab=map]"); await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(150)
+        await pg.evaluate("()=>{const S=window.__dbg.save(); S.vampire={since:1,fedAt:1};}"); await pg.click("[data-tab=world]"); await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(150)
         sheets["vamp"] = [img_of(await pg.get_attribute(".herobox img", "src"))]
         el = await pg.query_selector(".herobox"); await el.screenshot(path="hero_tab.png")
         for k, row in sheets.items():

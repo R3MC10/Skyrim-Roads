@@ -25,7 +25,7 @@ async def main():
             await pg.click("[data-act=shop][data-id=wizard]"); await pg.wait_for_timeout(300)
             txt = await pg.inner_text("#side"); print("college lists Fire Storm:", "Fire Storm" in txt, "| staffs:", "Staff of" in txt)
         # magic menu
-        await pg.evaluate(clr); await pg.click("[data-tab=pack]"); await pg.wait_for_timeout(300)
+        await pg.evaluate(clr); await pg.evaluate("__ui.go('items')"); await pg.wait_for_timeout(300)
         await pg.click("[data-act=skytab][data-id=magic]"); await pg.wait_for_timeout(300)
         cats = await pg.evaluate("[...document.querySelectorAll('#sky .sky-cat')].map(b=>b.textContent.trim()).join(',')")
         print("schools:", cats)

@@ -64,7 +64,7 @@ async def main():
             if name == "phone412":
                 # quick craft from the real forge button: plain result, no game left on screen
                 await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
-                for sel in ["[data-tab=map]", "[data-tab=town]", "[data-id=forge]"]:
+                for sel in ["[data-tab=world]", "[data-tab=town]", "[data-id=forge]"]:
                     try: await pg.click(sel, timeout=3000)
                     except Exception: pass
                     await pg.wait_for_timeout(300)

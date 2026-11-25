@@ -15,7 +15,7 @@ async def main():
         await pg.wait_for_timeout(600)
         for _ in range(4):
             if await pg.query_selector("#modal [data-act=close]"): await pg.click("#modal [data-act=close]"); await pg.wait_for_timeout(200)
-        await pg.click("[data-tab=map]"); await pg.wait_for_timeout(500)
+        await pg.click("[data-tab=world]"); await pg.wait_for_timeout(500)
         t1 = await pg.evaluate("document.querySelector('.refill')?.innerText"); print("card:", t1)
         await pg.wait_for_timeout(2200)
         print("ticks:", await pg.evaluate("document.querySelector('.refill .cd')?.textContent"))
@@ -27,7 +27,7 @@ async def main():
         if el: await el.screenshot(path="cleared_journal.png")
         await pg.wait_for_timeout(75000)
         print("after 75s:", await pg.evaluate("document.querySelector('#j-cleared')?.innerText"))
-        await pg.click("[data-tab=map]"); await pg.evaluate("()=>{}")
+        await pg.click("[data-tab=world]"); await pg.evaluate("()=>{}")
         await pg.wait_for_timeout(500); await pg.screenshot(path="cleared_map.png")
         print("errors:", errs)
         await b.close()

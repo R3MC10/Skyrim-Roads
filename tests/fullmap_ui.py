@@ -16,7 +16,7 @@ async def closeModals(pg):
 
 async def goto(pg, place):
     await pg.evaluate("""(n)=>{const S=window.__dbg.save(); S.trip=null; S.location=n; [S.x,S.y]=WORLD.places[n]; if(!S.discovered.includes(n)) S.discovered.push(n); S.gold=Math.max(S.gold,300);}""", place)
-    await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(600)
+    await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200); await pg.click("[data-tab=world]"); await pg.wait_for_timeout(600)
 
 async def run(p, style, errs):
     b = await p.chromium.launch(**({"executable_path": CHROME} if CHROME else {}), args=["--no-sandbox"])

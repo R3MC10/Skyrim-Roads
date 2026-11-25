@@ -18,7 +18,7 @@ async def main():
             await pg.wait_for_timeout(1200); await clear(pg)
             return pg
         async def market(pg):
-            await clear(pg); await pg.click("[data-tab=map]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200); await pg.click("[data-id=market]"); await pg.wait_for_timeout(300)
+            await clear(pg); await pg.click("[data-tab=world]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200); await pg.click("[data-id=market]"); await pg.wait_for_timeout(300)
         A = await phone("ma", "Alfa", True); B = await phone("mb", "Beta", False)
         await market(A)
         await A.click("details summary")

@@ -14,8 +14,8 @@ const mk = (lvl = 20) => { const s = G.newSave("ft" + Math.random(), "Tester", "
 
 // 1. the tab sits in the Character menu, next to Character
 const tabs = MENUS.charTabs().map((t) => t[0]);
-OK(tabs.includes("follower") && tabs.indexOf("follower") === tabs.indexOf("hero") + 1, "Follower tab next to Character: " + tabs);
-OK(MENUS.groupOf("follower") === "hero", "Follower tab belongs to the Character menu");
+OK(tabs.includes("follower") && tabs.indexOf("follower") > tabs.indexOf("hero"), "Follower tab in the Hero row, after Character: " + tabs);   // tabs5: Hero holds Character, Items, Magic, Skills, Perks, Stats, Follower, Settings
+OK(MENUS.groupOf("follower") === "hero", "Follower tab belongs to the Hero menu");
 
 // 2. no follower: a friendly page with where to hire, and nothing on the Character page
 const A = mk();

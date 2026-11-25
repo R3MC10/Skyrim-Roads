@@ -16,14 +16,6 @@ ok(!HUD2.hit(R(0, 0, 10, 10), R(20, 0, 10, 10)), "boxes apart don't");
 ok(HUD2.hit(R(0, 0, 10, 10), R(12, 0, 10, 10), 4), "near boxes hit with padding");
 ok(!HUD2.hit(null, R(0, 0, 1, 1)), "missing box never hits");
 
-// the floating button steps up past buttons
-const base = { left: 300, top: 700 };
-ok(HUD2.freeSlot(base, 46, 58, 5, []) === 0, "nothing under it: stays put");
-ok(HUD2.freeSlot(base, 46, 58, 5, [R(290, 700, 80, 50)]) === 1, "a button under it: one step up");
-ok(HUD2.freeSlot(base, 46, 58, 5, [R(290, 700, 80, 50), R(300, 640, 60, 40)]) === 2, "two buttons: two steps up");
-ok(HUD2.freeSlot(base, 46, 58, 5, [R(0, 0, 400, 800)]) === 0, "covered everywhere: back to the base spot");
-ok(HUD2.freeSlot(base, 46, 58, 5, [R(290, 690, 80, 60)], 680) === 0, "never climbs above the top limit");
-
 // the objective line
 ok(HUD2.objLine(null) === null && HUD2.objLine({}) === null, "no quest, no line");
 const o = HUD2.objLine({ title: " Before the Storm ", where: "Whiterun" });

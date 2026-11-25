@@ -20,7 +20,7 @@ async def main():
                S.trip.status='encounter'; S.trip.encounter={...G.scaleEnemy(base,S.level), hold:'Whiterun', danger:base.danger}; }""")
             await pg.wait_for_timeout(300)
             await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
-            await pg.click("[data-tab=map]"); await pg.wait_for_timeout(300)
+            await pg.click("[data-tab=world]"); await pg.wait_for_timeout(300)
             if await pg.query_selector("[data-act=openenc]"): await pg.click("[data-act=openenc]")
             await pg.wait_for_timeout(300)
             await pg.click("[data-act=enc][data-a=fight]"); await pg.wait_for_timeout(900)

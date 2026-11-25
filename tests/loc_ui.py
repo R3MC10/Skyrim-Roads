@@ -11,7 +11,7 @@ async def main():
         await pg.goto("http://localhost:" + PORT + "/index.html?net=bc&notut&p=lc"); await pg.wait_for_timeout(1800)
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Scout"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
         await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
-        await pg.click("[data-tab=map]"); await pg.wait_for_timeout(300)
+        await pg.click("[data-tab=world]"); await pg.wait_for_timeout(300)
         listed = await pg.evaluate("[...document.querySelectorAll('[data-act=go]')].map(b=>b.dataset.place)")
         hid = await pg.evaluate("[...WORLD.hidden]")
         print("where-to shows", len(listed), "places; hidden ones among them:", [n for n in listed if n in hid])
@@ -25,7 +25,7 @@ async def main():
         # everything discovered, max zoom: look + frame time
         await pg.evaluate("()=>{const S=window.__dbg.save(); S.trip=null; S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; S.discovered=Object.keys(WORLD.places); S.explored=Object.values(WORLD.places).map(p=>p.slice(0,2));}")
         await pg.wait_for_timeout(800); await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
-        await pg.click("[data-tab=map]"); await pg.wait_for_timeout(600)
+        await pg.click("[data-tab=world]"); await pg.wait_for_timeout(600)
         await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
         await pg.evaluate("window.scrollTo(0,0)")
         await pg.screenshot(path="loc_all_z1.png")
