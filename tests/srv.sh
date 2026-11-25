@@ -1,2 +1,4 @@
 #!/bin/sh
-curl -s -o /dev/null localhost:8765/index.html || (cd /home/claude/web && setsid nohup python3 -m http.server 8765 >/tmp/srv.log 2>&1 < /dev/null & sleep 1)
+# serve the web build on 8765 with the robust test server (python http.server drops script downloads on busy machines)
+D=$(cd "$(dirname "$0")" && pwd)
+curl -s -o /dev/null localhost:8765/index.html || (setsid nohup node "$D/serve.js" 8765 /home/claude/web >/tmp/srv.log 2>&1 < /dev/null & sleep 1)

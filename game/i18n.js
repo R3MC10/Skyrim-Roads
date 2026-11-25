@@ -112,7 +112,7 @@ const I18N = (() => {
   const PAT = [
     [/^Level (\d+)$/, (m) => `Poziom ${m[1]}`],
     [/^(\d+) gold$/, (m) => `${m[1]} złota`],
-    [/^Build (\d+) · (.+)$/, (m) => `Wersja ${m[1]} · ${m[2]}`],
+    [/^Build (\d+) · (.+)$/, (m) => `Wersja ${m[1]} · ${tr(m[2]) ?? m[2]}`],
     [/^(.+?) (\d+)$/, (m) => (SKILLS[m[1]] ? `${SKILLS[m[1]]} ${m[2]}` : null)],
     [/^(.+?) (\d+) → (\d+)$/, (m) => (SKILLS[m[1]] ? `${SKILLS[m[1]]} ${m[2]} → ${m[3]}` : null)],
     [/^Health: (.+)$/, (m) => `Zdrowie: ${m[1]}`], [/^Magicka: (.+)$/, (m) => `Magia: ${m[1]}`], [/^Stamina: (.+)$/, (m) => `Wytrzymałość: ${m[1]}`],

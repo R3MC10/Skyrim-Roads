@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b256-qacore2", build: 256, date: "25 Nov 2026", title: "Title screen in Polish and the level-up tip", items: [
+      "Fixed: in Polish, the title screen, How to Play, Credits, Settings and the Updates page still had lines in English.",
+      "Fixed: in Polish, every perk description, the hirelings' descriptions and the patch-note dates were still in English.",
+      "Fixed: the first level-up tip and one Dawnguard line still sent you to the Hero tab; it's called Character now."
+    ] },
     { id: "b255-notify", build: 255, date: "25 Nov 2026", title: "Tidier pop-ups", items: [
       "All the pop-up messages now take turns: at most one message and one banner at a time, never on top of each other. Level ups and finished quests go first.",
       "Loot and gold that arrive together are added up into one line (\"Iron Dagger ×3\", one gold total), and a skill that rises a few times in a row shows as \"21 → 24\".",
