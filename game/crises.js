@@ -689,7 +689,7 @@ const CRISES = (() => {
     if (act === "claim") {
       const msg = claim(S, b.dataset.id, t); if (!msg) return api.toast(T("Nothing to claim yet."));
       api.persist(true); publish(true); if (typeof SOUND !== "undefined") try { SOUND.fx("levelup"); } catch (er) { /* ignore */ }
-      api.closeModal(); return api.showMessage(T("Hold status"), msg);
+      api.closeModal(); return api.showMessage(T("Hold status"), msg, false, true);   // a crisis won: prestige frame
     }
     if (act === "do") {
       const id = b.dataset.id, cid = b.dataset.c, c = CONTRACTS[cid];

@@ -35,7 +35,7 @@ var I18N_LONGHOUSE = (() => {
     "No such setting.": "Nie ma takiego ustawienia.",
     "A trophy for the longhouse: {name}": "Trofeum dla długiego domu: {name}",
     "The company library: you take in more ({n}% of the next level).": "Biblioteka kompanii: uczysz się więcej ({n}% następnego poziomu).",
-    "Your longhouse is founded.": "Twój długi dom został założony.", "Gold put in.": "Złoto wpłacone.", "Gold taken out.": "Złoto wypłacone.",
+    "Your longhouse is founded.": "Twój długi dom został założony.", "Company founded": "Kompania założona", "Gold put in.": "Złoto wpłacone.", "Gold taken out.": "Złoto wypłacone.",
     "Given to the stockpile.": "Oddano do magazynu.", "Built!": "Zbudowane!", "Plan set.": "Plan ustalony.", "Plan cleared.": "Plan odwołany.",
     "Invitation sent.": "Zaproszenie wysłane.", "Welcome to the company!": "Witaj w kompanii!", "You left the company.": "Opuszczono kompanię.", "Done.": "Gotowe.",
     "{who} invites you to the company {name} (Social → Company)": "{who} zaprasza cię do kompanii {name} (Społeczność → Kompania)",
