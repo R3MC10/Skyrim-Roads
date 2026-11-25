@@ -65,7 +65,7 @@ async def run(p, w, h, touch, lang=None):
     errs = []
     if PL: await ctx.add_init_script("try{const k='rotn_prefs';localStorage.setItem(k,JSON.stringify({...JSON.parse(localStorage.getItem(k)||'{}'),lang:'pl'}))}catch(e){}")
     pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
-    await pg.goto(f"http://localhost:{PORT}/index.html?assets&net=bc&notut&p=mf{w}&tb&fightanim"); await pg.wait_for_timeout(2000)
+    await pg.goto(f"http://localhost:{PORT}/index.html?assets&net=bc&notut&p=mf{w}&tb&fightanim&mountcombat"); await pg.wait_for_timeout(2000)
     await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Rider"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
     await pg.evaluate("localStorage.setItem('rotn_prefs', JSON.stringify({...JSON.parse(localStorage.getItem('rotn_prefs')||'{}'), tips:false}))")
     tag0 = f"{w}x{h}" + ("_pl" if PL else "")

@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b230-nomountfight", build: 230, date: "25 Nov 2026", title: "Horses wait at the edge of the fight", items: [
+      "Horses now wait at the edge of the fight; you always fight on foot. That goes for solo fights, parties and co-op.",
+      "Nobody goes for your horse and it never gets knocked down in a fight. If you rode in, you're back in the saddle when it's over.",
+      "Dual casting works in every fight again, since everyone is on foot.",
+    ] },
     { id: "b229-gatherfix", build: 229, date: "25 Nov 2026", title: "Picking herbs fixed", items: [
       "On a PC the Gathering card sat in the side panel, which the big map hides, so there was no way to pick plants or forage. It now floats on the left of the map whenever plants are in reach.",
       "Some older saves made the Gather button do nothing. Those heroes pick plants, forage and plant gardens normally again.",
