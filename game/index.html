@@ -4160,6 +4160,49 @@ body:has(#modal .sheet) #pbanners{top:auto!important;bottom:calc(6px + env(safe-
 .exp-done h3{margin:0;font-family:"Cinzel",serif;font-size:18px;letter-spacing:.05em;color:var(--gold)}.exp-done p{margin:0;font-size:15px}.exp-done .btn{align-self:stretch;min-height:44px}
 @media (max-width:900px){.exp-offers{grid-template-columns:1fr}.exp-art{aspect-ratio:16/5}}
 @media (min-width:901px){#exp-layer{inset:0;align-items:center;background:rgba(0,0,0,.35)}.exp-sheet{border-radius:6px;animation:none}}
+/* [dungeonphone] dungeon screen on phones: route strip above the room (dunstrip.js), compact 2-column actions (the main
+   one full width when the count is odd), the foe's figure in its room (dunrooms.js), indoor dust/drips/embers (dunfx.js) */
+.dstrip{display:flex;align-items:center;gap:10px;padding:6px 8px 6px 10px;min-height:46px;background:linear-gradient(90deg,rgba(0,0,0,.72),rgba(0,0,0,.5));border-top:1px solid var(--sk-line2);border-bottom:1px solid var(--sk-line2);position:sticky;top:-12px;z-index:3;backdrop-filter:blur(3px)}
+.dspips{display:flex;align-items:center;gap:4px;flex:none}
+.dspip{display:block;width:7px;height:7px;border-radius:50%;border:1px solid rgba(236,232,222,.45);background:transparent}
+.dspip.done{background:rgba(226,187,100,.55);border-color:rgba(226,187,100,.7)}
+.dspip.here{width:10px;height:10px;background:var(--gold);border-color:#fff3c8;box-shadow:0 0 6px rgba(226,187,100,.8)}
+.dspip.boss{width:10px;height:10px;border-radius:2px;transform:rotate(45deg);border-color:rgba(214,90,74,.85)}
+.dspip.boss.here,.dspip.boss.done{background:var(--ember)}
+.dsnext{flex:1;min-width:0;display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none}
+.dsnext::-webkit-scrollbar{display:none}
+.dsnext small{flex:none;font-family:var(--sk-ui);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--sk-mute)}
+.dschip{flex:0 1 auto;min-width:44px;overflow:hidden;display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 9px 0 5px;border:1px solid rgba(236,232,222,.16);background:rgba(255,255,255,.03);color:var(--sk-ink);font-family:var(--sk-ui);font-size:13px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.dschip img.art{flex:none;width:22px;height:22px;display:block}.dschip span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+button.dschip{cursor:pointer;border-color:rgba(226,187,100,.55);background:rgba(226,187,100,.08);border-radius:2px;min-height:34px}
+button.dschip:hover,button.dschip:focus-visible{background:rgba(226,187,100,.18)}
+span.dschip{opacity:.78;border-style:dashed}
+@media (max-width:420px){.dsnext small{display:none}.dschip{letter-spacing:.03em;padding-right:7px}.dstrip{gap:8px}}
+.dstrip .dsmap{flex:none;min-height:34px;font-family:var(--sk-ui);letter-spacing:.14em;text-transform:uppercase;font-size:13px}
+.dun .dcol .evc:not(.pvopts){display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dun .dcol .evc:not(.pvopts)>.btn{min-height:46px;padding:6px 8px;white-space:normal;line-height:1.15;font-size:14px;letter-spacing:.06em}
+.dun .dcol .evc:not(.pvopts)>.btn:first-child:nth-last-child(odd){grid-column:1/-1}
+.dun .dcol .evc:not(.pvopts)>:not(.btn){grid-column:1/-1}
+.dentrance{position:relative;margin:-2px 0 10px;overflow:hidden;border-radius:4px}
+.dentrance img.art.scene{margin:0;display:block}
+canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;mix-blend-mode:screen}
+.droomart.painted::after{z-index:3}
+.droomfoe{position:absolute;right:9%;bottom:5%;height:80%;aspect-ratio:1;z-index:1;pointer-events:none;animation:droomfoe 1s ease-out both}
+.droomfoe img{position:relative;display:block;width:100%;height:100%;object-fit:contain;object-position:50% 100%;filter:brightness(.72) contrast(1.06) saturate(.85) drop-shadow(0 0 10px rgba(0,0,0,.55));animation:droombreath 4.5s ease-in-out infinite;transform-origin:50% 100%}
+.droomfoe i{position:absolute;left:18%;right:18%;bottom:-2%;height:9%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.7),rgba(0,0,0,0))}
+.droomfoe.boss{right:50%;transform:translateX(50%)}
+.droomfoe.boss img{filter:brightness(.78) contrast(1.08) saturate(.9) drop-shadow(0 0 14px rgba(120,20,10,.45))}
+@keyframes droomfoe{from{opacity:0;translate:0 4%}to{opacity:1;translate:0 0}}
+@keyframes droombreath{0%,100%{transform:scale(1)}50%{transform:scale(1.012,1.018)}}
+@media (prefers-reduced-motion:reduce){.droomfoe,.droomfoe img{animation:none}}
+.a11y-still .droomfoe,.a11y-still .droomfoe img{animation:none}
+@media (max-width:899.98px),(max-height:519.98px){
+  .dun .dcol .droomart.painted,.dun .dcol .droomart.waiting{aspect-ratio:16/8.2}
+  .dun .card>h3{margin-bottom:2px}
+  .dun .card>p{margin:4px 0;line-height:1.4}
+  .dun .dmapcard{scroll-margin-top:8px}
+}
+@media (min-width:900px) and (min-height:520px){.dstrip{display:none}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -4325,6 +4368,8 @@ body:has(#modal .sheet) #pbanners{top:auto!important;bottom:calc(6px + env(safe-
 <script src="npcart.js"></script>
 <script src="dunart.js"></script>
 <script src="dunrooms.js"></script>
+<script src="dunstrip.js"></script>
+<script src="dunfx.js"></script>
 <script src="dollart.js"></script>
 <script src="raidart.js"></script>
 <script src="homeart.js"></script>
@@ -4459,6 +4504,7 @@ body:has(#modal .sheet) #pbanners{top:auto!important;bottom:calc(6px + env(safe-
 <script src="i18n_fishhunt.js"></script>
 <script src="i18n_esckey.js"></script>
 <script src="i18n_partyspells.js"></script>
+<script src="i18n_dungeonphone.js"></script>
 <script src="i18n_comingnext.js"></script>
 <script src="i18n_afflictions.js"></script>
 <script src="i18n_crises.js"></script>
