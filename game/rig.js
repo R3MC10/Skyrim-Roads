@@ -10,8 +10,9 @@
           plus move + mu + power (the replay's move and its time 0..1), knock (how hard you were just hit), down (0..1,
           knocked down), dying (0..1, a foe's death fall), ride (in the saddle)
      PAINTRIG.can(look)   → the painted parts for this look are loaded (fightart.js then lets the rig play the fall)
-     PAINTRIG.draw(g, look, { clip, u, t }) → one clip frame on its own (the viewer, tests); doll: the paper doll's
-                          stance (dollHold); the shield shows its face over the body unless shieldOut: false
+     PAINTRIG.draw(g, look, { clip, u, t }) → one clip frame on its own (the viewer, tests, the map: mapride.js); doll: the paper doll's
+                          stance (dollHold); the shield shows its face over the body unless shieldOut: false;
+                          stirrup: [x, y] figure units, where a rider's boot goes (default STIRRUP)
      PAINTRIG.setOf(sp)   → which painted set a look wears · PAINTRIG.geo(set) → its skeleton in units (tests)
    Gear: light armour, robes and plain clothes → leather; iron (and banded, chain) → iron; steel and heavier → steel;
    women get the women's sets the same way. Dunmer, Khajiit and Argonians wear their own painted head (RIGDATA.HEADS, scaled
@@ -311,9 +312,9 @@ const PAINTRIG = (() => {
      rider 30 up and moves both with the same bob, so it stays put however the rider leans). far: the leg on the other
      side, a little back and in shade, drawn before the horse */
   const STIRRUP = [6, -5.5];
-  function rideLeg(g, ctx, B, far) {
-    const G = ctx.G, m = G.m, hip = add(B.H, far ? [-0.5 * m, -0.2 * m] : [0.6 * m, 0]);
-    const want = [(STIRRUP[0] - (far ? 1.5 : 0)) * m, (STIRRUP[1] - (far ? 0.5 : 0)) * m];
+  function rideLeg(g, ctx, B, far, stir) {   // stir: another stirrup (the map's smaller horse, mapride.js)
+    const G = ctx.G, m = G.m, hip = add(B.H, far ? [-0.5 * m, -0.2 * m] : [0.6 * m, 0]), S0 = stir || STIRRUP;
+    const want = [(S0[0] - (far ? 1.5 : 0)) * m, (S0[1] - (far ? 0.5 : 0)) * m];
     const [kn, an] = ik(hip[0], hip[1], want[0], want[1], G.thigh, G.shin, -1);
     legAt(g, ctx, { hip, knee: kn, ankle: an, toe: 0.05 }, far ? "d" : "n");
   }
@@ -364,7 +365,7 @@ const PAINTRIG = (() => {
   function figure(g, ctx, P, sp, o, wk) {
     const G = ctx.G, m = G.m, B = solve(G, P), kit = ctx.kit, st = ctx.st;
     if (o.rideLayer === "far") {   // [riding] the first of two passes in the saddle: only the far leg, drawn before the horse so its body covers it
-      if (P.ride) rideLeg(g, ctx, B, true);
+      if (P.ride) rideLeg(g, ctx, B, true, P.stir);
       return B;
     }
     const tintC = sp.r && sp.r !== "nord" && !sp.vamp ? sp.skin : null, sv = (d) => (tintC ? (d ? "dt:" : "t:") + tintC : d ? "d" : "n");
@@ -423,7 +424,7 @@ const PAINTRIG = (() => {
     if (shieldOn && !shieldFront) shieldHere(false);
     if (P.cast > 0.05 && kit) kit.glowAt(g, fg[0], fg[1], (5 + P.cast * 3) * m, castC, 0.75, st);
     // legs: the far one in shade (in the saddle only the near leg here, bent over the horse's flank: the far one went first, behind the horse)
-    if (P.ride) rideLeg(g, ctx, B, false);   // [riding] thigh, shin and boot folded over the flank into the stirrup (every set: the old one-piece bent-leg picture stopped short of it)
+    if (P.ride) rideLeg(g, ctx, B, false, P.stir);   // [riding] thigh, shin and boot folded over the flank into the stirrup (every set: the old one-piece bent-leg picture stopped short of it)
     else { legAt(g, ctx, B.legF, "d"); legAt(g, ctx, B.legN, "n"); }
     // the body: torso (its waist plug hidden), the hips over it, then the head
     const hk = B.sa * 0.55 + (P.tilt || 0), sw = ctx.sway ? ctx.sway.a : 0;
@@ -533,7 +534,7 @@ const PAINTRIG = (() => {
     const r = ready(setOf(sp, look)); if (!r) return false;
     const name = D.CLIPS[o.clip] ? o.clip : "idle", C = D.CLIPS[name], u = o.u != null ? o.u : ((o.t || 0) / C.len) % 1;
     const wk = o.wt === undefined ? sp.wk : o.wt || null, P = sample(name, u);
-    P.hand = C.hand || null; P.front = !!C.front || P.back < -0.8; P.clip = name; P.ride = !!C.ride;
+    P.hand = C.hand || null; P.front = !!C.front || P.back < -0.8; P.clip = name; P.ride = !!C.ride; P.stir = o.stirrup || null;
     const shield = o.shield === undefined ? !!sp.shield : o.shield;
     render(g, r, sp, P, { shield, shieldOut: o.shieldOut === undefined ? shield : o.shieldOut, doll: !!o.doll, glow: o.glow, t: o.t, ride: P.ride }, wk);
     return true;

@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b333-locintro", build: 333, date: "25 Nov 2026", title: "Every arrival shows the place", items: [
+    { id: "b334-locintro", build: 334, date: "25 Nov 2026", title: "Every arrival shows the place", items: [
       "Every time you arrive somewhere (a town, a hold's capital, a dungeon, a camp, a shrine...), the place fills the screen for a moment: its painting, its name, the time, the weather and the season. Night and bad weather tint the picture.",
       "The first time you see a place you get the full view for a few seconds. Coming back, a shorter one. Tap anywhere or press Esc to skip; it fades out by itself and never holds up the game.",
       "Up to two lines say what's new since your last visit: friends or party members here, new jobs on the notice board, fresh spell tomes or a caravan in town.",
@@ -11,6 +11,14 @@ const PATCHNOTES = (() => {
       "In the Area tab, the little landscape button next to the place's name shows the picture again, until you tap it away.",
       "Settings → Look → Location introductions: Always, First visit only or Off.",
       "It waits its turn: never on top of a window, a tip or a fight. It replaces the old quick \"You arrive at\" name over the map.",
+    ] },
+    { id: "b333-maprider", build: 333, date: "25 Nov 2026", title: "Your rider on the map looks like you", items: [
+      "On the world map your hero now looks like they really do: your race, your helmet, your armour, your shield and weapon, the same as on the hero screen. That goes for walking and standing too.",
+      "Your horse on the map has a new body that really moves: it walks, trots and gallops, and it picks the one that fits how fast you're going. On a road you gallop; in deep snow or rough hills you slow down to a trot or a walk.",
+      "At the gallop there's a moment with all four hooves off the ground, and you lean forward in the saddle. At the trot you bounce a bit.",
+      "Standing still, your horse breathes, nods, flicks its tail and rests a back hoof now and then. Stopping and turning round are smooth now.",
+      "Riding in a party, every horse moves in its own rhythm, so a group of eight doesn't march in step, and when the line gets crowded only your name and the leader's stay over the riders.",
+      "Reduce motion in Settings still keeps the horses calm and still.",
     ] },
     { id: "b332-fightscreen", build: 332, date: "25 Nov 2026", title: "A clearer fight screen", items: [
       "On a phone the fight screen now has three parts: the turn order, the foe's next move, its health and the latest line of the fight at the top; the battle in the middle with nothing covering the fighters; your health, your party and the move buttons at the bottom, in easy reach of your thumbs.",
