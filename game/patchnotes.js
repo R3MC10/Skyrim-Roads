@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b299-pcupdates", build: 299, date: "25 Nov 2026", title: "The PC game updates itself", items: [
+      "On Windows the game now updates by itself in the background, the installed and the portable version alike: no more downloading a new setup for every build.",
+      "Usually only the files that changed get downloaded, so an update is often just a few megabytes. A card in the corner shows how far along it is.",
+      "When it's ready the card says Restart to update. On the title screen it switches over by itself, and otherwise the new version starts the next time you open the game. Your saves stay.",
+      "If a new version ever fails to start, the game goes back to the one before by itself and skips the broken one.",
+      "The title screen's Update page now works on PC too. The whole app only downloads again when the app itself changes.",
+      "Older PC copies need the new version once (from the GitHub page); after that they keep themselves up to date.",
+    ] },
     { id: "b298-mapheroanim", build: 298, date: "25 Nov 2026", title: "Your hero moves on the map", items: [
       "Your horse on the world map is alive now: standing, it breathes, shifts its weight, tosses its head now and then and flicks its tail.",
       "On the road its legs swing as it walks or gallops, its body bobs and rocks, and you sit into each stride in the saddle.",
