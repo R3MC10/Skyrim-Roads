@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b222-overlays", build: 222, date: "25 Nov 2026", title: "One thing on screen at a time", items: [
+      "The first-fight tip no longer sits on top of the VICTORY card. Results always come first, then windows that ask you something, then tips, then messages.",
+      "In your first turn-by-turn fight the big wall of text is gone. Instead you get short one-line hints right next to the turn order, your moves and End turn, and each one goes away as soon as you use it.",
+      "A tip that pops up while a window is open waits until you close it, instead of covering it.",
+      "Letters that arrive on their own (like the courier with three letters) wait until you're out of a fight and out of the menus.",
+      "Messages at the top left get a dark backing over menus, so they don't blur into the titles underneath.",
+    ] },
     { id: "b221-housekeeping", build: 221, date: "25 Nov 2026", title: "More of the game in Polish", items: [
       "Playing in Polish? The trip line on the map, the Journal and its quests, the inn, the market, road events, the fight log and the townsfolk greetings are now in Polish too.",
       "Lines that start with a little game icon now get translated as well, so buttons like Fight, Pay or Something by the road show up in Polish.",
@@ -1549,7 +1556,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 221;
+  const NEXT_AT = 222;
   const NEXT = [
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",

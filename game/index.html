@@ -1429,7 +1429,6 @@ html.a11y-hc i.iq-up{color:var(--buff,#6fd36a)!important}html.a11y-hc i.iq-dn{co
 .obfoot{margin:8px 0 0;font-size:13px}
 .obtip{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top));z-index:80;width:min(94vw,440px);box-sizing:border-box;padding:10px 12px 10px 14px;
   background:linear-gradient(180deg,rgba(20,22,26,.97),rgba(10,11,13,.97));border:1px solid rgba(226,187,100,.6);border-radius:6px;box-shadow:0 10px 28px rgba(0,0,0,.6);color:#efe7d2;animation:obin .25s ease-out}
-.obtip.infight{top:auto;bottom:calc(8px + env(safe-area-inset-bottom));max-height:42vh;overflow:auto}
 .obtip p{margin:4px 0 8px;font-size:14px;line-height:1.4}
 .obtip-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .obtip-h b{font-family:var(--sk-ui,Cinzel,serif);letter-spacing:.06em;color:#f3e2b0;font-size:14px}
@@ -4097,6 +4096,21 @@ body:has(#modal .sheet) #pbanners{top:auto!important;bottom:calc(6px + env(safe-
 .hbond .bondnx{text-transform:none;letter-spacing:.02em;color:#a89c80}
 .hbreed>b{padding-right:42px}
 @media (max-width:360px){.hport{width:104px;height:104px}.hport .hcoatpic{width:96px;margin:0 auto 4px}.hinfo h3{font-size:18px}}
+/* overlays.js: one overlay at a time. Results > windows > tips > messages; a tip under a window waits (hidden, not dismissed) */
+body[data-ovl=result] #obtip,body[data-ovl=decision] #obtip,body[data-ovl=result] #fhints{display:none!important}
+/* first-fight hints: one line pinned to the control it explains (onboard.js), SkyUI plate with a hairline gold rule */
+#fhints{position:fixed;inset:0;z-index:78;pointer-events:none}
+#fhints .fhint{position:absolute;box-sizing:border-box;width:max-content;padding:7px 12px;pointer-events:auto;cursor:pointer;background:rgba(9,10,12,.94);border:1px solid rgba(214,178,94,.5);border-radius:3px;box-shadow:0 6px 18px rgba(0,0,0,.55);color:#ece3cb;font:500 13.5px/1.3 "Barlow Semi Condensed","Barlow",sans-serif;letter-spacing:.02em;animation:fhin .25s ease-out}
+#fhints .fhint[hidden]{display:none}
+#fhints .fh-ar{position:absolute;left:var(--ax,50%);width:9px;height:9px;background:rgba(9,10,12,.94);border:1px solid rgba(214,178,94,.5);transform:translateX(-50%) rotate(45deg)}
+#fhints .fhint.above .fh-ar{bottom:-6px;border-top:0;border-left:0}
+#fhints .fhint.below .fh-ar{top:-6px;border-bottom:0;border-right:0}
+@keyframes fhin{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){#fhints .fhint{animation:none}}
+html.a11y-still #fhints .fhint{animation:none}
+/* messages over menus (the map isn't behind them): only the newest, on a solid plate, so it never blurs into a title */
+#hudlane:not(.onmap) #hudlog .hlog{display:none}
+#hudlane:not(.onmap) #hudlog .toast{background:rgba(8,9,11,.94);box-shadow:0 4px 14px rgba(0,0,0,.5)}
 /* [fightdeclutter] a calmer fight screen, phone first (fightdeclutter.js, foeintent.js, tooltip.js) */
 /* the top: one slim strip with the round and the turn order; Log and Wheel live in the "..." menu */
 #tbf.c2 .tbtop{box-sizing:border-box;height:calc(48px + env(safe-area-inset-top));flex-wrap:nowrap;align-items:center;gap:6px;padding:calc(5px + env(safe-area-inset-top)) 8px 5px;background:linear-gradient(180deg,rgba(5,5,6,.8),rgba(5,5,6,.38) 78%,transparent)}
@@ -4627,6 +4641,7 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
+<script src="overlays.js"></script>
 <script src="onboard.js"></script>
 <script src="search.js"></script>
 <script src="remind.js"></script>
