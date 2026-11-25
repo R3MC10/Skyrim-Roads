@@ -15,14 +15,15 @@ const INVITES = (() => {
   const nowS = () => (typeof G !== "undefined" && G.now ? G.now() : Date.now() / 1000);
 
   /* ---------------------------------------------------------------- pure part
-     src: { parties, runs, clans, duels, trades, gold, inClan }, each already "for me" (ui.js filters them).
-     -> [{ key, kind, id, from, text, sub, can, why }] newest first */
+     src: { parties, runs, clans, duels, trades, gold, inClan, joins, face(uid) }, each already "for me" (ui.js filters them);
+     face(uid) gives a player's round portrait (avatar.js) for party invites; join cards bring their own (pic).
+     -> [{ key, kind, id, from, text, sub, can, why, pic }] newest first */
   function list(s, src = {}) {
     const out = [], no = (s && s.invNo) || {};
     const add = (c) => { if (!no[c.key]) out.push(c); };
     for (const p of src.parties || []) {
       const n = (p.members || []).length, full = n >= MAX_PARTY;
-      add({ key: "party:" + p.id, kind: "party", id: p.id, from: p.leaderName, t: p.t || 0, text: `${p.leaderName} invites you to their party`,
+      add({ key: "party:" + p.id, kind: "party", id: p.id, from: p.leaderName, pic: src.face ? src.face(p.leader) : "", t: p.t || 0, text: `${p.leaderName} invites you to their party`,
         sub: full ? `The party is full (${n}/${MAX_PARTY})` : `${n}/${MAX_PARTY} heroes · the leader makes the choices`, can: true, full });
     }
     for (const r of src.runs || []) {
@@ -131,7 +132,7 @@ const INVITES = (() => {
     const html = show.slice(0, SHOW).map((c) => {
       const b = busy.has(c.key) ? "disabled" : "";
       return `<div class="invcard" data-key="${esc(c.key)}" data-kind="${c.kind}">
-        <div class="invhead"><span class="invic" aria-hidden="true">${ICON[c.kind] || "\uE13A"}</span><div class="invt"><b>${esc(c.text)}</b><span>${esc(c.why || c.sub)}</span></div>
+        <div class="invhead">${c.pic ? `<span class="invic invpic" aria-hidden="true">${c.pic}</span>` : `<span class="invic" aria-hidden="true">${ICON[c.kind] || "\uE13A"}</span>`}<div class="invt"><b>${esc(c.text)}</b><span>${esc(c.why || c.sub)}</span></div>
           <button class="invx" data-inv="hide" aria-label="Hide for now" title="Hide for now">✕</button></div>
         <div class="invbtns"><button class="btn sm pri" data-inv="yes" ${b || (c.can ? "" : "disabled")}>Accept</button><button class="btn sm" data-inv="no" ${b}>Decline</button></div></div>`;
     }).join("") + (more > 0 ? `<button class="invmore" data-inv="more">+${more} more invite${more > 1 ? "s" : ""} in \uE106 Social</button>` : "");

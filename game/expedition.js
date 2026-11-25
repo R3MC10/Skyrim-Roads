@@ -444,7 +444,7 @@ const EXPEDITION = (() => {
   /* ---- the floating sheet: party votes, the road event, the finish */
   function faceOf(uid) {
     const p = party(), nm = p?.members?.find((m) => m.id === uid)?.name || "?";
-    let h = ""; try { const c = uid === S()?.id ? S() : api?.cardOf?.(uid); h = c && typeof HEROART !== "undefined" ? HEROART.portrait(c, 26) : ""; } catch { h = ""; }
+    let h = ""; try { const c = uid === S()?.id ? S() : api?.cardOf?.(uid); h = c && typeof AVATAR !== "undefined" ? AVATAR.portrait(c, 26) : ""; } catch { h = ""; }
     return `<span class="pvchip" title="${esc(nm)}">${h || `<b>${esc(nm.slice(0, 1).toUpperCase())}</b>`}</span>`;
   }
   function voteSheet(s, p) {

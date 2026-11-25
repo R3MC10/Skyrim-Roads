@@ -54,13 +54,14 @@ const DOLL = (() => {
     return `<button class="dslot ${r ? "full" : ""}" data-act="dollslot" data-slot="${slot}" aria-label="${esc(NAMES[slot])}: ${esc(label)}">
       ${r ? ICONART.item(r.item, size, r) : emptyIcon(slot, size)}<span class="dsl">${NAMES[slot]}</span>${r && !isJewel(slot) ? `<span class="dst num">${statOf(r)}</span>` : r && it.aenchant ? `<span class="dst dench">✦</span>` : ""}</button>`;
   }
-  /* the equipment screen: slots | figure | slots, then the numbers */
+  /* the equipment screen: slots | figure | slots, then the numbers. [dollrig] both columns start level with the top of
+     the figure, so the weapon sits across from the head and the shield across from the chest */
   function screen(s, stats) {
     const eq = G.equipment(s), am = typeof AMMO !== "undefined" ? AMMO.status(s) : null;
     const ammoRow = am ? (() => { const b = am.best && s.inv.find((x) => D.ITEMS[x.item]?.name === am.best); return `<div class="dammo ${am.best ? "" : "warn"}">${b ? ICONART.item(b.item, 28, b) : emptyIcon("ammo", 28)}<span>${am.best ? `${am.n} ${esc(am.best)}s <i>(best is used)</i>` : "No ammo for your bow"}</span></div>`; })() : "";
     return `<div class="doll">
       <div class="dcol">${LEFT.map((sl) => slotBtn(s, sl, eq)).join("")}</div>
-      <div class="dfig">${HEROART.figure(s, 150, 206)}${typeof BUSTART !== "undefined" ? BUSTART.crest(s, 60) : ""}</div>
+      <div class="dfig">${HEROART.figure(s, 200, 290)}${typeof AVATAR !== "undefined" ? AVATAR.badge(s, 50) : ""}</div>
       <div class="dcol">${RIGHT.map((sl) => slotBtn(s, sl, eq)).join("")}</div>
     </div>
     <div class="djewel" aria-label="Amulet and rings">${JEWEL.map((sl) => slotBtn(s, sl, eq, 40)).join("")}</div>${ammoRow}

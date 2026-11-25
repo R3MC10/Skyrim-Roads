@@ -1273,7 +1273,6 @@ h3[class*="cat-"]{color:var(--cat)}
 .gearprev figure{margin:0;text-align:center}
 .gearprev figcaption{font-size:11px;color:var(--muted,#b8ab90);margin-top:2px}
 .gearprev img{border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
-.pgear{flex:0 0 auto;margin-right:6px;border-radius:6px;overflow:hidden;line-height:0}
 /* [world events] worldevents.js: the strips under the map, the event sheet and the Journal panel */
 #wev:empty{display:none}
 .wev-card{display:flex;flex-direction:column;gap:6px;margin:8px 0}
@@ -4347,7 +4346,7 @@ html.mo-on .evc-fx{display:block}
 @keyframes evc-wind{0%{opacity:0;transform:translate(0,0)}15%{opacity:.55}85%{opacity:.4}100%{opacity:0;transform:translate(-190px,105px)}}
 @media (prefers-reduced-motion:reduce){.evc-fx{display:none!important}.evc.evc-in{animation:none!important}}
 .a11y-still .evc-fx{display:none!important}.a11y-still .evc.evc-in{animation:none!important}
-/* [busts] painted race busts (bustart.js): race picker tiles, Hero page portrait, inventory crest */
+/* [busts] painted race busts (bustart.js): race picker tiles; your round portrait (avatar.js) on the Character sheet and the paper doll */
 .bustslot{display:inline-flex;align-items:center;justify-content:center;flex:none}
 .bustslot img.bustimg{display:block;width:100%;height:100%;object-fit:contain;border:0;box-shadow:none;border-radius:0;max-width:none}
 .bustgrid .rpick{padding:4px 4px 6px;justify-content:flex-start}
@@ -4356,8 +4355,8 @@ html.mo-on .evc-fx{display:block}
 .bustgrid .rpick:not(.on) .bust-pick.ok img{filter:saturate(.82) brightness(.9)}
 .bustgrid .rpick:hover .bust-pick.ok img{filter:none}
 .bust-hero.ok{width:220px;height:220px;border:1px solid #4a4237;border-radius:8px;overflow:hidden;background:radial-gradient(ellipse at 50% 36%,#383d46 0%,#1e2128 60%,#121418 100%);box-shadow:0 2px 10px rgba(0,0,0,.35),inset 0 -18px 24px rgba(0,0,0,.35)}
-.bust-hero.ok.bust-crest{width:196px;height:196px;margin:12px;border-radius:50%;border:1px solid rgba(214,178,94,.45);box-shadow:0 0 0 4px #15171b,0 0 0 5px rgba(214,178,94,.22),0 2px 12px rgba(0,0,0,.45)}
-.bust-hero.ok.bust-crest img{filter:saturate(.7) sepia(.12);transform:scale(1.04) translateY(4px)}
+.bust-hero.ok.bust-av{width:196px;height:196px;margin:12px;border-radius:50%;border:1px solid rgba(214,178,94,.45);box-shadow:0 0 0 4px #15171b,0 0 0 5px rgba(214,178,94,.22),0 2px 12px rgba(0,0,0,.45)}
+.bust-hero.ok.bust-av img{transform:scale(1.04) translateY(4px)}
 .dfig{position:relative}
 .bust-badge.ok{position:absolute;top:-8px;left:max(0px,calc(50% - 99px));width:var(--bs,60px);height:var(--bs,60px);border-radius:50%;overflow:hidden;border:1px solid rgba(214,178,94,.5);background:radial-gradient(ellipse at 50% 38%,#353a43 0%,#16181d 100%);box-shadow:0 2px 8px rgba(0,0,0,.5);pointer-events:none}
 .dfig .bust-badge img.bustimg{border:0;border-radius:0;box-shadow:none;transform:scale(1.2) translateY(6%)}
@@ -4691,7 +4690,7 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 .cgdetail img{border-radius:50%;box-shadow:0 0 0 2px rgba(214,178,94,.5),0 2px 10px rgba(0,0,0,.55);margin:0}
 .cgdetail span{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:#d9cfb6;text-shadow:0 1px 3px #000}
 .rshow .cgbust .bust-hero.ok{width:150px;height:150px}
-.rshow .cgbust .bust-hero.ok.bust-crest{width:136px;height:136px;margin:7px}
+.rshow .cgbust .bust-hero.ok.bust-av{width:136px;height:136px;margin:7px}
 @media (min-width:900px){.cg-painted .cgdetail.on{left:24px;top:96px}.cgdetail img{width:104px;height:104px}}
 
 /* [longhousegrow] painted room patches on the hall, the crossfade after a build, and the tap areas */
@@ -5322,6 +5321,86 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 .ddwait .t{flex:1 1 100%;font-size:15px}.ddwait .btn{min-height:40px;flex:1 1 140px}
 .ddwait.back{border-color:rgba(120,200,120,.6)}
 @media (min-width:1000px){.ddwait{bottom:24px}}
+/* [avatars] your round painted portrait (avatar.js): player lists, friends, party, invite cards; the picker on the
+   Character sheet and in character creation; a plain silhouette for a friend never seen */
+.avport,.avsil{width:var(--av,40px);height:var(--av,40px);border-radius:50%;overflow:hidden;flex:none;align-self:center;margin-right:10px;background:radial-gradient(ellipse at 50% 38%,#3a3f48 0%,#1c1f25 70%,#121418 100%);box-shadow:0 0 0 1px rgba(214,178,94,.45),0 1px 4px rgba(0,0,0,.5)}
+.avport img.bustimg{transform:scale(1.28) translate(-3%,8%)}
+.avport>img.heroport{width:100%;height:100%;margin:0}
+.avsil{display:inline-flex;align-items:flex-end;justify-content:center}
+.avsil svg{width:86%;height:86%;fill:#6b6455;opacity:.75}
+.pvchip .avport,.invic .avport,.invic .avsil{margin:0}
+.invic.invpic{border:0;background:none;overflow:visible}
+.avbtn{position:relative;display:inline-flex;padding:0;border:0;background:none;cursor:pointer;border-radius:50%;color:inherit}
+.avbtn:focus-visible{outline:2px solid var(--gold,#d6b25e);outline-offset:2px}
+.avedit{position:absolute;right:18px;bottom:18px;width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:#15171b;border:1px solid rgba(214,178,94,.6);color:#e8d9ae;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.avbtn:hover .avedit{background:#23262c}
+.avgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;margin:8px 0}
+.avtile{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:1px solid rgba(255,255,255,.08);border-radius:3px;background:rgba(255,255,255,.02);color:inherit;cursor:pointer;min-height:44px;font:inherit}
+.avtile:hover{background:rgba(255,255,255,.05)}
+.avtile.on{border-color:rgba(226,187,100,.7);background:rgba(226,187,100,.08);box-shadow:inset 0 0 14px rgba(226,187,100,.14)}
+.avtile .avface{width:64px;height:64px;border-radius:50%;overflow:hidden;margin-bottom:4px;background:radial-gradient(ellipse at 50% 38%,#3a3f48 0%,#1c1f25 70%,#121418 100%);box-shadow:0 0 0 1px rgba(214,178,94,.35)}
+.avtile .avface img.bustimg{transform:scale(1.2) translate(-2%,7%)}
+.avtile .avface>img{width:100%;height:100%;margin:0;border:0;box-shadow:none}
+.avtile b{font-size:.85rem;line-height:1.1}
+.avtile span{font-size:.75rem;color:#b9b0a0}
+.avtile i{font-size:.7rem;font-style:normal;color:#d6b25e;letter-spacing:.04em}
+.avall{width:100%}
+.cgavh{margin-top:14px}
+/* ==== [dollrig] the paper doll: slots in even rows either side of the figure, readable labels, the crest in the card's corner ==== */
+.doll{grid-template-columns:66px minmax(0,1fr) 66px;align-items:start;gap:8px}
+.doll .dcol{gap:8px;justify-content:flex-start}
+.doll .dfig{align-self:stretch;align-items:flex-start}
+.doll .dfig img{width:200px;max-width:100%;height:auto}
+.dslot{width:62px;min-height:64px;padding:5px 2px 3px}
+.dslot .dsl{font-size:11px;letter-spacing:.05em;color:#cbbd9c;line-height:1.15;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dslot:not(.full) .dsl{color:var(--mute)}
+.dslot .dst{top:-6px;right:-6px}
+.djewel{gap:12px;margin:2px 0 6px}.djewel .dslot{width:58px;min-height:60px}
+.doll .bust-badge.ok{top:6px;left:max(0px,calc(50% - 94px))}
+.sky-doll .dhint{text-align:center;margin:8px 0 0}
+@media (min-width:900px){.doll{grid-template-columns:74px minmax(0,1fr) 74px;gap:12px}.doll .dslot{width:70px;min-height:72px}.doll .dcol{gap:10px}.doll .dslot .dsl{font-size:12px}}
+/* [dunchoices] the ways at a dungeon fork as cards (dunchoice.js): the room's painting, its name, a risk tag, the reward and
+   what comes next. Phones: one card per row, picture on the left. PC: side by side, picture on top. In a party vote the
+   same cards carry the voters' faces and a vote count on the picture (partyvote.js). */
+.dun .dcol .evc.dcards,.pvote .pvopts.dcards{display:grid;grid-template-columns:1fr;gap:10px}
+.dun .dcol .evc.dcards>.btn.dchoice:nth-child(n),.pvote .pvopts.dcards>.btn.dchoice:nth-child(n){grid-column:auto}
+.btn.dchoice{position:relative;display:grid;grid-template-columns:minmax(112px,36%) minmax(0,1fr);grid-template-areas:"pic tx";align-items:stretch;padding:0;min-height:0;width:100%;text-align:left;overflow:hidden;white-space:normal;text-transform:none;letter-spacing:normal;line-height:1.25;border-color:rgba(236,232,222,.22);background:linear-gradient(90deg,rgba(0,0,0,.55),rgba(0,0,0,.35))}
+.btn.dchoice:hover:not(:disabled),.btn.dchoice:focus-visible{border-color:rgba(226,187,100,.75);background:linear-gradient(90deg,rgba(226,187,100,.10),rgba(0,0,0,.35))}
+.btn.dchoice:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.btn.dchoice.t-boss{border-color:rgba(214,90,74,.62)}
+.dcpic{grid-area:pic;position:relative;display:block;min-height:104px;background:#0c0b0a;overflow:hidden}
+.dcpic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.dcpic.painted::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 100% at 50% 45%,rgba(0,0,0,0) 50%,rgba(0,0,0,.55))}
+.dcpic.drawn,.dcpic.waiting{display:flex;align-items:center;justify-content:center;background:radial-gradient(70% 70% at 50% 50%,rgba(255,170,80,.10),rgba(0,0,0,0)),#0c0b0a}
+.dcpic img.dcmed{position:static;width:44px;height:44px;object-fit:contain}
+.dctx{grid-area:tx;display:flex;flex-direction:column;gap:3px;min-width:0;padding:8px 10px 9px;font-family:var(--sk-ui);font-weight:500;font-size:14px;color:var(--sk-ink)}
+.dchd{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:2px 8px}
+.dcname{font-weight:600;font-size:16px;letter-spacing:.08em;text-transform:uppercase;min-width:0}
+.dcname .dcic{opacity:.85}.dcside{font-size:11px;letter-spacing:.1em;color:var(--sk-mute)}
+.dcrisk{flex:none;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:1px 6px;border:1px solid currentColor;border-radius:2px;line-height:1.35}
+.dcrisk.r0{color:#9fcf8f}.dcrisk.r1{color:#cfd6a0}.dcrisk.r2{color:#e2bb64}.dcrisk.r3{color:#f08a5d}.dcrisk.r4{color:#ff6b5b;background:rgba(176,52,40,.22)}.dcrisk.ru{color:#b9b1d6}
+.dcwhat{color:var(--sk-mute);font-size:13.5px}
+.dcgain{color:#e6cf92;font-size:13.5px}.dcgain.need small{color:var(--sp);font-size:12px}
+.dclab{font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--sk-mute);margin-right:2px}
+.dcthen{font-size:12.5px;color:var(--sk-mute)}.dcthen b{color:var(--sk-ink);font-weight:600}.dcthen .dcsep{font-style:normal;opacity:.6}
+.pvtally{grid-area:pic;align-self:end;justify-self:start;display:flex;align-items:center;gap:6px;margin:6px;z-index:2;pointer-events:none}
+.pvote .dchoice .pvchips{position:static;transform:none;margin-left:9px}
+.pvn{display:inline-block;font-family:var(--sk-ui);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:none;padding:1px 7px;border:1px solid rgba(232,198,106,.7);border-radius:2px;background:rgba(0,0,0,.72);color:#f1e3c0}
+.pvn:empty{display:none}
+.pvote .pvopt.pvlead .pvn{background:#e8c66a;color:#1a150d}
+.pvote .dchoice.pvlead{border-color:rgba(232,198,106,.8)}
+.pvote .pvopt.dchoice.pvmine{outline-offset:2px}
+.pvote .pvrule{margin:0 0 2px;color:#e8c66a}
+@media (max-width:360px){.btn.dchoice{grid-template-columns:minmax(96px,32%) minmax(0,1fr)}.dcname{font-size:15px}.dcwhat{font-size:13px}}
+@media (min-width:900px) and (min-height:520px){
+  .dun .dcol .evc.dcards,.pvote .pvopts.dcards{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+  .btn.dchoice{grid-template-columns:minmax(0,1fr);grid-template-areas:"pic" "tx";align-content:start}
+  .dcpic{aspect-ratio:16/9;min-height:0}
+  .dun .dcol .evc.dcards>.btn.dchoice .dctx{font-size:15px}.dcwhat,.dcgain{font-size:14.5px}.dcthen{font-size:13.5px}
+}
+/* ==== party members never get invites: an "In your party" tag instead (friendjoin.js, coop.js, Social → Travellers) ==== */
+.inparty{display:inline-flex;align-items:center;min-height:32px;padding:2px 4px;font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#d8c69a}.inparty::before{content:"\2691";margin-right:6px;font-size:13px}
+.coop .coopinparty{font-weight:600;color:#d8c69a}.coop .coopparty{margin-top:6px;font-style:italic}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -5460,6 +5539,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="store.js"></script>
 <script src="inkmap.js"></script>
 <script src="maptiles.js"></script>
+<script src="partytrain.js"></script>
 <script src="map.js"></script>
 <script src="backup.js"></script>
 <script src="sound.js"></script>
@@ -5484,6 +5564,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="gearlook.js"></script>
 <script src="heroart.js"></script>
 <script src="bustart.js"></script>
+<script src="avatar.js"></script>
 <script src="figart.js"></script>
 <script src="rigdata.js"></script>
 <script src="riggear.js"></script>
@@ -5509,6 +5590,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="dunart.js"></script>
 <script src="dunrooms.js"></script>
 <script src="dunstrip.js"></script>
+<script src="dunchoice.js"></script>
 <script src="dunfx.js"></script>
 <script src="dollart.js"></script>
 <script src="raidart.js"></script>
@@ -5571,6 +5653,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="menus.js"></script>
 <script src="menus2.js"></script>
 <script src="tabmenu.js"></script>
+<script src="menutop.js"></script>
 <script src="perkkeys.js"></script>
 <script src="fabdodge.js"></script>
 <script src="nickname.js"></script>
@@ -5620,7 +5703,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="i18n_foepanel.js"></script>
 <script src="i18n_hotbar.js"></script>
 <script src="i18n_movepreview.js"></script>
-<script src="i18n_busts.js"></script><script src="i18n_npcportraits.js"></script>
+<script src="i18n_busts.js"></script><script src="i18n_avatars.js"></script><script src="i18n_npcportraits.js"></script>
 <script src="i18n_fightset.js"></script>
 <script src="i18n_stacks.js"></script>
 <script src="i18n_fighttips.js"></script>
@@ -5650,6 +5733,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="i18n_movefx.js"></script>
 <script src="i18n_riding.js"></script>
 <script src="i18n_bugreport.js"></script>
+<script src="i18n_menutop.js"></script>
 <script src="i18n_hourlyupdates.js"></script>
 <script src="i18n_paintedmap.js"></script>
 <script src="i18n_horsedown.js"></script>
@@ -5659,11 +5743,13 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="i18n_perkkeys.js"></script>
 <script src="i18n_holds.js"></script>
 <script src="i18n_partyvote.js"></script>
+<script src="i18n_dunchoice.js"></script>
 <script src="i18n_deepdelve.js"></script>
 <script src="i18n_dunevents.js"></script>
 <script src="i18n_netsync.js"></script>
 <script src="i18n_netfix.js"></script>
 <script src="i18n_pcmap.js"></script>
+<script src="i18n_partytrain.js"></script>
 <script src="i18n_eventart.js"></script>
 <script src="i18n_assetquality.js"></script>
 <script src="i18n_treasure.js"></script>
@@ -5721,6 +5807,8 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="i18n_pcupdate.js"></script>
 <script src="i18n_friendjoin.js"></script>
 <script src="i18n_dundropout.js"></script>
+<script src="i18n_dollrig.js"></script>
+<script src="i18n_partyinvites.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

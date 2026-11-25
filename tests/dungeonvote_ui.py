@@ -83,7 +83,7 @@ async def main():
             moved = await wait_for(A, f"() => !!document.querySelector('#dun .pvote [data-k=\"{k[0]}\"] .pvchip[data-uid=\"{idb}\"]') && !document.querySelector('#dun .pvote [data-k=\"{k[1]}\"] .pvchip[data-uid=\"{idb}\"]')")
             check(f"[{style}] a changed vote moves the face", moved)
             await B.wait_for_timeout(400)
-            await clean(B); await B.locator("#dun .pvote").screenshot(path=os.path.join(OUT, f"{style}_member_vote.png"))
+            await B.bring_to_front(); await clean(B); await B.locator("#dun .pvote").screenshot(path=os.path.join(OUT, f"{style}_member_vote.png"))
             # the leader votes for the other way: 2-1, the majority wins; everyone voted so it closes at once
             await A.click(f"#dun .pvote [data-act=pvv][data-k='{k[1]}']")
             moved_in = await wait_for(A, "() => !!window.__dbg.save().dungeon?.room", tries=30)

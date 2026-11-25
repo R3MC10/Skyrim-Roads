@@ -6,7 +6,6 @@ Object.assign(I18N_EXTRA.words, {
   "What does the party do?": "Co robi drużyna?",
   "Which way does the party go?": "Którędy idzie drużyna?",
   "⚑ Decide now": "⚑ Rozstrzygnij teraz",
-  "Tap a choice to vote. Most votes wins; a tie goes the leader's way.": "Dotknij wyboru, aby zagłosować. Wygrywa większość; przy remisie decyduje przywódca.",
   "Your face is by your pick. Tap another to change your vote.": "Twoja twarz jest przy twoim wyborze. Dotknij innego, aby zmienić głos.",
   "Time's up: the first vote decides.": "Czas minął: decyduje pierwszy głos.",
   "Nobody has voted yet: tap a choice first.": "Nikt jeszcze nie zagłosował: najpierw dotknij wyboru.",
