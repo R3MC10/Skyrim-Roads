@@ -73,10 +73,10 @@ async def run(b, w, h):
     await pg.wait_for_timeout(1800); await shot("4_window")
     check(not await pg.evaluate(f"({SHOWN})('#obtip')"), "the level-up tip waits under the window")
     # closing it may open the next window (a quest update); the tip keeps waiting until the screen is clear
-    for _ in range(6):
+    for _ in range(10):
         await pg.evaluate("(()=>{const b=document.querySelector('#modal [data-act=close]')||document.querySelector('#modal .sheet button'); if(b) b.click(); else document.querySelectorAll('#modal').forEach(m=>m.remove());})()")
         await pg.wait_for_timeout(500)
-        if not await pg.query_selector("#modal"): break
+        if not await pg.evaluate("!!document.querySelector('#modal') || (typeof NOTICES!=='undefined' && NOTICES.queued>0)"): break   # notices.js: a waiting message opens a moment after the last one closes
     await pg.wait_for_timeout(1500); await shot("5_after_window")
     check(await pg.evaluate(f"({SHOWN})('#obtip')"), "the tip shows once the window is closed")
     check(not await pg.evaluate("!!__dbg.save().onb.seen.level"), "a held tip isn't marked as read")

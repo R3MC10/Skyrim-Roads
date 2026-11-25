@@ -1324,6 +1324,7 @@
 
   // ------------------------------------------------------------ encounters & messages
   function openModal(html, cls = "") {
+    if (typeof NOTICES !== "undefined") NOTICES.opening();   // [notices] a waiting message pushed off the screen goes back in line
     closeModal();
     const m = document.createElement("div");
     m.className = "modal"; m.id = "modal";
@@ -1335,10 +1336,15 @@
   const closeModal = () => $("#modal")?.remove();
   /* [lightmenus] the gold knotwork frame is kept for prestige moments only (a quest done, a company founded, a crisis won);
      every other window gets the plain SkyUI hairline */
+  /* [notices] one window at a time: a message that arrives on its own waits for the open window, fight or menu; the same one twice shows once */
   function showMessage(title, text, bad, prestige) {
-    if (/quest/i.test(title) || //.test(text)) SOUND.fx("quest");
     if (typeof POLISH !== "undefined") POLISH.fromText(text);
-    const got = typeof RTIP !== "undefined" && !bad ? RTIP.take() : [];   // [rewardtips] a quest or crisis reward: its icons, with tooltips
+    const got = typeof RTIP !== "undefined" && !bad ? RTIP.take() : [];   // [rewardtips] a quest or crisis reward: its icons, with tooltips (taken now, so a waiting window keeps its own)
+    if (typeof NOTICES !== "undefined") return NOTICES.modal(`${title}|${text}`, () => showMessageNow(title, text, bad, prestige, got));
+    showMessageNow(title, text, bad, prestige, got);
+  }
+  function showMessageNow(title, text, bad, prestige, got) {
+    if (/quest/i.test(title) || //.test(text)) SOUND.fx("quest");
     openModal(`${/^You died/.test(title) ? UIART.death(320, 120) : typeof EVENTART !== "undefined" ? EVENTART.story(title, text) : ""}<h2>${esc(title)}</h2><p>${esc(text)}</p>${got.length ? RTIP.strip(0, got) : ""}<button class="btn ${bad ? "danger" : "pri"}" data-act="close" style="width:100%">Continue</button>`, bad ? "enc" : (prestige || title === "Quest") ? "prestige" : "");
   }
   function fightLog(f) {
