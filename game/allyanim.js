@@ -26,6 +26,8 @@ const ALLYANIM = (() => {
   function clipOf(seg) {
     const t = String(seg || "").toLowerCase();
     if (/fades away|breaks away|leaves the fight|looks for a potion/.test(t)) return null;
+    if (/catch(es)? (their|his|her|your) breath|break away|throws an oil flask|marks the|swings up onto|slides down from|'s [a-z]+ blade \d/.test(t)) return null;   // [phantom] not a blow: a teammate's Breathe, Flee, Oil flask, Mark, Mount; an enchanted blade's tick
+    if (/stands guard over/.test(t)) return "block";
     if (/pulled back from the brink|gets back up|back on (their|his|her) feet/.test(t)) return "getup";
     if (/raises their (shield|guard)|keeps their guard|guard up|steps in front|holds back|blocks/.test(t)) return "block";
     if (/\bcasts\b|conjures|lays a|\bheals\b|raises .*(around|soaks)|channels|\bmends\b/.test(t)) return "cast";
