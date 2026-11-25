@@ -36,31 +36,36 @@ const BOSSFIGHT = (() => {
     soul: { ic: "", name: "Soul Rend", mul: 2.3, ans: [], cut: 1, magic: true },
     steam: { ic: "", name: "Steam Blast", mul: 1.9, ans: ["dodge"], cut: 0.3 },
     pounce: { ic: "", name: "Savage Leap", mul: 1.9, ans: ["dodge"], cut: 0.3 },
+    hex: { ic: "\uE12E", name: "Withering Hex", mul: 0.9, ans: ["ward"], cut: 0.5, magic: true, hex: true, more: "cleanse" },   // reactions.js: cleanse it
+    doom: { ic: "\uE145", name: "Marked for Death", mul: 2.2, ans: ["cover"], cut: 0.5, doom: true },                          // reactions.js: protect a friend
   };
   const HINT = {
     block: "Block (or end your turn after 2 moves or fewer) to halve it",
     ward: "A ward soaks most of it",
     dodge: "End your turn after 2 moves or fewer to dodge most of it",
+    cover: "It goes for a friend: Cover allies to take it yourself, at half",
+    cleanse: "If it lands, a potion or a healing spell washes the hex off",
   };
   const BREAK = "A shout or a shield bash breaks it";
-  const hintOf = (d) => [...d.ans.map((a) => T(HINT[a])), T(BREAK)].join(" · ");
+  const hintOf = (d) => [...d.ans.map((a) => T(HINT[a])), ...(d.more ? [T(HINT[d.more])] : []), T(BREAK)].join(" · ");
+  const HEX = { rounds: 5, dmg: 0.16 };   // Withering Hex: a share of its plain blow, every round until washed off
 
   // ------------------------------------------------------------------ what kind of boss, and what each phase brings
   //  each phase: fx (enrage | add | element | hazard), say ({0} = the boss), and which big attacks it uses
   const PROF = {
     dragon: { th: [0.66, 0.35], ep: ["Doom on wings", "Terror of the northern sky", "Devourer of the hold"], tele: [["breath"], ["breath"], ["tail", "breath"]],
       ph: [null, { fx: ["hazard"], say: "{0} climbs higher and rains fire on you", hz: "Fire from above" }, { fx: ["enrage"], say: "{0} crashes down, fighting for its life" }] },
-    priest: { ep: ["Masked servant of the dragons", "Keeper of the old tomb", "Voice of a dead age"], tele: [["storm"], ["storm"], ["soul", "storm"]],
+    priest: { ep: ["Masked servant of the dragons", "Keeper of the old tomb", "Voice of a dead age"], tele: [["storm"], ["storm", "hex"], ["soul", "storm", "hex"]],
       ph: [null, { fx: ["add"], say: "{0} calls its dead servants out of the walls", add: "Risen draugr" }, { fx: ["element", "hazard"], say: "{0}'s mask blazes with a new power", hz: "Soul fire" }] },
-    mage: { ep: ["Master of forbidden magic", "The storm-caller", "Reader of black books"], tele: [["storm"], ["storm"], ["storm", "storm"]],
+    mage: { ep: ["Master of forbidden magic", "The storm-caller", "Reader of black books"], tele: [["storm"], ["hex", "storm"], ["storm", "hex", "storm"]],
       ph: [null, { fx: ["add"], say: "{0} summons a servant to fight beside them", add: "Summoned atronach" }, { fx: ["element", "hazard"], say: "{0} covers the floor in burning runes", hz: "Burning runes" }] },
-    undead: { ep: ["Lord of the barrow", "The restless king", "Who should have stayed dead"], tele: [["thuum"], ["thuum", "slam"], ["slam", "thuum"]],
+    undead: { ep: ["Lord of the barrow", "The restless king", "Who should have stayed dead"], tele: [["thuum"], ["thuum", "slam"], ["slam", "thuum", "hex"]],
       ph: [null, { fx: ["add"], say: "The dead rise to {0}'s side", add: "Restless draugr" }, { fx: ["enrage", "hazard"], say: "{0} turns the air to killing frost", hz: "Grave frost" }] },
     construct: { ep: ["Guardian of the deep halls", "Brass colossus", "The machine that never sleeps"], tele: [["steam"], ["steam"], ["steam", "slam"]],
       ph: [null, { fx: ["element"], say: "{0} crackles with lightning", el: "shock" }, { fx: ["enrage", "hazard"], say: "{0} vents scalding steam everywhere", hz: "Scalding steam" }] },
-    beast: { ep: ["Terror of the wilds", "The hungry dark", "Eater of hunters"], tele: [["pounce"], ["pounce"], ["pounce", "sweep"]],
+    beast: { ep: ["Terror of the wilds", "The hungry dark", "Eater of hunters"], tele: [["pounce"], ["pounce", "doom"], ["pounce", "sweep", "doom"]],
       ph: [null, { fx: ["add"], say: "{0}'s brood joins the fight", add: "Its brood" }, { fx: ["enrage"], say: "{0} goes wild with rage" }] },
-    warrior: { ep: ["The one they all fear", "Champion of the blade", "Never beaten in this hall"], tele: [["slam"], ["slam"], ["slam", "sweep"]],
+    warrior: { ep: ["The one they all fear", "Champion of the blade", "Never beaten in this hall"], tele: [["slam"], ["slam", "doom"], ["slam", "sweep", "doom"]],
       ph: [null, { fx: ["enrage"], say: "{0} gets angry and hits harder" }, { fx: ["add"], say: "{0} calls for help", add: "Loyal guard" }] },
   };
   const ELS = ["fire", "frost", "shock"];
@@ -148,7 +153,16 @@ const BOSSFIGHT = (() => {
   }
 
   // ------------------------------------------------------------------ the plan for this round (after FIGHTREAD.plan and FOEINTENT.plan)
-  const teleKey = (b) => { const L = PROF[b.prof].tele[Math.min(b.phase, 2)] || ["slam"]; return L[b.teleN % L.length]; };
+  const friends = (f) => (f && f.allies || []).filter((a) => a && !a.down && !(a.hp != null && a.hp <= 0) && !a.fsum && !a.summon && !a.summonOf);
+  const teleKey = (b, f) => {
+    const L = PROF[b.prof].tele[Math.min(b.phase, 2)] || ["slam"], k = L[b.teleN % L.length];
+    if (TELE[k] && TELE[k].doom && !friends(f).length) return L.find((x) => !(TELE[x] && TELE[x].doom)) || "slam";
+    return k;
+  };
+  /* Marked for Death goes for your most hurt friend */
+  const doomOf = (f) => { const fr = friends(f); if (!fr.length) return null; return fr.reduce((a, x) => ((x.hp || 0) / Math.max(1, x.maxHp || x.hp || 1) < (a.hp || 0) / Math.max(1, a.maxHp || a.hp || 1) ? x : a)); };
+  const keyOfAl = (al) => (typeof FOEINTENT !== "undefined" ? FOEINTENT.keyOf(al) : al && al.name);
+  const doomAl = (f, b) => friends(f).find((a) => keyOfAl(a) === b.tele?.doomK) || null;
   function register() {
     if (typeof FIGHTREAD === "undefined" || !FIGHTREAD.INTENT || FIGHTREAD.INTENT.bf_slam) return;
     for (const [k, d] of Object.entries(TELE)) {
@@ -174,9 +188,11 @@ const BOSSFIGHT = (() => {
     } else if (b.teleCd > 0) b.teleCd--;
     else if (slots.length && f.ehp > 0) {
       teleAt = slots.length - 1;
-      k.plan[teleAt] = { id: "bft_" + teleKey(b), bf: "tele", key: teleKey(b) };
+      k.plan[teleAt] = { id: "bft_" + teleKey(b, f), bf: "tele", key: teleKey(b, f) };
     }
-    if (Array.isArray(f.foeTgts) && landAt >= 0) f.foeTgts[landAt] = { k: "host", n: String(f.s?.name || "You"), kind: "you" };   // a big attack goes for you
+    const da = landAt >= 0 && TELE[b.tele.key]?.doom ? doomAl(f, b) : null;
+    if (Array.isArray(f.foeTgts) && landAt >= 0) f.foeTgts[landAt] = da ? { k: keyOfAl(da), n: String(da.name || "Ally"), kind: typeof FOEINTENT !== "undefined" ? FOEINTENT.kindOf(da) : "ally" } : { k: "host", n: String(f.s?.name || "You"), kind: "you" };   // a big attack goes for you (Marked for Death: for a friend)
+    if (da && typeof REACT !== "undefined") REACT.retarget(sess);   // you're already covering them
     return k.plan;
   }
 
@@ -201,6 +217,11 @@ const BOSSFIGHT = (() => {
       d = Math.max(1, Math.min(d * (1 - (f.tbGuard || 0)), f.hp - 1));
       f.hp -= d; out.push(fmt("{0} hits you {1}", T(b.add.name), Math.round(d)));
     }
+    if (b.hex && b.hex.left > 0 && f.hp > 1) {   // Withering Hex
+      const d = Math.max(1, Math.min(b.hex.dmg, f.hp - 1));
+      f.hp -= d; b.hex.left--; out.push(fmt("the hex withers you for {0}", Math.round(d)));
+      if (b.hex.left <= 0) { b.hex = null; out.push(T("the hex fades")); }
+    }
     if (b.hazard && f.hp > 1) {
       const d = Math.max(1, Math.min(b.hazard.dmg * (f.ward > 0 ? 0.5 : 1), f.hp - 1));
       f.hp -= d; out.push(fmt("{0} burns you for {1}", T(b.hazard.name), Math.round(d)));
@@ -218,10 +239,13 @@ const BOSSFIGHT = (() => {
       pre += tickKit(f);
       if (head.bf === "tele") {
         if (stuck(f)) return pre + f.enemyTurn();   // stunned: no big attack this time
-        const key = head.key || teleKey(b), d = TELE[key];
+        let key = head.key || teleKey(b, f), d = TELE[key];
+        const al = d.doom ? doomOf(f) : null;
+        if (d.doom && !al) { key = teleKey({ ...b, teleN: b.teleN + 1 }, f); d = TELE[key]; if (d.doom) { key = "slam"; d = TELE.slam; } }
         const me = (sess.order || []).findIndex((o) => o.id === "me");
-        b.tele = { key, round: sess.round, idx: sess.idx, meAfter: me > (sess.idx || 0) };
+        b.tele = { key, round: sess.round, idx: sess.idx, meAfter: me > (sess.idx || 0), ...(al ? { doomK: keyOfAl(al), doomN: String(al.name || "") } : {}) };
         b.teleN++;
+        if (al) return pre + say(f, "{0} marks {1} for death! It lands next turn.", al.name) + " " + hintOf(d) + ".";
         return pre + say(f, "{0} readies {1}! It lands next turn.", T(d.name)) + " " + hintOf(d) + ".";
       }
       if (!b.tele) { const hpB = f.hp, t = go(); return pre + scaleRage(f, hpB, t); }
@@ -238,11 +262,21 @@ const BOSSFIGHT = (() => {
   }
   /* the big attack lands. Answered (blocked, warded, dodged): it does much less */
   function land(sess) {
-    const f = sess.f, b = f.bf, d = TELE[b.tele.key];
+    const f = sess.f, b = f.bf, d = TELE[b.tele.key], tl = b.tele;
     b.tele = null; b.teleCd = b.phase >= b.th.length ? 0 : 1;
     if (stuck(f)) return f.enemyTurn() + " " + T("(the big attack is lost)");
+    const covering = typeof REACT !== "undefined" && REACT.covering(f);
+    if (d.doom && !covering) {   // Marked for Death: it goes for your friend
+      const al = doomAl(f, { tele: tl });
+      if (al) {
+        const dm = f.e.damage; f.e.damage = dm * d.mul * b.rage; f.tgtNow = al;
+        let t; try { t = f.enemyTurnInner(); } finally { f.e.damage = dm; }
+        b.landed++;
+        return say(f, "{0} unleashes {1}!", T(d.name)) + " " + t;
+      }
+    }
     const blocked = !!f.blocking || (f.tbGuard || 0) >= 0.1, warded = (f.ward || 0) > 0, dodged = (f.tbGuard || 0) >= 0.1;   // 2 moves or fewer
-    const how = d.ans.find((a) => (a === "block" && blocked) || (a === "ward" && warded) || (a === "dodge" && dodged));
+    const how = d.ans.find((a) => (a === "block" && blocked) || (a === "ward" && warded) || (a === "dodge" && dodged) || (a === "cover" && covering));
     const hpB = f.hp;
     f.tgtNow = null; f.eMagic = !!d.magic;
     let t; try { t = f.enemyTurnInner(); } finally { f.eMagic = false; }
@@ -254,8 +288,10 @@ const BOSSFIGHT = (() => {
       f.hp = hpB - loss * m;
       if (d.wind && !how) { if (typeof STACKS !== "undefined") STACKS.add(f, "me", "winded", d.wind + 1); else f.sp = Math.max(0, f.sp - G.maxStamina(f.s) * 0.08 * d.wind); note += " " + fmt("(winded ×{0})", d.wind + 1); }
     }
+    if (d.hex && !how && f.hp > 0) { b.hex = { left: HEX.rounds, dmg: Math.max(1, Math.round((f.e.damage || 5) * HEX.dmg * b.rage)) }; note += " " + T("(you are hexed: it withers you every round until you wash it off with a potion or a healing spell)"); }
+    if (d.doom && how) note += " " + fmt("(you take the blow meant for {0})", tl?.doomN || T("your friend"));
     b.landed++;
-    if (how) { b.answered++; note = " " + fmt("(you saw it coming: {0})", T({ block: "blocked", ward: "warded", dodge: "dodged" }[how])) + note; }
+    if (how) { b.answered++; note = " " + fmt("(you saw it coming: {0})", T({ block: "blocked", ward: "warded", dodge: "dodged", cover: "covered" }[how])) + note; }
     return say(f, "{0} unleashes {1}!", T(d.name)) + " " + t + note;
   }
 
@@ -269,6 +305,7 @@ const BOSSFIGHT = (() => {
       if (b.add.hp <= 0) { t += " " + fmt("(you cut down {0})", T(b.add.name)); b.add = null; }
       else t += " " + fmt("({0} takes {1})", T(b.add.name), Math.round(part));
     }
+    if (b.hex && cleanses(a)) { b.hex = null; f._rxPend = "cleanse"; t += " " + T("(the hex is washed away)"); }
     if (b.tele) {
       const brk = typeof PFX !== "undefined" ? PFX.num(f.s, "bfbreak") : 0;   // Break Their Focus
       const heavy = dealt >= mx * (brk ? 0.1 : 0.15) && (brk || Math.random() < 0.35);
@@ -281,16 +318,27 @@ const BOSSFIGHT = (() => {
     }
     return t;
   }
+  const spOf = (a) => { const [k, arg] = String(a || "").split(":"); return typeof D === "undefined" ? null : k === "spell" || k === "dual" ? D.SPELLS[arg] : k === "scroll" ? D.SPELLS[D.ITEMS[arg]?.spell] : null; };
+  function cleanses(a) { if (/^potion:/.test(a || "")) return true; const sp = spOf(a); return !!sp && (sp.kind === "heal" || sp.kind === "ward"); }
+  /* a teammate healed you (tbfight.js allyMove, followerai.js) */
+  function cleanse(f) { const b = f && f.bf; if (!b || !b.hex) return ""; b.hex = null; f._rxPend = "cleanse"; return " · " + T("(the hex is washed away)"); }
   /* Auto (and the sim): answer a big attack that's coming */
   function ai(sess, a) {
-    const f = sess.f, b = f.bf; if (!b || !b.tele || !a) return a;
+    const f = sess.f, b = f.bf; if (!b || !a) return a;
     const can = (x) => { try { return sess.canAfford(x); } catch (e) { return false; } };
+    if (b.hex && !b.tele && a !== "end") {   // wash the hex off: a healing spell, else a potion when it's worth drinking
+      const heal = (f.s.spells || []).map((id) => "spell:" + id).find((x) => { const sp = spOf(x); return sp && (sp.kind === "heal" || sp.kind === "ward") && can(x); });
+      if (heal) return heal;
+      if (f.hp < G.maxHealth(f.s) * 0.75 && can("potion:health")) return "potion:health";
+    }
+    if (!b.tele) return a;
     if (can("bash")) return "bash";
     const sh = ["shout:fus", "shout:yol", "shout:fo"].find(can);
     if (sh) return sh;
     const d = TELE[b.tele.key];
     if (d.ans.includes("block") && !sess.myActs && can("block")) return "block";
     if ((d.ans.includes("dodge") || d.ans.includes("block")) && sess.myActs >= 2) return "end";
+    if (d.doom && sess.myActs >= 1 && can("rx:cover") && f.hp > G.maxHealth(f.s) * 0.45) return "rx:cover";   // stand over the friend it marked
     return a;
   }
 
@@ -320,14 +368,15 @@ const BOSSFIGHT = (() => {
     const ph = fmt("Phase {0}/{1}", b.phase + 1, phasesOf(b));
     const add = b.add && b.add.hp > 0 ? `<div class="bfadd"><span> ${esc(T(b.add.name))}</span><i><b style="width:${(100 * b.add.hp / b.add.max).toFixed(1)}%"></b></i><em>${esc(T("takes some of your blows"))}</em></div>` : "";
     const hz = b.hazard ? `<span class="bfhz">${EL_IC[b.hazard.el] || ""} ${esc(fmt("{0}: {1} a round", T(b.hazard.name), Math.round(b.hazard.dmg)))}</span>` : "";
+    const hexc = b.hex ? `<span class="bfhz hex" data-tip="${esc(T("Washed off by a potion or a healing spell"))}">\uE12E ${esc(fmt("Hexed: {0} a round, {1} rounds", b.hex.dmg, b.hex.left))}</span>` : "";
     const rage = b.rage > 1 ? `<span class="bfhz rage"> ${esc(fmt("+{0}% damage", Math.round((b.rage - 1) * 100)))}</span>` : "";
     return `<div class="bfbar" data-tip="${esc(T("Boss: the marks on the bar are where it changes how it fights."))}"><div class="bfname"><b>${esc(pl() ? T(f.e.name) : f.e.name)}</b><small>${esc(T(b.ep))}</small><span class="bfph">${esc(ph)}</span></div>
-      <div class="bftrack"><i style="width:${pc.toFixed(1)}%"></i>${ticks}</div>${hz || rage ? `<div class="bfchips">${rage}${hz}</div>` : ""}${add}</div>`;
+      <div class="bftrack"><i style="width:${pc.toFixed(1)}%"></i>${ticks}</div>${hz || rage || hexc ? `<div class="bfchips">${rage}${hz}${hexc}</div>` : ""}${add}</div>`;
   }
   function teleHTML(sess) {
     const f = sess.f, b = f.bf; if (!b.tele || sess.done) return "";
     const d = TELE[b.tele.key];
-    return `<div class="bftele" role="alert"><b>${d.ic} ${esc(say(f, "{0} readies {1}!", T(d.name)))}</b><small>${esc(hintOf(d))}</small></div>`;
+    return `<div class="bftele" role="alert"><b>${d.ic} ${esc(b.tele.doomN ? say(f, "{0} marks {1} for death!", b.tele.doomN) : say(f, "{0} readies {1}!", T(d.name)))}</b><small>${esc(hintOf(d))}</small></div>`;
   }
   function decorate(el, sess, newEv = [], ehpNow, playing) {
     if (!DOM || !el || !sess?.f?.bf) return;
@@ -361,6 +410,6 @@ const BOSSFIGHT = (() => {
   }
 
   if (typeof TB !== "undefined" && Array.isArray(TB.FOE_KEYS) && !TB.FOE_KEYS.includes("bf")) TB.FOE_KEYS.push("bf");   // party fights: every phone sees the same boss
-  return { TELE, PROF, isBoss, profileOf, setup, check, plan, turn, answer, ai, decorate, reveal, hintOf, phasesOf, teleKey };
+  return { TELE, PROF, HEX, isBoss, profileOf, setup, check, plan, turn, answer, ai, decorate, reveal, hintOf, phasesOf, teleKey, cleanse, cleanses };
 })();
 if (typeof module !== "undefined") module.exports = BOSSFIGHT;

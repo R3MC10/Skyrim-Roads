@@ -61,6 +61,7 @@ const TB = (() => {
   function base(f, a) {
     if (typeof BEASTPATH !== "undefined") { const c = BEASTPATH.cost(f, a); if (c) return c; }   // claws and a changed form's own moves (beastpaths.js)
     if (typeof STRAT !== "undefined" && STRAT.owns(a)) return STRAT.cost(f, a);   // Catch your breath (strategy.js)
+    if (typeof REACT !== "undefined" && REACT.owns(a)) return REACT.cost(f, a);   // Oil flask, Mark target, Cover allies (reactions.js)
     if (typeof MOUNTFIGHT !== "undefined" && MOUNTFIGHT.owns(a)) return MOUNTFIGHT.cost(f, a);   // getting on / off your horse (mountfight.js)
     const s = f.s, [k, arg] = a.split(":");
     if (a === "attack") return { sp: ATK_SP[f.wt] || 9 };
@@ -190,6 +191,7 @@ const TB = (() => {
     emit(who, text, kind, extra = {}) {
       const e = { who, text, kind, round: this.round, hp: Math.max(0, Math.round(this.f.hp)), ehp: Math.max(0, Math.round(this.f.ehp)), ...extra };
       if (this.remote && this.players && !this.mirror) { const ph = {}; for (const a of this.everyone) if (a.pid) ph[a.pid] = Math.max(0, Math.round(a.hp || 0)); e.ph = ph; }   // every player's health at this moment, for their own screens
+      if (this.f._rxPend) { e.rx = this.f._rxPend; this.f._rxPend = null; }   // a combo landed: the banner (reactions.js)
       this.ev.push(e); return e;
     }
     get over() { const f = this.f; if (f.bf && typeof BOSSFIGHT !== "undefined") BOSSFIGHT.check(this); if (f.ehp <= 0 && f.hp > 0 && !f.endWon && this.wave < this.waves) this.nextFoe(); return f.hp <= 0 || f.ehp <= 0 || !!f.endWon || this.round > this.maxRounds; }
@@ -228,6 +230,7 @@ const TB = (() => {
       if (typeof FIGHTREAD !== "undefined") FIGHTREAD.plan(this);   // the foe's intents for this round (fightread.js)
       if (typeof FOEINTENT !== "undefined") FOEINTENT.plan(this);   // and who each one goes for (foeintent.js)
       if (this.f.bf && typeof BOSSFIGHT !== "undefined") BOSSFIGHT.plan(this);   // a boss shows its big attacks a turn ahead
+      if (typeof REACT !== "undefined") REACT.retarget(this);   // covering your friends: its blows come to you
     }
     /* the foe gets a free action first (you were spotted, or fled and got caught) */
     begin() {
@@ -264,6 +267,7 @@ const TB = (() => {
       this.used = {}; this.myActs = Math.min(1, this.f.kitApLoss || 0); this.pots = 0; this.apSet = true; this.f.kitApLoss = 0;   // kitApLoss: thrown from the saddle (mountfight.js) = one move fewer this turn
       const w = typeof STACKS !== "undefined" ? STACKS.beginTurn(this.f) : "";   // Winded / Drained stacks bite (stacks.js)
       if (w) this.emit("tick", w.replace(/^ · /, ""), "tick");
+      if (typeof REACT !== "undefined") REACT.beginTurn(this.f);   // Cover allies drops when your turn comes back
     }
     /* why you can't do a move now ("" = you can) */
     why(a) {
@@ -283,6 +287,7 @@ const TB = (() => {
       if (this.why(a)) return false;
       if (a === "bash") return typeof SHIELDFX !== "undefined" && SHIELDFX.can(this.f);
       if (typeof STRAT !== "undefined" && STRAT.owns(a)) return STRAT.can(this.f, a);
+      if (typeof REACT !== "undefined" && REACT.owns(a)) return REACT.can(this.f, a);
       return this.f.affordable(a) || a === "attack";
     }
     /* after a move ran: take what the engine didn't (a plain blow, a shout, the repeat surcharge, blood for dark magic)
@@ -305,8 +310,10 @@ const TB = (() => {
       const price = cost(f, a, this);
       const before = f.ehp, myBefore = f.hp;
       let text = null;
-      const setup = typeof STRAT !== "undefined" ? STRAT.setup(f) : "";   // staggered, stunned, chilled: an opening (strategy.js)
+      let setup = typeof STRAT !== "undefined" ? STRAT.setup(f) : "";   // staggered, stunned, chilled: an opening (strategy.js)
+      const rxPre = typeof REACT !== "undefined" ? REACT.pre(f) : null;   // what the foe was open to before this move (reactions.js)
       if (typeof STRAT !== "undefined" && STRAT.owns(a)) text = STRAT.act(f, a);
+      if (text == null && typeof REACT !== "undefined" && REACT.owns(a)) text = REACT.act(this, a);
       if (text == null && al && zoneOf(a) === "self") text = onAlly(f, a, al);
       if (text == null) { f.tbTarget = al || null; try { text = a === "bash" ? SHIELDFX.bash(f) : f.act(a); } finally { f.tbTarget = null; } }
       if (f.hidden) f.hidden = false;   // only your first strike can be a sneak attack
@@ -316,7 +323,9 @@ const TB = (() => {
       if (typeof DRAGONS !== "undefined") text += DRAGONS.graze(f, a, before);
       if (typeof FOEKIT !== "undefined") text += FOEKIT.defend(f, a, before);   // its raised shield, ward or dodge
       if (f.bf && typeof BOSSFIGHT !== "undefined") text += BOSSFIGHT.answer(this, a, before);   // its helpers, and breaking a big attack
-      if (typeof COMBO !== "undefined" && f.ehp < before) text += COMBO.after(f, a, before);   // followers2: combos
+      const rx = typeof REACT !== "undefined" ? REACT.after(this, a, before, rxPre) : { text: "", key: null };   // Shatter, Exploit, Precision, Stagger exploit
+      if (rx.key) { text += rx.text; setup = ""; f._rxPend = rx.key; }   // the combo replaces the plain opening
+      else if (typeof COMBO !== "undefined" && f.ehp < before) text += COMBO.after(f, a, before);   // followers2: combos
       if (typeof STRAT !== "undefined" && f.ehp < before) text += STRAT.after(f, a, before, setup);
       if (typeof STACKS !== "undefined" && f.ehp < before) text += STACKS.after(f, a, before);   // Vulnerable, Sunder, Might
       text += this.capFoe(before);
@@ -328,6 +337,7 @@ const TB = (() => {
       this.emit("me", text, "me", { a, wt: f.wt, dmg: Math.max(0, Math.round(before - f.ehp)), healed: Math.max(0, Math.round(f.hp - myBefore)) });
       if (this.over) { this.apSet = false; this.idx++; return { turn: "next" }; }
       if (typeof STRAT !== "undefined" && STRAT.ends && STRAT.ends(a)) return this.endTurn(true);   // Breathe is your whole turn
+      if (typeof REACT !== "undefined" && REACT.ends(a)) return this.endTurn(true);   // Cover allies is a stance
       if (this.myActs >= this.st.acts || !this.anyAffordable()) return this.endTurn(true);
       return { turn: "me" };
     }
@@ -358,6 +368,7 @@ const TB = (() => {
         let a = aiPick(f, "me");
         if (!this.canAfford(a)) a = this.canAfford("attack") ? "attack" : null;
         if (typeof STRAT !== "undefined") a = STRAT.ai(this, a);   // cash in openings, catch your breath
+        if (typeof REACT !== "undefined") a = REACT.ai(this, a);   // set up and cash in combos
         if (f.bf && typeof BOSSFIGHT !== "undefined") a = BOSSFIGHT.ai(this, a);   // answer a big attack that's coming
         if (!a) break;
         if (a === "block" && this.myActs > 0) break;   // keep the guard from moves you don't make instead of a second raise
@@ -382,14 +393,16 @@ const TB = (() => {
       const f = this.f;
       if (al.down || f.ehp <= 0) return;
       if (al.fai && typeof FAI !== "undefined" && !(al.player && move && move !== "auto")) return FAI.turn(this, f, al);   // followers2: their own turn
-      const b = f.ehp, hpB = f.hp;
+      const b = f.ehp, hpB = f.hp, rxPre = typeof REACT !== "undefined" ? REACT.pre(f) : null;
       let t;
       if (al.player && move && move !== "auto") t = this.playerMove(al, move);
       else if (al.coop && typeof COOP !== "undefined") t = COOP.allyAct(f, al);
       else if (al.follower && f.ai && typeof COMBATAI !== "undefined") t = COMBATAI.followerAct(f, al);
       else { const d = al.dmg * (0.85 + Math.random() * 0.3); f.ehp -= d; t = ` · ${al.name} ${Math.round(d)}`; if (al.fsum && typeof COMBO !== "undefined") t += COMBO.phys(f, b, "al" + f.allies.indexOf(al)); }   // followers2: summons can shatter too
       t = String(t || "").replace(/^ · /, "");
+      if (typeof REACT !== "undefined" && f.ehp < b && move !== "heal" && move !== "potion" && move !== "guard") { const rx = REACT.ally(this, f, al, move === "power" ? "power" : "attack", b, rxPre); if (rx.key) { t += rx.text; f._rxPend = rx.key; } }
       if (f.ehp < b) { t += this.capFoe(b) + this.flank(b); this.hitters++; }
+      if (move === "heal" && f.hp > hpB && f.bf && typeof BOSSFIGHT !== "undefined" && BOSSFIGHT.cleanse) t += BOSSFIGHT.cleanse(f);   // a friend heals the boss's hex off you
       if (timedOut) t = `${al.name} took too long and keeps their guard up. ` + t;
       if (al.left != null && --al.left <= 0) { f.allies = f.allies.filter((x) => x !== al); t += ` · ${al.name} fades away`; }   // a teammate's summon runs out
       this.lines.me.push(t);
@@ -468,6 +481,7 @@ const TB = (() => {
       // foes go after your healers and casters when they can (party fights)
       const FI = typeof FOEINTENT !== "undefined" ? FOEINTENT : null;
       if (FI) FI.next(this);   // foeintent.js: the target its intent showed (healers first is part of that roll)
+      if (typeof REACT !== "undefined") REACT.foePre(this);   // Intercept: a blow meant for a friend comes to you
       else if (f.allies.length && !f.coverAl) { const h = f.allies.find((a) => !a.down && a.player && (a.role === "healer" || a.heals > 0)); if (h && Math.random() < 0.5) f.coverAl = h; }
       let act = null;   // the move it shows, by name (" Venom Spit → Meeko"): the log, the banner and the scene say it as it happens
       try { if (typeof FIGHTREAD !== "undefined" && !this.mirror) act = FIGHTREAD.actName(FIGHTREAD.intents(this)[0], this); } catch (x) { act = null; }
@@ -485,6 +499,7 @@ const TB = (() => {
       }
       const loss = hpB - f.hp;
       if (loss > 0 && f.tbGuard) { const back = loss * f.tbGuard; f.hp += back; t += ` (guard −${Math.round(back)})`; }
+      if (typeof REACT !== "undefined") t += REACT.foePost(this, hpB);
       const mh = G.maxHealth(f.s), cap = HIT_CAP * mh, loss2 = hpB - f.hp;
       if (loss2 > cap && hpB > cap) { f.hp = hpB - cap; t += " (you stay on your feet)"; }
       f.tbGuard = 0;
@@ -521,6 +536,7 @@ const TB = (() => {
       if (typeof MAGIC !== "undefined" && !f.endWon) MAGIC.tick(f, line);
       if (f.pw && typeof POWERS !== "undefined") POWERS.tick(f, line);
       if (typeof STACKS !== "undefined") STACKS.tick(f, line);   // every stack drops by 1
+      if (typeof REACT !== "undefined") REACT.tick(f, line);   // burning ground
       const extra = (line.me.slice(n0) + line.them.slice(t0)).replace(/^ · /, "");
       if (extra) this.emit("tick", extra, "tick");
       line.hp = Math.max(0, Math.round(f.hp)); line.ehp = Math.max(0, Math.round(f.ehp));
@@ -653,6 +669,7 @@ const TB = (() => {
     if (typeof BEASTPATH !== "undefined" && BEASTPATH.zone(a)) return BEASTPATH.zone(a);
     if (a === "attack" || a === "power_attack" || a === "bash" || /^(shout|power):/.test(a)) return "foe";
     if (a === "block" || /^potion:/.test(a)) return "self";
+    if (a === "rx:oil" || a === "rx:mark") return "foe";
     const sp = spellOf(a);
     if (sp) return typeof SPELLBOOK !== "undefined" && SPELLBOOK.SUPPORT.has(sp.kind) ? "ally" : SELF_KINDS.has(sp.kind) ? "self" : "foe";
     return "";
@@ -680,6 +697,7 @@ const TB = (() => {
   function iconOf(f, a) {
     if (typeof BEASTPATH !== "undefined") { const ic = BEASTPATH.icon(f, a); if (ic) return ic; }
     if (a === "mount" || a === "dismount") return "\uE12D";
+    if (typeof REACT !== "undefined" && REACT.owns(a)) return REACT.IC[a.slice(3)] || "•";
     if (a === "attack") return f.wt === "bow" || f.wt === "crossbow" ? ICON.bow : ICON.attack;
     const k = a.split(":")[0];
     if (k === "spell" || k === "dual") { const sp = spellOf(a); return sp?.kind === "heal" ? ICON.heal : sp?.element === "fire" ? "" : sp?.element === "frost" ? "" : sp?.element === "shock" ? "" : ICON.magic; }
@@ -706,7 +724,7 @@ const TB = (() => {
       return `<div class="tbmenu"><div class="tbmh"><b> Items</b><small>Drag a potion onto yourself, or tap it</small></div><div class="tbgrid">${pots || scrolls ? pots + scrolls : `<p class="sub">No potions or scrolls.</p>`}${shouts}</div><button class="tbact back" data-tbm="">‹ Back</button></div>`;
     }
     const bx = typeof BEASTPATH !== "undefined" ? BEASTPATH.moves(f) : { form: null, list: [] };   // Beast Form / Vampire Lord moves, vampire powers (beastpaths.js)
-    const mv = typeof MOUNTFIGHT !== "undefined" && !bx.form ? MOUNTFIGHT.moves(f) : [];   // Mount / Dismount (mountfight.js)
+    const mv = (typeof MOUNTFIGHT !== "undefined" && !bx.form ? MOUNTFIGHT.moves(f) : []).concat(typeof REACT !== "undefined" && !bx.form ? REACT.moves(f) : []);   // Mount / Dismount (mountfight.js), Oil flask, Mark, Cover (reactions.js)
     const sh = bx.form ? "" : shoutsFor(f).map(([a, n]) => B(a, n, "shout")).join("") + bx.list.map(([a, n]) => B(a, n, "shout beast")).join("") + mv.map(([a, n]) => B(a, n, "mount")).join("");
     if (typeof TBRADIAL !== "undefined" && TBRADIAL.on()) {   // the combat wheel: moves in a ring round End turn
       const W = (a, label, extra = "") => { const c = cost(f, a, sess), ok = sess.canAfford(a), z = zoneOf(a);
@@ -804,6 +822,7 @@ const TB = (() => {
     if (typeof FIGHTTIPS !== "undefined") { try { FIGHTTIPS.decorate(el, sess); } catch (e) { console.warn("fight tips", e); } }   // tooltips on everything (fighttips.js)
     if (R) { el.classList.toggle("tbplay", playing); R.low(el, hpNow / Math.max(1, hpMax), !sess.done); }
     if (f.bf && typeof BOSSFIGHT !== "undefined") { try { BOSSFIGHT.decorate(el, sess, newEv, ehpNow, playing); } catch (e) { console.warn("boss", e); } }   // boss bar, phases, big attacks
+    if (typeof REACT !== "undefined") { try { REACT.decorate(el, sess, newEv, playing); } catch (e) { console.warn("combos", e); } }   // combo icons on moves, the combo banner
   }
   /* floating numbers for what just happened: damage coloured by element, heals, crits, and what you spent */
   const ELEM = [["fire", /\b(fire|flame|burn|scorch|ember)/i], ["frost", /\b(frost|ice|cold|freez|chill)/i], ["shock", /\b(shock|lightning|spark|thunder)/i], ["poison", /\b(poison|venom|toxic)/i]];
@@ -871,6 +890,7 @@ const TB = (() => {
     if (f.tbStunLeft > 0) out.push(`<i class="st stun" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.stun : ""}"></i>`);
     if (f.stagger) out.push(`<i class="st stag" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.stag : ""}"></i>`);
     if (typeof FOEKIT !== "undefined") for (const [c, ic, tip] of FOEKIT.chips(f)) out.push(`<i class="st kit ${c}" data-tip="${esc(tip)}">${ic}</i>`);
+    if (typeof REACT !== "undefined") for (const [c, ic, tip] of REACT.chips(f)) out.push(`<i class="st rxc rxc-${c}" data-tip="${esc(tip)}">${ic}</i>`);   // soaked, marked, burning ground (reactions.js)
     if (typeof COMBO !== "undefined") for (const [c, ic, tip] of COMBO.chips(f)) out.push(`<i class="st ${c}" data-tip="${esc(tip)}">${ic}</i>`);   // followers2: weak/resists
     if (typeof SPELLFX !== "undefined") { const h = SPELLFX.foeHTML(f); if (h) out.push(h); }   // calm, fear, walls, runes, soul trap (spellfx.js)
     return out.length ? `<div class="tbst">${out.join("")}</div>` : "";

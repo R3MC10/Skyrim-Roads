@@ -3601,6 +3601,25 @@ html.art-pixel .lh-paint{border-radius:0;image-rendering:pixelated}html.art-pixe
 /* [c2polish] a long next-move chip on the foe's plate wraps inside the plate instead of printing over itself (phones) */
 #tbf.c2 .c2ov .tbu.foe .tbint{flex-wrap:wrap;white-space:normal;max-width:100%;box-sizing:border-box;row-gap:1px}
 #tbf.c2 .c2ov .tbu.foe .tbint>*{flex:none;white-space:nowrap}
+/* [combos] reactions.js: a combo icon on a move that would set one off now, the combo chips on the foe, the combo banner */
+#tbf .tbact.rxon{position:relative;border-color:#e9c46a !important;box-shadow:0 0 0 1px rgba(233,196,106,.65),0 0 12px rgba(233,196,106,.45) !important}
+#tbf .tbact.rxon .rxbadge{position:absolute;top:-7px;right:-6px;z-index:3;display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font:normal 13px/1 "Barlow Semi Condensed",sans-serif;color:#1a1208;background:radial-gradient(circle at 40% 35%,#fff1c0,#e2bb64 60%,#9a7a2a);border:1px solid #2a1e0c;box-shadow:0 1px 3px rgba(0,0,0,.8);pointer-events:none;animation:rxpulse 1.3s ease-in-out infinite alternate}
+#tbf .tbact.rxon.rx-shatter .rxbadge{background:radial-gradient(circle at 40% 35%,#ffffff,#9fdcff 60%,#3a7fae)}
+#tbf .tbact.rxon.rx-burn .rxbadge{background:radial-gradient(circle at 40% 35%,#fff0c8,#ff9a4a 60%,#b0401a)}
+#tbf .tbact.rxon.rx-cleanse .rxbadge{background:radial-gradient(circle at 40% 35%,#eaffea,#7fd88a 60%,#2f7a3a)}
+@keyframes rxpulse{from{transform:scale(1)}to{transform:scale(1.14)}}
+#tbf .st.rxc{color:#ffe6b0;border-color:rgba(233,196,106,.6)}#tbf .st.rxc-fire{color:#ffb070}#tbf .st.rxc-oil{color:#d8c690}#tbf .st.rxc-mark{color:#ff8a7a}
+.rxban{position:fixed;left:50%;top:30%;z-index:390;transform:translate(-50%,-50%);display:flex;align-items:center;gap:8px;padding:6px 16px 6px 10px;pointer-events:none;white-space:nowrap;
+  font-family:Cinzel,serif;color:#fbe7b0;background:linear-gradient(90deg,rgba(20,12,6,0),rgba(20,12,6,.9) 18%,rgba(20,12,6,.9) 82%,rgba(20,12,6,0));border-top:1px solid rgba(233,196,106,.7);border-bottom:1px solid rgba(233,196,106,.7);
+  text-shadow:0 2px 0 #000,0 0 10px rgba(0,0,0,.9);animation:rxban 1.9s ease-out both}
+.rxban i{font-style:normal;font-size:24px;line-height:1;color:#f6d27a;filter:drop-shadow(0 0 6px rgba(246,210,122,.7))}
+.rxban b{font-size:clamp(18px,5.6vw,26px);letter-spacing:.1em}.rxban small{font-family:"Barlow Semi Condensed",sans-serif;font-size:18px;font-weight:700;color:#ffd27a}
+.rxban em{font-family:"Barlow Semi Condensed",sans-serif;font-style:italic;font-size:12px;color:#d9c9a4;opacity:.85;align-self:flex-end;margin-bottom:3px}
+.rxban.rx-shatter i,.rxban.rx-shatter b{color:#bfe8ff}.rxban.rx-burn i,.rxban.rx-burn b{color:#ffb072}.rxban.rx-cleanse i,.rxban.rx-cleanse b{color:#a8f0b0}.rxban.rx-intercept i{color:#e6d6a8}
+@keyframes rxban{0%{opacity:0;transform:translate(-50%,-50%) scale(1.35)}14%{opacity:1;transform:translate(-50%,-50%) scale(1)}78%{opacity:1}100%{opacity:0;transform:translate(-50%,-62%)}}
+.rxban.still{animation:rxbanstill 1.4s linear both}@keyframes rxbanstill{0%,85%{opacity:1}100%{opacity:0}}
+html.art-pixel .rxban,html.art-pixel #tbf .tbact.rxon .rxbadge{border-radius:0;image-rendering:pixelated}html.art-pixel .rxban{font-family:"Barlow Condensed",sans-serif;background:rgba(20,12,6,.92);border:2px solid #e9c46a;box-shadow:3px 3px 0 rgba(0,0,0,.6)}
+@media (prefers-reduced-motion:reduce){#tbf .tbact.rxon .rxbadge{animation:none}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -3710,6 +3729,7 @@ html.art-pixel .lh-paint{border-radius:0;image-rendering:pixelated}html.art-pixe
 <script src="followerai.js"></script>
 <script src="folbuild.js"></script>
 <script src="combo.js"></script>
+<script src="reactions.js"></script>
 <script src="partyplay.js"></script>
 <script src="lootvote.js"></script>
 <script src="partyvote.js"></script>
@@ -3830,6 +3850,7 @@ html.art-pixel .lh-paint{border-radius:0;image-rendering:pixelated}html.art-pixe
 <script src="i18n_homestash.js"></script>
 <script src="i18n_noequip.js"></script>
 <script src="i18n_boss.js"></script>
+<script src="i18n_combos.js"></script>
 <script src="i18n_accounts.js"></script>
 <script src="i18n_spells.js"></script>
 <script src="i18n_potionfx.js"></script>
