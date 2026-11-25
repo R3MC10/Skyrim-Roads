@@ -1276,7 +1276,7 @@
     if (!e) return;
     openModal(`<p class="sub danger-${e.danger}" style="margin:0">${e.danger === "high" ? "Deadly" : e.danger === "medium" ? "Dangerous" : "Minor"} encounter · ${esc(e.hold)}${G.isNight() ? " · night" : ""}</p>
       <h2 style="margin:4px 0 8px">${esc(e.name)}</h2>${typeof FOEPERKS !== "undefined" ? FOEPERKS.html(e, esc) : ""}<p>${esc(e.text)}</p>
-      ${note ? `<p class="sub">${esc(note)}</p>` : ""}${(() => { const am = typeof AMMO !== "undefined" ? AMMO.status(S) : null; return am && !am.best ? ammoNote() : ""; })()}${typeof HORSEBACK !== "undefined" ? (typeof MOUNTCOMBAT !== "undefined" && !MOUNTCOMBAT.enabled ? MOUNTCOMBAT.note(S) : HORSEBACK.note(S)) : ""}${typeof WFX !== "undefined" ? WFX.noteHTML(S) : ""}
+      ${note ? `<p class="sub">${esc(note)}</p>` : ""}${(() => { const am = typeof AMMO !== "undefined" ? AMMO.status(S) : null; return am && !am.best ? ammoNote() : ""; })()}${typeof MOUNTCOMBAT !== "undefined" ? MOUNTCOMBAT.note(S) : ""}${typeof WFX !== "undefined" ? WFX.noteHTML(S) : ""}
       <div class="grid2" style="margin:10px 0"><div class="vital"><small><span>You</span><span class="num">${Math.round(G.curHealth(S))}/${G.maxHealth(S)}</span></small><div class="bar"><i style="width:${pct(G.curHealth(S), G.maxHealth(S))}%;background:var(--hp)"></i></div></div>
       <div class="vital"><small><span>${esc(e.name)}</span><span class="num">${e.hp}/${e.health}</span></small><div class="bar"><i style="width:${pct(e.hp, e.health)}%;background:var(--ember)"></i></div></div></div>
       <div class="grid2">
@@ -3217,7 +3217,7 @@
     return `<div class="aimode ${m !== "custom" ? "on" : ""}" role="radiogroup" aria-label="How you fight"><span class="aimode-l">Combat</span>${b("smart", " Smart AI")}${typeof AISET !== "undefined" ? b("hybrid", " Hybrid") : ""}${b("custom", " Custom tactics")}</div>
       <p class="sub aidesc">${desc}</p>${m !== "custom" ? aiSettingsHTML(L) : ""}`;
   }
-  let aiSetOpen = false, shareOpen = false, shareMsg = "", previewResult = null;
+  let aiSetOpen = false, rulesFoldOpen = false, shareOpen = false, shareMsg = "", previewResult = null;
   function aiSettingsHTML(L) {   // aiset.js: how Smart AI fights for this loadout
     if (typeof AISET === "undefined") return "";
     const st = AISET.get(L), seg = (key, opts) => `<div class="aiseg" role="radiogroup">${opts.map(([v, l]) => `<button class="chip ${st[key] === v ? "on" : ""}" role="radio" aria-checked="${st[key] === v}" data-act="aiset" data-k="${key}" data-v="${v}">${l}</button>`).join("")}</div>`;
@@ -3266,13 +3266,14 @@
     const cards = rules.map((r, i) => { const d = G.describeRule(r), w = dead[i] || ruleWarn(r);
       return `<div class="rcard ${r.off ? "off" : ""} ${dead[i] ? "dead" : ""} ${tacticsDraft.edit === i ? "editing" : ""}"><div class="rhead"><span class="n rdrag" data-drag="${i}" title="Drag to reorder" aria-label="Rule ${i + 1}: drag to move">${i + 1}</span>${r.do === "power:stone" && S.stone ? UIART.stone(S.stone, 30) : r.do === "power:race" ? UIART.power(S.race, 30) : UIART.action(r.do, 30)}<div class="rtxt"><div><small>IF</small> <b>${esc(d.cond)}</b></div><div><small>THEN</small> <b>${esc(d.act)}</b></div>${r.off ? '<div class="rw">Switched off</div>' : w ? `<div class="rw"> ${esc(w)}</div>` : ""}</div></div>
         <div class="racts"><button class="iconbtn" data-act="rup" data-i="${i}" aria-label="Move up" ${i ? "" : "disabled"}>↑</button><button class="iconbtn" data-act="rdown" data-i="${i}" aria-label="Move down" ${i < rules.length - 1 ? "" : "disabled"}>↓</button><button class="iconbtn" data-act="roff" data-i="${i}" aria-label="${r.off ? "Switch on" : "Switch off"}">${r.off ? "" : ""}</button><button class="iconbtn" data-act="redit" data-i="${i}" aria-label="Edit">✎</button><button class="iconbtn" data-act="rdel" data-i="${i}" aria-label="Remove">✕</button></div></div>`; }).join("");
-    return `<div class="panel ${smart ? "ai-smart" : ""}"><h2>Tactics · ${esc(S.loadout)}</h2>${aiToggle(L)}<div class="rulesbox"><p class="sub">Every turn, the <b>first</b> rule that is true <b>and</b> possible (enough magicka, stamina, potions…) fires. If none does, you attack. Power attacks cost ${F.powerAttackCost(G.equipment(S).weapon ? D.ITEMS[G.equipment(S).weapon.item].weight : 0)} stamina now.</p>${ammoNote()}
+    return `<div class="panel ${smart ? "ai-smart" : ""}"><h2>Tactics · ${esc(S.loadout)}</h2>${aiToggle(L)}<div class="rulesbox">${smart ? `<details class="rulesfold" ${rulesFoldOpen || tacticsDraft.edit != null ? "open" : ""}><summary data-act="rulesfold">Your rules (${rules.length}) · kept, used in Custom and Hybrid</summary>` : ""}<p class="sub">Every turn, the <b>first</b> rule that is true <b>and</b> possible (enough magicka, stamina, potions…) fires. If none does, you attack. Power attacks cost ${F.powerAttackCost(G.equipment(S).weapon ? D.ITEMS[G.equipment(S).weapon.item].weight : 0)} stamina now.</p>${ammoNote()}
       <div class="rlist">${cards || '<p class="sub">No rules: you will just attack.</p>'}</div>
       <div class="card redit" id="tedit"><h3>${editing ? `Change rule ${tacticsDraft.edit + 1}` : "Add a rule"}</h3>
       ${ruleEditorConds()}
       <label class="sub">Then</label><select id="ta" aria-label="Action">${actOpts}</select>
       ${editing ? `<div class="grid2"><button class="btn pri" data-act="rsave">Save rule ${tacticsDraft.edit + 1}</button><button class="btn" data-act="rcancel">Cancel</button></div>`
-        : `<button class="btn pri" data-act="radd" style="width:100%" ${rules.length >= D.MAX_RULES ? "disabled" : ""}>Add rule ${rules.length >= D.MAX_RULES ? `(max ${D.MAX_RULES})` : ""}</button><p class="sub" style="margin:4px 0 0">New rules go above “Always → Attack”, so they get used.</p>`}</div>
+        : `<button class="btn pri" data-act="radd" style="width:100%" ${rules.length >= D.MAX_RULES ? "disabled" : ""}>Add rule ${rules.length >= D.MAX_RULES ? `(max ${D.MAX_RULES})` : ""}</button><p class="sub" style="margin:4px 0 0">New rules go above “Always → Attack”, so they get used.</p>`}</div>${smart ? "</details>" : ""}
+      ${typeof AITEST !== "undefined" ? AITEST.html(S, esc) : ""}
       <h3 style="margin-top:14px">Presets</h3>${(() => { const PR = typeof AISET !== "undefined" ? AISET.PRESETS : D.PRESETS;
         return pendingPreset && PR[pendingPreset] ? `<div class="card"><p>Replace your ${rules.length} rule${rules.length === 1 ? "" : "s"} with the <b>${esc(PR[pendingPreset].name)}</b> preset?${PR[pendingPreset].desc ? ` <span class="sub">${esc(PR[pendingPreset].desc)}</span>` : ""}</p><div class="grid2"><button class="btn danger" data-act="presetyes">Replace</button><button class="btn" data-act="presetno">Keep mine</button></div></div>`
         : `<div class="chips">${Object.entries(PR).map(([id, p]) => `<button class="chip" data-act="preset" data-id="${id}" title="${esc(p.desc || "")}">${esc(p.name)}</button>`).join("")}</div><p class="sub" style="margin:4px 0 0">Presets are built from the spells and gear you have now.</p>`; })()}
@@ -4179,6 +4180,7 @@
         if (!D.PRESETS[id]) break; L.rules = G.clone(D.PRESETS[id].rules); tacticsDraft.edit = null; say(`${D.PRESETS[id].name} tactics loaded. Rules for spells you don't know are skipped.`); break; }
       case "aimode": { const m = ["custom", "hybrid"].includes(b.dataset.id) ? b.dataset.id : "smart"; L.mode = m; persist(); renderPanel(true); toast(m === "smart" ? " Smart AI fights for this loadout." : m === "hybrid" ? " Your rules first, then Smart AI." : " Your own tactics fight for this loadout."); break; }
       case "aisetopen": e.preventDefault(); aiSetOpen = !aiSetOpen; renderPanel(true); break;
+      case "rulesfold": e.preventDefault(); rulesFoldOpen = !rulesFoldOpen; renderPanel(true); break;   // Smart AI: your rules folded into one row
       case "aiset": { const st = AISET.get(L), k = b.dataset.k, v = b.dataset.v; st[k] = v; if (k === "prefer") st.w = { ...AISET.PREFER[v] }; Object.assign(st, AISET.clean(st)); persist(); renderPanel(true); break; }
       case "aischool": { const st = AISET.get(L), k = b.dataset.id; if (st.schools[k] === false) delete st.schools[k]; else st.schools[k] = false; persist(); renderPanel(true); break; }
       case "aispell": { const st = AISET.get(L), id = b.dataset.id, i = st.off.indexOf(id); if (i >= 0) st.off.splice(i, 1); else st.off.push(id); persist(); renderPanel(true); break; }

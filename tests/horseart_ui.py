@@ -1,4 +1,4 @@
-"""Painted horses (horseart.js): the horse pictures in a mounted fight, the travel strip, the world map hero and the
+"""Painted horses (horseart.js): the travel strip, the world map hero and the
 stable card, on a phone and a wide PC window, plus a gallery straight from the drawers (every coat, standing,
 galloping, ridden in a fight and knocked down). Needs ?assets so the pictures load.
 Run:  node tests/serve.js 8770   then   python tests/horseart_ui.py 8770 [outdir]
@@ -17,10 +17,8 @@ FIGHT = """()=>{ const S=window.__dbg.save(); G.startTrip(S,'Riverwood',WORLD.pl
   S.trip.status='encounter'; S.trip.encounter={...G.scaleEnemy(base,S.level), hold:'Whiterun', danger:base.danger}; }"""
 GALLERY = """()=>{ const out=[], S=window.__dbg.save(), look=HEROART.lookOf(S), ids=HORSES.COATS.map(c=>c[0]);
   const cv=(w,h)=>{ const c=document.createElement('canvas'); c.width=w; c.height=h; const g=c.getContext('2d'); g.fillStyle='#6d7f6a'; g.fillRect(0,0,w,h); return [c,g]; };
-  { const [c,g]=cv(ids.length*240, 760);   // row 1: fight rider (back, hero, front) · row 2: downed · row 3: ride sprite gallop · row 4: ride sprite stand
+  { const [c,g]=cv(ids.length*240, 760);   // ride sprite gallop, ride sprite stand (no riders in fights any more)
     ids.forEach((id,i)=>{ const col=HORSES.coat(id)[2], x=120+i*240;
-      g.save(); g.translate(x,190); g.scale(2,2); HORSEBACK.drawHorse(g,col,0,0.3,'back'); g.translate(0,-30); FIGART.draw(g,{look},0,0,{pose:'idle',frame:0,h:61}); g.translate(0,30); HORSEBACK.drawHorse(g,col,0,0.3,'front'); g.restore();
-      g.save(); g.translate(x-20,320); g.scale(2,2); HORSEBACK.drawDowned(g,col,0.3,'Downed'); g.restore();
       FIGART.draw(g,{look},x,520,{pose:'ride',frame:1,h:90,horse:col});
       FIGART.draw(g,{look},x,720,{pose:'ride',frame:0,h:90,horse:col,gait:'stand'});
       g.fillStyle='#fff'; g.font='16px sans-serif'; g.fillText(id,x-30,20); });
@@ -61,7 +59,7 @@ async def main():
             for nm, url in shots:
                 path = os.path.join(OUT, f"{tag}_travel_{nm}.png")
                 with open(path, "wb") as f: f.write(base64.b64decode(url.split(",")[1]))
-            # a mounted fight
+            # a road fight while riding (on foot: horses are for travel)
             await pg.evaluate("()=>{ const S=__dbg.save(); S.trip=null; S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; }")
             await pg.evaluate(FIGHT); await pg.wait_for_timeout(300); await pg.evaluate(CLEAR)
             await pg.evaluate("()=>__ui.go('map')"); await pg.wait_for_timeout(500)

@@ -10,7 +10,16 @@
 
    API: HORSEART.coatOf(colourOrId) → coat id · HORSEART.ok(coat, pose) → picture ready?
         HORSEART.ride(g, coat, pose, seatH, o)  draws the horse with its feet at y 0 and its saddle seat at (0, -seatH);
-                                                o.bob lifts it, o.clip = "barrel" draws only the barrel under the saddle
+                                                o.bob lifts it, o.clip = "barrel" draws only the barrel under the saddle,
+                                                o.anim = { gait: "stand" | "walk" | "gallop", c: 0..1 through the cycle } moves it (below)
+        HORSEART.motion(gait, c) → { bob, pitch, kH, kF, head, tail, rider }: [mapheroanim] how the painted horse moves at
+                                                this moment of its cycle. One picture per pose, so the horse is cut into
+                                                pieces (body, head and neck, tail, hind legs, front legs) that move on
+                                                their own: standing it breathes, shifts its weight, tosses its head now and
+                                                then and flicks its tail; walking and galloping the legs swing (a skew of
+                                                each leg strip, the hooves move, the tops stay on the body), the body bobs
+                                                and rocks. rider = how far the saddle has lifted (fraction of the picture
+                                                height, up), a little behind the body so the rider sits into each stride.
         HORSEART.lying(g, coat, w)              draws the downed horse w wide, centred on x 0, feet line at y 0
         HORSEART.icon(g, coat, size, down)      the stable-card picture inside a size×size square
         HORSEART.card(coat, w, pose) → an <img> of the whole horse w wide (stand by default; the stables coat preview and header portrait), "" until loaded
@@ -87,11 +96,56 @@ const HORSEART = (() => {
   const ok = (coat, pose = "stand") => { const s = source(coatOf(coat), pose); return !!img(s.key); };
   let seen = 0;
   const sig = () => { let n = 0; for (const [c, ps] of Object.entries(HAVE)) for (const p of ps) if (img(`${c}-${p}`)) n++; if (n !== seen) { seen = n; MIPS.clear(); } return n; };
+  /* [mapheroanim] where to cut each pose's picture (fractions of the picture): legs below legY, hind | front at split,
+     the tail left of tailX (down to tailY), the head and upper neck right of neckX above neckY (it turns about that corner) */
+  const CUTS = {
+    stand: { legY: 0.6, split: 0.5, tailX: 0.16, tailY: 1, tp: [0.15, 0.33], neckX: 0.66, neckY: 0.36 },
+    gallop: { legY: 0.6, split: 0.5, tailX: 0.26, tailY: 0.6, tp: [0.27, 0.32], neckX: 0.8, neckY: 0.4 },
+  };
+  const TAU = Math.PI * 2;
+  function motion(gait, c) {
+    c = (((c || 0) % 1) + 1) % 1;
+    const sn = Math.sin;
+    if (gait === "stand") {   // one long idle loop (the map plays it over ~6 s): breathing, a weight shift, a toss, a flick
+      const toss = c > 0.55 && c < 0.75 ? sn(((c - 0.55) / 0.2) * Math.PI) : 0;
+      const fu = c > 0.12 && c < 0.32 ? (c - 0.12) / 0.2 : -1, flick = fu >= 0 ? sn(fu * TAU * 1.5) * (1 - fu) : 0;
+      const shift = c > 0.8 ? sn(((c - 0.8) / 0.2) * Math.PI) : 0, bob = 0.005 * sn(c * TAU * 3);
+      return { bob, pitch: -0.01 * shift, kH: -0.06 * shift, kF: 0, head: -0.2 * toss + 0.03 * sn(c * TAU * 3 + 0.8), tail: 0.05 * sn(c * TAU * 2) + 0.22 * flick, rider: 0.005 * sn(c * TAU * 3 - 0.5) };
+    }
+    if (gait === "walk") {   // four beats: hind, then the front on the same side a quarter later; two bobs a stride
+      return { bob: 0.012 * sn(c * TAU * 2), pitch: 0.018 * sn(c * TAU), kH: 0.26 * sn(c * TAU), kF: 0.26 * sn(c * TAU - Math.PI / 2),
+        head: 0.06 * sn(c * TAU * 2 + 1), tail: 0.08 * sn(c * TAU + 0.5), rider: 0.012 * sn(c * TAU * 2 - 0.9) };
+    }
+    // the gallop: a rocking body (hinds push, the front lifts), legs reaching and folding
+    return { bob: 0.035 * sn(c * TAU), pitch: 0.06 * sn(c * TAU + 1.2), kH: 0.4 * sn(c * TAU), kF: 0.4 * sn(c * TAU - 2.2),
+      head: 0.08 * sn(c * TAU + 0.6), tail: 0.16 * sn(c * TAU + 2.4), rider: 0.03 * sn(c * TAU - 1) };
+  }
+  /* the picture in moving pieces (see motion); x0, y0, W, H = where the whole picture goes */
+  function pieces(g, c, x0, y0, W, H, cut, M) {
+    const X = (f) => x0 + f * W, Y = (f) => y0 + f * H, pad = 0.04, by = M.bob * H, px = X(0.5), py = Y(cut.legY);
+    const body = () => { g.translate(0, -by); g.translate(px, py); g.rotate(-M.pitch); g.translate(-px, -py); };
+    const turn = (fx, fy, a) => { g.translate(X(fx), Y(fy)); g.rotate(a); g.translate(-X(fx), -Y(fy)); };
+    const put = (rects) => { g.beginPath(); for (const r of rects) g.rect(X(r[0]), Y(r[1]), (r[2] - r[0]) * W, (r[3] - r[1]) * H); g.clip(); g.drawImage(c, x0, y0, W, H); };
+    // the tail, behind everything
+    g.save(); body(); turn(cut.tp[0], cut.tp[1], M.tail); put([[-pad, -pad, cut.tailX + 0.04, cut.tailY + (cut.tailY >= 1 ? pad : 0)]]); g.restore();   // a bit under the body, so no gap opens when it swings
+    // the body (and the chest under the head)
+    g.save(); body(); put([[cut.tailX, -pad, cut.neckX, cut.legY + 0.01], [cut.neckX, cut.neckY, 1 + pad, cut.legY + 0.01]]); g.restore();
+    // the legs: the tops follow the body, the hooves swing (a skew of the strip)
+    const yT = cut.legY - 0.03, Hb = Y(1);
+    for (const [a, b, k] of [[cut.tailY >= 1 ? cut.tailX : -pad, cut.split + 0.02, M.kH], [cut.split - 0.02, 1 + pad, M.kF]]) {   // the strips overlap a little
+      const dx = (X((a + b) / 2) - px), dyTop = -by - dx * M.pitch, top = Y(yT), sy = (Hb - top - dyTop) / Math.max(1e-6, Hb - top);
+      g.save(); g.translate(0, Hb); g.scale(1, sy); g.translate(0, -Hb); g.transform(1, 0, k, 1, -k * top, 0);
+      put([[a, yT, b, 1 + pad]]); g.restore();
+    }
+    // the head and upper neck, turning about the base of the neck
+    g.save(); body(); turn(cut.neckX, cut.neckY, M.head); put([[cut.neckX - 0.035, -pad, 1 + pad, cut.neckY + 0.02]]); g.restore();   // over the body's edge, so the cut never shows
+  }
   /* the horse with its feet on y 0 and the saddle seat at (0, -seatH) */
   function ride(g, coat, pose, seatH, o = {}) {
     const rec = mips(coatOf(coat), pose); if (!rec) return false;
     const m = rec.meta, H = seatH / (1 - m.sy), W = H * rec.w / rec.h, x0 = -m.sx * W, y0 = -H - (o.bob || 0);
     const c = pick(rec, H * devScale(g));
+    if (o.anim && !o.clip && CUTS[pose]) { g.save(); pieces(g, c, x0, y0, W, H, CUTS[pose], motion(o.anim.gait, o.anim.c)); g.restore(); return true; }
     g.save();
     if (o.clip === "barrel") {   // just the barrel and saddle flaps under the seat, over the rider's legs
       g.beginPath(); g.rect(x0 + (m.sx - 0.17) * W, y0 + (m.sy + 0.04) * H, 0.36 * W, (m.belly - m.sy - 0.04) * H); g.clip();
@@ -126,5 +180,5 @@ const HORSEART = (() => {
   }
   const fill = () => { if (typeof document === "undefined") return; for (const el of document.querySelectorAll(".hcoatwait")) { const h = card(el.dataset.coat, +el.dataset.w || 120, el.dataset.pose || "stand"); if (h && !/hcoatwait/.test(h)) el.outerHTML = h; } };
   if (typeof ASSETS !== "undefined" && ASSETS.on) ASSETS.on(() => { sig(); fill(); });
-  return { POSES, HAVE, META, TINT, coatOf, source, ok, sig, ride, lying, icon, card };
+  return { POSES, HAVE, META, TINT, CUTS, coatOf, source, ok, sig, ride, motion, lying, icon, card };
 })();
