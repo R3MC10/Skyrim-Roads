@@ -16,7 +16,7 @@ const text = (h) => String(h || "").replace(/<[^>]+>/g, " ").replace(/\\s+/g, " 
 ok(["item", "inv", "slot", "spell", "shout", "power", "fx", "perk", "skill", "place", "quest", "follower", "player", "stat", "cur"].every((k) => TIP.providers.includes(k)), "all providers registered");
 
 // items: stats, weight, value, enchantments, tomes
-{ const h = TIP.html("item:steel_sword"); ok(clean(h) && /Damage/.test(h) && /Weight/.test(h) && /Value/.test(h), "a sword: damage, weight, value " + text(h));
+{ const h = TIP.html("item:steel_sword"); ok(clean(h) && /Hits for/.test(h) && /Weight/.test(h) && /Value/.test(h), "a sword: hits for (with skill), weight, value " + text(h));
   ok(new RegExp(D.ITEMS.steel_sword.damage + "").test(text(h)), "with its real damage");
   const ench = Object.keys(D.ITEMS).find((k) => D.ITEMS[k].enchant), aen = Object.keys(D.ITEMS).find((k) => D.ITEMS[k].aenchant);
   if (ench) ok(/✦/.test(TIP.html("item:" + ench)) && TIP.html("item:" + ench).includes(D.ITEMS[ench].enchant.effect), "weapon enchantment shown " + ench);
@@ -27,7 +27,7 @@ ok(["item", "inv", "slot", "spell", "shout", "power", "fx", "perk", "skill", "pl
   ok(TIP.html("item:nope_not_real") === null, "unknown items give nothing");
   // a pack row: count, temper, compare with what's worn
   const id = G.give(s, "iron_sword"); const row = s.inv.find((r) => r.id === id); row.temper = 3;
-  const h2 = TIP.html("inv:" + id); ok(clean(h2) && /\\+3/.test(h2), "a pack row shows its temper " + text(h2));
+  const h2 = TIP.html("inv:" + id); ok(clean(h2) && /\\(10 base\\)/.test(text(h2)), "a pack row counts its temper in the base (7 + 3) " + text(h2));
   G.equip(s, id); ok(/wearing this/.test(TIP.html("inv:" + id)), "worn gear says so");
   ok(/vs/.test(TIP.html("item:steel_sword")), "other swords compare with the worn one " + text(TIP.html("item:steel_sword")));
   ok(clean(TIP.html("slot:weapon")) && TIP.html("slot:weapon").includes("Iron Sword"), "the weapon slot shows the worn sword");

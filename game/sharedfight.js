@@ -117,8 +117,8 @@ const SHAREDFIGHT = (() => {
       this.t0 = { ehp: f.ehp, hp: f.hp, ev: this.ev.length, hitters: this.hitters, ward: f.ward || 0, armor: f.armorSpell || 0, snap };
     }
     /* your moves: the normal ones; when your turn ends, it goes back to the leader's phone */
-    act(a, tgt, mult) {
-      const i0 = this.idx, r = super.act(a, tgt, mult);
+    act(a, tgt, mult, grade) {   // grade: how your minigame went (a Perfect adds its stack in party fights too)
+      const i0 = this.idx, r = super.act(a, tgt, mult, grade);
       if (this.myTurn && this.idx !== i0) this.sendTurn();
       return r;
     }

@@ -98,6 +98,8 @@ const TB = (() => {
       let d = 0; try { d = f.weaponDamage(); } catch (e) { d = 0; }
       d = cut(d * (a === "power_attack" ? (typeof F !== "undefined" ? F.POWER_ATTACK_DAMAGE : 2) : 1));
       lo = d * s0; hi = d * s1;
+    } else if (k === "poison" && typeof POISONFX !== "undefined") {
+      out.note = POISONFX.note(f, a);   // [itemgames] nothing lands now: the next hit carries it
     } else if (k === "spell" || k === "dual" || k === "scroll") {
       const sp = spellOf(a);
       if (sp && sp.kind === "damage") {
@@ -362,6 +364,7 @@ const TB = (() => {
       if (mult && mult !== 1 && f.ehp < before) { f.ehp = before - (before - f.ehp) * mult; text += mult > 1 ? " (perfect timing!)" : " (mistimed)"; }
       else if (mult && mult !== 1 && f.hp > myBefore) { f.hp = Math.min(G.maxHealth(f.s), myBefore + (f.hp - myBefore) * mult); text += mult > 1 ? " (perfect!)" : " (shaky)"; }
       if (grade && grade.cls === "perfect" && typeof MINIGAME !== "undefined") text += MINIGAME.perfect(f, a, before);   // a Perfect adds a stack
+      if (grade && typeof MINIGAME !== "undefined" && MINIGAME.itemFx) text += MINIGAME.itemFx(f, a, grade);   // [itemgames] an oil flask thrown well soaks longer
       if (typeof DRAGONS !== "undefined") text += DRAGONS.graze(f, a, before);
       if (typeof FOEKIT !== "undefined") text += FOEKIT.defend(f, a, before);   // its raised shield, ward or dodge
       if (f.bf && typeof BOSSFIGHT !== "undefined") text += BOSSFIGHT.answer(this, a, before);   // its helpers, and breaking a big attack
@@ -711,7 +714,7 @@ const TB = (() => {
   function zoneOf(a) {
     if (typeof BEASTPATH !== "undefined" && BEASTPATH.zone(a)) return BEASTPATH.zone(a);
     if (a === "attack" || a === "power_attack" || a === "bash" || /^(shout|power):/.test(a)) return "foe";
-    if (a === "block" || /^potion:/.test(a)) return "self";
+    if (a === "block" || /^(potion|poison):/.test(a)) return "self";
     if (a === "rx:oil" || a === "rx:mark") return "foe";
     const sp = spellOf(a);
     if (sp) return typeof SPELLBOOK !== "undefined" && SPELLBOOK.SUPPORT.has(sp.kind) ? "ally" : SELF_KINDS.has(sp.kind) ? "self" : "foe";
@@ -764,7 +767,8 @@ const TB = (() => {
       const pots = ["health", "magicka", "stamina"].map((r) => (f.findPotion(r) ? B("potion:" + r, `${r[0].toUpperCase() + r.slice(1)} potion`) : "")).join("");
       const scrolls = [...new Set(s.inv.filter((r) => D.ITEMS[r.item]?.spell && f.left(r.id) > 0).map((r) => r.item))].slice(0, 4).map((it) => B("scroll:" + it, D.ITEMS[it].name)).join("");
       const shouts = typeof POWERS !== "undefined" && f.pw ? (POWERS.known ? [] : []).join("") : "";
-      return `<div class="tbmenu"><div class="tbmh"><b> Items</b><small>Drag a potion onto yourself, or tap it</small></div><div class="tbgrid">${pots || scrolls ? pots + scrolls : `<p class="sub">No potions or scrolls.</p>`}${shouts}</div><button class="tbact back" data-tbm="">‹ Back</button></div>`;
+      const poisons = typeof POISONFX !== "undefined" ? POISONFX.list(f).slice(0, 4).map(([a, n]) => B(a, n)).join("") : "";   // coat your weapon (poisonfight.js)
+      return `<div class="tbmenu"><div class="tbmh"><b> Items</b><small>Drag a potion onto yourself, or tap it</small></div><div class="tbgrid">${pots || scrolls || poisons ? pots + scrolls + poisons : `<p class="sub">No potions or scrolls.</p>`}${shouts}</div><button class="tbact back" data-tbm="">‹ Back</button></div>`;
     }
     const bx = typeof BEASTPATH !== "undefined" ? BEASTPATH.moves(f) : { form: null, list: [] };   // Beast Form / Vampire Lord moves, vampire powers (beastpaths.js)
     const mv = (typeof MOUNTFIGHT !== "undefined" && !bx.form ? MOUNTFIGHT.moves(f) : []).concat(typeof REACT !== "undefined" && !bx.form ? REACT.moves(f) : []);   // Mount / Dismount (mountfight.js), Oil flask, Mark, Cover (reactions.js)
@@ -1009,7 +1013,8 @@ const TB = (() => {
         const sp = spellOf(a);
         ui.timing = true; ui.timingAt = Date.now();
         let game;
-        try { game = MINIGAME.play(root, f, a, { icon: iconOf(f, a), label: sp ? sp.name : a === "power_attack" ? "Power attack" : a === "bash" ? "Shield bash" : a === "block" ? "Guard" : f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack" }); }
+        const g0 = MINIGAME.kindFor(f, a);
+        try { game = MINIGAME.play(root, f, a, { icon: iconOf(f, a), label: g0 && g0.label ? g0.label : sp ? sp.name : a === "power_attack" ? "Power attack" : a === "bash" ? "Shield bash" : a === "block" ? "Guard" : f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack" }); }
         catch (e) { console.error("minigame", a, e); game = null; }   // a broken minigame must not lock the fight: the move goes in as a normal hit
         if (!game || typeof game.then !== "function") { ui.timing = false; return go(null); }
         const tok = ui.timingTok;

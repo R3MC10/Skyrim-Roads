@@ -172,9 +172,11 @@ const TOWNS = (() => {
     if (!it || it.slot !== "poison") return "That isn't a poison.";
     if (!G.equipment(s).weapon) return "Equip a weapon first.";
     G.take(s, rowId);
-    s.poison = { effects: it.effects, hits: P(s, "concentrated_poison") ? 2 : 1, name: it.name };   // [Skyrim] one hit
+    coat(s, it);
     return `You coat your weapon with ${it.name}. The next hit delivers it.`;
   }
+  /* the coat itself (the pack above, and mid-fight: poisonfight.js) */
+  function coat(s, it) { s.poison = { effects: it.effects, hits: P(s, "concentrated_poison") ? 2 : 1, name: it.name }; return s.poison; }   // [Skyrim] one hit
 
   // ---- inns ([Skyrim] names; a room costs 10 gold)
   const INNS = { Whiterun: "The Bannered Mare", Riverwood: "Sleeping Giant Inn", Solitude: "The Winking Skeever", Windhelm: "Candlehearth Hall", Markarth: "Silver-Blood Inn",
@@ -572,7 +574,7 @@ const TOWNS = (() => {
   }
 
   return { HOMES, home, buyHome, sleepHome, stash, unstash, gardenReady, harvest, BIG, SMALL, carriageFrom, carriageDests, rideCarriage, CARRIAGE_SPEED, FOLLOWERS, followerMax, followerHp, followersHere, hire, dismiss, deliverDragonstone, canDeliverDragonstone,
-    EFFECTS, INGREDIENT_FX, INNS, TRAINERS, CAP, QUALITY, known, brewPreview, brew, eat, drink, applyPoison, roomPrice, rentRoom, rumour, trainCost, trainedThisLevel, train,
+    EFFECTS, INGREDIENT_FX, INNS, TRAINERS, CAP, QUALITY, known, brewPreview, brew, eat, drink, applyPoison, coat, roomPrice, rentRoom, rumour, trainCost, trainedThisLevel, train,
     temperInfo, temper, ingotFor, bounty, totalBounty, addBounty, wanted, guardCheck, guardChoice, pickChance, townPickPlan, pickTownsfolk, canFence, jobsAt, takeJob, dropJob, checkJobs, handIn, countItem, isTown, RUMOUR, rumourPrice,
     POTION_MINUTES: (d) => Math.round(d * SECONDS_PER_REAL_SECOND_OF_SKYRIM / 60) };
 })();

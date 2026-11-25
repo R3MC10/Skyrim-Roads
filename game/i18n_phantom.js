@@ -1,4 +1,4 @@
-/* i18n_phantom.js: Polish for the phantom-attacks fix (fightart.js labels on the fight picture, patch note b288). Loaded before i18n.js. */
+/* i18n_phantom.js: Polish for the phantom-attacks fix (fightart.js labels on the fight picture, patch note b293). Loaded before i18n.js. */
 var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 (() => {
   Object.assign(I18N_EXTRA.words, {
@@ -17,7 +17,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Counter!": "Kontra!",
     "Thorns!": "Ciernie!",
     "Riposte!": "Riposta!",
-    // patch note b288
+    // patch note b293
     "No one swings on their own any more":
       "Nikt już nie macha bronią sam z siebie",
     "In a fight, you, your friends and the foe only swing when they really strike. Catching your breath, the end-of-round burns, bleeds and poison, marking the foe and covering your friends used to show you swinging your weapon. Now they don't.":

@@ -93,6 +93,12 @@ const MOVEPREVIEW = (() => {
       me.appendChild(chip);
       orb?.classList.add("mpv-guarded");
     }
+    if (p.note && me) {   // [itemgames] a poison: what your next hit will carry
+      const chip = document.createElement("div");
+      chip.className = "mpv-guard mpv-note"; chip.setAttribute("aria-hidden", "true");
+      chip.textContent = p.note;
+      me.appendChild(chip);
+    }
     // the move diamonds: the ones this move would use fade
     const n = a === "end" || a === "flee" ? 0 : Math.max(1, c.acts || 1);
     if (n) {
