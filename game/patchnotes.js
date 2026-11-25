@@ -3,12 +3,18 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b215-lightmenus", build: 215, date: "25 Nov 2026", title: "Lighter menus", items: [
+    { id: "b217-lightmenus", build: 217, date: "25 Nov 2026", title: "Lighter menus", items: [
       "Social has four big tabs now: Party, Company, Friends and Realm. Messages, Trades, Chat and Faction sit in a small More row just under them, with their counters, so everything is still one tap away.",
       "Every button now has the same plain look: a thin line, small corners and no shine. Main buttons are a bit taller so they're easy to hit.",
       "The big gold knotwork frame is saved for special moments: a quest done, a company founded, a crisis won. Other windows (heists, Hold status, messages) get a thin line and more room for text.",
       "The bar at the bottom now lights up Items or Magic while that menu is open, not Map.",
       "Long crisis names (like The Long Winter) wrap onto a second line instead of being cut off.",
+    ] },
+    { id: "b216-dungeonphone", build: 216, date: "25 Nov 2026", title: "Dungeons fit your phone better", items: [
+      "A strip above the room shows how deep you are and the rooms you can go to next. Tap one to go there, or tap Map for the whole chart.",
+      "The room's choices sit two to a row, so Fight, Sneak, Run and your potion fit on the screen without scrolling.",
+      "No more snow or rain inside caves and ruins. Instead you see dust in the torchlight in barrows, water dripping in caves, and sparks drifting in Dwemer ruins and by campfires.",
+      "The foe waiting in a room now stands in the painting, so a draugr that opens its eyes is really there.",
     ] },
     { id: "b214-daedric", build: 214, date: "25 Nov 2026", title: "Daedric bargains and artifacts that wake up", items: [
       "Black shrines by the road can now carry an offer from one of six Daedric princes: Mehrunes Dagon, Azura, Nocturnal, Hircine, Boethiah and Meridia (from level 8).",

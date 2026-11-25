@@ -33,16 +33,33 @@ const DUNROOMS = (() => {
   }
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   const label = (type) => (typeof DUNGEONS !== "undefined" && DUNGEONS.LABEL[type]) || type;
-  function inner(type, theme) {
+  /* [dungeonphone] the foe waiting in a fight, elite or boss room: its painted figure stands in the painting
+     (foe-<kind>.webp cut-outs, assets.js foeKey), graded darker to sit in the torchlight, with a contact shadow */
+  const FOE_ROOMS = { fight: 1, elite: 1, boss: 1 };
+  // how tall the figure stands, as a share of the picture: a skeever is knee-high, a troll fills the arch
+  const FOE_H = { skeever: 0.34, mudcrab: 0.32, wolf: 0.48, spider: 0.5, dwarvenspider: 0.42, chaurus: 0.5, sabrecat: 0.52, horker: 0.42, riekling: 0.5,
+    bear: 0.62, icewraith: 0.62, ashspawn: 0.74, giant: 0.92, troll: 0.86, frosttroll: 0.86, mammoth: 0.9, centurion: 0.92 };
+  function foeKeyOf(type, foe) {
+    if (!foe || !FOE_ROOMS[type] || !has() || !ASSETS.foeKey) return "";
+    const k = ASSETS.foeKey(foe.name, foe.kind || (foe.tags || [])[0]) || "";
+    return k === "foe-dragon" ? "" : k;   // a dragon doesn't fit under a ceiling
+  }
+  function foeHTML(fk, type) {
+    if (!fk) return "";
+    const u = ASSETS.url(fk); if (!u) return "";   // not loaded yet: the asset hook redraws the screen when it is
+    const h = Math.min(0.92, (FOE_H[fk.slice(4)] || 0.78) * (type === "boss" ? 1.08 : type === "elite" ? 1.04 : 1));
+    return `<div class="droomfoe ${type === "boss" ? "boss" : type === "elite" ? "elite" : ""}" style="height:${Math.round(h * 100)}%" aria-hidden="true"><i></i><img src="${esc(u)}" alt="" decoding="async"></div>`;
+  }
+  function inner(type, theme, fk) {
     const p = pick(type, theme);
-    if (p?.url) return `<img class="droompic" src="${esc(p.url)}" alt="${esc(label(type))}" data-key="${esc(p.key)}" decoding="async">`;
+    if (p?.url) return `<img class="droompic" src="${esc(p.url)}" alt="${esc(label(type))}" data-key="${esc(p.key)}" decoding="async">${foeHTML(fk, type)}`;
     if (p?.wait) return `<div class="droomwait" aria-hidden="true"></div>`;
     return typeof PLACEART !== "undefined" ? PLACEART.room(type) : "";
   }
   /* the room picture, as HTML */
-  function room(type, theme) {
-    const p = pick(type, theme), cls = p?.url ? "painted" : p?.wait ? "waiting" : "drawn";
-    return `<div class="droomart ${cls}" data-type="${esc(type)}" data-theme="${esc(theme || "")}">${inner(type, theme)}</div>`;
+  function room(type, theme, foe) {
+    const p = pick(type, theme), cls = p?.url ? "painted" : p?.wait ? "waiting" : "drawn", fk = foeKeyOf(type, foe);
+    return `<div class="droomart ${cls}" data-type="${esc(type)}" data-theme="${esc(theme || "")}" data-foe="${esc(fk)}">${inner(type, theme, fk)}</div>`;
   }
   /* swap a waiting frame for the painting (or the drawing) once the file has arrived or turned out missing */
   let timer = 0, tries = 0;
@@ -53,7 +70,13 @@ const DUNROOMS = (() => {
     for (const el of document.querySelectorAll(".droomart.waiting")) {
       const p = pick(el.dataset.type, el.dataset.theme);
       if (p?.wait) { waiting = true; continue; }
-      el.classList.remove("waiting"); el.classList.add(p?.url ? "painted" : "drawn"); el.innerHTML = inner(el.dataset.type, el.dataset.theme);
+      el.classList.remove("waiting"); el.classList.add(p?.url ? "painted" : "drawn"); el.innerHTML = inner(el.dataset.type, el.dataset.theme, el.dataset.foe);
+      if (p?.url && typeof DUNFX !== "undefined") DUNFX.attach(el.parentElement, el.dataset.theme, !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches));   // the room's air
+    }
+    for (const el of document.querySelectorAll(".droomart.painted[data-foe]")) {   // a foe's figure that arrived after the room did
+      if (!el.dataset.foe || el.querySelector(".droomfoe")) continue;
+      const h = foeHTML(el.dataset.foe, el.dataset.type), pic = el.querySelector(".droompic");
+      if (h && pic) pic.insertAdjacentHTML("afterend", h);
     }
     if (waiting && tries++ < 60) timer = setTimeout(update, 250);
   }
