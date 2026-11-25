@@ -634,6 +634,8 @@
     if (typeof BLACKREACH !== "undefined") BLACKREACH.mount({ S: () => S, persist, toast, showFightResult, showMessage, renderPanel, tb: tbCall });   // the cavern under Alftand (blackreach.js)
     if (typeof GREATEV !== "undefined") GREATEV.mount({ S: () => S, persist, toast, showFightResult, showMessage, openModal, closeModal, postNews, click: onPanelClick, party: () => party });   // great world events: banner + countdown (greatevents.js)
     if (typeof CRISES !== "undefined") CRISES.mount({ S: () => S, persist, toast, showFightResult, showMessage, openModal, closeModal, postNews, party: () => party });   // regional crises: hold status, contracts, bosses (crises.js)
+    if (typeof EXPEDITION !== "undefined") EXPEDITION.mount({ S: () => S, persist, toast, render: () => { if (document.getElementById("lng-root")) renderPanel(true); }, party: () => party, cardOf,
+      online: (id) => { const c = cardOf(id); return !!c && (typeof SOCIAL === "undefined" || SOCIAL.status(c).online); } });   // the Expedition Table: tonight's adventure (expedition.js)
     if (typeof LONGHOUSE !== "undefined") LONGHOUSE.mount({ S: () => S, persist, toast, showMessage, render: () => renderPanel(true), party: () => party });   // the adventuring company longhouse (longhouse.js)
     if (typeof HOLDUI !== "undefined") HOLDUI.mount({ S: () => S, persist, toast, showFightResult, postNews, refresh: () => { bump(); renderPanel(true); }, party: () => party });   // player-run holds: Jarl, tax, raids (holdui.js)
     if (typeof TOURNEYUI !== "undefined") TOURNEYUI.mount({ S: () => S, persist, toast, showFightResult, postNews, tbCall, refresh: () => { bump(); renderPanel(true); }, party: () => party, allies: () => allies() });   // festivals, contests and the Grand Arena (tourneyui.js)
@@ -794,7 +796,7 @@
         if (out.died) { SOUND.fx("death"); showMessage("You died", out.died, true); }
         else if (out.encounter) { openEncounter(); ppUI?.leaderHalt("encounter", out.encounter.name, out.encounter.text); }
         else if (out.arrived) {
-          SOUND.fx("arrive"); tally("arrivals"); festCount("arrive");
+          SOUND.fx("arrive"); tally("arrivals"); festCount("arrive"); if (typeof EXPEDITION !== "undefined") EXPEDITION.hook("arrive", { place: out.arrived });
           if (typeof IMM !== "undefined") IMM.bark(S, out.arrived);
           if (!WORLD.places[out.arrived]) {   // free roam or a pin: say what's around
             const near = ROAM.around(S), msg = `You stop in ${ROAM.isRoam(out.arrived) ? out.arrived : `the spot you marked (${out.arrived})`}. ${Terrain.NAMES[Terrain.typeAtPos([S.x, S.y])]} all around.${near.length ? ` Nearby: ${near.join(", ")}.` : " Nothing you know of nearby."}`;
@@ -1274,7 +1276,7 @@
   function showFightResult(r) {
     shareSpoils(r);
     if (r.fight) { const inf = CURSE.maybeInfect(S, r.fight.e); if (inf) { persist(); setTimeout(() => toast(inf), 1800); } }
-    if (r.fight && !r.died && !r.fled && !r.fight.nonlethal) { tally("foes"); warPoint("fight", G.holdAt(livePos())); if (typeof CRISES !== "undefined") CRISES.onFight(S, r.fight.e, G.holdAt(livePos())); if (typeof LONGHOUSE !== "undefined") LONGHOUSE.onFight(S, r.fight.e); if ((r.fight.e?.tags || []).includes("undead")) festCount("undead"); }
+    if (r.fight && !r.died && !r.fled && !r.fight.nonlethal) { tally("foes"); warPoint("fight", G.holdAt(livePos())); if (typeof CRISES !== "undefined") CRISES.onFight(S, r.fight.e, G.holdAt(livePos())); if (typeof LONGHOUSE !== "undefined") LONGHOUSE.onFight(S, r.fight.e); if (typeof EXPEDITION !== "undefined") EXPEDITION.hook("fight", { e: r.fight.e, hold: G.holdAt(livePos()) }); if ((r.fight.e?.tags || []).includes("undead")) festCount("undead"); }
     if (r.fight || r.died) SOUND.fight(r); else if (/potion|drink/i.test(r.text || "")) SOUND.fx("potion");
     const skills = skillsHTML(r.skills);
     if (r.died) {
@@ -1525,7 +1527,7 @@
     r.roomType = roomType; r.hurt = roomType === "trap" && G.curHealth(S) < hp0 - 0.5;
     if (r.fight) { const inf = CURSE.maybeInfect(S, r.fight.e); if (inf) setTimeout(() => toast(inf), 1800); }
     if (r.fight && !r.died) shareSpoils(r);
-    if (r.fight && !r.died) { tally("foes"); warPoint("fight", G.holdAt(WORLD.places[S.dungeon?.place] || livePos())); if ((r.fight.e?.tags || []).includes("undead")) festCount("undead"); }
+    if (r.fight && !r.died) { tally("foes"); warPoint("fight", G.holdAt(WORLD.places[S.dungeon?.place] || livePos())); if (typeof EXPEDITION !== "undefined") EXPEDITION.hook("fight", { e: r.fight.e, hold: G.holdAt(WORLD.places[S.dungeon?.place] || livePos()) }); if ((r.fight.e?.tags || []).includes("undead")) festCount("undead"); }
     if (r.fight || r.died) SOUND.fight(r); else if (r.trap || /trap|dart|blade/i.test(r.text || "")) SOUND.fx("hit");
     if (r.bag) Store.addBag(r.bag);
     persist(true);
@@ -1538,7 +1540,7 @@
         members: party.members, place: S.dungeon?.place || "", byName: S.name, t: G.now() });
       postNews(` ${S.name}'s party cleared ${S.dungeon?.place}. The chest is waiting to be shared.`);
     } else if (r.partyChest) { S.gold += r.partyChest.gold; r.partyChest.items.forEach((i) => G.give(S, i)); }
-    if (r.cleared) { tally("dungeons"); warPoint("dungeon", G.holdAt(WORLD.places[S.dungeon?.place] || livePos())); const jm = TOWNS.checkJobs(S); if (jm.length) { tally("jobs", jm.length); r.text += " " + jm.join(" "); } postNews(` ${S.name} cleared ${S.dungeon?.place}.`); }
+    if (r.cleared) { tally("dungeons"); warPoint("dungeon", G.holdAt(WORLD.places[S.dungeon?.place] || livePos())); if (typeof EXPEDITION !== "undefined") EXPEDITION.hook("dungeon", { place: S.dungeon?.place, hold: G.holdAt(WORLD.places[S.dungeon?.place] || livePos()) }); const jm = TOWNS.checkJobs(S); if (jm.length) { tally("jobs", jm.length); r.text += " " + jm.join(" "); } postNews(` ${S.name} cleared ${S.dungeon?.place}.`); }
     persist(true);
     if (typeof BOSSFIGHT !== "undefined") BOSSFIGHT.reveal(r);   // the boss room: the big loot card
     dunNote = r; renderDungeon();
