@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b291-weaponfx", build: 291, date: "25 Nov 2026", title: "Weapon hits that fit the weapon", items: [
+      "Weapon effects in fights are much smaller now and match what you swing: a sword leaves a thin slash, an axe a short chop, a mace or warhammer a heavy thud with a puff of dust (no slash), a dagger a quick little stab, a spear a thrust.",
+      "The hit now shows up the moment the weapon actually connects, right where it meets the body, instead of a big white swoosh popping up early in front of the foe.",
+      "A dagger's two stabs each get their own quick trail, and every hit plays once. A miss is just a faint swish, with no sparks.",
+      "A staff's spell now gathers and flies from the top of the staff, not from your chest.",
+      "When your follower steps in and hits the foe, you now see the blow land.",
+      "Power attacks get a small gleam on the blade instead of a star floating in the air, and only they crack the ground.",
+    ] },
     { id: "b290-itemcards2", build: 290, date: "25 Nov 2026", title: "Item cards say what changes", items: [
       "The damage at the top of a weapon's card is now what it really hits for in your hands, with your skill and perks, the same number as in the comparison below. The weapon's own number is shown next to it as \"base\".",
       "Item cards now say what else changes when you put something on: a two-handed weapon takes your shield off (and with it its armour and Shield bash), a shield takes a two-handed weapon off, and a bow or crossbow tells you when you have nothing to shoot.",
@@ -1940,7 +1948,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 285;
+  const NEXT_AT = 291;
   const NEXT = [
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",
