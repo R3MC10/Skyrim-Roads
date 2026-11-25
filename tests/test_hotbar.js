@@ -75,7 +75,7 @@ for (const b of ["warrior", "mage", "archer", "spellsword", "twohand"]) {
   const d = H.layout(s, f), ok = d.filter((a) => a && !ss.why(a));
   OK(ok.length >= 3, "at least three default slots can be used at once " + ok);
   r = ss.act(d[0]); OK(!r.err, "slot 1 plays a real move " + (r.err || "")); }
-// ---- drag and drop + single / dual cast (b301)
+// ---- drag and drop + single / dual cast (b302)
 { const { s, f } = fight("mage", 20);
   for (const id of ["flames", "healing", "conjure_familiar"]) if (!s.spells.includes(id)) s.spells.push(id);
   OK(H.mode("spell:flames") === 1 && H.mode("dual:flames") === 2 && H.mode("attack") === 0 && H.mode(null) === 0, "slot modes: spell 1x, dual 2x, the rest none");
