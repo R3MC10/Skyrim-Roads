@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b266-movepreview", build: 266, date: "25 Nov 2026", title: "See a move before you make it", items: [
+      "In a fight, rest the mouse on a move (or hold your finger on it on a phone): the foe's health bar shows a striped piece for what it could lose, from the lowest to the highest hit.",
+      "Your stamina or magicka dims by what the move costs, and one of your move diamonds fades. Healing spells show the health you'd get back; End turn shows the guard you keep.",
+      "The numbers match the tooltip, and a strong foe never shows more than 40% gone from one blow. A quick tap still does the move right away.",
+      "Bandit archers now carry a bow instead of an axe, bandit mages a staff and a spell, and Forsworn and draugr archers have their own pictures too.",
+    ] },
     { id: "b265-qacore3", build: 265, date: "25 Nov 2026", title: "Crafting in Polish", items: [
       "Fixed: in Polish, the arcane enchanter, parts of the alchemy lab and one cooking recipe were still in English.",
       "Fixed: in Polish, the messages after brewing, cooking, eating a meal and improving gear were half in English.",
