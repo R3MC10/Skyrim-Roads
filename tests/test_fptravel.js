@@ -40,6 +40,10 @@ grounds.forEach((gr,i)=>{ const sky=skies[i%skies.length], dest=dests[i%dests.le
 });
 for (const sky of skies) { FPT.frame({ground:"Pine forest",p:0.5,look,sky,dest:"Solitude",riding:true,heading:350,destBear:10}, {w:980,h:240}); n++; }
 FPT.frame({ground:"Nowhere",p:NaN,look:null}, {}); n++;   // odd input: still no NaN
+// every region of the road view (fpscene.js), day and night, bends and hills, far along the road (deep travel values)
+for (const region of Object.keys(FPSCENE.REGIONS)) for (const [k,sky] of [[0,skies[0]],[1,skies[1]],[2,skies[2]],[3,skies[6]]]) {
+  FPT.frame({ground:"Road",region,p:0.2+k*0.25,look,sky,dest:"Whiterun",origin:"Riverwood",riding:k%2===0,heading:k*90,turn:(k-1.5)*40,destBear:k*90+20}, {w:390,h:120,t:k*7.1,travel:k*900+13.7,trip:"t"+k});
+  const d=FPT.debug(); ok(d && d.world && d.world.region===region && d.world.objects>0, region+" draws its land ("+(d&&d.world&&d.world.objects)+")"); ok(d.world.objects<=60,"no pile-up in "+region+": "+d.world.objects); n++; }
 ok(Object.keys(FPT.LAYERS).length>=9 && FPT.LAYERS.pine.far==="fpv-pine-far","painted layer hook");
 ok(FPT.FOV===200,"same field of view as the compass");
 globalThis.__res={n};

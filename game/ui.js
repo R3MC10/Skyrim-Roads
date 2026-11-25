@@ -1131,7 +1131,7 @@
       heavy: G.overweight(S), carriage: !!tr.carriage, boat: !!tr.boat, ship: tr.ship, follow: !!tr.follow, weather: wx && wx.id !== "clear" ? wx.name : "",
       sky: typeof SKY !== "undefined" ? SKY.state(here) : null, heading, turn, destBear: tr.dest ? brg(here, tr.dest) : null, look: myLook(),
       company: typeof PARTY !== "undefined" ? PARTY.companions(S, party, others, here, (o) => otherPos(o), MP.NEAR_PX).map((c) => ({ name: c.name, player: !!c.player, riding: !!c.riding })) : [],
-      pet: S.pet ? (S.pet.name || S.pet.id || "") : "", say, reduce: reduceMotion };
+      pet: S.pet ? (S.pet.name || S.pet.id || "") : "", say, reduce: reduceMotion, pos: here };   // pos: the road view reads the land around you (fpscene.js)
   }
   function renderTabs() {
     tabsEl.querySelectorAll(".tab").forEach((b) => {
