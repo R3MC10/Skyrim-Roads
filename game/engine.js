@@ -514,6 +514,7 @@ const G = (() => {
       this.eq = equipment(s);
       this.hp = curHealth(s, t); this.mp = maxMagicka(s); this.sp = maxStamina(s);
       this.ehp = enemy.hp ?? enemy.health;
+      if (typeof DIFF !== "undefined") DIFF.apply(this);   // Story / Normal / Hard: snapshot taken now, foe damage set (difficulty.js)
       this.wx = typeof WFX !== "undefined" ? WFX.fight(s, t) : null;   // [OURS] weather that matters (weatherfx.js)
       if (this.wx && this.wx.stam < 1) this.sp = Math.round(this.sp * this.wx.stam);
       this.hp0 = this.hp; this.ehp0 = this.ehp;   // start health, for the fight scene's health bars
@@ -1090,7 +1091,7 @@ const G = (() => {
       for (const [id, c] of Object.entries(this.charges)) { const r = invRow(this.s, +id); if (r) r.charge = c; }
       const msgs = typeof MAGIC !== "undefined" ? MAGIC.after(this) : [];
       if (this.mount && typeof HORSEBACK !== "undefined") msgs.push(...HORSEBACK.after(this, t));
-      if (!this.e.guard) for (const [k, v] of Object.entries(this.xp)) msgs.push(...useSkill(this.s, k, v));   // [OURS] fighting guards teaches you nothing
+      if (!this.e.guard) for (const [k, v] of Object.entries(this.xp)) msgs.push(...useSkill(this.s, k, v * (typeof DIFF !== "undefined" ? DIFF.xp(this, k) : 1)));   // [OURS] fighting guards teaches you nothing
       return [...(this.followerDown ? [`${this.followerDown} gets back up after the fight, badly hurt.`] : []), ...extraMsgs, ...daeMsgs, ...msgs];
     }
   }

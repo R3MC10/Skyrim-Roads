@@ -190,7 +190,7 @@ const TB = (() => {
       this.waves = this.players > 0 && !f.e.boss && !f.e.pool ? Math.min(MAX_FOES, 1 + this.players) : grp.n; this.wave = 1;
       // another player fights with their real health; a raid dragon's health is shared by everyone fighting it (wevents.js)
       const k = f.e.player || f.e.pool ? 1 : this.players > 0 ? kk * (1 + PARTY_HP * this.players) / this.waves : kk;   // another player fights with their real health, no monster boost
-      this.ehpBase = f.ehp * k;
+      this.ehpBase = f.ehp * k * (f.diffHp = typeof DIFF !== "undefined" ? DIFF.hp(f) : 1);   // Story / Normal / Hard foe health, from the fight's snapshot (difficulty.js)
       f.ehp = Math.round(this.ehpBase * (grp.hpMul[0] || 1)); f.ehp0 = f.ehp; this.ehpMax = f.ehp;
       f.e.tbHp = this.ehpMax;
       f.regenMp *= MP_REGEN; f.regenSp *= SP_REGEN;   // several actions a round need a bit more breath and magicka per round
@@ -872,7 +872,7 @@ const TB = (() => {
     if (R && newEv.length) { const k = Math.max(0, newEv.length - 3); newEv.slice(k).forEach((e, i) => R.play(R.cue(e, vis[vis.indexOf(e) - 1]), i * 0.25)); }
     const keepGame = ui.timing ? el.querySelector(":scope > .tbtime:not(.hit)") : null;   // [channel] an update from the party mid-minigame must not wipe your game
     el.innerHTML = `<div class="tbin">
-      <div class="tbtop"><b>Round ${sess.round}</b><span class="tbord">${order}</span><button class="tbff" data-tbx="log" aria-label="Full fight log"></button>${typeof TBRADIAL !== "undefined" ? `<button class="tbff ${TBRADIAL.on() ? "on" : ""}" data-tbx="wheel" aria-label="Combat wheel and timing ring" data-tip="${typeof FIGHTCTL !== "undefined" && FIGHTCTL.on() ? "Timing ring: after a strike or a damage spell, tap when the needle is in the bright zone (Perfect +25%, a miss −20%). Tap to switch it on or off." : "Combat wheel: your moves in a ring, and a timing ring for strikes and spells (Perfect +25%, a miss −20%). Tap to switch to cards."}"></button>` : ""}</div>
+      <div class="tbtop"><b>Round ${sess.round}</b>${typeof DIFF !== "undefined" ? DIFF.chip(f) : ""}<span class="tbord">${order}</span><button class="tbff" data-tbx="log" aria-label="Full fight log"></button>${typeof TBRADIAL !== "undefined" ? `<button class="tbff ${TBRADIAL.on() ? "on" : ""}" data-tbx="wheel" aria-label="Combat wheel and timing ring" data-tip="${typeof FIGHTCTL !== "undefined" && FIGHTCTL.on() ? "Timing ring: after a strike or a damage spell, tap when the needle is in the bright zone (Perfect +25%, a miss −20%). Tap to switch it on or off." : "Combat wheel: your moves in a ring, and a timing ring for strikes and spells (Perfect +25%, a miss −20%). Tap to switch to cards."}"></button>` : ""}</div>
       <div class="tbstage" data-tbzone="foe"><div class="tbscene" id="tbscene">${scene || (keepScene ? "" : ui.lastScene || "")}</div>${banner}${rd ? rd.bubble : ""}<div class="tbhint" aria-hidden="true"></div></div>
       <div class="tbvit"><div class="tbu me" data-tbzone="self"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.me(f, sess.st))}"` : ""}><small class="nm">\uE102 ${esc(s.name || "You")}</small>${uBar(hpNow, prev.hp, hpMax, "hp", rd ? rd.meMarks(hpNow, hpMax) : "")}${rd ? rd.meLine : ""}<div class="tbsub">${rBar(mpNow, prev.mp, mpMax, "mp", "MP")}${rBar(spNow, prev.sp, spMax, "sp", "SP")}${typeof CHARGE !== "undefined" ? CHARGE.fightBar(f) : ""}</div>${f.ward > 0 ? `<div class="tbward" title="Ward: soaks magic until it breaks. Cast it again to refill it."><i style="width:${pc(f.ward, f.wardMax || f.ward)}%"></i><span>\uE102 Ward ${Math.round(f.ward)} / ${Math.round(f.wardMax || f.ward)}</span></div>` : ""}${R ? R.myChips(f) : ""}${typeof SPELLFX !== "undefined" ? SPELLFX.meHTML(f) : ""}</div>
         <div class="tbu foe" data-tbzone="foe"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.foe(f, sess.ehpMax))}"` : ""}><small class="nm">${f.e.player ? "\uE101" : "\uE12E"} ${esc(f.e.name)}${f.e.archLabel && !String(f.e.name).toLowerCase().includes(f.e.archLabel) ? ` <span class="arch">${esc(f.e.archLabel)}</span>` : ""}${sess.waves > 1 ? ` <span class="arch">${sess.wave}/${sess.waves}</span>` : ""}</small>${uBar(ehpNow, prev.ehp, sess.ehpMax, "hp foe", rd ? rd.foeMarks(ehpNow, sess.ehpMax) : "")}${rd ? rd.foeLine : ""}${statusChips(f)}${rd ? rd.intents : ""}</div></div>
@@ -1115,7 +1115,7 @@ const TB = (() => {
       allies: f.allies.filter((a) => !a.summon).slice(0, 9).map((a) => ({ name: a.name, pid: a.pid || null, hp: Math.max(0, Math.round(a.hp ?? 0)), hpMax: Math.round(a.hp0 || a.maxHp || a.hp || 1), down: !!a.down })),
       turn: w ? { pid: w.pid, until: w.until, name: w.name, heals: w.al?.heals || 0, pots: w.al?.pots || 0, tid: w.tid || null } : null,
       log: sess.ev.filter((e) => e.kind !== "round").slice(-6).map((e) => e.text),
-      done: !!sess.done, won: sess.done ? !!f.won : null, t: Date.now() / 1000, ...shared(sess) };
+      done: !!sess.done, won: sess.done ? !!f.won : null, t: Date.now() / 1000, diff: f.diff ? f.diff.id : null, ...shared(sess) };
   }
   /* v2: everything a teammate's phone needs to show the same fight on its full fight screen and play real turns in it
      (sharedfight.js). Older phones read only the fields above and keep the small "Fighting beside" box. */

@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b345-difficulty", build: 345, date: "26 Nov 2026", title: "Pick your difficulty: Story, Normal or Hard", items: [
+      "Choose how tough fights are: Story, Normal or Hard. Pick it when you make a new hero, or change it any time in Settings → Fights → Difficulty.",
+      "Story: foes hit softer, fall a bit sooner and fight plainly, and the timing games in fights are easier. Hard: foes hit harder, have a bit more health, use their tricks more and go for whoever is hurt; timing is tighter. Normal stays as it was.",
+      "XP, gold and loot are the same on every difficulty. Hard is about danger, not longer fights.",
+      "In a party the leader's setting counts for everyone. The Party panel shows which one you're on.",
+      "A fight keeps the difficulty it started with: changing it in the middle of a fight changes the next one. A small tag on the fight screen shows which one is on.",
+      "World events, world bosses and fights against other players are the same for everyone (Normal).",
+    ] },
     { id: "b344-tabs5", build: 344, date: "26 Nov 2026", title: "Five tabs instead of seven", items: [
       "The bar at the bottom now has five tabs: World, Area, Hero, Journal and Social.",
       "World is the map: under it you see the one thing to do next and a big Where to? button for every place you know. World news has its own page there once world events are open for you.",
