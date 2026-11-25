@@ -978,6 +978,8 @@
     const el = $("#gnear"); if (!el) return;
     let html = "";
     if (typeof HARVESTGAME !== "undefined" && (tab === "map" || tab === "places") && !S.dungeon && !HARVESTGAME.isOpen()) { try { html = HARVESTGAME.nearHTML(S); } catch (e) { html = ""; } }
+    // [nocover] PC: the Gathering card already shows this patch's Gather button, so the prompt would be the same action twice
+    if (html && innerWidth >= 900) { const id = (html.match(/data-act="gpick" data-id="([^"]*)"/) || [])[1]; if ([...document.querySelectorAll("[data-act=gpick]")].some((b) => !b.closest("#gnear") && b.getClientRects().length && (!id || b.dataset.id === id))) html = ""; }
     if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; }
   }
   function renderTrip() {

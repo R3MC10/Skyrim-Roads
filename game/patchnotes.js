@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b269-nocover", build: 269, date: "25 Nov 2026", title: "Nothing covers your buttons", items: [
+      "The round message history button now sits at the left end of the messages (on a PC, next to World news) and steps aside when there's a button under it. It used to land on Leave in a dungeon, the info button in a town and other buttons in the corner. It hides while a menu, the character creator, the perk stars or a mini-game is open.",
+      "Big banners (quest done, achievements) stay in a slim strip near the top and pick a spot with no buttons under it. On the map and in a dungeon they never drop below the top fifth of the screen, so the dungeon route stays readable.",
+      "On a phone, the Gather prompt is a strip right on top of the bottom bar, and the page gets room for it at the end. On a PC it no longer shows when the Gathering card already has the same Gather button.",
+      "Character creation: a raised sword is never cut off at the top and never touches the turn and Face buttons.",
+    ] },
     { id: "b265-qacore3", build: 265, date: "25 Nov 2026", title: "Crafting in Polish", items: [
       "Fixed: in Polish, the arcane enchanter, parts of the alchemy lab and one cooking recipe were still in English.",
       "Fixed: in Polish, the messages after brewing, cooking, eating a meal and improving gear were half in English.",

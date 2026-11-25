@@ -4713,6 +4713,22 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 #tbf .fc-aimbar .fc-who:active{background:rgba(96,66,24,.95)}
 /* [notify-2] an onboarding tip waits, hidden, while it would cover the dungeon route strip */
 #obtip.obwait{visibility:hidden;pointer-events:none}
+/* [nocover] nocover.js: nothing floats on a button. The history button starts the message lane (or sits right of "World news"
+   on a PC), banners keep to a slim band at the top, the Gather prompt docks on the bottom bar on phones */
+#nfhbtn{position:fixed;right:auto}
+#hudlane{padding-right:0}
+#hudlane.nc-hb{padding-left:44px}
+#nfhbtn.nc-off{display:none}
+#pbanners.nc-fit{align-items:center}
+#pbanners.nc-fit .pban{min-width:0;max-width:100%;box-sizing:border-box;max-height:64px;overflow:hidden;padding:6px 18px}
+#pbanners.nc-fit .pban .ptx b{-webkit-line-clamp:1;line-clamp:1}
+#pbanners.nc-fit .pban .ptx{max-width:100%}
+#pbanners.nc-fit .pban .pic img{max-height:44px;width:auto}
+#pbanners.nc-fit .pban img.pmini{width:auto;max-height:44px}
+body.nc-gdock #gnear:not(:empty){left:0;right:0;max-width:none;margin:0;z-index:6}
+body.nc-gdock #gnear .gnear{padding:8px max(12px,env(safe-area-inset-left)) 8px max(12px,env(safe-area-inset-right));box-shadow:0 -1px 0 rgba(170,220,130,.35),0 -8px 20px rgba(0,0,0,.45)}
+body.nc-gdock .app{padding-bottom:calc(140px + var(--nc-gnear,0px) + env(safe-area-inset-bottom))}
+body:has(#tbf) #gnear{display:none!important}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -5054,6 +5070,7 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 <script src="i18n_qaside2.js"></script>
 <script src="i18n_gptqa.js"></script>
 <script src="i18n_perklayout.js"></script>
+<script src="i18n_nocover.js"></script>
 <script src="i18n_crafticons.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
@@ -5072,6 +5089,7 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 <script src="hud2.js"></script>
 <script src="skillup.js"></script>
 <script src="notify.js"></script>
+<script src="nocover.js"></script>
 <script src="invites.js"></script>
 <script src="tourney.js"></script>
 <script src="holdui.js"></script>
