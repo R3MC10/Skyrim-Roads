@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b333-maprider", build: 333, date: "25 Nov 2026", title: "Your rider on the map looks like you", items: [
+      "On the world map your hero now looks like they really do: your race, your helmet, your armour, your shield and weapon, the same as on the hero screen. That goes for walking and standing too.",
+      "Your horse on the map has a new body that really moves: it walks, trots and gallops, and it picks the one that fits how fast you're going. On a road you gallop; in deep snow or rough hills you slow down to a trot or a walk.",
+      "At the gallop there's a moment with all four hooves off the ground, and you lean forward in the saddle. At the trot you bounce a bit.",
+      "Standing still, your horse breathes, nods, flicks its tail and rests a back hoof now and then. Stopping and turning round are smooth now.",
+      "Riding in a party, every horse moves in its own rhythm, so a group of eight doesn't march in step, and when the line gets crowded only your name and the leader's stay over the riders.",
+      "Reduce motion in Settings still keeps the horses calm and still.",
+    ] },
     { id: "b330-fightfeel", build: 330, date: "25 Nov 2026", title: "Blows that land with weight", items: [
       "Swings now wind up and hold for a moment before they snap through. A dagger is quick, a sword is steady and a warhammer takes its time.",
       "When a blow lands, both fighters freeze for a split second, then the one who got hit is knocked back, staggers and finds their stance again. A miss never freezes anyone, and the fight doesn't get any slower.",

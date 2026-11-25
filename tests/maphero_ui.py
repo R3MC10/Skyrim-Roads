@@ -13,8 +13,8 @@ os.makedirs(OUT, exist_ok=True)
 CLEAR = "document.querySelectorAll('#modal,#sky').forEach(m=>m.remove()); typeof TABMENU!=='undefined' && TABMENU.closeHub?.()"
 PLACE = """(t)=>{ const S=__dbg.save(); S.location=null; [S.x,S.y]=WORLD.places[t]; for(const n of Object.keys(WORLD.places)) if(!S.discovered.includes(n)) S.discovered.push(n); __ui.go('map'); }"""
 # count calls into the figure drawer, so we know the hero really is a figure
-SPY = """()=>{ if (window.__mh) return; window.__mh={n:0, ride:0, walk:0, idle:0}; const d=HEROART.drawFigure;
-  HEROART.drawFigure=function(g,c,x,y,o){ if (g.canvas && g.canvas.id==='map') { __mh.n++; if(o&&o.pose) __mh[o.pose]=(__mh[o.pose]||0)+1; } return d.apply(this, arguments); }; }"""
+SPY = """()=>{ if (window.__mh) return; window.__mh={n:0, ride:0, walk:0, idle:0}; const d=MAPHERO.draw;   // [maprider] the map draws heroes through MAPHERO (painted figure / moving horse)
+  MAPHERO.draw=function(g,x,y,s,o){ if (g.canvas && g.canvas.id==='map' && o) { __mh.n++; const k = o.horse ? 'ride' : o.moving ? 'walk' : 'idle'; __mh[k]=(__mh[k]||0)+1; } return d.apply(this, arguments); }; }"""
 HORSE = "()=>{ const S=__dbg.save(); S.horse={name:'Shadow', breed:'nord', coat:'black', armor:'none', shoes:'none', bags:0, hp:100, hpT:G.now(), mounted:true}; }"
 TRIP = "(to)=>{ const S=__dbg.save(); G.startTrip(S, to, WORLD.places[to].slice(0,2)); }"
 HERE = """()=>{ const v=__dbg.view(), t=v.transform, r=document.getElementById('map').getBoundingClientRect(); return [r.left + v.player[0]*WorldMap.W*t.k + t.ox, r.top + v.player[1]*WorldMap.H*t.k + t.oy]; }"""
