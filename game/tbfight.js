@@ -842,7 +842,7 @@ const TB = (() => {
     const keepScene = !scene && ui.lastScene ? el.querySelector("#tbscene > .fscene") : null;   // [phantom] nothing new happened: the scene on screen stays as it is (redrawing it played the last blow again)
     const fmt = typeof TBUI !== "undefined" ? TBUI.logLine : (e) => `<div class="tbl ${e.kind}">${esc(e.text)}</div>`;
     const recent = vis.filter((e) => e.kind !== "round"), lastE = recent[recent.length - 1];
-    const log = recent.slice(-10).map((e) => fmt(e, e === lastE && newEv.includes(e))).join("");
+    const log = recent.slice(-200).map((e) => fmt(e, e === lastE && newEv.includes(e))).join("");
     const atE = playing ? vis[vis.length - 1] : null;   // while playing, the bars show health as of the event on screen
     const hpMax = G.maxHealth(s), hpNow = Math.max(0, Math.round(atE?.hp ?? f.hp)), ehpNow = Math.max(0, Math.round(atE?.ehp ?? f.ehp));
     const prev = ui.prevBars || { hp: hpNow, ehp: ehpNow, mp: Math.max(0, Math.round(f.mp)), sp: Math.max(0, Math.round(f.sp)) };
@@ -889,6 +889,7 @@ const TB = (() => {
     if (typeof REACT !== "undefined") { try { REACT.decorate(el, sess, newEv, playing); } catch (e) { console.warn("combos", e); } }   // combo icons on moves, the combo banner
     if (typeof HOTBAR !== "undefined") { try { HOTBAR.decorate(el, sess); } catch (e) { console.warn("hotbar", e); } }   // "Edit hotbar" for the … menu (hotbar.js)
     if (typeof FIGHTDC !== "undefined") { try { FIGHTDC.decorate(el, sess); } catch (e) { console.warn("declutter", e); } }   // the "…" menu, the foe's folded moves (fightdeclutter.js)
+    if (typeof FOEPANEL !== "undefined") { try { FOEPANEL.decorate(el, sess); } catch (e) { console.warn("foepanel", e); } }   // the slim foe plate, the scrollable log (foepanel.js)
   }
   /* floating numbers for what just happened: damage coloured by element, heals, crits, and what you spent */
   const ELEM = [["fire", /\b(fire|flame|burn|scorch|ember)/i], ["frost", /\b(frost|ice|cold|freez|chill)/i], ["shock", /\b(shock|lightning|spark|thunder)/i], ["poison", /\b(poison|venom|toxic)/i]];
