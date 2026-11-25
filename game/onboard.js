@@ -130,7 +130,7 @@ const ONBOARD = (() => {
     if (!tip) { if (el) el.remove(); shown = null; return; }
     if (!el) { el = document.createElement("div"); el.id = "obtip"; el.setAttribute("role", "status"); el.addEventListener("click", onTipClick); document.body.appendChild(el); }
     el.className = "obtip";
-    el.innerHTML = `<div class="obtip-h"><b> ${esc(tip.title)}</b><button class="obx" data-obt="ok" aria-label="Close tip">✕</button></div><p>${tip.text}</p>
+    el.innerHTML = `<div class="obtip-h"><b> ${esc(tip.title)}</b><button class="obx" data-obt="ok" aria-label="Close tip">✕</button></div><p>${typeof I18N !== "undefined" && I18N.t ? I18N.t(tip.text) : tip.text}</p>
       <div class="obtip-b">${tip.btn ? `<button class="btn sm pri" data-obt="go" data-id="${tip.btn[0]}">${esc(tip.btn[1])}</button>` : ""}<button class="btn sm" data-obt="ok">Got it</button><button class="linkbtn" data-obt="off">Don't show tips</button></div>`;
     shown = tip.id;
     place();
