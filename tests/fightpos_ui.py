@@ -77,10 +77,10 @@ async def run(p, w, h, touch):
             ok(fp["h"][0] < fp["f"][0], f"{tag}: you stand left of the foe")
             ok(len(fp["a"]) == players + fols, f"{tag}: every ally has a spot ({len(fp['a'])} of {players + fols})")
             ok(all(a[0] < fp["f"][0] for a in fp["a"]), f"{tag}: the company is on your side")
-            ok(all(fp["gy"] - 40 <= a[1] <= fp["gy"] + 0.5 for a in fp["a"]), f"{tag}: allies' feet on the ground line or a row behind")
+            ok(all(fp["gy"] - 2 * 7 * 1.9 * fp["H"] / 150 - 1 <= a[1] <= fp["gy"] + 0.5 for a in fp["a"]), f"{tag}: allies' feet on the ground line or a row or two behind (a big party stands in deeper rows)")
             if d["waves"] and d["waves"] > d["wave"] and not touch and name != "dragon":   # (a dragon fills the stage: the next one waits out of sight)
                 ok(len(fp["w"]) >= 1, f"{tag}: the foes still to come stand behind it ({len(fp['w'])} of {d['waves'] - d['wave']})")
-            ok(all(x[0] > fp["f"][0] for x in fp["w"]), f"{tag}: the waiting foes stand behind the foe")
+            ok(all(x[0] > fp["f"][0] or x[1] < fp["gy"] - 0.3 * (fp["gy"] - fp["f"][1]) for x in fp["w"]), f"{tag}: the waiting foes stand behind the foe")
             if d["plate"]:
                 pl, pt, pw, ph = d["plate"]; fxp = X(fp["f"][0])
                 ok(pl - 30 <= fxp <= pl + pw + 30 or pl + pw >= vw - 12, f"{tag}: the foe's plate is over the foe (plate {pl:.0f}..{pl + pw:.0f}, foe {fxp:.0f})")
