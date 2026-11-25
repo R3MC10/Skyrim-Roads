@@ -743,13 +743,8 @@ const FIGART = (() => {
     }
     return out;
   }
-  function horse(g, col, frame, st, part, gait, anim) {   // gait: "stand" (idle: still legs, tail swish, head nod), "walk", or a gallop (default)
+  function horse(g, col, frame, st, part, gait) {   // gait: "stand" (idle: still legs, tail swish, head nod), "walk", or a gallop (default)
     const still = gait === "stand", slow = gait === "walk";
-    if (anim && typeof HORSEART !== "undefined" && HORSEART.motion) {   // [mapheroanim] the map: the painted horse in moving pieces; walking uses the standing picture with its legs swinging
-      const pz = still || slow ? "stand" : "gallop";
-      if (part === "front" && HORSEART.ok(col, pz)) return;
-      if (part !== "front" && HORSEART.ride(g, col, pz, 40, { anim: { gait: still ? "stand" : slow ? "walk" : "gallop", c: frame / 4 } })) return;
-    }
     if (typeof HORSEART !== "undefined") {   // [OURS] the painted horse (horseart.js): drawn whole behind the rider, nothing in front; seat at -40 + bob like the drawn one
       const pz = still ? "stand" : "gallop";
       if (part === "front" && HORSEART.ok(col, pz)) return;
@@ -820,7 +815,7 @@ const FIGART = (() => {
     if (P.ride && P.horseC && P.noFar) {   // [riding] the far leg, in shade, before the horse: its body hides all but the boot under the belly
       g.save(); g.scale(sp.bw, sp.bh); const B0 = solve(sp, P); leg(g, sp, B0.thighF, B0.shinF, B0.footF, st, true); g.restore();
     }
-    if (P.ride && P.horseC) horse(g, P.horseC, P.frame || 0, st, "back", P.gait, P.hanim);
+    if (P.ride && P.horseC) horse(g, P.horseC, P.frame || 0, st, "back", P.gait);
     g.scale(sp.bw, sp.bh);
     const B = solve(sp, P), S = B.spine, hn = B.handN, hf = B.handF;
     const inSpine = (fn) => { g.save(); at(g, S); fn(); g.restore(); };
@@ -834,7 +829,7 @@ const FIGART = (() => {
     if (P.off && !shieldOn) { g.save(); at(g, hf); g.rotate(0.55 + (P.lunge || 0) * 0.7); weapon(g, sp, P.off, st, { plain: true, glow: P.glow }); g.restore(); }
     fist(g, hf.x, hf.y, hcF, st);
     if (P.cast && !P.front) glowAt(g, hf.x, hf.y, 5 + P.cast * 3, P.castC || "#9fd0f0", 0.75, st);
-    if (P.ride && P.horseC) { g.save(); g.scale(1 / sp.bw, 1 / sp.bh); horse(g, P.horseC, P.frame || 0, st, "front", P.gait, P.hanim); g.restore(); }
+    if (P.ride && P.horseC) { g.save(); g.scale(1 / sp.bw, 1 / sp.bh); horse(g, P.horseC, P.frame || 0, st, "front", P.gait); g.restore(); }
     if (!P.noFar) leg(g, sp, B.thighF, B.shinF, B.footF, st, true);
     leg(g, sp, B.thighN, B.shinN, B.footN, st, false);
     robeSkirt(g, sp, P, st, W);
@@ -894,10 +889,6 @@ const FIGART = (() => {
     const P = poseOf(pose, frame, sp, o); P.frame = frame;
     if (pose === "ride") {
       P.horseC = o.horse || "#6b4a2e"; P.gait = o.gait || null;
-      if (o.hanim && typeof HORSEART !== "undefined" && HORSEART.motion && HORSEART.ok(P.horseC, P.gait === "stand" || P.gait === "walk" ? "stand" : "gallop")) {   // [mapheroanim] the rider sits into the moving saddle
-        const M = HORSEART.motion(P.gait || "gallop", frame / 4), H = 40 / 0.7;
-        P.hanim = true; P.dy -= (M.rider * H) / (sp.bh || 1); P.lean += M.pitch * 0.6;
-      }
     }
     if (sp.wk === "staff" || P.cast) P.castC = sp.wk === "staff" ? sp.staffC : sp.ench || "#9fd0f0";
     return P;
@@ -910,7 +901,7 @@ const FIGART = (() => {
       const fp = o.from.pose, a = posed(sp, fp, frameOf(fp, o.from), o), b = posed(sp, pose, frame, o);
       return render(sp, blend(a, b, o.w), o.w < 0.5 ? fp : pose, k);
     }
-    const key = `${sp.key}|${pose}|${frame}|${k}|${o.horse || ""}${o.gait ? ":" + o.gait : ""}${o.hanim ? ":a" : ""}${o.horse && typeof HORSEART !== "undefined" ? ":p" + HORSEART.sig() : ""}|${o.armed === undefined ? "" : +o.armed}`;
+    const key = `${sp.key}|${pose}|${frame}|${k}|${o.horse || ""}${o.gait ? ":" + o.gait : ""}${o.horse && typeof HORSEART !== "undefined" ? ":p" + HORSEART.sig() : ""}|${o.armed === undefined ? "" : +o.armed}`;
     let c = SPRITES.get(key);
     if (c) { SPRITES.delete(key); SPRITES.set(key, c); return c; }
     c = render(sp, posed(sp, pose, frame, o), pose, k);

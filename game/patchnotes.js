@@ -10,6 +10,21 @@ const PATCHNOTES = (() => {
       "In fights the same goes for your fighter: the main weapon is always in the right hand and the shield or second weapon in the left, each drawn in its own layer, so arms, shields and blades don't overlap into weird shapes anymore.",
       "Reduce motion in Settings keeps your hero still, and they stop moving while the game is in the background.",
     ] },
+    { id: "b333-maprider", build: 333, date: "25 Nov 2026", title: "Your rider on the map looks like you", items: [
+      "On the world map your hero now looks like they really do: your race, your helmet, your armour, your shield and weapon, the same as on the hero screen. That goes for walking and standing too.",
+      "Your horse on the map has a new body that really moves: it walks, trots and gallops, and it picks the one that fits how fast you're going. On a road you gallop; in deep snow or rough hills you slow down to a trot or a walk.",
+      "At the gallop there's a moment with all four hooves off the ground, and you lean forward in the saddle. At the trot you bounce a bit.",
+      "Standing still, your horse breathes, nods, flicks its tail and rests a back hoof now and then. Stopping and turning round are smooth now.",
+      "Riding in a party, every horse moves in its own rhythm, so a group of eight doesn't march in step, and when the line gets crowded only your name and the leader's stay over the riders.",
+      "Reduce motion in Settings still keeps the horses calm and still.",
+    ] },
+    { id: "b332-fightscreen", build: 332, date: "25 Nov 2026", title: "A clearer fight screen", items: [
+      "On a phone the fight screen now has three parts: the turn order, the foe's next move, its health and the latest line of the fight at the top; the battle in the middle with nothing covering the fighters; your health, your party and the move buttons at the bottom, in easy reach of your thumbs.",
+      "On a PC your party stands down the left side, the foe you're fighting and the whole fight story down the right, and the battle in the middle.",
+      "A gold ring under the foe shows who your blows go to.",
+      "Only one big banner shows at a time (Your turn, a new round, a combo, a boss's new phase), and they appear above the fighters' heads instead of over them.",
+      "A boss's introduction plays once per fight, and the first-fight tips and Your turn wait until it's over.",
+    ] },
     { id: "b331-partyfoeturns", build: 331, date: "25 Nov 2026", title: "Foes take proper turns in party fights", items: [
       "In a party fight the foe now says who its next move goes for, and that's who it really hits. Before, it could say \"you\" and then hit a teammate.",
       "When a fast foe moves twice in a round, its 1st move always comes before its 2nd in the turn strip.",

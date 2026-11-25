@@ -5399,6 +5399,68 @@ body.nq-fighthold .rxban,body.nq-fighthold #fhints,body.nq-fighthold .bfov.bfpha
 @keyframes dfgrip{0%,80%,100%{transform:none}86%{transform:rotate(-4deg)}92%{transform:rotate(1.5deg)}}
 .dfhidden .dfront .dfg,.dfhidden .dfront .dfl,.dfront.dfcalm .dfg,.dfront.dfcalm .dfl{animation:none!important}
 @media (prefers-reduced-motion:reduce){.dfront .dfg,.dfront .dfl{animation:none!important}}
+/* [fightscreen] fightzones.js: the fight screen in three zones. Phone: turn order, boss bar, the foe's card and the event
+   line on top; the battlefield in the middle (nothing permanent over it); your orb, the party, tips and the dock at the
+   bottom. PC: party left, the selected foe + fight history right, the battlefield in the centre. fightpres.js: one banner. */
+#tbf.c2.fz .c2ov .tbu.foe.fpl{transition:none}
+#tbf.c2.fz:not(.fzw) .c2ov .tbu.foe.fpl{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:10px;row-gap:0;align-items:start;width:calc(100% - 16px);box-sizing:border-box;padding:5px 8px 3px;text-align:left;background:linear-gradient(180deg,rgba(8,10,14,.78),rgba(8,10,14,.55));border:1px solid rgba(226,205,150,.22);border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+#tbf.c2.fz:not(.fzw) .c2ov .tbu.foe.fpl>*{grid-column:1 / -1;min-width:0}
+#tbf.c2.fz:not(.fzw) .c2ov .tbu.foe.fpl>.nm{grid-column:1;grid-row:1;margin:0 0 3px}
+#tbf.c2.fz:not(.fzw) .c2ov .tbu.foe.fpl>.tbbar.big{grid-column:1;grid-row:2;width:100%;margin:0 0 15px}
+#tbf.c2.fz:not(.fzw) .c2ov .tbu.foe.fpl>.tbints{grid-column:2;grid-row:1 / span 2;align-self:center;justify-content:flex-end;margin:0;max-width:52vw}
+#tbf.c2.fz:not(.fzw) .c2ov .tbu.foe.fpl>.c2fx{justify-content:flex-start;margin-top:0;padding:0 6px 5px 0}
+#tbf.c2.fz:not(.fzw) .c2ov .tbu.foe.fpl.fpl-boss>.tbints{grid-column:1 / -1;grid-row:auto;justify-content:center}
+#tbf.c2.fz:not(.fzw) .c2ov .tbu.foe.fpl .tbint{font-size:12px;padding:3px 8px;background:rgba(0,0,0,.5)}
+#tbf.c2.fz:not(.fzw) .c2ov .tbu.foe.fpl .tbint.big{background:rgba(120,24,12,.62)}
+#tbf.c2.fz:not(.fzw) .c2ov .tblog.fpl-log{width:calc(100% - 16px);max-width:none;box-sizing:border-box}
+#tbf.c2.fz.pff:not(.pff-log) .c2ov .tblog.fpl-log .tbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+#tbf.c2.fz:not(.fzw) .c2ov .tbu.me{bottom:var(--fzbot,186px)}
+#tbf.c2.fz:not(.fzw) .c2ov .tbparty{bottom:calc(var(--fzbot,186px) / var(--c2ui,1))}
+#tbf.c2.fz .tbban{top:calc(var(--fzmt,30%) + 6px)}
+#tbf.c2.fz .tbban small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:92vw;margin-left:auto;margin-right:auto}
+#tbf.c2.fz:not(.fzw) .tbhint{bottom:calc(var(--fzbot,186px) + 4px)}
+/* PC: the picture lives in the centre column; the side columns show its soft blurred copy */
+#tbf.c2.fzw .tbstage .tbscene{left:var(--fzl,0px);right:var(--fzr,0px);overflow:hidden}
+#tbf.c2.fzw .tbscene .fscene{-webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent);mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
+#tbf.c2.fzw .tbstage::before{content:"";position:absolute;top:0;bottom:0;left:0;width:var(--fzl,0px);z-index:1;pointer-events:none;background:linear-gradient(90deg,rgba(5,5,6,.55),rgba(5,5,6,.25))}
+#tbf.c2.fzw .tbstage .c2ov::before{content:"";position:absolute;top:0;bottom:0;right:0;width:var(--fzr,0px);pointer-events:none;background:linear-gradient(270deg,rgba(5,5,6,.6),rgba(5,5,6,.28))}
+#tbf.c2.fzw .tbban{left:var(--fzl,0px);right:var(--fzr,0px)}
+#tbf.c2.fzw .bfwrap{transform:none}
+#tbf.c2.fzw .c2ov .tbu.foe.fpl{box-sizing:border-box;padding:8px 10px;text-align:left;background:rgba(8,10,14,.62);border:1px solid rgba(226,205,150,.25);border-radius:6px;box-shadow:0 3px 12px rgba(0,0,0,.5)}
+#tbf.c2.fzw .c2ov .tbu.foe.fpl>.nm{font-size:15px}
+#tbf.c2.fzw .c2ov .tbu.foe.fpl:not(.fpl-boss) .tbbar.big{height:8px;margin-bottom:16px}
+#tbf.c2.fzw .c2ov .tbu.foe.fpl:not(.fpl-boss) .tbbar.big .num{display:block;position:absolute;left:0;right:0;top:10px;font-size:12px;line-height:14px;font-weight:700;text-align:center;color:#f1e9d4;text-shadow:0 1px 2px #000}
+#tbf.c2.fzw .c2ov .tbu.foe.fpl>.c2fx{justify-content:flex-start;flex-wrap:wrap}
+#tbf.c2.fzw .c2ov .tbu.foe.fpl .tbints{justify-content:flex-start;flex-wrap:wrap}
+#tbf.c2.fzw .c2ov .tbu.foe.fpl .tbints .tbint~.tbint{display:inline-flex}
+#tbf.c2.fzw .c2ov .tbu.foe.fpl .tbfcl{display:flex;justify-content:flex-start}
+#tbf.c2.fzw .c2ov .tblog.fpl-log{right:auto;bottom:auto;max-height:none;box-sizing:border-box;padding:6px 10px;font-size:13.5px;background:rgba(8,10,14,.5);border:1px solid rgba(226,205,150,.14);border-radius:6px;-webkit-mask-image:linear-gradient(180deg,transparent,#000 16px);mask-image:linear-gradient(180deg,transparent,#000 16px);-webkit-mask-size:auto;mask-size:auto}
+#tbf.c2.fzw .c2ov .tbu.me{bottom:var(--fzbot,140px);width:calc(var(--fzl,300px) - 32px)}
+#tbf.c2.fzw .c2ov .tbparty{top:calc(var(--fzpt,60px) / var(--c2ui,1));width:calc((var(--fzl,300px) - 32px) / var(--c2ui,1))}
+/* the foe you're fighting: a gold ring at its feet (always there, so you know who your blows go to) */
+#tbf.c2 .c2ov .fzring{position:absolute;left:var(--c2fx,70%);top:var(--c2fg,70%);width:calc(var(--c2fw,60px) * 1.5);height:calc(var(--c2fw,60px) * .36);transform:translate(-50%,-50%);border-radius:50%;border:2px solid rgba(240,200,110,.85);box-shadow:0 0 10px rgba(240,190,90,.55),inset 0 0 8px rgba(240,190,90,.35);pointer-events:none;animation:fzring 2.2s ease-in-out infinite}
+@keyframes fzring{50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){#tbf.c2 .c2ov .fzring{animation:none}}
+html.a11y-still #tbf.c2 .c2ov .fzring{animation:none}
+#tbf.c2.tbplay .c2ov .fzring{opacity:.35}
+/* [fightscreen] fightpres.js: while the boss's intro plays, the tips and combo banners wait */
+body.fp-intro #fhints,body.fp-intro .rxban{visibility:hidden!important}
+/* [fightscreen] nothing scrolls during a fight (the page behind it stays put, no pull-to-refresh bounce) */
+html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:none}
+/* [fightscreen] phone: every move button keeps its size when a "Need 20 more stamina" note comes or goes (one line,
+   cut with "…"; the full reason is in its tip), so the buttons never move under your thumb */
+#tbf.c2.fz:not(.fzw) .fc.fc-hb:not(.fc-pick) .hb-bar{grid-auto-rows:66px}
+#tbf.c2.fz:not(.fzw) .fc.fc-hb:not(.fc-pick) .hb-bar .tbact,#tbf.c2.fz:not(.fzw) .fc.fc-hb:not(.fc-pick) .hb-bar .hb-empty{min-height:0;height:66px;overflow:hidden}
+#tbf.c2.fz:not(.fzw) .fc:not(.fc-pick) .tbact small.fc-why{display:block;white-space:nowrap;-webkit-line-clamp:none;overflow:hidden;text-overflow:ellipsis}
+/* [fightscreen] a small phone (360px): the move buttons stay 44px wide; Magic, Items and Flee stack in a narrow
+   column and End turn gets a tall column of its own beside them */
+@media (max-width:379px){
+  #tbf.c2.fz .tbdock{padding-left:max(2px,env(safe-area-inset-left));padding-right:max(2px,env(safe-area-inset-right))}
+  #tbf.c2.fz .fc.fc-hb:not(.fc-pick){gap:4px 4px}
+  #tbf.c2.fz .fc.fc-hb:not(.fc-pick) .hb-side{grid-template-columns:44px 76px;grid-template-rows:repeat(3,minmax(44px,auto));gap:3px 2px}
+  #tbf.c2.fz .fc.fc-hb:not(.fc-pick) .hb-side>.tbact{grid-column:1;min-height:44px;--d:30px}
+  #tbf.c2.fz .fc.fc-hb:not(.fc-pick) .hb-side>.tbact.end{grid-column:2;grid-row:1 / span 3;min-height:0;min-width:0;width:76px;padding:6px 3px}
+}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -5506,6 +5568,8 @@ body.nq-fighthold .rxban,body.nq-fighthold #fhints,body.nq-fighthold .bfov.bfpha
 <script src="fightdeclutter.js"></script>
 <script src="foepanel.js"></script>
 <script src="phonefight.js"></script>
+<script src="fightzones.js"></script>
+<script src="fightpres.js"></script>
 <script src="movepreview.js"></script>
 <script src="guide.js"></script>
 <script src="patchnotes.js"></script>
@@ -5571,6 +5635,7 @@ body.nq-fighthold .rxban,body.nq-fighthold #fhints,body.nq-fighthold .bfov.bfpha
 <script src="riglook.js"></script>
 <script src="rig.js"></script>
 <script src="mapart.js"></script>
+<script src="mapride.js"></script>
 <script src="maphero.js"></script>
 <script src="riding.js"></script>
 <script src="placeart.js"></script>
@@ -5704,6 +5769,7 @@ body.nq-fighthold .rxban,body.nq-fighthold #fhints,body.nq-fighthold .bfov.bfpha
 <script src="i18n_fightdeclutter.js"></script>
 <script src="i18n_foepanel.js"></script>
 <script src="i18n_phonefight.js"></script>
+<script src="i18n_fightscreen.js"></script>
 <script src="i18n_hotbar.js"></script>
 <script src="i18n_movepreview.js"></script>
 <script src="i18n_busts.js"></script><script src="i18n_avatars.js"></script><script src="i18n_npcportraits.js"></script>
@@ -5718,6 +5784,7 @@ body.nq-fighthold .rxban,body.nq-fighthold #fhints,body.nq-fighthold .bfov.bfpha
 <script src="i18n_widetitle.js"></script>
 <script src="i18n_horseart.js"></script>
 <script src="i18n_mapheroanim.js"></script>
+<script src="i18n_maprider.js"></script>
 <script src="i18n_followeranim.js"></script>
 <script src="i18n_shouts.js"></script>
 <script src="i18n_bleakfalls.js"></script>
