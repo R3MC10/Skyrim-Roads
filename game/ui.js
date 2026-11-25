@@ -952,7 +952,8 @@
     HUD.compass({ pos, target, W, H, places: [...near.slice(0, 8), ...unk.slice(0, 3)],
       players: others.filter((o) => !o.hiding && sameMap(o) && seesHero(o)).map((o) => ({ name: typeof GREET !== "undefined" ? GREET.label(S, o, party) : o.name, pos: otherPos(o) })).filter((o) => G.pxDist(pos, o.pos) < 220).slice(0, 8),
       quest: qp ? { pos: qp, name: qa ? QUESTS.target(qa.st) : "" } : null,
-      raid: raid && WORLD.places[raid.town] ? { town: raid.town, pos: WORLD.places[raid.town] } : null });
+      raid: raid && WORLD.places[raid.town] ? { town: raid.town, pos: WORLD.places[raid.town] } : null,
+      dest: tr && tr.status === "travel" && tr.dest && !tr.boat ? { name: tr.destName, pos: tr.dest } : null });
     if (typeof HUD2 !== "undefined") { const tq = QUESTS.tracked(S); HUD2.objective(tq && tq.st ? { title: tq.st.title, where: QUESTS.target(tq.st) } : null); }   // hud2.js: the objective line under the compass
   }
   function renderVitals() {
@@ -990,6 +991,8 @@
     const el = $("#trip"), tr = S.trip;
     if (typeof RIDING !== "undefined") RIDING.sync(S);   // cheap: only toggles classes on the map's ride button
     const put =(html) => { if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; } };   // only redraw on change, so taps don't get lost
+    const fpt = typeof FPT !== "undefined" && $("#mapwrap");   // fptravel.js: on the road the trip is a first-person band at the top of the map
+    if (fpt && !(tr && tr.status === "travel" && !S.dungeon)) FPT.hide();
     if (S.dungeon) { put(`<div class="trip enc"><div class="row"><b> You're inside ${esc(S.dungeon.place)}</b><button class="btn danger sm" data-act="dun">Go back in</button></div></div>`); return; }
     if (!tr) { put(""); return; }
     if (tr.status === "event") {
@@ -1007,6 +1010,7 @@
     const mins = tripMinutesLeft(), total = Math.max(mins, tr.total || mins), p = pct(total - mins, total);
     const here = livePos(), ground = Terrain.NAMES[Terrain.typeAtPos(here)], sp = Terrain.speedAt(here);
     const pace = sp >= 1.2 ? "fast going" : sp >= 0.95 ? "steady" : sp >= 0.6 ? "slow going" : "very slow going";
+    if (fpt) { put(""); FPT.show($("#mapwrap"), fptInfo(tr, here, ground, pace, mins), onPanelClick); return; }
     const html = `<div class="trip"><div class="row"><b>${esc(tr.origin)} → ${esc(tr.destName)}</b><span class="num sub">${fmtMin(mins)}</span>${!tr.carriage && !tr.boat && HORSES.present(S) && HORSES.downed(S) ? `<span class="chip hdownchip">\uE12D Downed</span>` : ""}${!tr.carriage && !tr.boat && HORSES.present(S) && !HORSES.downed(S) ? `<button class="btn sm" data-act="hride">${HORSES.riding(S) ? "Walk" : "Ride"}</button>` : ""}${tr.follow ? `<span class="chip ppfollow">⚑ following</span>` : `<button class="btn sm" data-act="stop">Stop</button>`}</div>
       <div class="bar"><i style="background:var(--frost)"></i></div>
       <div class="sub">${tr.boat ? `\uE12F aboard ${esc(tr.ship || "the ship")} · nothing attacks a ship at sea` : tr.carriage ? "\uE12D by carriage · safe on the Jarl's roads" : `${esc(ground)} · ${pace} · ${HORSES.riding(S) ? `riding ${esc(S.horse.name)}` : HORSES.present(S) && HORSES.downed(S) ? `on foot · ${esc(S.horse.name)} is downed and limps beside you` : HORSES.present(S) ? `walking beside ${esc(S.horse.name)}` : G.overweight(S) ? "too heavy to run" : "on foot"}`}${S.follower ? ` · ${esc(TOWNS.FOLLOWERS[S.follower.id][0])} with you` : ""}</div>
@@ -1015,6 +1019,42 @@
     const bar = el.querySelector(".bar i"); if (bar) bar.style.width = `${p}%`;
     if (tr.boat && typeof SOLART !== "undefined") { const tv = el.querySelector(".tripvig"); if (tv && !tv.dataset.sea) { tv.dataset.sea = 1; tv.innerHTML = SOLART.sea(); } }   // at sea (solart.js)
     else if (typeof FXART !== "undefined") FXART.vignette(el.querySelector(".tripvig"), { ground, progress: p / 100, dest: tr.destName, origin: tr.origin, riding: HORSES.riding(S), carriage: !!tr.carriage, boat: !!tr.boat, horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, led: typeof RIDING !== "undefined" ? RIDING.led(S) : null, look: myLook(), company: typeof PARTY !== "undefined" ? PARTY.companions(S, party, others, here, (o) => otherPos(o), MP.NEAR_PX) : [], reduce: reduceMotion, sky: typeof SKY !== "undefined" ? SKY.state(here) : null });
+  }
+  /* what the first-person travel band needs (fptravel.js): route, time, stops on the way, mount, company, sky, heading */
+  let fptStops = { key: "", list: [] };
+  function fptInfo(tr, here, ground, pace, mins) {
+    const W = G.MAP_W, H = G.MAP_H, brg = (a, b) => (Math.atan2((b[0] - a[0]) * W, -(b[1] - a[1]) * H) * 180 / Math.PI + 360) % 360;
+    const path = tr.path || [], idx = Math.max(0, Math.min(tr.idx || 0, path.length - 1));
+    // distance along the route: the bar and the places you pass on it
+    const segs = []; let tot = 0; for (let i = 1; i < path.length; i++) { const d = G.pxDist(path[i - 1], path[i]); segs.push(tot); tot += d; }
+    let done = 0; if (path.length > 1) { done = (segs[Math.min(idx, segs.length - 1)] || 0) + G.pxDist(path[idx], here); }
+    const f = tot > 0 ? Math.max(0, Math.min(1, done / tot)) : Math.max(0, Math.min(1, 1 - mins / Math.max(mins, tr.total || mins || 1)));
+    const key = tr.destName + "|" + path.length + "|" + (tr.start || []).join(",");
+    if (fptStops.key !== key) {
+      const list = [];
+      if (tot > 0) for (const [n, pp] of Object.entries(WORLD.places)) {
+        if (n === tr.destName || n === tr.origin || !known(n)) continue;
+        let best = 9, at = 0;
+        for (let i = 1; i < path.length; i++) { const a = path[i - 1], b = path[i], dx = (b[0] - a[0]) * W, dy = (b[1] - a[1]) * H, L2 = dx * dx + dy * dy || 1, u = Math.max(0, Math.min(1, ((pp[0] - a[0]) * W * dx + (pp[1] - a[1]) * H * dy) / L2)), d = Math.hypot((a[0] + (b[0] - a[0]) * u - pp[0]) * W, (a[1] + (b[1] - a[1]) * u - pp[1]) * H); if (d < best) { best = d; at = segs[i - 1] + Math.sqrt(L2) * u; } }
+        if (best < 8) list.push({ name: n, f: at / tot });
+      }
+      fptStops = { key, list: list.sort((a, b) => a.f - b.f).filter((s, i, a) => !i || s.f - a[i - 1].f > 0.03).slice(0, 8) };
+    }
+    // the bend ahead: where the road goes after the next waypoint, against where you're looking now
+    const ahead = path.slice(idx + 1).filter((q) => G.pxDist(here, q) > 4), nx = ahead[0] || tr.dest, far = ahead.find((q) => G.pxDist(nx, q) > 25) || tr.dest;
+    const heading = typeof HUD !== "undefined" ? HUD.heading : brg(here, nx);
+    let turn = ((brg(nx, far) - brg(here, nx)) % 360 + 540) % 360 - 180; if (G.pxDist(here, tr.dest) < 12) turn = 0;
+    const hp = HORSES.present(S), downed = hp && HORSES.downed(S), riding = HORSES.riding(S);
+    let say = null;
+    try { if (S.follower && typeof BONDS !== "undefined") { const e = BONDS.bond(S, S.follower.id)?.bond?.log?.[0]; if (e && G.now() - e.t < 20 && e.w) say = { who: e.w, line: e.dog ? e.l : `"${BONDS.T(e.l)}"` }; } } catch { /* no line */ }
+    const wx = WEVENTS.weather(here);
+    return { id: S.id || S.name, origin: tr.origin, dest: tr.destName, timeText: fmtMin(mins), p: tr.boat ? Math.max(0, Math.min(1, 1 - mins / Math.max(mins, tr.total || 1))) : f,
+      stops: fptStops.list.map((s) => ({ ...s, passed: s.f <= f })), ground, pace: tr.boat || tr.carriage ? "" : pace, slow: sp < 0.6,
+      riding: riding && !tr.carriage && !tr.boat, canRide: !tr.carriage && !tr.boat && hp && !downed, horse: hp ? { name: S.horse.name, coat: HORSES.coat(S.horse.coat)[2] } : null, downed,
+      heavy: G.overweight(S), carriage: !!tr.carriage, boat: !!tr.boat, ship: tr.ship, follow: !!tr.follow, weather: wx && wx.id !== "clear" ? wx.name : "",
+      sky: typeof SKY !== "undefined" ? SKY.state(here) : null, heading, turn, destBear: tr.dest ? brg(here, tr.dest) : null, look: myLook(),
+      company: typeof PARTY !== "undefined" ? PARTY.companions(S, party, others, here, (o) => otherPos(o), MP.NEAR_PX).map((c) => ({ name: c.name, player: !!c.player, riding: !!c.riding })) : [],
+      pet: S.pet ? (S.pet.name || S.pet.id || "") : "", say, reduce: reduceMotion };
   }
   function renderTabs() {
     tabsEl.querySelectorAll(".tab").forEach((b) => {
