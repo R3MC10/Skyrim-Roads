@@ -915,6 +915,7 @@ const TB = (() => {
     const keep = fast() && !sess.done ? lines.filter((l, i) => l.me || i === lines.map((x) => !!x.them).lastIndexOf(true)) : lines;   // Fast: your moves and the foe's last blow
     const v = Object.create(f);
     v.log = keep.length ? keep : lines; v.hp0 = ui.lastHp ?? f.hp0; v.ehp0 = ui.lastEhp ?? f.ehp0; v.won = sess.done ? f.won : undefined;
+    v.tbWait = sess.done ? 0 : Math.max(0, (sess.waves || 1) - (sess.wave || 1));   // [fightpos] the foes still to come stand behind this one
     v.tbTall = true; v.tbAspect = typeof COMBAT2 !== "undefined" && COMBAT2.aspect ? COMBAT2.aspect() : null; v.tbMid = !sess.done; v.tbHud = typeof COMBAT2 !== "undefined" && COMBAT2.on(); v.tbHpMax = G.maxHealth(f.s); v.tbEhpMax = sess.ehpMax;   // fightart: stay standing between turns, bars against full health
     ui.lastHp = lines[lines.length - 1].hp; ui.lastEhp = lines[lines.length - 1].ehp;
     return FIGHTART.placeholder(v, f.s);

@@ -3,6 +3,44 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b263-raceheads", build: 263, date: "25 Nov 2026", title: "Every race has its own painted face", items: [
+      "Imperials, Bretons, Redguards, Altmer, Bosmer and Orcs now have their own painted heads, for men and women, in fights and in character creation. Every race in the game has one now.",
+      "Switching race in character creation no longer flashes a Nord head for a moment: the hero appears once the right face is ready.",
+      "On a phone, your hero's head and a raised sword stay below the turn and Face buttons instead of hiding behind them.",
+    ] },
+    { id: "b262-phonelayout", build: 262, date: "25 Nov 2026", title: "Tidier screens on phones", items: [
+      "On a phone, the Area tab lists places in full-width rows: icon, name and whether it's open. Open places come first; shut ones fold away under \"Closed\". Two columns only when every name fits.",
+      "On a phone, the Company tab shows your longhouse right under the Party / Company / Friends / Realm row. Messages, trades and chat fold away under More.",
+      "On a phone, the Items menu has one Sort button (pick what to sort by) next to the up/down switch, instead of a row of tiny buttons.",
+      "On a phone, holding a finger on an item opens its details in a panel at the bottom of the screen. The list stays where it was; tap elsewhere to close it.",
+      "On a PC map, the floating Gathering card and the world event cards on the left no longer cover each other: the cards stop above it and scroll.",
+    ] },
+    { id: "b261-notify2", build: 261, date: "25 Nov 2026", title: "Promotions and tips back in their place", items: [
+      "When you're promoted on a side, the banner shows again (it was quietly swallowed before).",
+      "The tips for new players no longer sit on top of the dungeon's route buttons: they move below them, or wait until there's room.",
+    ] },
+    { id: "b260-crafticons", build: 260, date: "25 Nov 2026", title: "Painted crafting icons", items: [
+      "Iron, steel and dwarven ingots, leather, firewood and refined moonstone have painted icons in your pack and at the forge.",
+      "So do six alchemy and cooking ingredients: blue mountain flower, lavender, wheat, salt, garlic and fire salts.",
+    ] },
+    { id: "b259-movefx2", build: 259, date: "25 Nov 2026", title: "Every blow and shout has its own look", items: [
+      "Every weapon swings its own way now: a sword leaves a diagonal slash, a greatsword a wide sweep, axes and warhammers chop down from above, maces and clubs crack in with a dust ring, daggers stab twice and spears drive straight through.",
+      "Power attacks wind up with a gleam along the blade, hit bigger and leave a gouge or cracks in the ground. A critical flashes white, a sneak attack leaves a dark second cut, and an enchanted weapon sprays fire, frost or sparks.",
+      "Combos show too: Shatter bursts into ice, Overload forks with lightning, Steam puffs up and an opening rings gold.",
+      "Shield bash knocks stars around the foe's head. Every shout rolls out of your mouth in its own colour (Unrelenting Force kicks up a dust wave, Fire Breath is a stream of flame), and every race power, werewolf move and Vampire Lord power has its own look.",
+    ] },
+    { id: "b258-fightpos", build: 258, date: "25 Nov 2026", title: "Everyone stands in the right place", items: [
+      "In a fight your party, followers and summons now stand in neat rows behind you, all of them on screen, even a full party of 8 on a phone. Before, some stood off the edge of the screen.",
+      "Foes still waiting their turn now stand behind the one you're fighting, so you can see what's coming.",
+      "Big foes like dragons and giants keep their size but always fit on screen, and the foe's health bar sits over its head, even over a dragon's.",
+      "When a party member swings at the foe, they step up to it and then go back to their place.",
+      "The ring under the one the foe is about to hit is now under the right person.",
+    ] },
+    { id: "b257-qaside2b", build: 257, date: "25 Nov 2026", title: "Halls, inns and festivals in Polish", items: [
+      "Fixed: a festival in a hold's capital said the place twice, like \"Falkreath, Falkreath\".",
+      "Fixed: in Polish, the Hall of the North's sizes and shared chest, buying a house or a hall plot, the neighbours list, renting a room and writing a bard's verse are translated.",
+      "Fixed: in Polish, festival times, the player search box and the \"% there\" under your skills are translated.",
+    ] },
     { id: "b256-qacore2", build: 256, date: "25 Nov 2026", title: "Title screen in Polish and the level-up tip", items: [
       "Fixed: in Polish, the title screen, How to Play, Credits, Settings and the Updates page still had lines in English.",
       "Fixed: in Polish, every perk description, the hirelings' descriptions and the patch-note dates were still in English.",

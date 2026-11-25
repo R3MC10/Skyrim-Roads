@@ -222,11 +222,18 @@ const SKILLUP = (() => {
   install();
   /* polish.js asks before it shows its old banner: skill-ups and level-ups are ours. Ones we already showed are dropped;
      ones from elsewhere (a skill book, a trainer) get a toast here with the bar from the save. */
+  /* [notify-2] is this banner a character level-up or a skill rise (ours), or something else that only shares the kind
+     (a side's "Promoted: ..." rank, "+5 rank XP")? Others go back to polish.js and show as normal banners. Pure. */
+  function ours(kind, big) {
+    if (kind === "level") return /\blevel (\d+)\b/i.test(String(big)) || /^\s*\d+\s*$/.test(String(big));
+    if (kind === "skill") return String(big).split(" · ").some((p) => /^[A-Z][A-Za-z'\- ]*? \d+$/.test(p.trim()));
+    return false;
+  }
   function claim(kind, big) {
-    if (!live || (kind !== "skill" && kind !== "level")) return false;
+    if (!live || !ours(kind, big)) return false;
     const S = window.__dbg?.save?.();
     if (kind === "level") {
-      const lvl = +(String(big).match(/(\d+)/) || [])[1]; if (!lvl) return true;
+      const lvl = +(String(big).match(/(\d+)/) || [])[1]; if (!lvl) return false;
       if (!fresh(`level|${lvl}`)) add([{ kind: "level", name: "level", lvl, segs: [{ a: 0, b: S && S.level === lvl ? frac(0, S.charXp || 0, charNeed(lvl), Infinity) : 0, lvl, cross: false }], minor: false }]);
       return true;
     }
@@ -239,5 +246,5 @@ const SKILLUP = (() => {
     return true;
   }
 
-  return { frac, run, dur, merge, enqueue, skillItem, pickCreeps, others, spot, diff, claim, dock, add, skip, install, PL, get queue() { return queue; }, get current() { return cur; } };
+  return { frac, run, dur, merge, enqueue, skillItem, pickCreeps, others, spot, diff, ours, claim, dock, add, skip, install, PL, get queue() { return queue; }, get current() { return cur; } };
 })();

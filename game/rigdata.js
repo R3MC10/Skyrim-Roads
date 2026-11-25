@@ -107,6 +107,12 @@ const RIGDATA = (() => {
     dunmerm: { w: 295, h: 356, p: [116, 309], nw: 110, cut: 322 }, dunmerf: { w: 354, h: 554, p: [157, 347], nw: 110, cut: 361 },
     khajiitm: { w: 303, h: 373, p: [104, 305], nw: 110, cut: 318 }, khajiitf: { w: 377, h: 597, p: [158, 372], nw: 110, cut: 385 },
     argonianm: { w: 362, h: 374, p: [123, 275], nw: 110, cut: 289 }, argonianf: { w: 407, h: 444, p: [155, 310], nw: 110, cut: 323 },
+    imperialm: { w: 254, h: 345, p: [80, 294], nw: 110, cut: 306 }, imperialf: { w: 328, h: 403, p: [144, 299], nw: 110, cut: 312 },
+    bretonm: { w: 264, h: 331, p: [93, 280], nw: 110, cut: 294 }, bretonf: { w: 323, h: 480, p: [135, 302], nw: 110, cut: 315 },
+    redguardm: { w: 258, h: 326, p: [102, 256], nw: 110, cut: 268 }, redguardf: { w: 307, h: 449, p: [126, 282], nw: 110, cut: 294 },
+    altmerm: { w: 299, h: 376, p: [137, 266], nw: 110, cut: 278 }, altmerf: { w: 383, h: 461, p: [195, 313], nw: 110, cut: 326 },
+    bosmerm: { w: 280, h: 378, p: [109, 297], nw: 110, cut: 310 }, bosmerf: { w: 334, h: 426, p: [162, 305], nw: 110, cut: 318 },
+    orcm: { w: 293, h: 376, p: [115, 280], nw: 110, cut: 292 }, orcf: { w: 279, h: 375, p: [109, 268], nw: 110, cut: 282 },
   };
   const headFile = (k) => `rig-head-${k}`;
   const file = (set, part) => `rig-${set}-${part}`;

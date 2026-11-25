@@ -1,4 +1,4 @@
-"""Move effects on screen: spells play their own painted effect, bows and crossbows shoot a real arrow or bolt
+"""Move effects on screen: spells, weapon blows and shouts play their own painted effect, bows and crossbows shoot a real arrow or bolt
 (you, an archer foe, the Dwarven ballista, a follower). Checks there are no page errors on phone and PC sizes.
 Usage: python3 movefx_ui.py PORT   (set SHOTS=/some/dir to save a picture of each case; nothing is saved by default)"""
 import asyncio, sys, os
@@ -38,6 +38,15 @@ SHOTS_CASES = [  # name, synth opts, ms to advance before the picture
     ("foe_archer", {"name": "Bandit archer", "them": "Bandit archer hits 9"}, 640),
     ("ballista", {"name": "Dwarven ballista", "them": "Dwarven ballista hits 19"}, 300),
 ]
+MOVE_CASES = [  # name, synth opts, the effect key it should play, ms to advance before the picture
+    ("sword", {"wt": "sword", "me": "Attack: 20", "a": "attack"}, "atk:sword", 440),
+    ("dagger", {"wt": "dagger", "me": "Attack: 14", "a": "attack"}, "atk:dagger", 330),
+    ("power_greatsword", {"wt": "greatsword", "me": "Power attack: 40", "a": "power_attack"}, "pow:greatsword", 640),
+    ("power_warhammer", {"wt": "warhammer", "me": "Power attack: 44 (critical)", "a": "power_attack"}, "pow:warhammer", 700),
+    ("bash", {"wt": "sword", "me": "Shield bash: 8, staggers", "a": "bash"}, "bash", 400),
+    ("shout_force", {"wt": "sword", "me": "Unrelenting Force: 12", "a": "shout:unrelenting_force"}, "shout:unrelenting_force", 560),
+    ("shout_fire", {"wt": "sword", "me": "Fire Breath: 30", "a": "shout:fire_breath"}, "shout:fire_breath", 560),
+]
 async def main():
     if SHOTS: os.makedirs(SHOTS, exist_ok=True)
     async with async_playwright() as p:
@@ -65,6 +74,13 @@ async def main():
                 n = await pg.evaluate("+(document.querySelector('#mfbox .fscene canvas')?.dataset.shots || 0)")
                 ok(n >= 1, f"{vw}: {name} fires a projectile ({n})")
                 if SHOTS and vw < 500: await el.screenshot(path=os.path.join(SHOTS, f"{name}.png"))
+            for name, o, key, t in MOVE_CASES:
+                js = "{" + ",".join(f"{k}:{v!r}" for k, v in o.items()) + "}"
+                await pg.evaluate(f"()=>__mf.mount(__mf.synth({js}), {w})")
+                el = await pg.query_selector("#mfbox .fscene")
+                await pg.evaluate(f"FIGHTART.advance({t})")
+                ok(await pg.evaluate("document.querySelector('#mfbox .fscene canvas')?.dataset.mfx || ''") == key, f"{vw}: {name} plays {key}")
+                if SHOTS and vw < 500: await el.screenshot(path=os.path.join(SHOTS, f"move_{name}.png"))
             ok(await pg.evaluate("FIGHTART.advance(3000).length >= 0"), f"{vw}: scenes step on without errors")
             await ctx.close()
         ok(not errs, "no page errors: " + "; ".join(errs[:3]))

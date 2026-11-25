@@ -118,3 +118,12 @@ Object.assign(I18N_EXTRA.words, {
   "The race card shows the painted bust of the race instead of the little drawn figure.": "Karta rasy pokazuje malowane popiersie rasy zamiast małej rysowanej postaci.",
 });
 // [/chargenrig]
+
+// [raceheads] patch note
+Object.assign(I18N_EXTRA.words, {
+  "Every race has its own painted face": "Każda rasa ma własną malowaną twarz",
+  "Imperials, Bretons, Redguards, Altmer, Bosmer and Orcs now have their own painted heads, for men and women, in fights and in character creation. Every race in the game has one now.": "Cesarscy, Bretoni, Redgardzi, Altmerowie, Bosmerowie i Orkowie mają teraz własne malowane głowy, dla mężczyzn i kobiet, w walce i w tworzeniu postaci. Każda rasa w grze ma już swoją.",
+  "Switching race in character creation no longer flashes a Nord head for a moment: the hero appears once the right face is ready.": "Zmiana rasy w tworzeniu postaci nie pokazuje już na chwilę głowy Norda: bohater pojawia się, gdy właściwa twarz jest gotowa.",
+  "On a phone, your hero's head and a raised sword stay below the turn and Face buttons instead of hiding behind them.": "Na telefonie głowa bohatera i uniesiony miecz zostają pod przyciskami obrotu i Twarzy, zamiast chować się za nimi.",
+});
+// [/raceheads]

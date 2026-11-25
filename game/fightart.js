@@ -556,8 +556,8 @@ const FIGHTART = (() => {
         } else if (k === "potion" || (!k && /^drinks/i.test(me))) {
           const it = typeof D !== "undefined" && D.ITEMS?.[arg]; const res = it?.restore?.[0] || (/magicka/i.test(me) ? "magicka" : /stamina/i.test(me) ? "stamina" : "health");
           Object.assign(b, { move: "potion", fx: "potion", el: res, flask: res === "magicka" ? "#4a7ac8" : res === "stamina" ? "#4a9a5a" : "#c03a3a" });
-        } else if (k === "block" || (!k && /^raises guard|^shield bash/i.test(me))) {
-          b.move = /^shield bash/i.test(me) ? "bash" : "block"; st.guard = true;
+        } else if (k === "block" || k === "bash" || (!k && /^raises guard|^shield bash/i.test(me))) {   // [movefx2] a turn-by-turn bash (a: "bash") is a bash too, not a sword swing
+          b.move = k === "bash" || /^shield bash/i.test(me) ? "bash" : "block"; st.guard = true;
         } else if (k === "shout" || k === "power") {
           const fx = k === "shout" ? SHOUT_FX[arg] || "fus" : RACE_FX[arg] || "glow";
           Object.assign(b, { move: k === "shout" ? "shout" : "self", fx, el: arg === "frost_breath" || arg === "ice_form" ? "frost" : arg === "fire_breath" || arg === "dunmer" ? "fire" : null });
@@ -739,6 +739,7 @@ const FIGHTART = (() => {
       const refit = () => {
         if (!cv.isConnected || !cv.offsetWidth) return;
         vs = Math.max(1, cv.offsetWidth / W);
+        try { replace(); } catch (e) { /* not laid out yet: mount does it */ }   // [fightpos] the visible part of the stage may have changed
         const nk = kOf(cv);
         if (Math.abs(nk - k) / k > 0.04) { k = nk; cv.width = Math.round(W * k); cv.height = Math.round(Hh * k);
           try { if (!MANUAL) draw(performance.now()); } catch { /* the next frame draws it */ } }
@@ -764,15 +765,66 @@ const FIGHTART = (() => {
       return ln?.st ? { me: ln.st.me || {}, foe: ln.st.foe || {} } : NOST;
     }
     const turned = !!f.endWon;
-    const groundY = Hh * 0.8, s = Hh / 150, fx0 = W * 0.72;
-    /* [OURS] on a tall phone stage the figures are big next to the width: step you in from the left edge so the allies
-       standing behind you (and your own wind-up) stay on screen */
-    const hasAllies = (rec.hero.list || []).length > 0 || (rec.hero.allies || 0) > 0, hx0 = Math.max(W * 0.27, Math.min(W * 0.4, (hasAllies ? 60 : 24) * s));
+    const groundY = Hh * 0.8, s = Hh / 150;
     const foeK = rec.foe, fSize = SIZE[foeK] || 1, reach = REACH[foeK] || 1, isPerson = PERSON.has(foeK);
-    const foeChest = groundY - 34 * s * fSize, heroChest = groundY - 36 * s;
+    const heroChest = groundY - 36 * s;
+    /* [fightpos] where everyone stands comes from fightpos.js: you, up to 7 other players plus followers, thralls and
+       summons in depth rows behind you, the foe across the gap (big ones shrink only when they would not fit) and the
+       foes still waiting their turn behind it, all inside the part of the stage that is really on screen (the phone's
+       immersive screen crops its sides). The health plate, pop-ups and the target ring read the same spots. */
+    const ALLY_MAX = 11, alist0 = rec.hero.list || [], groundL = alist0.filter((a) => !FLYERS.has(a.kind)).slice(0, ALLY_MAX), flyers = alist0.filter((a) => FLYERS.has(a.kind)).slice(0, 1);
+    const nGen = Math.max(0, Math.min(ALLY_MAX, rec.hero.allies) - groundL.length - flyers.length);
+    const slots = [...groundL, ...Array.from({ length: Math.min(ALLY_MAX - groundL.length, nGen) }, () => ({ kind: "soldier" }))];
+    const FP = typeof FIGHTPOS !== "undefined" ? FIGHTPOS : null, nWait = Math.max(0, rec.f.tbWait | 0);
+    const hasAllies = slots.length > 0 || flyers.length > 0;
+    let LAY = null, band = [0, W], fx0 = W * 0.72, hx0 = Math.max(W * 0.27, Math.min(W * 0.4, (hasAllies ? 60 : 24) * s)), FSC = 1, foeChest = groundY - 34 * s * fSize;
+    const slotOf = new Map();   // an ally (its place in slots) -> its spot
+    function bandOf() {   // the stage's on-screen part, in stage units (a parent that clips it, or the window)
+      if (!cv.isConnected || typeof getComputedStyle !== "function") return [0, W];
+      const rc = cv.getBoundingClientRect(); if (!rc.width) return [0, W];
+      let lo = 0, hi = typeof innerWidth === "number" && innerWidth ? innerWidth : rc.right;
+      for (let e = cv.parentElement; e && e !== document.body; e = e.parentElement) {
+        if (getComputedStyle(e).overflowX === "visible") continue;
+        const er = e.getBoundingClientRect(); lo = Math.max(lo, er.left); hi = Math.min(hi, er.right);
+      }
+      const l = Math.max(0, ((lo - rc.left) / rc.width) * W), r = Math.min(W, ((hi - rc.left) / rc.width) * W);
+      return r - l > W * 0.5 ? [Math.round(l), Math.round(r)] : [0, W];
+    }
+    function relayout() {
+      if (!FP) return false;
+      const nb = bandOf(); if (LAY && Math.abs(nb[0] - band[0]) < 3 && Math.abs(nb[1] - band[1]) < 3) return false;
+      band = nb;
+      const MF = typeof MOUNTFIGHT !== "undefined" && typeof HORSEBACK !== "undefined" ? MOUNTFIGHT : null;
+      const al = slots.map((a, i) => ({ name: "#" + i, kind: a.kind, ride: !!(MF && a.kind === "mate" && a.name && MF.allyHorse(f, a.name)) }));
+      for (const a of flyers) al.push({ name: "#fly", kind: a.kind });
+      LAY = FP.layout({ W, Hh, l: band[0], r: band[1], groundY, ride: !!rec.horse, allies: al, foe: { kind: foeK }, waiting: nWait });
+      hx0 = LAY.hero.x; fx0 = LAY.foe.x; FSC = LAY.foe.fs; foeChest = groundY - 34 * s * fSize * FSC;
+      slotOf.clear();
+      for (const p of LAY.allies) { const i = +p.name.slice(1); slotOf.set(i, p); p.name = slots[i]?.name || p.name; }   // the target ring finds them by name
+      for (const p of LAY.flyers) p.name = flyers[0]?.name || p.name;
+      FP.publish(cv, LAY);
+      return true;
+    }
+    const replace = () => { if (relayout() && typeof COMBAT2 !== "undefined" && COMBAT2.place) { const tb = cv.closest && cv.closest("#tbf"); if (tb) try { COMBAT2.place(tb, true); } catch (e) { /* the plate stays where it was */ } } };
+    replace();
     // [OURS] foe rigs (foerig.js): the foe is a little skeleton that breathes, winds up, flinches, staggers and falls
     const RIG = typeof FOERIG !== "undefined" && FOERIG.on() ? FOERIG.ctl(foeK, rec.foeName, { look: foeK === "player" ? matePerson(rec.foeLook) : null, foeLook: rec.foeLook, arch: typeof FOEGROUPS !== "undefined" ? FOEGROUPS.look(rec.f?.e) : null }) : null;
     const RIGKIT = { weapon, gearTorso, foeFig, person, H: ART.H }, RIGST = { t: 0, clip: null, u: 0, hitU: null, pose: null, pic: null, picH: 0, filter: null, dragon: null, kit: RIGKIT, jitter: false, still: false };
+    // [fightpos] the foes waiting their turn: the same kind of foe, idle, one rig shared by all of them
+    const RIGW = RIG && nWait ? FOERIG.ctl(foeK, rec.foeName, { look: foeK === "player" ? matePerson(rec.foeLook) : null, foeLook: rec.foeLook, arch: typeof FOEGROUPS !== "undefined" ? FOEGROUPS.look(rec.f?.e) : null }) : null;
+    const RIGWST = { ...RIGST, still: !!rm }, waitP = idlePose({}, null);
+    function drawWaiting(tt) {
+      const pic0 = foeK !== "player" && typeof ASSETS !== "undefined" ? ASSETS.img(ASSETS.foeKey(rec.foeName, foeK)) : null;
+      const pic = pic0 && typeof RIGLOOK !== "undefined" ? RIGLOOK.graded(pic0) : pic0, picH = (foeK === "dragon" ? 120 : 66) * Math.min(1.8, fSize);
+      curFoeLook = rec.foeLook; curArchLook = typeof FOEGROUPS !== "undefined" ? FOEGROUPS.look(rec.f?.e) : null; curDragon = null;
+      for (const w of LAY.waiting) {
+        wg.save(); wg.translate(w.x, w.y); wg.scale(-s * w.sc, s * w.sc); wg.globalAlpha = 0.86;
+        if (RIGW) { RIGWST.t = rm ? 0 : tt + w.x * 0.013; RIGWST.pose = isPerson || foeK === "player" ? waitP : null; RIGWST.pic = pic; RIGWST.picH = pic ? picH : 0; RIGW.draw(wg, RIGWST); }
+        else if (pic) { const wU = picH * pic.naturalWidth / pic.naturalHeight; wg.drawImage(pic, -wU / 2, -picH, wU, picH); }
+        else foeFig(wg, foeK, 0, tt + w.x * 0.013, isPerson ? waitP : null);
+        wg.restore();
+      }
+    }
     const pmul = rm ? 0.4 : 1;
     // [arrowfx] bows and crossbows shoot a painted arrow or bolt (arrowfx.js); [movefx] every spell has its own painted effect (movefx.js)
     const lowQ = !!(FS && FS.quality && FS.quality() === "low");
@@ -1141,43 +1193,40 @@ const FIGHTART = (() => {
       // a rune waiting on the ground, a portal
       if (st.rune) rune(fx0, groundY, COL[st.rune]?.[0] || "#ffb347", tt);
       if (b && !mOwn && b.fx === "rune" && b.who === "me" && u > 0.4) rune(fx0, groundY, COL[b.el]?.[0] || "#ffb347", tt);
-      if (b && !mOwn && b.fx === "summon" && b.who === "me" && u > 0.2) portal(hx0 + 46 * s, groundY, Math.min(1, (u - 0.2) * 3) * (u > 0.85 ? (1 - u) / 0.15 : 1), tt);
+      if (b && !mOwn && b.fx === "summon" && b.who === "me" && u > 0.2) portal(Math.min(hx0 + 46 * s, fx0 - 40 * s), groundY, Math.min(1, (u - 0.2) * 3) * (u > 0.85 ? (1 - u) / 0.15 : 1), tt);
+      // [fightpos] the foes still waiting their turn stand behind the one you fight (dimmer, a little smaller), idle
+      if (LAY && LAY.waiting.length) drawWaiting(tt);
       // allies behind you: each kind has its own figure (allyFig); dragons fly overhead
-      // up to 7 heroes stand with you (parties of 8): one line of 3, or two staggered lines when there are more
-      const ALLY_MAX = 7, mateTags = [], alist = rec.hero.list || [], groundL = alist.filter((a) => !FLYERS.has(a.kind)).slice(0, ALLY_MAX), flyers = alist.filter((a) => FLYERS.has(a.kind)).slice(0, 1);
-      const nGen = Math.max(0, Math.min(ALLY_MAX, rec.hero.allies) - groundL.length - flyers.length);
-      const slots = [...groundL, ...Array.from({ length: Math.min(ALLY_MAX - groundL.length, nGen) }, () => ({ kind: "soldier" }))];
+      // up to 7 other players plus followers stand with you, in depth rows from fightpos.js (the back rows drawn first)
+      const mateTags = [];
       const allyLunge0 = b && b.who === "me" && b.ally && u > 0.5 && u < 0.85 ? Math.sin((u - 0.5) / 0.35 * Math.PI) : 0;
       const AA = typeof ALLYANIM !== "undefined" ? ALLYANIM : null, named = !!(b && b.allyActs && b.allyActs.length), hitU0 = m && m.hits.length ? m.hits[0] : 0.5;
       const allyLunge = named ? 0 : allyLunge0;   // [OURS] named allies play their own clip (allyanim.js); the rest step in together as before
       const animOf = (a) => AA && a.name ? AA.anim(b, a.name, u, hitU0, beats.downEnd) : null;
       if (slots.length) { const tag = slots.map((a) => { const x = animOf(a); return x ? x.clip : "idle"; }).join(","); if (cv.dataset.allyClips !== tag) cv.dataset.allyClips = tag; }   // which clip each ally is on (screen tests)
-      const two = slots.length > 3, frontN = two ? Math.ceil(slots.length / 2) : slots.length;
-      const rowsA = two ? [slots.slice(frontN), slots.slice(0, frontN)] : [slots];   // the back line is drawn first
-      rowsA.forEach((row, ri) => {
-        const back = two && ri === 0, crowd = slots.length > 5 ? 0.86 : 1, rs = (back ? 0.8 : 1) * crowd, lift = back ? 9 : 0;
-        const backs = []; row.forEach((a, i) => backs.push(i ? backs[i - 1] + ((ALLY_W[a.kind] || 20) + (ALLY_W[row[i - 1].kind] || 20)) / 2 * rs : 26 + (back ? 10 : 0)));
-        const squeeze = backs.length ? Math.min(1, (back ? 86 : 76) / backs[backs.length - 1]) : 1;   // keep the whole line inside the scene
-        row.forEach((a, i) => {
-          const ax = hx0 - (backs[i] * squeeze - allyLunge * 14) * s, ay = groundY + 2 - i * 2 - lift * s, sc2 = s * rs;
-          if (a.name && !two && (a.kind === "mate" || a.kind === "follower" || a.kind === "valor" || a.kind === "dog")) mateTags.push([a.name, ax * z + ox + zcx - zcx * z, (ay - 66 * sc2) * z + oy + zcy - zcy * z]);
-          const an = animOf(a), al2 = an && an.clip === "attack" && !an.shoot ? Math.sin(Math.PI * Math.min(1, an.u / 0.8)) * (an.w ?? 1) : 0;
-          const ahc = a.kind === "mate" && typeof MOUNTFIGHT !== "undefined" && typeof HORSEBACK !== "undefined" && !(an && an.clip === "down") ? MOUNTFIGHT.allyHorse(f, a.name) : null;   // a teammate in the saddle (mountfight.js)
-          if (AFX && an && an.shoot && an.u >= 0.55 && b && phase === "play" && !(b.shotBy && b.shotBy.includes(a.name))) {   // [arrowfx] a follower or party archer looses at the foe
-            (b.shotBy = b.shotBy || []).push(a.name);
-            AFX.fire(null, { x0: ax + 16 * sc2, y0: ay - (ahc ? 74 : 44) * sc2, x1: fx0, y1: foeChest, dur: 0.24, sp: ARROWFX.spec({ wt: /crossbow/.test(a.look?.wt || "") ? "crossbow" : "bow" }), miss: false, gore: !!GS });
-          }
-          wg.save(); wg.translate(ax + al2 * 4 * s, ay); wg.scale(sc2, sc2); if (back) wg.globalAlpha = 0.92;
-          if (ahc) { const by = -30 - (HORSEBACK.riderBob ? HORSEBACK.riderBob(ahc, tt + i) : 0); wg.save(); wg.translate(0, by); allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look, anim: an, ride: true, rideLayer: "far" }); wg.restore(); }
-          if (ahc) { HORSEBACK.drawHorse(wg, ahc, 0, tt + i, "back"); HORSEBACK.drawHorse(wg, ahc, 0, tt + i, "front"); wg.translate(0, -30 - (HORSEBACK.riderBob ? HORSEBACK.riderBob(ahc, tt + i) : 0)); }   // [riding] the horse first, the rider on it
-          allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look, anim: an, ride: !!ahc });
-          wg.restore();
-          const sp = SPARK[a.kind]; if (sp && Math.random() < (two ? 0.09 : 0.18) * pmul) spawn(sp[1], sp[0], ax + (Math.random() - 0.5) * 18 * s, ay + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 14 * s, -20 * s, 0.7, 2.2, 0);
-        });
-      });
-      if (two) { const named = slots.filter((a) => a.kind === "mate").length; mateTags.push([L(`⚑ ${named ? `${named} of your party` : `${slots.length} allies`} with you`), (hx0 - 50 * s) * z + ox + zcx - zcx * z, (groundY - 78 * s) * z + oy + zcy - zcy * z]); }   // a big party: one label instead of a pile of names
+      const two = slots.length > 3;
+      const order = slots.map((a, i) => ({ a, i, p: slotOf.get(i) || { x: hx0 - (26 + i * 20) * s, y: groundY, sc: 1, row: 0 } })).sort((p, q) => q.p.row - p.p.row || p.p.x - q.p.x);
+      const foeFront = ((FP && FP.FOE[foeK]) || [0, 15])[1] * FSC;
+      for (const { a, i, p } of order) {
+        const an = animOf(a), al2 = an && an.clip === "attack" && !an.shoot ? Math.sin(Math.PI * Math.min(1, an.u / 0.8)) * (an.w ?? 1) : 0;
+        // a melee blow: they step out of their row up to the foe, then back to their spot
+        const tx = fx0 - (foeFront + 16) * s, sc2 = s * (p.sc + (1 - p.sc) * al2), ax = p.x + Math.max(0, tx - p.x) * al2 + allyLunge * 14 * s, ay = p.y + (groundY - p.y) * al2;
+        if (a.name && !two && (a.kind === "mate" || a.kind === "follower" || a.kind === "valor" || a.kind === "dog")) mateTags.push([a.name, ax * z + ox + zcx - zcx * z, (ay - 66 * sc2) * z + oy + zcy - zcy * z]);
+        const ahc = a.kind === "mate" && typeof MOUNTFIGHT !== "undefined" && typeof HORSEBACK !== "undefined" && !(an && an.clip === "down") ? MOUNTFIGHT.allyHorse(f, a.name) : null;   // a teammate in the saddle (mountfight.js)
+        if (AFX && an && an.shoot && an.u >= 0.55 && b && phase === "play" && !(b.shotBy && b.shotBy.includes(a.name))) {   // [arrowfx] a follower or party archer looses at the foe
+          (b.shotBy = b.shotBy || []).push(a.name);
+          AFX.fire(null, { x0: ax + 16 * sc2, y0: ay - (ahc ? 74 : 44) * sc2, x1: fx0, y1: foeChest, dur: 0.24, sp: ARROWFX.spec({ wt: /crossbow/.test(a.look?.wt || "") ? "crossbow" : "bow" }), miss: false, gore: !!GS });
+        }
+        wg.save(); wg.translate(ax, ay); wg.scale(sc2, sc2); if (p.row && !al2) wg.globalAlpha = 0.94;
+        if (ahc) { const by = -30 - (HORSEBACK.riderBob ? HORSEBACK.riderBob(ahc, tt + i) : 0); wg.save(); wg.translate(0, by); allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look, anim: an, ride: true, rideLayer: "far" }); wg.restore(); }
+        if (ahc) { HORSEBACK.drawHorse(wg, ahc, 0, tt + i, "back"); HORSEBACK.drawHorse(wg, ahc, 0, tt + i, "front"); wg.translate(0, -30 - (HORSEBACK.riderBob ? HORSEBACK.riderBob(ahc, tt + i) : 0)); }   // [riding] the horse first, the rider on it
+        allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look, anim: an, ride: !!ahc });
+        wg.restore();
+        const sp = SPARK[a.kind]; if (sp && Math.random() < (two ? 0.09 : 0.18) * pmul) spawn(sp[1], sp[0], ax + (Math.random() - 0.5) * 18 * s, ay + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 14 * s, -20 * s, 0.7, 2.2, 0);
+      }
+      if (two) { const named = slots.filter((a) => a.kind === "mate").length, tg = LAY && LAY.tag ? LAY.tag : { x: hx0 - 50 * s, y: groundY - 78 * s }; mateTags.push([L(`⚑ ${named ? `${named} of your party` : `${slots.length} allies`} with you`), tg.x * z + ox + zcx - zcx * z, tg.y * z + oy + zcy - zcy * z]); }   // a big party: one label instead of a pile of names
       for (const a of flyers) {   // a dragon circles above and dives in with fire when it strikes
-        const cx = hx0 - 10 * s + Math.sin(tt * 0.5) * 30 * s + allyLunge * (fx0 - hx0) * 0.35, cy = groundY - (44 - allyLunge * 10) * s + Math.sin(tt * 1.3) * 4 * s;
+        const fp0 = LAY && LAY.flyers[0], cx = Math.max(band[0] + 40 * s, (fp0 ? fp0.x : hx0 - 10 * s) + Math.sin(tt * 0.5) * 30 * s) + allyLunge * (fx0 - hx0) * 0.35, cy = (fp0 ? fp0.y : groundY - 44 * s) + allyLunge * 10 * s + Math.sin(tt * 1.3) * 4 * s;
         wg.save(); wg.translate(cx, cy); wg.scale(s, s); allyFig(wg, a.kind, { lunge: allyLunge, t: tt }); wg.restore();
         if (allyLunge > 0.3) for (let k = 0; k < 3; k++) if (Math.random() < pmul) spawn(0, ["#fff2c0", "#ffb347", "#e8653a"][k], cx + 40 * s, cy - 40 * s, (fx0 - cx) * (1.2 + Math.random() * 0.6), (groundY - 40 * s - cy) * (1.1 + Math.random() * 0.5), 0.6, 4, 0);
         if (a.name) mateTags.push([a.name, cx * z + ox + zcx - zcx * z, (cy - 50 * s) * z + oy + zcy - zcy * z]);
@@ -1185,8 +1234,10 @@ const FIGHTART = (() => {
       // your summon: the spectral wolf, a Dremora, an atronach
       const liveSum = f.tbMid && f.summonTurns > 0 && f.summonId ? summonKind(f.summonId, f.summonName) : null;   // a turn-by-turn fight: your summon stays in view between turns
       if ((st && b && b.wolf) || (b && b.fx === "summon" && b.who === "me" && u > 0.5) || liveSum) {
-        const lunge = wolfT < 1 ? Math.sin(wolfT * Math.PI) : 0, sk = (b && b.st && b.st.summon) || st.summon || liveSum || "familiar", sx = hx0 + (34 + lunge * 50) * s;
-        wg.save(); wg.translate(sx, groundY); wg.scale(s, s); allyFig(wg, sk, { lunge, t: tt }); wg.restore();
+        const lunge = wolfT < 1 ? Math.sin(wolfT * Math.PI) : 0, sk = (b && b.st && b.st.summon) || st.summon || liveSum || "familiar";
+        // [fightpos] one row back, just ahead of you and short of the foe; it bounds forward when it strikes
+        const sx0 = Math.min(hx0 + 34 * s, fx0 - (foeFront + 24) * s), sx = sx0 + lunge * Math.max(0, Math.min(50 * s, fx0 - (foeFront + 12) * s - sx0)), sy = groundY - (LAY ? 7 * s * (1 - lunge) : 0), ss = s * (LAY ? 0.9 + 0.1 * lunge : 1);
+        wg.save(); wg.translate(sx, sy); wg.scale(ss, ss); allyFig(wg, sk, { lunge, t: tt }); wg.restore();
         const sp = SPARK[sk]; if (sp && Math.random() < 0.25 * pmul) spawn(sp[1], sp[0], sx + (Math.random() - 0.5) * 16 * s, groundY + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 12 * s, -24 * s, 0.6, 2.2, 0);
       }
       // you
@@ -1245,11 +1296,11 @@ const FIGHTART = (() => {
       // the foe (faces left)
       wg.save();
       const fleeing = over && won && turned ? fallE : 0;
-      wg.translate(fx0 - (foeP.dx - foeKnock - fdg * 18) * s + fleeing * W * 0.4, groundY + (foeP.dy - fdg * 3) * s); wg.scale(-s, s);
+      wg.translate(fx0 - (foeP.dx - foeKnock - fdg * 18) * s + fleeing * W * 0.4, groundY + (foeP.dy - fdg * 3) * s); wg.scale(-s * FSC, s * FSC);
       if (fleeing) wg.globalAlpha = 1 - fleeing;
       const dk = foeDown ? deathK : null, dT = phase === "fall" ? phaseT : 9;
       if (dk && goreOn && !GS && (bleed[2] === "blood" || bleed[2] === "oil") && !["ash", "shatter", "fade"].includes(dk)) {   // a pool spreads under the body
-        wg.save(); wg.scale(-1 / s, 1 / s); wg.globalAlpha = 0.75; wg.fillStyle = bleed[1];
+        wg.save(); wg.scale(-1 / (s * FSC), 1 / (s * FSC)); wg.globalAlpha = 0.75; wg.fillStyle = bleed[1];
         const pr = Math.min(1, dT / 1.3) * 16 * s * Math.min(1.6, fSize), pxo = (dk === "launch" ? 26 : isPerson ? 30 : 4) * s * fallE;
         wg.beginPath(); wg.ellipse(pxo, 1 * s, pr * 1.4, pr * 0.32, 0, 0, 7); wg.fill(); wg.restore();
       }
@@ -1308,11 +1359,11 @@ const FIGHTART = (() => {
       } else drawFoe();
       wg.filter = "none";
       wg.restore();
-      if (GS) GS.drawMarks(wg, "foe", fx0 - (foeP.dx - foeKnock - fdg * 18) * s, foeChest, s * Math.min(1.6, fSize), ehpD / ehpMax, foeDown || fleeing > 0 || (curDragon?.air && !foeDown));   // streaks, stuck arrows, char
+      if (GS) GS.drawMarks(wg, "foe", fx0 - (foeP.dx - foeKnock - fdg * 18) * s, foeChest, s * FSC * Math.min(1.6, fSize), ehpD / ehpMax, foeDown || fleeing > 0 || (curDragon?.air && !foeDown));   // streaks, stuck arrows, char
       if (dk === "decap") {   // ...and the head flies, tumbling, and rolls to a stop
         const vy = -95, gr = 300, yMax = -6 - (NECK - 8), tl = (-vy + Math.sqrt(vy * vy + 2 * gr * yMax)) / gr, t = Math.min(dT, tl);
         const hxo = -t * 70 - (dT > tl ? Math.min(dT - tl, 0.4) * 30 : 0), hyo = Math.min(yMax, vy * t + 0.5 * gr * t * t), rot = t * 8 + (dT > tl ? Math.min(dT - tl, 0.4) * 5 : 0);
-        wg.save(); wg.translate(fx0, groundY); wg.scale(-s, s); wg.translate(hxo, hyo); wg.translate(0, NECK - 8); wg.rotate(rot); wg.translate(0, -(NECK - 8));
+        wg.save(); wg.translate(fx0, groundY); wg.scale(-s * FSC, s * FSC); wg.translate(hxo, hyo); wg.translate(0, NECK - 8); wg.rotate(rot); wg.translate(0, -(NECK - 8));
         wg.beginPath(); wg.rect(-300, NECK - 300, 600, 300); wg.clip(); drawFoe(); wg.filter = "none"; wg.restore();
       }
       // states on the foe: paralysis crackle, fear swirls, soul trap glow
@@ -1360,7 +1411,7 @@ const FIGHTART = (() => {
         g.fillStyle = "#1c2128"; g.fillText(ftx[i], fxs[i] + 1.5, fys[i] + 1.5); g.fillStyle = fcl[i]; g.fillText(ftx[i], fxs[i], fys[i]);
       }
       g.globalAlpha = 1;
-      for (const [nm, tx2, ty2] of mateTags) { const ts = tagSz(), tu = ts / 11; g.font = `600 ${ts.toFixed(2)}px "Barlow Semi Condensed", sans-serif`; const w = g.measureText(nm).width + 10 * tu, tx3 = Math.max(w / 2 + 2, Math.min(W - w / 2 - 2, tx2)), ty3 = Math.max(26 * tu, ty2); g.fillStyle = "rgba(14,15,18,0.72)"; g.fillRect(tx3 - w / 2, ty3 - 11 * tu, w, 15 * tu); g.fillStyle = "#c8f0c0"; g.fillText(nm, tx3, ty3 + 0.5); }   // party members' names, crisp in both styles
+      for (const [nm, tx2, ty2] of mateTags) { const ts = tagSz(), tu = ts / 11; g.font = `600 ${ts.toFixed(2)}px "Barlow Semi Condensed", sans-serif`; const w = g.measureText(nm).width + 10 * tu, tx3 = Math.max(band[0] + w / 2 + 2, Math.min(band[1] - w / 2 - 2, tx2)), ty3 = Math.max(26 * tu, ty2); g.fillStyle = "rgba(14,15,18,0.72)"; g.fillRect(tx3 - w / 2, ty3 - 11 * tu, w, 15 * tu); g.fillStyle = "#c8f0c0"; g.fillText(nm, tx3, ty3 + 0.5); }   // party members' names, crisp in both styles
       if (label && labelT > 0) { const a = Math.min(1, labelT * 3), sz = lbl(20); g.globalAlpha = a; g.font = `700 ${sz}px Cinzel, Georgia, serif`; const y = Hh * 0.25 - (1 - a) * 8; g.fillStyle = "rgba(28,33,40,0.7)"; const pu = sz / 20, w = g.measureText(label).width + 18 * pu; g.fillRect(W / 2 - w / 2, y - sz + 2 * pu, w, sz + 8 * pu); g.fillStyle = labelC; g.fillText(label, W / 2, y); }
       g.restore();
       // end banner
