@@ -3,13 +3,26 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b299-pcupdates", build: 299, date: "25 Nov 2026", title: "The PC game updates itself", items: [
+    { id: "b301-pcupdates", build: 301, date: "25 Nov 2026", title: "The PC game updates itself", items: [
       "On Windows the game now updates by itself in the background, the installed and the portable version alike: no more downloading a new setup for every build.",
       "Usually only the files that changed get downloaded, so an update is often just a few megabytes. A card in the corner shows how far along it is.",
       "When it's ready the card says Restart to update. On the title screen it switches over by itself, and otherwise the new version starts the next time you open the game. Your saves stay.",
       "If a new version ever fails to start, the game goes back to the one before by itself and skips the broken one.",
       "The title screen's Update page now works on PC too. The whole app only downloads again when the app itself changes.",
       "Older PC copies need the new version once (from the GitHub page); after that they keep themselves up to date.",
+    ] },
+    { id: "b300-pets", build: 300, date: "25 Nov 2026", title: "Pets: Meeko walks with your follower", items: [
+      "Meeko is a pet now, not a follower. You can have a follower and a pet with you at the same time.",
+      "The Follower tab has two parts, Follower and Pet, and each one has its own Dismiss.",
+      "Pets don't wear gear. If Meeko was holding anything, it's back in your pack. His loyalty, his quest and his Pounce stay.",
+      "In fights Meeko has his own turn and his own health bar next to your follower. He's a bit weaker than a follower, gets knocked down and never dies, and carries a little for you.",
+      "New Etiquette perk, Pack Leader: your pet bites harder, takes less and gets up stronger.",
+      "Your party sees your pet and it fights beside them too. Pets never count toward the 8 players.",
+    ] },
+    { id: "b299-netfix", build: 299, date: "25 Nov 2026", title: "Players can see each other again", items: [
+      "Players can see each other again. Since accounts came in, players who signed in and players who didn't were in two separate worlds, so friends vanished from each other's map, Social tab and parties.",
+      "Signed in, your phone now joins both: the account world and the phone-to-phone world. Signed in or not, you see each other, chat, trade and team up like before.",
+      "A friend who signed in on an older version still only sees players who signed in. If someone is missing, ask them to update the game.",
     ] },
     { id: "b298-mapheroanim", build: 298, date: "25 Nov 2026", title: "Your hero moves on the map", items: [
       "Your horse on the world map is alive now: standing, it breathes, shifts its weight, tosses its head now and then and flicks its tail.",
