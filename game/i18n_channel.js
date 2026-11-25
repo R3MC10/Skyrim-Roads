@@ -15,5 +15,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Twój bohater przyjmuje tę samą postawę za twoją minigrą, także w walkach w pojedynkę.",
     "A minigame can't hold up the fight any more: after 12 seconds the move is called off and you keep your guard up.":
       "Minigra nie może już wstrzymać walki: po 12 sekundach ruch zostaje odwołany, a ty trzymasz gardę.",
+    "Fixed: in a party fight, an update from your friends could close your minigame halfway through. It now stays open until you finish it.":
+      "Naprawione: w walce drużynowej wiadomość od przyjaciół mogła zamknąć twoją minigrę w połowie. Teraz zostaje otwarta, dopóki jej nie skończysz.",
   });
 })();

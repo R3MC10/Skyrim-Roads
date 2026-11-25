@@ -9,6 +9,7 @@
    - Keyboard: arrows or WASD walk between signposts, Enter opens one, Esc closes an open card, then leaves to the map.
    - Phones (or a short window): the signposts turn into a readable list over the lower half of the picture.
    - "List" switches back to the old Area board (remembered per player); the board has a "Scene" button back.
+   - The landscape button next to the name opens the place's arrival picture again (locintro.js).
    - Signpost positions are data: POS[place] (percent of the 16:9 painting) wins over KIND_POS[kind], and anything
      left over takes the next free SLOT. Drop a painted scene for a place in later and give it its own POS row.
    ui.js decides when the scene is up (Area tab, standing at a place, no shop open) and hands in what's there;
@@ -190,7 +191,7 @@ const LOCSCREEN = (() => {
     return `<div class="ls ls-${esc(kind)} tod-${sk.tod} wx-${esc(sk.wx)}${indoor ? " indoor" : ""}${sheetOpen ? " sheet-on" : ""}" data-place="${esc(l)}" role="region" aria-label="${esc(l)}">
       <div class="ls-stage"><div class="ls-bg" style='background-image:${bg}'></div><div class="ls-tint"></div><div class="ls-wx" aria-hidden="true"></div></div>
       <ul class="ls-spots" role="list">${pins}</ul>
-      <header class="ls-head"><div class="ls-tt"><small class="ls-hold"><span>${esc(KIND_NAME[kind] || "")}</span> · <span>${esc(hold)}</span></small><h1 class="ls-name">${esc(l)}</h1><p class="ls-flav">${esc(flav)}</p>${o.wanted ? `<div class="ls-wanted">${o.wanted}</div>` : ""}</div>
+      <header class="ls-head"><div class="ls-tt"><small class="ls-hold"><span>${esc(KIND_NAME[kind] || "")}</span> · <span>${esc(hold)}</span></small><div class="ls-nrow"><i aria-hidden="true"></i><h1 class="ls-name">${esc(l)}</h1>${typeof LOCINTRO !== "undefined" ? LOCINTRO.viewBtn() : ""}</div><p class="ls-flav">${esc(flav)}</p>${o.wanted ? `<div class="ls-wanted">${o.wanted}</div>` : ""}</div>
         <div class="ls-meta"><span class="ls-clock">${esc(sk.clock)}</span>${sk.wxName ? `<span class="ls-wxn">${esc(sk.wxName)}</span>` : ""}${S ? `<span class="ls-gold"><b class="gold">${S.gold}</b> gold</span>` : ""}</div>
         <div class="ls-btns"><button class="btn ls-list" data-act="locmode" data-id="list" aria-label="Show as a list"><span>List</span></button><button class="btn pri ls-leave" data-act="locleave"><span>Leave</span></button></div></header>
       ${ppl ? `<footer class="ls-people" aria-label="People here">${ppl}</footer>` : ""}
@@ -293,7 +294,7 @@ const LOCSCREEN = (() => {
     if (typeof window !== "undefined") window.addEventListener("resize", () => { if (isOpen()) fitBottom(); });
   }
 
-  return { PLACE_PICS, KIND_PIC, THEME_PIC, KIND_POS, TOWN_POS, SITE_POS, POS, COLS, ROWS, SLOTS, near, FLAVOUR, KIND_LINE, MAIN, SHEET, kindOf, backdrop, layout, spots, people, mode, setMode, placeOf, tod, sky, html, sceneBtn,
+  return { PLACE_PICS, KIND_PIC, THEME_PIC, KIND_POS, TOWN_POS, SITE_POS, POS, COLS, ROWS, SLOTS, near, FLAVOUR, KIND_LINE, KIND_NAME, MAIN, SHEET, kindOf, backdrop, layout, spots, people, mode, setMode, placeOf, tod, sky, html, sceneBtn,
     show, isOpen, closeSheet, openSheet, act, pick, get sheet() { return sheetOpen; } };
 })();
 if (typeof module !== "undefined") module.exports = LOCSCREEN;
