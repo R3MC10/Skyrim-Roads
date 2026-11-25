@@ -44,7 +44,7 @@ const HEISTS = (() => {
       guard: ["Shatter-Shield dock guard", "Strażnik doków Shatter-Shieldów"], prize: "hs_compass" },
     Solitude: { id: "erikur", tier: 3, minLv: 10,
       name: ["Thane Erikur's townhouse", "Kamienica tana Erikura"],
-      blurb: ["Erikur hosts the finest dinners in Solitude, and drinks from a jewelled goblet he says the Emperor gave him.", "Erikur wydaje najlepsze kolacje w Samotni i pije z wysadzanego klejnotami pucharu, który podobno dostał od Cesarza."],
+      blurb: ["Erikur hosts the finest dinners in Solitude, and drinks from a jewelled goblet he says the Emperor gave him.", "Erikur wydaje najlepsze kolacje w Solitude i pije z wysadzanego klejnotami pucharu, który podobno dostał od Cesarza."],
       way: ["the servants' gate", "brama dla służby"], wayWho: ["the head butler", "kamerdyner"],
       vault: ["the locked gallery", "zamknięta galeria"], vaultWho: ["Erikur's bodyguard", "ochroniarz Erikura"],
       guard: ["Erikur's hired sword", "Najemny miecz Erikura"], prize: "hs_goblet" },
@@ -80,7 +80,7 @@ const HEISTS = (() => {
 
   // ---------------------------------------------------------------- perks (perkfx.js format)
   const PERK_ADD = [
-    ["Lockpicking", "heist_locksmith", "Locksmith", 2, [25, 50], ["apprentice_locks"], "On a heist every lock counts one grade easier per rank, and you bring two spare picks. [OURS]", [["hslock", [1, 2], {}], ["hspicks", 2, {}]]],
+    ["Lockpicking", "heist_locksmith", "Locksmith", 2, [25, 50], ["apprentice_locks"], "On a heist every lock counts one grade easier per rank, and you bring two spare picks. [OURS]", [["hslock", [1, 2], {}], ["hspicks", [2, 2], {}]]],
     ["Sneak", "heist_infiltrator", "Infiltrator", 2, [30, 60], ["stealth"], "On a heist: +10%/+20% to forged papers, slipping past unseen and walking out calmly, and a failed try raises less suspicion. [OURS]", [["hsinfil", [0.1, 0.2], {}]]],
     ["Acrobatics", "heist_escape", "Escape Artist", 1, [40], ["sure_footed"], "+20% to every heist escape, heist bounties are halved, and once per heist a capture turns into a narrow escape. [OURS]", [["hsescape", 0.2, {}], ["hshalf", 1, {}], ["hsslip", 1, {}]]],
   ];
@@ -115,10 +115,10 @@ const HEISTS = (() => {
   const lvl = (s) => Math.max(1, s?.level || 1);
   const sk = (s, name) => { try { return G.skill(s, name); } catch { return 15; } };
   const best = (s, ...names) => Math.max(...names.map((n) => sk(s, n)));
-  const NEED = (tier) => 20 + 15 * tier;                       // the skill an even chance needs
+  const NEED = (tier) => 15 + 12 * tier;                       // the skill an even chance needs
   const partyBonus = (n) => Math.min(0.15, 0.03 * Math.max(0, (n || 1) - 1));
   /* the goods in the house, before the fence: grows with your level (to 50) and with more hands to carry it */
-  const goodsValue = (tier, L, n = 1) => Math.round((150 + 90 * tier) * (1 + Math.min(L, 50) / 20) * (0.5 + 0.5 * clamp(n || 1, 1, 8)));
+  const goodsValue = (tier, L, n = 1) => Math.round((250 + 150 * tier) * (1 + Math.min(L, 50) / 12) * (0.5 + 0.5 * clamp(n || 1, 1, 8)));
   function bribeCost(s, r, at) {
     const h = BY_ID[r.id];
     let c = (40 + 30 * h.tier) * (1 + Math.min(lvl(s), 50) / 50) * (at === 2 ? 1.6 : 1);
