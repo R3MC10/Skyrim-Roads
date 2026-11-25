@@ -386,7 +386,8 @@ const MOVEFX = (() => {
     let cur = null;   // { key, r, pal, b, m, u, G, launched, hitDone }
     function begin(b, line, m) {
       const key = keyOf(b, line), r = recipe(key);
-      cur = r ? { key, r, pal: PAL[r.p] || PAL.fire, b, m, line, u: 0, launched: false, hits: 0, last: -1, blow: 0 } : null;
+      const wp = r && r.w && ["swing", "thrust", "jab"].includes(r.d) && typeof WEAPONFX !== "undefined" ? WEAPONFX.of(b.move) : null;   // [weaponfx] the weapon's own stroke and hit
+      cur = r ? { key, r, pal: PAL[r.p] || PAL.fire, b, m, line, u: 0, launched: false, hits: 0, last: -1, blow: 0, wp } : null;
       return cur;
     }
     /* one step of a beat. G: positions this frame { hand, hand2, from, to, ally, gy }. Returns true when this file draws the beat */
@@ -395,10 +396,9 @@ const MOVEFX = (() => {
       if (!cur) return false;
       if (cur.r.mouth) G = mouthG(G);   // a shout comes out of the mouth, not the hand
       cur.u = u; cur.G = G; cur.dt = dt;
-      if (cur.r.w) {   // a weapon blow: a wind-up (power attacks), then the swoosh at every blow of the move
+      if (cur.r.w) {   // a weapon blow: a wind-up (power attacks); the stroke itself plays on the contact frame (blowHit), once per hit [weaponfx]
         const r = cur.r, hs = m.hits && m.hits.length ? m.hits : [0.5];
         if (r.c !== "none") { const c0 = 0.06, c1 = Math.max(0.1, hs[0] - 0.1); if (u > c0 && u < c1) charge(r, cur.pal, r.z, G, (u - c0) / (c1 - c0), dt); }
-        while (cur.blow < hs.length && u >= hs[cur.blow] - 0.08) { blow(r, cur.pal, r.z, G, cur.blow, hs.length); cur.blow++; }
         return true;
       }
       const r = cur.r, pal = cur.pal, z = r.z, ch = m.charge || [0.08, Math.max(0.1, (m.hits?.[0] ?? 0.5) - 0.12)];
@@ -417,6 +417,17 @@ const MOVEFX = (() => {
     function blow(r, pal, z, G, i, n) {
       const [hx, hy] = G.hand, [tx, ty] = G.to, dir = dirOf(G), b = cur.b, miss = b.miss, Z = z * (b.final && i === n - 1 ? 1.15 : 1);
       const cy = ty - (miss ? 18 : 4) * s, al = miss ? 0.5 : 1, alt = i % 2 ? -1 : 1;
+      const wp = cur.wp;
+      if (wp) {   // [weaponfx] the weapon's own stroke, through the spot the blade meets the body (a miss: a faint pass in front of it)
+        const [ax, ay0] = G.at || [tx - dir * 4 * s, ty], ay = ay0 - (miss ? 14 : 0) * s, wx = ax + (miss ? dir * 10 : 0) * s;
+        const Zc = Math.min(1.3, Z), R = wp.r * s * Zc, wa = miss ? 0.32 : 0.8;
+        if (wp.slash === "arc" || wp.slash === "chop" || (!wp.slash && miss && wp.kind === "blunt")) {
+          const k = wp.slash === "chop" ? 2 : wp.slash === "arc" ? (i % 2 ? 3 : wp.kind === "blade" && wp.trail === "wide" ? 1 : 0) : 3;
+          S("swoosh", { x: wx - dir * R * 0.5, y: ay, r: wp.slash ? R : R * 0.7, th: wp.th ? wp.th * (b.power ? 1.35 : 1) : 0.06, life: 0.22, pal, k, dir, al: wa, pw: 0, thin: 1 });
+        } else if (wp.slash === "stab" || wp.slash === "thrust") S("streak", { x: wx - dir * R, y: ay + alt * 3 * s, x2: wx + dir * (miss ? 16 : 2) * s, y2: ay + alt * 2 * s, w: (wp.slash === "thrust" ? 2.6 : 2) * Zc, life: 0.13, pal, al: wa });
+        else if (wp.slash === "jab") S("streak", { x: wx - dir * R * 1.6, y: ay, x2: wx - dir * 2 * s, y2: ay, w: 4 * Zc, life: 0.14, pal, al: wa, blunt: 1 });
+        return;
+      }
       switch (r.d) {
         case "swing": S("swoosh", { x: tx - dir * 6 * s, y: cy, r: 30 * s * Z, life: 0.3, pal, k: i % 2 ? 3 : r.k, dir, al, pw: r.pw ? 1 : 0 }); break;   // the second blow of a pair comes back the other way
         case "thrust": S("streak", { x: hx, y: hy, x2: tx + (miss ? dir * 26 : -dir * 2) * s, y2: cy + alt * 4 * s, w: (r.k ? 4.6 : 3.4) * Z, life: 0.22, pal, al }); break;
@@ -430,10 +441,23 @@ const MOVEFX = (() => {
     /* a weapon blow's impact, then what rides on it: crit, sneak attack, enchantment, combo */
     function blowHit(b, last) {
       const r = cur.r, pal = cur.pal, G = cur.G; if (!G) return true;
-      const [tx, ty] = G.to, dir = dirOf(G), gyy = G.gy ?? gy, z = r.z * (last ? (b.final ? 1.2 : 1) : 0.7), fwd = dir > 0 ? 0 : Math.PI, up = dir > 0 ? -0.6 : Math.PI + 0.6;
-      if (b.miss) { if (last) spray(PUFF, PAL.dust, tx + dir * 16 * s, gyy - 2 * s, 4, 40, 0.7, 5, -6, null, TAU, 1, 3); return true; }
-      const ax = tx - dir * 4 * s, ay = ty;
-      switch (r.i) {
+      const nh = cur.m && cur.m.hits && cur.m.hits.length ? cur.m.hits.length : 1;
+      if (cur.blow < nh) { blow(r, pal, r.z, G, cur.blow, nh); cur.blow++; }   // [weaponfx] the stroke on the contact frame, once per hit
+      const wp = cur.wp;
+      const [tx, ty] = G.to, dir = dirOf(G), gyy = G.gy ?? gy, z = (wp ? Math.min(1.25, r.z) : r.z) * (last ? (b.final ? 1.15 : 1) : 0.75), fwd = dir > 0 ? 0 : Math.PI, up = dir > 0 ? -0.6 : Math.PI + 0.6;
+      if (b.miss) { if (last && (!wp || wp.kind === "blunt")) spray(PUFF, PAL.dust, tx + dir * 16 * s, gyy - 2 * s, wp ? 2 : 4, 40, 0.6, 4, -6, null, TAU, 1, 3); return true; }
+      const [ax, ay] = wp && G.at ? G.at : [tx - dir * 4 * s, ty];
+      if (wp) {   // [weaponfx] each weapon hits its own way, small and quick: a thin cut, a chop, a heavy thud and dust, a stab
+        const k = wp.kind, big = b.power || r.pw ? 1.3 : 1;
+        if (k === "blade") S("gash", { x: ax, y: ay, r: wp.r * 0.6 * s * z, life: 0.2, pal, rot: -0.7 * dir, thin: 1 });
+        else if (k === "chop") S("gash", { x: ax, y: ay, r: wp.r * 0.6 * s * z, life: 0.24, pal, rot: -1.2 * dir });
+        else if (k === "stab" || k === "pierce") S("gash", { x: ax, y: ay, r: wp.r * 0.3 * s * z, life: 0.16, pal, rot: -0.15 * dir, thin: 1 });
+        else if (k === "blunt") { S("dent", { x: ax, y: ay, r: wp.r * s * z * big, life: 0.24, pal: PAL.dust }); if (b.power || r.pw) S("ring", { x: ax, y: gyy, r0: 4 * s, r1: 30 * s * z, life: 0.35, pal: PAL.dust, flat: 0.22, w: 1.8 }); }
+        else if (k === "punch") S("ring", { x: ax, y: ay, r0: 3 * s, r1: 12 * s * z, life: 0.18, pal, flat: 1, w: 1.4 });
+        if (wp.sparks) spray(SPARK, pal, ax, ay, wp.sparks * z * big, 200, 0.18, 1.2, 200, fwd, 1.3, 0, 2);
+        if (wp.chips) spray(CHIP, k === "blunt" ? PAL.dust : pal, ax, ay, wp.chips * big, 120, 0.45, 1.5, 320, up, 1.2, 1, 4);
+        if (wp.dust) spray(PUFF, PAL.dust, ax, ay + 4 * s, wp.dust * big, 50, 0.6, 4.5, -6, up, 1.6, 1, 3);
+      } else switch (r.i) {
         case "cut": S("gash", { x: ax, y: ay, r: 18 * s * z, life: 0.32, pal, rot: -0.7 * dir }); spray(SPARK, pal, ax, ay, 8 * z, 240, 0.25, 1.4, 200, fwd, 1.6, 0, 2); spray(CHIP, pal, ax, ay, 3, 120, 0.5, 1.6, 300, up, 1.2, 2, 4); break;
         case "cleave": S("gash", { x: ax, y: ay, r: 26 * s * z, life: 0.38, pal, rot: -1.1 * dir, wide: 1 }); spray(SPARK, pal, ax, ay, 10 * z, 260, 0.3, 1.6, 220, fwd, 1.8, 0, 2); spray(CHIP, pal, ax, ay, 6 * z, 180, 0.7, 2.4, 320, up, 1.4, 2, 4); break;
         case "crush": S("dent", { x: ax, y: ay, r: 22 * s * z, life: 0.3, pal }); S("ring", { x: ax, y: gyy, r0: 6 * s, r1: 46 * s * z, life: 0.45, pal: PAL.dust, flat: 0.22, w: 2.6 }); spray(PUFF, PAL.dust, ax, gyy - 4 * s, 6 * z, 90, 0.9, 7, -8, up, 1.6, 1, 3); spray(CHIP, PAL.dust, ax, ay, 5 * z, 160, 0.6, 2, 320, up, 1.6, 1, 4); break;
@@ -444,18 +468,19 @@ const MOVEFX = (() => {
         case "bite": spray(CHIP, PAL.blood, ax, ay, 8 * z, 140, 0.6, 2.2, 340, up, 1.4, 1, 3); S("flash", { x: ax, y: ay - 4 * s, r: 18 * s, life: 0.18, pal }); break;
       }
       if (!last) return true;
-      if (b.crit) { S("star", { x: ax, y: ay - 4 * s, r: 30 * s * z, life: 0.3, pal: PAL.steel }); S("flash", { x: ax, y: ay, r: 36 * s * z, life: 0.2, pal: PAL.steel }); }
-      if (b.sneak) { S("gash", { x: ax, y: ay - 6 * s, r: 24 * s * z, life: 0.5, pal: PAL.shadow, rot: 0.8 * dir }); spray(PUFF, PAL.shadow, ax, ay, 5, 30, 1, 7, -8, null, TAU, 1, 3); }
-      if (b.enchant) { const ep = PAL[b.enchant === "drain" ? "blood" : b.enchant] || PAL.myst; spray(b.enchant === "frost" ? CRYSTAL : b.enchant === "shock" ? SPARK : b.enchant === "fire" ? EMBER : GLOW, ep, ax, ay, 12, 160, 0.5, 2.4, b.enchant === "fire" ? -40 : 0, null, TAU, 0, 2);
-        if (b.enchant === "shock") S("bolt", { x: ax, y: ay, x2: ax + dir * 26 * s, y2: ay + 16 * s, life: 0.16, pal: ep, w: 1.6, forks: 0, jag: 8 }); }
+      const q = wp ? 0.6 : 1;   // [weaponfx] on a weapon blow what rides on it stays small: a glint, not a burst
+      if (b.crit) { S("star", { x: ax, y: ay - 4 * s, r: 30 * q * s * z, life: 0.3, pal: PAL.steel }); S("flash", { x: ax, y: ay, r: 36 * q * s * z, life: 0.2, pal: PAL.steel }); }
+      if (b.sneak) { S("gash", { x: ax, y: ay - 6 * s, r: 24 * q * s * z, life: 0.5, pal: PAL.shadow, rot: 0.8 * dir, thin: wp ? 1 : 0 }); spray(PUFF, PAL.shadow, ax, ay, 5, 30, 1, 7, -8, null, TAU, 1, 3); }
+      if (b.enchant) { const ep = PAL[b.enchant === "drain" ? "blood" : b.enchant] || PAL.myst; spray(b.enchant === "frost" ? CRYSTAL : b.enchant === "shock" ? SPARK : b.enchant === "fire" ? EMBER : GLOW, ep, ax, ay, 12 * q, 160 * q, 0.5, 2.4 * (wp ? 0.8 : 1), b.enchant === "fire" ? -40 : 0, null, TAU, 0, 2);
+        if (b.enchant === "shock") S("bolt", { x: ax, y: ay, x2: ax + dir * 26 * q * s, y2: ay + 16 * q * s, life: 0.16, pal: ep, w: 1.6, forks: 0, jag: 8 }); }
       const said = String(cur.line?.me || "");   // combos and openings
       if (/shatter/i.test(said)) { spray(CRYSTAL, PAL.frost, ax, ay, 16, 240, 0.8, 3, 360); S("star", { x: ax, y: ay, r: 26 * s, life: 0.25, pal: PAL.frost }); }
       if (/overload/i.test(said)) for (let i = 0; i < 3; i++) { const an = rnd() * TAU; S("bolt", { x: ax, y: ay, x2: ax + Math.cos(an) * 34 * s, y2: ay + Math.sin(an) * 34 * s, life: 0.22, pal: PAL.shock, w: 1.8, forks: 0, jag: 8 }); }
       if (/steam/i.test(said)) spray(PUFF, PAL.voice, ax, ay, 10, 60, 1.3, 9, -30, -Math.PI / 2, 1.4, 0, 2);
       if (/thermal shock/i.test(said)) { spray(EMBER, PAL.fire, ax, ay, 8, 160, 0.5, 2.4, -30); spray(CRYSTAL, PAL.frost, ax, ay, 8, 160, 0.6, 2.4, 300); }
       if (/opening|exploit|precision/i.test(said)) S("ring", { x: ax, y: ay, r0: 4 * s, r1: 34 * s, life: 0.5, pal: PAL.gold, flat: 1, w: 2 });
-      if (r.pw || b.power) S("ring", { x: tx, y: gyy, r0: 6 * s, r1: 60 * s * z, life: 0.5, pal: PAL.dust, flat: 0.22, w: 2.4 });
-      if (r.g) mark(r.g, tx, 40 * s * z, pal, r.k);
+      if ((r.pw || b.power) && !wp) S("ring", { x: tx, y: gyy, r0: 6 * s, r1: 60 * s * z, life: 0.5, pal: PAL.dust, flat: 0.22, w: 2.4 });
+      if (r.g && (!wp || r.pw || b.power)) mark(r.g, tx, (wp ? 28 : 40) * s * z, pal, r.k);   // [weaponfx] a weapon only marks the ground on a power attack
       return true;
     }
 
@@ -475,7 +500,8 @@ const MOVEFX = (() => {
           case "flakes": if (rnd() < 0.6 * q) { const a = rnd() * TAU, d = R0 * 2.4; P(CHIP, pick(pal, 1, 3), hx + Math.cos(a) * d, hy + Math.sin(a) * d, -Math.cos(a) * d * 3, -Math.sin(a) * d * 3, 0.32, 2.2 * z, 0, 0.9); } break;
           case "wisps": if (rnd() < 0.6 * q) P(WISP, pick(pal, 1, 3), hx + (rnd() - 0.5) * R0, hy + (rnd() - 0.5) * R0, (rnd() - 0.5) * 30 * s, -(10 + rnd() * 20) * s, 0.6, 3.2 * z, 0, 0.95); break;
           case "smoke": if (rnd() < 0.5 * q) P(PUFF, pick(pal, 2, 4), hx + (rnd() - 0.5) * R0, hy, (rnd() - 0.5) * 10 * s, -14 * s, 0.9, 4 * z, -4); if (rnd() < 0.3 * q) P(GLOW, pal[1], hx, hy, (rnd() - 0.5) * 20 * s, -20 * s, 0.4, 1.6); break;
-          case "glint": if (rnd() < 0.14 * q) S("star", { x: hx + (rnd() - 0.5) * 6 * s, y: hy - p * 26 * s, r: (6 + 6 * p) * s * Math.min(1.3, z), life: 0.22, pal }); if (rnd() < 0.5 * q) P(MOTE, pick(pal, 0, 2), hx, hy - rnd() * 26 * s, (rnd() - 0.5) * 20 * s, -10 * s, 0.4, 1.6);
+          case "glint": if (G.tip) { const [gx, gy0] = G.tip; if (rnd() < 0.05 * q) S("star", { x: gx, y: gy0, r: (3 + 3 * p) * s, life: 0.18, pal }); if (rnd() < 0.3 * q) P(MOTE, pick(pal, 0, 2), lerp(hx, gx, rnd()), lerp(hy, gy0, rnd()), (rnd() - 0.5) * 12 * s, -8 * s, 0.35, 1.3); }   // [weaponfx] a gleam on the real blade
+            else { if (rnd() < 0.14 * q) S("star", { x: hx + (rnd() - 0.5) * 6 * s, y: hy - p * 26 * s, r: (6 + 6 * p) * s * Math.min(1.3, z), life: 0.22, pal }); if (rnd() < 0.5 * q) P(MOTE, pick(pal, 0, 2), hx, hy - rnd() * 26 * s, (rnd() - 0.5) * 20 * s, -10 * s, 0.4, 1.6); }
             if (r.pw && rnd() < 0.4 * q) { const sd = rnd() < 0.5 ? -1 : 1; P(PUFF, pick(PAL.dust, 1, 3), G.from[0] + sd * 36 * s, (G.gy ?? gy) - 2 * s, -sd * 50 * s, -4 * s, 0.6, 5, 0); } break;
           case "inhale": { const [mx, my] = mouthOf(G); if (rnd() < 0.7 * q) { const an = rnd() * TAU, d = (30 + rnd() * 30) * s; P(WISP, pick(pal, 1, 3), mx + Math.cos(an) * d, my + Math.sin(an) * d * 0.7, -Math.cos(an) * d * 2.4, -Math.sin(an) * d * 1.7, 0.35, 2.4 * z, 0, 0.9); } break; }
           case "growl": { const [mx, my] = mouthOf(G); if (rnd() < 0.5 * q) P(PUFF, pick(PAL.blood, 2, 3), mx, my, dirOf(G) * 20 * s, -10 * s, 0.6, 3.5, -4); if (rnd() < 0.4 * q) P(EMBER, pick(pal, 1, 2), hx + (rnd() - 0.5) * 10 * s, hy, 0, -20 * s, 0.4, 1.8, -20); break; }
@@ -826,14 +852,14 @@ const MOVEFX = (() => {
             }, p, 2.6 * s, a);
             break; }
           case "swoosh": {   // a painted crescent where the blade passed: diagonal, wide sweep, overhead chop or a short hook
-            const V2 = SWO[q.k] || SWO[0], head = Math.min(1, u * 3.2), tail = Math.max(0, (u - 0.35) / 0.65), R = q.r * V2[2], th = q.r * (q.pw ? 0.34 : 0.24), al = (q.al ?? 1) * a, n = 12;
+            const V2 = SWO[q.k] || SWO[0], head = Math.min(1, u * 3.2), tail = Math.max(0, (u - 0.35) / 0.65), R = q.r * V2[2], th = q.r * (q.th ?? (q.pw ? 0.34 : 0.24)), al = (q.al ?? 1) * a, n = 12;
             const A = (f) => lerp(V2[0], V2[1], lerp(tail, head, f));
             g.save(); g.translate(q.x - q.dir * R * 0.5, q.y); g.scale(q.dir, 1); g.rotate(V2[4]); g.scale(1, V2[3]);
             const outer = () => { for (let i = 0; i <= n; i++) { const an = A(i / n); i ? g.lineTo(Math.cos(an) * R, Math.sin(an) * R) : g.moveTo(Math.cos(an) * R, Math.sin(an) * R); } };
-            g.lineCap = "round"; g.globalAlpha = al * 0.3; g.strokeStyle = p[4]; g.lineWidth = 3 * s; g.beginPath(); outer(); g.stroke();
+            g.lineCap = "round"; if (!q.thin) { g.globalAlpha = al * 0.3; g.strokeStyle = p[4]; g.lineWidth = 3 * s; g.beginPath(); outer(); g.stroke(); }
             g.beginPath(); outer(); for (let i = n; i >= 0; i--) { const an = A(i / n), w = th * Math.pow(i / n, 0.8); g.lineTo(Math.cos(an) * (R - w), Math.sin(an) * (R - w)); } g.closePath();
             g.globalCompositeOperation = "lighter"; g.globalAlpha = al * 0.55; g.fillStyle = p[2]; g.fill();
-            g.globalAlpha = al; g.strokeStyle = p[0]; g.lineWidth = Math.max(1, 1.6 * s); g.beginPath(); outer(); g.stroke();
+            g.globalAlpha = al; g.strokeStyle = p[0]; g.lineWidth = Math.max(1, (q.thin ? 1 : 1.6) * s); g.beginPath(); outer(); g.stroke();
             g.globalCompositeOperation = "source-over"; g.restore(); break;
           }
           case "streak": {   // a stab, a punch, a claw or a pounce: a tapered streak that shoots in and fades from the back
@@ -844,7 +870,7 @@ const MOVEFX = (() => {
             break;
           }
           case "gash": {   // a bright slit across the target
-            const L = q.r * Math.min(1, u * 5), hw = L * (q.wide ? 0.16 : 0.1); g.save(); g.translate(q.x, q.y); g.rotate(q.rot || 0);
+            const L = q.r * Math.min(1, u * 5), hw = L * (q.wide ? 0.16 : q.thin ? 0.06 : 0.1); g.save(); g.translate(q.x, q.y); g.rotate(q.rot || 0);
             g.globalAlpha = a * 0.35; g.fillStyle = p[4]; g.beginPath(); g.moveTo(-L, 1.5 * s); g.quadraticCurveTo(0, -hw + 1.5 * s, L, 1.5 * s); g.quadraticCurveTo(0, hw + 1.5 * s, -L, 1.5 * s); g.fill();
             g.globalCompositeOperation = "lighter"; g.globalAlpha = a; g.fillStyle = p[1]; g.beginPath(); g.moveTo(-L, 0); g.quadraticCurveTo(0, -hw, L, 0); g.quadraticCurveTo(0, hw, -L, 0); g.fill();
             g.strokeStyle = p[0]; g.lineWidth = Math.max(1, s); g.beginPath(); g.moveTo(-L * 0.8, 0); g.lineTo(L * 0.8, 0); g.stroke(); g.globalCompositeOperation = "source-over"; g.restore(); break;
