@@ -3,10 +3,22 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b293-perkkeys", build: 293, date: "25 Nov 2026", title: "Perk stars with the keyboard", items: [
+    { id: "b295-perkkeys", build: 295, date: "25 Nov 2026", title: "Perk stars with the keyboard", items: [
       "On a PC the Skills page now works like Skyrim's: A and D (or the arrows) step through the skills, W and S move up and down the list, and the stars on the right follow the skill you're on.",
       "E, Enter or Space takes you into the stars. There W A S D jump to the nearest star that way (stars joined by a line first), its perk shows on the left, and E takes it if you can.",
       "Tab, Esc or Backspace (or S at the bottom) go back to the skills. A bright ring shows where you are, and a small key hint sits at the bottom. The mouse and phones work as before.",
+    ] },
+    { id: "b294-aitester", build: 294, date: "25 Nov 2026", title: "What would the AI do?", items: [
+      "Character → AI & Loadouts has a new card, What would the AI do?: set your health, stamina and magicka, the foe's health, what kind of foe (normal, strong, boss, dragon, caster), how many and whether a friend is down, and it shows the move your loadout would play right now and why.",
+      "In Custom and Hybrid it goes through your rules from the top: a tick for the one that fires, a cross and the reason for the ones it skips (like \"health is 80%, rule needs below 40%\").",
+      "With Smart AI on, your own rules fold into one row (they're kept for Custom and Hybrid) instead of sitting there greyed out.",
+      "In fights, moves the AI plays for you end with a short [AI] reason in the log. Moves you pick yourself don't.",
+    ] },
+    { id: "b293-layout3", build: 293, date: "25 Nov 2026", title: "Titles you can read, hotbar in order", items: [
+      "On phones the round message history button no longer sits on a screen's title (Area, Journal, Social, AI & Loadouts, a dungeon's name): the title makes room for it.",
+      "The fight hotbar on phones shows its slots in key order again: 1 to 5 on top, 6 to 0 below. Catch your breath no longer jumps out of line.",
+      "Tab strips that don't fit the screen (like Character's Skills, Character, Follower, AI & Loadouts...) fade out at the edge that has more tabs, and the chosen tab is always fully in view.",
+      "The Journal's chosen tab (Active, Misc, Completed) is now dark ink with a gold underline, easy to read on the parchment.",
     ] },
     { id: "b292-caravanpanel", build: 292, date: "25 Nov 2026", title: "Caravans open in a panel", items: [
       "Tapping a caravan on the map now opens a proper panel instead of a small floating card. On a PC it sits on the right side of the screen, full height, and the map stays visible beside it; on a phone it slides up from the bottom and sits above the menu bar.",
