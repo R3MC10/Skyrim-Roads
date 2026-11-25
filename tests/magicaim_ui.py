@@ -184,4 +184,4 @@ async def main():
     print("screenshots:", OUT)
     print("RESULT", "OK" if not fails else f"FAIL ({len(fails)})")
     if fails: sys.exit(1)
-asyncio.run(main())
+if __name__ == "__main__": asyncio.run(main())

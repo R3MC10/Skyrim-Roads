@@ -79,16 +79,20 @@ const FIGHTFIT = (() => {
       }
     }
   }
-  /* the foe's plate never sits on a party plate: it moves right of them, or above them, when there's room */
+  /* the foe's plate never sits on a party plate: it moves right of them, above, left or under them, when there's room */
   function unclash(el, o) {
     const plate = el && el.querySelector(".c2ov .tbu.foe"), box = el && el.querySelector(".c2ov .tbparty");
     if (!plate || !box || !box.children.length) return;
     const tin = el.querySelector(".tbin"); if (!tin) return;
-    const t = (plate.offsetParent || tin).getBoundingClientRect(), p = plate.getBoundingClientRect();   // the plate's left/top are in its parent's px
+    const t = (plate.offsetParent || tin).getBoundingClientRect();   // the plate's left/top are in its parent's px
+    // where combat2.js just sent the plate (it slides there, so its on-screen box can still be the old spot)
+    const pl = parseFloat(plate.style.left), pt = parseFloat(plate.style.top), pw = plate.offsetWidth, ph = plate.offsetHeight;
+    const p = isFinite(pl) && isFinite(pt) && pw ? { left: t.left + pl, top: t.top + pt, right: t.left + pl + pw, bottom: t.top + pt + ph, width: pw, height: ph } : plate.getBoundingClientRect();
     const hit = (q) => [...box.children].some((c) => { const r = c.getBoundingClientRect(); return r.width && q.left < r.right - 2 && q.right > r.left + 2 && q.top < r.bottom - 2 && q.bottom > r.top + 2; });
     if (!hit(p)) return;
     const b = box.getBoundingClientRect(), L0 = p.left - t.left, T0 = p.top - t.top;
-    const tries = [[b.right - t.left + 6, T0], [L0, b.top - t.top - p.height - 6], [b.left - t.left - p.width - 6, T0]];
+    const tries = [[b.right - t.left + 6, T0], [L0, b.top - t.top - p.height - 6], [b.left - t.left - p.width - 6, T0],
+      [L0, b.bottom - t.top + 6]];   // short landscape: the party is one row along the top, so the foe's plate goes just under it
     for (const [L, T] of tries) {
       if (L < 4 || L + p.width > o.W - 4 || T < o.top + 2 || T + p.height > o.H - o.dh - 4) continue;
       const q = { left: t.left + L, right: t.left + L + p.width, top: t.top + T, bottom: t.top + T + p.height };
