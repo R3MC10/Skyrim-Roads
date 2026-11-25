@@ -294,7 +294,7 @@ const FIGHTART = (() => {
     const wt = pose?.wt || h.wt;
     if (h.look && rigged()) {   // the shared rigged character (figart.js), posed by the replay
       const w2 = wt === "fist" ? null : wt;
-      return HEROART.fightFigure(g, { look: h.look }, { t: glowT, wt: w2, shield: h.shield && !TWO_HANDED.has(wt), off: !TWO_HANDED.has(wt) && wt !== "fist" ? h.off : null, lunge,
+      return HEROART.fightFigure(g, { look: h.look }, { t: glowT, wt: w2, shield: h.shield && !TWO_HANDED.has(wt), shieldOut: true, off: !TWO_HANDED.has(wt) && wt !== "fist" ? h.off : null, lunge,
         glow: pose ? pose.glow : h.bound, aim: pose?.aim, back: pose?.back, hunch: pose?.lean || 0, draw: pose?.draw, flask: pose?.flask,
         move: pose?.move, mu: pose?.mu, hitU: pose?.hitU, power: pose?.power, knock: pose?.knock || 0, down: pose?.down || 0, ride: !!pose?.ride, rideLayer: pose?.rideLayer || null, dx: pose?.dx || 0 });
     }
@@ -311,14 +311,14 @@ const FIGHTART = (() => {
   }
   const rigged = () => typeof HEROART !== "undefined" && !!HEROART.fightFigure;
   function mate(g, m) {
-    g.save(); g.scale(0.78, 0.78); if (m.look && rigged()) HEROART.fightFigure(g, { look: m.look }, {}); else person(g, matePerson(m.look)); g.restore();
+    g.save(); if (m.look && rigged()) HEROART.fightFigure(g, { look: m.look }, {}); else person(g, matePerson(m.look)); g.restore();
   }
   function ally(g, i) { g.save(); g.scale(0.62, 0.62); g.globalAlpha = 0.9; person(g, { skin: [SKIN.nord, SKIN.redguard, SKIN.dunmer][i % 3], body: ["#6a5a40", P.steel, "#4a5a3a"][i % 3], head: i % 2 ? "helm" : "hair", wt: ["sword", "axe", "bow"][i % 3], shield: i % 3 === 0 }); g.restore(); }
 
   /* [summ] every kind of helper gets its own figure: what an ally record is */
   const ALLY_KINDS = ["follower", "mate", "soldier", "zombie", "icewolf", "werewolf", "vlord", "gargoyle", "dremora", "valor", "odah", "dragon", "beast", "familiar", "flame_atronach", "frost_atronach", "storm_atronach", "dog"];
   const FLYERS = new Set(["odah", "dragon"]);
-  const ALLY_W = { mate: 24, follower: 24, soldier: 20, zombie: 20, valor: 26, dremora: 24, icewolf: 36, beast: 40, familiar: 34, werewolf: 30, vlord: 30, gargoyle: 30, flame_atronach: 28, frost_atronach: 30, storm_atronach: 32 };   // how much room each figure needs in the line
+  const ALLY_W = { mate: 30, follower: 30, soldier: 20, zombie: 20, valor: 26, dremora: 24, icewolf: 36, beast: 40, familiar: 34, werewolf: 30, vlord: 30, gargoyle: 30, flame_atronach: 28, frost_atronach: 30, storm_atronach: 32 };   // how much room each figure needs in the line
   function allyKind(a) {
     if (!a) return "soldier";
     if (a.form === "wolf") return "werewolf";   // a teammate in Beast Form or Vampire Lord form (beastpaths.js: the form travels with their turn)
@@ -367,9 +367,9 @@ const FIGHTART = (() => {
       if (an.clip === "block") g.translate(-2 * w, 0);
     }
     switch (kind) {
-      case "mate": case "follower": {
-        g.scale(0.78, 0.78);
-        if (rig) HEROART.fightFigure(g, { look: o.look }, an ? { t, clip: an.clip, u: an.u, from: an.from, fu: an.fu, w: an.w, ride: !!o.ride && an.clip !== "down", rideLayer: o.rideLayer || null } : { lunge, t, ride: !!o.ride, rideLayer: o.rideLayer || null });
+      case "mate": case "follower": {   // [followersize] full size, the same as you: the rig itself makes women and some races a touch shorter (figart.js bh)
+        if (rig) { const sh = !!(o.look.eq && o.look.eq.shield) && !o.ride;   // [shieldshow] a party member's or follower's shield on their arm
+          HEROART.fightFigure(g, { look: o.look }, an ? { t, clip: an.clip, u: an.u, from: an.from, fu: an.fu, w: an.w, ride: !!o.ride && an.clip !== "down", rideLayer: o.rideLayer || null, shield: sh, shieldOut: sh } : { lunge, t, ride: !!o.ride, rideLayer: o.rideLayer || null, shield: sh, shieldOut: sh }); }
         else if (o.look) person(g, { ...matePerson(o.look), lunge });
         else person(g, { skin: SKIN.nord, body: P.steel, head: "helm", wt: "sword", shield: true, lunge });
         break; }
@@ -416,7 +416,7 @@ const FIGHTART = (() => {
         break; }
       case "valor": {   // a hero of Sovngarde: blue-white, see-through, a soft light
         g.scale(0.84, 0.84);
-        const gl = g.createRadialGradient(0, -36, 2, 0, -36, 46); gl.addColorStop(0, "rgba(220,236,255,.55)"); gl.addColorStop(1, "rgba(160,200,255,0)");
+        const gl = g.createRadialGradient(0, -36, 2, 0, -36, 46); gl.addColorStop(0, "rgba(220,236,255,.16)"); gl.addColorStop(1, "rgba(160,200,255,0)");
         g.fillStyle = gl; g.beginPath(); g.arc(0, -36, 46, 0, 7); g.fill();
         g.globalAlpha = 0.62 + Math.sin(t * 2.2 + i) * 0.1;
         person(g, { skin: "#dfe9f6", body: "#a8c4e8", head: "horned", helmColor: "#c8dcf4", wt: ["greatsword", "battleaxe", "sword", "axe"][i % 4], shield: i % 2 === 1, shieldColor: "#b8d0f0", eyes: "#ffffff", cape: "#8aa8d8", lunge });
@@ -455,7 +455,7 @@ const FIGHTART = (() => {
     }
     g.restore();
   }
-  const SPARK = { icewolf: ["#e8f6ff", 2, -10], flame_atronach: ["#ffb060", 0, -40], frost_atronach: ["#e8f6ff", 2, 8], storm_atronach: ["#d8d0ff", 1, 0], valor: ["#dcecff", 4, -20], dremora: ["#ff7a4a", 0, -30], familiar: ["#bcd8ff", 4, -10], zombie: ["#a8d080", 2, -6] };
+  const SPARK = { icewolf: ["#e8f6ff", 2, -10], flame_atronach: ["#ffb060", 0, -40], frost_atronach: ["#e8f6ff", 2, 8], storm_atronach: ["#d8d0ff", 1, 0], valor: ["#dcecff", 4, -20], dremora: ["#ff7a4a", 0, -30], familiar: ["#bcd8ff", 0, -10], zombie: ["#a8d080", 2, -6] };
 
   // ---------------------------------------------------------------- what happened each turn
   // The log says what was done each turn (line.a: "attack", "power_attack", "block", "spell:firebolt", "dual:…",
@@ -685,6 +685,8 @@ const FIGHTART = (() => {
     drain: ["#ff4060", "#ff9aa0"], support: ["#9affc0", "#fff2a0", "#ffffff"], glow: ["#fff2c0", "#ffffff"], invis: ["#d8f0ff", "#ffffff"], bound: ["#bcd8ff", "#ffffff"], turn: ["#fff2a0", "#ffffff"], cloak: ["#ffb347", "#ff7a2a"], rune: ["#ffb347", "#fff2c0"], wall: ["#ffb347", "#ff7a2a"], fizzle: ["#8a8480", "#a8a29a"] };
   const colOf = (fx, el) => COL[(fx === "cloak" || fx === "rune" || fx === "wall" || fx === "breath" || fx === "staff" || fx === "support") && el ? el : fx] || COL[el] || COL.glow;
   const glowSprites = new Map();
+  /* [weaponshine] the colour of an enchanted weapon's edge shine, by enchantment (combatfx.js GLOW key); others use their own first colour */
+  const SHINE = [["fire", "#ff8a3a"], ["frost", "#9fd4f2"], ["shock", "#a08cf0"], ["drain", "#9a78d8"], ["absorb", "#9a78d8"], ["paralyze", "#8fd870"], ["fear", "#a882e0"]];
   function glowSprite(c) {
     let sp = glowSprites.get(c);
     if (!sp && typeof document !== "undefined") {
@@ -959,7 +961,7 @@ const FIGHTART = (() => {
         else if (fx === "fizzle") burst(handX(1, heroP), handY(1), 10, 2, COL.fizzle, 30 * s, 0.9, 5, -30, true);
         else if (fx === "turn") { burst(cx + 10 * s, cy, 30, 1, COL.turn, 320 * s, 0.6, 2.4, 0); flash = 0.4; flashC = "#fff6c0"; }
         else if (fx === "support") { beamT = 0; beamC = colOf("support", b.el)[0]; burst(allyX(), groundY - 30 * s, 22, 4, colOf("support", b.el), 70 * s, 1, 3, -40, true); burst(cx, cy, 8, 0, colOf("support", b.el), 40 * s, 0.5, 3, 0); }   // [spellbook] a beam to the ally you help
-        else if (fx === "summon") { wolfT = 0; burst(hx0 + 46 * s, groundY - 10 * s, 24, 4, COL.summon, 70 * s, 1, 3, -60, true); }
+        else if (fx === "summon") { wolfT = 0; burst(hx0 + 46 * s, groundY - 10 * s, 8, 4, COL.summon, 60 * s, 0.6, 1.3, -60, true); }   // [summonfx] a faint shimmer, not a white cloud
         else if (fx === "bound") burst(handX(1, heroP), handY(1), 18, 0, COL.bound, 70 * s, 0.5, 3, 0);
         else if (fx === "invis") burst(cx, cy, 18, 4, COL.invis, 50 * s, 0.9, 3, -30, true);
         else burst(cx, cy, 18, 4, cols, 60 * s, 0.9, 3, -40, true);
@@ -1215,8 +1217,8 @@ const FIGHTART = (() => {
         const an = animOf(a), al2 = an && an.clip === "attack" && !an.shoot ? Math.sin(Math.PI * Math.min(1, an.u / 0.8)) * (an.w ?? 1) : 0;
         // a melee blow: they step out of their row up to the foe, then back to their spot
         const tx = fx0 - (foeFront + 16) * s, sc2 = s * (p.sc + (1 - p.sc) * al2), ax = p.x + Math.max(0, tx - p.x) * al2 + allyLunge * 14 * s, ay = p.y + (groundY - p.y) * al2;
-        if (a.name && !two && (a.kind === "mate" || a.kind === "follower" || a.kind === "valor" || a.kind === "dog")) mateTags.push([a.name, ax * z + ox + zcx - zcx * z, (ay - 66 * sc2) * z + oy + zcy - zcy * z]);
         const ahc = a.kind === "mate" && typeof MOUNTFIGHT !== "undefined" && typeof HORSEBACK !== "undefined" && !(an && an.clip === "down") ? MOUNTFIGHT.allyHorse(f, a.name) : null;   // a teammate in the saddle (mountfight.js)
+        if (a.name && !two && (a.kind === "mate" || a.kind === "follower" || a.kind === "valor" || a.kind === "dog")) mateTags.push([a.name, ax * z + ox + zcx - zcx * z, (ay - (66 + (ahc ? 30 : 0)) * sc2) * z + oy + zcy - zcy * z]);   // [followersize] just over the head (a rider sits higher)
         if (AFX && an && an.shoot && an.u >= 0.55 && b && phase === "play" && !(b.shotBy && b.shotBy.includes(a.name))) {   // [arrowfx] a follower or party archer looses at the foe
           (b.shotBy = b.shotBy || []).push(a.name);
           AFX.fire(null, { x0: ax + 16 * sc2, y0: ay - (ahc ? 74 : 44) * sc2, x1: fx0, y1: foeChest, dur: 0.24, sp: ARROWFX.spec({ wt: /crossbow/.test(a.look?.wt || "") ? "crossbow" : "bow" }), miss: false, gore: !!GS });
@@ -1226,7 +1228,7 @@ const FIGHTART = (() => {
         if (ahc) { HORSEBACK.drawHorse(wg, ahc, 0, tt + i, "back"); HORSEBACK.drawHorse(wg, ahc, 0, tt + i, "front"); wg.translate(0, -30 - (HORSEBACK.riderBob ? HORSEBACK.riderBob(ahc, tt + i) : 0)); }   // [riding] the horse first, the rider on it
         allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look, anim: an, ride: !!ahc });
         wg.restore();
-        const sp = SPARK[a.kind]; if (sp && Math.random() < (two ? 0.09 : 0.18) * pmul) spawn(sp[1], sp[0], ax + (Math.random() - 0.5) * 18 * s, ay + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 14 * s, -20 * s, 0.7, 2.2, 0);
+        const sp = SPARK[a.kind]; if (sp && Math.random() < (two ? 0.09 : 0.18) * pmul) spawn(sp[1], sp[0], ax + (Math.random() - 0.5) * 18 * s, ay + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 14 * s, -20 * s, 0.7, 1.3, 0);   // [summonfx] small motes, never a glow over the figure
       }
       if (two) { const named = slots.filter((a) => a.kind === "mate").length, tg = LAY && LAY.tag ? LAY.tag : { x: hx0 - 50 * s, y: groundY - 78 * s }; mateTags.push([L(`⚑ ${named ? `${named} of your party` : `${slots.length} allies`} with you`), tg.x * z + ox + zcx - zcx * z, tg.y * z + oy + zcy - zcy * z]); }   // a big party: one label instead of a pile of names
       for (const a of flyers) {   // a dragon circles above and dives in with fire when it strikes
@@ -1242,7 +1244,7 @@ const FIGHTART = (() => {
         // [fightpos] one row back, just ahead of you and short of the foe; it bounds forward when it strikes
         const sx0 = Math.min(hx0 + 34 * s, fx0 - (foeFront + 24) * s), sx = sx0 + lunge * Math.max(0, Math.min(50 * s, fx0 - (foeFront + 12) * s - sx0)), sy = groundY - (LAY ? 7 * s * (1 - lunge) : 0), ss = s * (LAY ? 0.9 + 0.1 * lunge : 1);
         wg.save(); wg.translate(sx, sy); wg.scale(ss, ss); allyFig(wg, sk, { lunge, t: tt }); wg.restore();
-        const sp = SPARK[sk]; if (sp && Math.random() < 0.25 * pmul) spawn(sp[1], sp[0], sx + (Math.random() - 0.5) * 16 * s, groundY + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 12 * s, -24 * s, 0.6, 2.2, 0);
+        const sp = SPARK[sk]; if (sp && Math.random() < 0.14 * pmul) spawn(sp[1], sp[0], sx + (Math.random() - 0.5) * 16 * s, groundY + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 12 * s, -24 * s, 0.6, 1.1, 0);   // [summonfx] a few small motes
       }
       // you
       const over = phase !== "play" && phase !== "idle" && phase !== "settle";   // "idle": one turn of a turn-by-turn fight has played, both still stand
@@ -1283,12 +1285,23 @@ const FIGHTART = (() => {
           const T = PAINTRIG.tip ? PAINTRIG.tip("me") : null; glowOn = false;
           if (T && T.gx != null) { try { const M = wg.getTransform().inverse(), g0 = M.transformPoint({ x: T.gx, y: T.gy }), t0 = M.transformPoint({ x: T.x, y: T.y }); hxH = g0.x; hyH = g0.y; tx2 = t0.x; ty2 = t0.y; glowOn = true; } catch (e) { glowOn = false; } }
         }
-        if (glowOn) {
-        const pulse = 0.55 + 0.25 * Math.sin(tt * 4);
-        wg.save(); additive(); wg.globalAlpha = pulse * (heroRig ? 0.55 : 1);
-        for (let i = 1; i <= 4; i++) { const q = i / 4, x = hxH + (tx2 - hxH) * q, y = hyH + (ty2 - hyH) * q, r = (heroRig ? 2.5 + q * 3.5 : 5 + q * 6) * s; wg.drawImage(glowSprite(c[i & 1]), x - r, y - r, r * 2, r * 2); }   // on the painted blade: a slim glow hugging the steel
-        wg.restore();
-        if (Math.random() < 0.45 * pmul) { const q = 0.3 + Math.random() * 0.7, x = hxH + (tx2 - hxH) * q, y = hyH + (ty2 - hyH) * q; spawn(c === COMBATFX.GLOW.shock ? 1 : 4, c[(Math.random() * c.length) | 0], x, y, (Math.random() - 0.5) * 20 * s, (c === COMBATFX.GLOW.frost ? 14 : -26) * s, 0.7, 1.7, 0); }
+        if (glowOn) {   // [weaponshine] a thin, soft shine along the weapon's own edge in the enchantment's colour, never a blob over it
+          const wt = heroP.wt || "sword", GL = COMBATFX.GLOW, col = SHINE.find(([k]) => GL[k] === c)?.[1] || c[0];
+          const dx = tx2 - hxH, dy = ty2 - hyH, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len, nx = -uy, ny = ux;
+          const pulse = 0.75 + 0.25 * Math.sin(tt * 2.6), at = (q, o) => [hxH + dx * q + nx * o, hyH + dy * q + ny * o];
+          wg.save(); wg.lineCap = "round"; wg.lineJoin = "round"; wg.strokeStyle = col; wg.shadowColor = col; wg.shadowBlur = 3 * s * k * z;
+          if (/axe|mace|hammer|staff/.test(wt)) {   // a head at the end of a haft: a faint rim around the head, the haft stays plain
+            const r = (/battleaxe|warhammer/.test(wt) ? 5 : /staff/.test(wt) ? 2.5 : 3.6) * s, [cx, cy] = at(heroRig ? 0.9 : 0.92, 0);
+            wg.globalAlpha = 0.34 * pulse; wg.lineWidth = 0.7 * s; wg.beginPath(); wg.arc(cx, cy, r, 0, Math.PI * 2); wg.stroke();
+          } else if (/bow/.test(wt)) {   // a bow: a hairline along the limb
+            wg.globalAlpha = 0.3 * pulse; wg.lineWidth = 0.6 * s; wg.beginPath(); wg.moveTo(...at(0.15, 0)); wg.lineTo(...at(1, 0)); wg.stroke();
+          } else {   // a blade: both edges from the guard to the point, meeting at the tip
+            const q0 = heroRig ? 0.42 : 0.3, half = (/greatsword/.test(wt) ? 1.3 : /dagger/.test(wt) ? 0.7 : 1) * s;
+            wg.globalAlpha = 0.36 * pulse; wg.lineWidth = 0.55 * s;
+            wg.beginPath(); wg.moveTo(...at(q0, half)); wg.lineTo(...at(0.9, half * 0.55)); wg.lineTo(...at(1, 0)); wg.lineTo(...at(0.9, -half * 0.55)); wg.lineTo(...at(q0, -half)); wg.stroke();
+          }
+          wg.restore();
+          if (Math.random() < 0.16 * pmul) { const q = 0.5 + Math.random() * 0.5, [x, y] = at(q, 0); spawn(c === GL.shock ? 1 : 4, col, x, y, (Math.random() - 0.5) * 12 * s, (c === GL.frost ? 10 : -16) * s, 0.55, 1.1, 0); }
         }
       }
       if (b && b.drain && b.who === "me" && typeof BEASTART !== "undefined") BEASTART.drain(wg, hx0 + 24 * s, heroChest - 8 * s, fx0, foeChest, u, tt);   // a Vampire Lord's drain
@@ -1527,8 +1540,8 @@ const FIGHTART = (() => {
     function portal(x, y, a, tt) {
       if (a <= 0) return;
       wg.save(); additive(); wg.globalAlpha = a;
-      for (let i = 0; i < 3; i++) { wg.strokeStyle = COL.summon[i % 2]; wg.lineWidth = Math.max(1, (3 - i) * s); wg.beginPath(); wg.ellipse(x, y - 30 * s, (14 - i * 3) * s, (30 - i * 6) * s, Math.sin(tt * 2 + i) * 0.1, 0, 7); wg.stroke(); }
-      wg.drawImage(glowSprite("#a07aff"), x - 26 * s, y - 56 * s, 52 * s, 52 * s);
+      wg.globalAlpha = a * 0.6; for (let i = 0; i < 3; i++) { wg.strokeStyle = COL.summon[i % 2]; wg.lineWidth = Math.max(1, (1.6 - i * 0.4) * s); wg.beginPath(); wg.ellipse(x, y - 30 * s, (14 - i * 3) * s, (30 - i * 6) * s, Math.sin(tt * 2 + i) * 0.1, 0, 7); wg.stroke(); }
+      wg.globalAlpha = a * 0.12; wg.drawImage(glowSprite("#a07aff"), x - 16 * s, y - 46 * s, 32 * s, 32 * s);   // [summonfx] only a hint of light in the tear
       wg.restore();
     }
     function rays(x, y, p) {
