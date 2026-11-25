@@ -22,6 +22,12 @@ const COOP = (() => {
   const live = (run, t = G.now()) => !!run && run.status !== "over" && t - (run.t || 0) < RUN_SECONDS;
   const isMember = (run, uid) => !!run?.members?.some((m) => m.id === uid);
   const activeMembers = (run) => (run?.members || []).filter((m) => !m.left);
+  /* [dunloop] a deep expedition (deepdelve.js) starts a new map on every level, so a room in the shared path is
+     [row, col, level] (no level: the first map). The path only ever goes deeper: a later level, or a later row. */
+  const lvOf = (p) => p?.[2] || 0;
+  const levelOf = (d) => d?.deep?.level || 0;
+  const deeper = (p, q) => lvOf(p) > lvOf(q) || (lvOf(p) === lvOf(q) && p[0] > q[0]);
+  const spot = (d) => (levelOf(d) ? [d.row, d.col, levelOf(d)] : [d.row, d.col]);
 
   /* [party] your party goes in as one: everyone in it is in the run straight away (no invites, no Accept cards).
      Adds party members who aren't in the run yet (up to the cap) and drops any invites still pending for them.
@@ -119,10 +125,10 @@ const COOP = (() => {
   function recordPick(run, d) {
     const step = run.path.length;
     if ((d.cstep || 0) < step) return null;      // someone else moved first; don't fork the path
-    if (step && run.path[step - 1][0] >= d.row) return null;   // a late write for a room the record is already past: the path only ever goes deeper
+    if (step && !deeper(spot(d), run.path[step - 1])) return null;   // a late write for a room the record is already past: the path only ever goes deeper
     const spec = { type: d.room.type };
     if (d.room.enemy && d.room.type !== "boss") spec.key = keyOf(d.room.enemy.name);
-    return { ...run, status: "in", path: [...run.path, [d.row, d.col]], rooms: [...run.rooms, spec] };
+    return { ...run, status: "in", path: [...run.path, spot(d)], rooms: [...run.rooms, spec] };
   }
   /* make a room match the shared one: same foe for everyone, a little tougher with more of you */
   function shape(s, run, spec) {
@@ -142,7 +148,12 @@ const COOP = (() => {
     if (!d || d.run !== run?.id || d.done) return 0;
     const i = d.cstep || 0;
     if (i >= run.path.length) return 0;
-    const [row, col] = run.path[i];
+    const [row, col] = run.path[i], lv = lvOf(run.path[i]);
+    if (lv < levelOf(d)) { d.cstep = i + 1; return 0; }   // a room on a level you already left behind
+    if (lv > levelOf(d)) {   // the leader went down the stairs: once you're out of your own room, follow them down
+      if (d.room) return 0;   // (the camp's choices replay first; lootvote.js steps you out of it once the leader moved on)
+      if (!descendTo(s, lv)) { d.cstep = i + 1; return 0; }
+    }
     if (d.row >= 0 && d.row === row && d.col === col) {   // you already stand in that room (a fight snapshot undid the count, or the path names it twice): count it, never walk it again
       d.cstep = i + 1;
       if (typeof console !== "undefined") console.warn(`coop: room ${row}:${col} already walked, moving on`);
@@ -156,6 +167,13 @@ const COOP = (() => {
     d.cstep = i + 1; d.path = d.path || []; d.path.push([d.row, d.col]);
     shape(s, run, run.rooms[i]);
     return 1;
+  }
+  /* walk down the stairs to the leader's level (a member who missed the "descend" replay, or whose camp was emptied) */
+  function descendTo(s, lv) {
+    const d = s.dungeon;
+    if (typeof DEEPDELVE === "undefined" || !DEEPDELVE.campAct) return false;
+    for (let k = 0; k < 6 && levelOf(s.dungeon) < lv; k++) { const r = DEEPDELVE.campAct(s, "descend", G.now(), {}); if (!r?.descended) break; }
+    return levelOf(s.dungeon) === lv && s.dungeon === d;
   }
   /* the leader's own room: count the step */
   function picked(s, run) { const d = s.dungeon; d.cstep = Math.max((d.cstep || 0) + 1, run.path?.length || 0); shape(s, run, run.rooms[d.cstep - 1]); }
@@ -313,15 +331,16 @@ const COOP = (() => {
     function heal(s, run) {
       const d = s.dungeon;
       if (healing || !d?.path?.length || d.run !== run.id) return;
-      const tail = (path, lr) => { const out = []; for (const p of path) if (p[0] > lr && (!out.length || p[0] > out[out.length - 1][0])) out.push(p); return out; };
-      const lastRow = (r) => (r.path.length ? r.path[r.path.length - 1][0] : -1);
-      if (!tail(d.path, lastRow(run)).length) return;
+      const lv = levelOf(d), mine = d.path.map((p) => (lv ? [p[0], p[1], lv] : [p[0], p[1]]));   // your own path is this level's
+      const tail = (path, last) => { const out = []; for (const p of path) if ((!last || deeper(p, last)) && (!out.length || deeper(p, out[out.length - 1]))) out.push(p); return out; };
+      const lastRow = (r) => (r.path.length ? r.path[r.path.length - 1] : null);
+      if (!tail(mine, lastRow(run)).length) return;
       healing = true;
       ctx.Store.change("runs", run.id, (r) => {
-        const add = r.leader === s.id ? tail(d.path, lastRow(r)) : [];
+        const add = r.leader === s.id ? tail(mine, lastRow(r)) : [];
         if (!add.length) return r;
         if (typeof console !== "undefined") console.warn(`coop: ${add.length} room(s) missing from the run record, written now`);
-        return { ...r, path: [...r.path, ...add.map((p) => [p[0], p[1]])], rooms: [...r.rooms, ...add.map((p) => ({ type: d.rows[p[0]]?.[p[1]]?.type || "fight" }))] };
+        return { ...r, path: [...r.path, ...add], rooms: [...r.rooms, ...add.map((p) => ({ type: d.rows[p[0]]?.[p[1]]?.type || "fight" }))] };
       }).then((res) => { const nd = S().dungeon, p = res?.after?.path; if (nd && p?.length && nd.row === p[p.length - 1][0] && nd.col === p[p.length - 1][1]) nd.cstep = p.length; })
         .catch(() => {}).finally(() => { healing = false; });
     }
@@ -405,7 +424,7 @@ const COOP = (() => {
       // count the room right away: a fight started before the store answers snapshots the save (tbfight.js), and a late
       // count was undone when it ended, which sent the leader back into the same room
       const step = Math.max(d.cstep || 0, run.path.length), at = [d.row, d.col];
-      const pre = { row: d.row, col: d.col, cstep: step, room: { type: d.room.type, enemy: d.room.enemy ? { name: d.room.enemy.name } : null } };
+      const pre = { row: d.row, col: d.col, cstep: step, deep: levelOf(d) ? { level: levelOf(d) } : null, room: { type: d.room.type, enemy: d.room.enemy ? { name: d.room.enemy.name } : null } };
       const spec = { type: d.room.type }; if (d.room.enemy && d.room.type !== "boss") spec.key = keyOf(d.room.enemy.name);
       d.cstep = step + 1; shape(s, run, spec);
       const here = () => { const nd = S().dungeon; return !!nd && nd.run === run.id && nd.row === at[0] && nd.col === at[1]; };   // (a fight's snapshot swaps the save object, so look it up fresh)
@@ -414,7 +433,7 @@ const COOP = (() => {
         if (k) { await new Promise((ok) => setTimeout(ok, 250 * k)); if (!here()) break; }   // already in another room: that pick writes the way on
         nr = (await ctx.Store.change("runs", run.id, (r) => recordPick(r, pre) || r))?.after || null;
       }
-      const mine = nr && nr.path.length && nr.path[nr.path.length - 1][0] === at[0] && nr.path[nr.path.length - 1][1] === at[1];
+      const mine = nr && nr.path.length && nr.path[nr.path.length - 1][0] === at[0] && nr.path[nr.path.length - 1][1] === at[1] && lvOf(nr.path[nr.path.length - 1]) === levelOf(d);
       if (mine) { if (here()) S().dungeon.cstep = nr.path.length; }
       else if (nr && here() && nr.path.length > step) {   // someone else moved first: step back out and follow the shared path instead
         const d = S().dungeon;
