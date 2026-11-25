@@ -4523,6 +4523,78 @@ html.mo-on .evc-fx{display:block}
 #gpop{display:none}
 html.pcmap.pc-home #gpop:not(:empty){display:block;position:fixed;left:14px;bottom:96px;width:340px;max-height:min(52vh,calc(100vh - 400px));overflow:auto;z-index:4;overscroll-behavior:contain}
 html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);background:linear-gradient(180deg,rgba(26,28,31,.95),rgba(12,13,15,.95))}
+/* [hotbar] the fight's action panel as 10 slots, keys 1-0 (hotbar.js, fightctl.js): two rows of 5 on a phone, one row on a PC */
+#tbf .fc.fc-hb{display:flex;flex-direction:column;gap:6px}
+#tbf .fc-hb .hb-bar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+#tbf .fc-hb .hb-side{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.6fr);gap:5px}
+#tbf .fc-hb .hb-s{position:relative}
+#tbf .fc-hb .hb-s .fc-k{display:block;opacity:.8}
+#tbf .fc-hb .hb-empty{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:52px;padding:0;border:0;background:none;color:#a49d8c;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#tbf .fc-hb .hb-empty .ic{display:block;width:var(--d,40px);height:var(--d,40px);border-radius:50%;border:1.5px dashed rgba(214,178,94,.3);background:rgba(0,0,0,.25)}
+#tbf .fc-hb .hb-empty:hover .ic,#tbf .fc-hb .hb-empty:focus-visible .ic{border-color:rgba(226,187,100,.8)}
+#tbf .fc-hb .hb-empty .fc-k{top:-3px;right:calc(50% - var(--d,40px) / 2 - 7px)}
+#tbf.c2 .fc.fc-hb:not(.fc-pick){display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto;gap:4px 6px;align-items:center}
+#tbf.c2 .fc.fc-hb:not(.fc-pick) .hb-bar{grid-row:1;grid-column:1;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px 2px;min-width:0}
+#tbf.c2 .fc.fc-hb:not(.fc-pick) .hb-side{grid-row:1;grid-column:2;grid-template-columns:repeat(3,44px);grid-auto-rows:auto;gap:3px 4px;align-self:stretch}
+#tbf.c2 .fc.fc-hb:not(.fc-pick) .hb-side>.tbact{grid-row:auto;grid-column:auto;--d:36px;min-height:50px}
+#tbf.c2 .fc.fc-hb:not(.fc-pick) .hb-side>.tbact.end{grid-column:1 / -1;min-height:52px}
+#tbf.c2 .fc.fc-hb:not(.fc-pick) .hb-bar .tbact{--d:38px;min-height:56px;width:auto}
+#tbf.c2 .fc.fc-hb:not(.fc-pick) .hb-bar .hb-empty{--d:38px;min-height:56px}
+#tbf.c2 .fc.fc-hb:not(.fc-pick) .hb-bar .tbact b{font-size:8.5px;letter-spacing:.02em}
+#tbf.c2 .fc.fc-hb:not(.fc-pick) .hb-bar .tbact.pw .ic{background:radial-gradient(circle at 50% 32%,#6a3424,#24100a 68%,#100604)}
+#tbf.c2 .fc.fc-hb:not(.fc-pick) .hb-bar .tbact.gd .ic{background:radial-gradient(circle at 50% 32%,#2f4256,#0f161e 68%,#070a0e)}
+#tbf.c2 .fc.fc-hb:not(.fc-pick) .hb-bar .tbact[disabled] .cp{opacity:.8}
+#tbf.c2 .fc.fc-hb:not(.fc-pick) .hb-bar .tbact.hb-gone .ic{opacity:.3}
+#tbf.c2.c2wide .fc.fc-hb:not(.fc-pick){grid-template-columns:auto auto;justify-content:center;gap:4px 14px}
+#tbf.c2.c2wide .fc.fc-hb:not(.fc-pick) .hb-bar{grid-template-columns:repeat(10,64px);gap:4px}
+#tbf.c2.c2wide .fc.fc-hb:not(.fc-pick) .hb-bar .tbact,#tbf.c2.c2wide .fc.fc-hb:not(.fc-pick) .hb-bar .hb-empty{--d:48px;min-height:68px}
+#tbf.c2.c2wide .fc.fc-hb:not(.fc-pick) .hb-bar .tbact b{font-size:10.5px}
+#tbf.c2.c2wide .fc.fc-hb:not(.fc-pick) .hb-side{grid-template-columns:repeat(3,60px) 150px;grid-auto-flow:column;align-items:start}
+#tbf.c2.c2wide .fc.fc-hb:not(.fc-pick) .hb-side>.tbact{--d:44px;min-height:60px}
+#tbf.c2.c2wide .fc.fc-hb:not(.fc-pick) .hb-side>.tbact.end{grid-column:auto;min-height:70px}
+/* edit mode: a SkyUI list over the bar */
+#tbf .fc-hb .hb-edit{display:flex;flex-direction:column;gap:6px;grid-column:1 / -1;min-width:0;width:100%}
+#tbf.c2 .fc.fc-hb.hb-on:not(.fc-pick){display:block}
+#tbf.c2.c2wide .fc.fc-hb.hb-on .hb-edit{max-width:760px;margin:0 auto}
+#tbf .hb-pick{border:1px solid rgba(236,230,214,.14);border-top-color:rgba(226,187,100,.55);border-radius:4px;background:linear-gradient(180deg,rgba(14,14,13,.97),rgba(8,8,8,.97));overflow:hidden}
+#tbf .hb-tabs{display:flex;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid rgba(236,230,214,.12)}
+#tbf .hb-tabs::-webkit-scrollbar{display:none}
+#tbf .hb-tab{flex:1 0 auto;display:flex;align-items:center;justify-content:center;gap:4px;min-height:38px;padding:0 9px;border:0;border-bottom:2px solid transparent;background:none;color:#a49d8c;font:600 12px/1 "Barlow Semi Condensed",sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+#tbf .hb-tab i{font-style:normal;font-size:10px;opacity:.6}
+#tbf .hb-tab.on{color:#f1ead8;border-bottom-color:#e2bb64}
+#tbf .hb-list{display:flex;flex-direction:column;max-height:min(34vh,260px);overflow-y:auto;overscroll-behavior:contain}
+#tbf .hb-p{display:flex;align-items:center;gap:9px;min-height:44px;padding:4px 12px;border:0;border-top:1px solid rgba(236,230,214,.06);background:none;color:#ece6d6;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+#tbf .hb-p:first-child{border-top:0}
+#tbf .hb-p:hover,#tbf .hb-p:focus-visible{background:rgba(226,187,100,.13);outline:none}
+#tbf .hb-p .hb-pic{flex:none;display:flex;width:28px;height:28px;align-items:center;justify-content:center;pointer-events:none}
+#tbf .hb-p .hb-pic img,#tbf .hb-p .hb-pic canvas{width:26px;height:26px}
+#tbf .hb-pn{flex:1;min-width:0;font:500 15px/1.15 "Barlow Semi Condensed",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+#tbf .hb-pn small{display:block;font-size:11px;color:#a49d8c}
+#tbf .hb-p.in .hb-pn{color:#f3d98b}
+#tbf .hb-at{flex:none;min-width:20px;padding:1px 5px;border-radius:3px;border:1px solid rgba(226,187,100,.6);background:rgba(0,0,0,.5);color:#f3d98b;font:600 12px/16px "Barlow Semi Condensed",sans-serif;text-align:center;pointer-events:none}
+#tbf .hb-hint{margin:0;font-size:12px;line-height:1.3;color:#cfc6b0;text-align:center;min-height:16px}
+#tbf .hb-hint.hb-flash{color:#ff9f8a}
+#tbf .hb-ebar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+#tbf.c2.c2wide .hb-ebar{grid-template-columns:repeat(10,minmax(0,1fr))}
+#tbf .hb-slot{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:58px;padding:5px 2px 4px;border-radius:6px;border:1px solid rgba(236,230,214,.18);background:rgba(20,18,15,.92);color:#ece6d6;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+#tbf .hb-slot .ic{display:flex;align-items:center;justify-content:center;width:30px;height:30px;font-size:18px;color:#a49d8c;pointer-events:none}
+#tbf .hb-slot .ic img,#tbf .hb-slot .ic canvas{width:28px;height:28px}
+#tbf .hb-slot b{font:600 9px/1.1 "Barlow Semi Condensed",sans-serif;letter-spacing:.03em;text-transform:uppercase;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+#tbf .hb-slot .fc-k{display:block;position:absolute;top:2px;right:3px;min-width:12px;padding:0 3px;border-radius:3px;border:1px solid rgba(255,255,255,.22);background:rgba(0,0,0,.55);font:600 9.5px/13px "Barlow Semi Condensed",sans-serif;color:#d9d2c0;pointer-events:none}
+#tbf .hb-slot.empty{border-style:dashed;background:rgba(0,0,0,.25)}
+#tbf .hb-slot.gone .ic{opacity:.35}
+#tbf .hb-slot:hover,#tbf .hb-slot:focus-visible{border-color:rgba(226,187,100,.7);outline:none}
+#tbf .hb-slot.sel{border-color:#e2bb64;box-shadow:0 0 0 2px rgba(226,187,100,.5),0 0 14px rgba(226,187,100,.35);background:rgba(66,52,24,.9)}
+#tbf .hb-slot.hb-over{border-color:#f3d98b;background:rgba(90,70,30,.95);transform:scale(1.05)}
+#tbf .hb-tools{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:6px}
+#tbf .hb-tb{min-height:40px;border-radius:4px;border:1px solid rgba(236,230,214,.2);background:linear-gradient(180deg,rgba(32,30,26,.96),rgba(12,11,10,.98));color:#ece6d6;font:600 13px/1 "Barlow Semi Condensed",sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+#tbf .hb-tb.pri{border-color:rgba(226,187,100,.85);background:linear-gradient(180deg,rgba(66,52,24,.96),rgba(22,17,8,.98));color:#f3e3b4}
+#tbf .hb-tb[disabled]{opacity:.45;cursor:default}
+.hb-ghost{position:fixed;left:0;top:0;z-index:200;display:flex;flex-direction:column;align-items:center;gap:2px;width:52px;padding:4px;border-radius:6px;border:1px solid #e2bb64;background:rgba(30,25,16,.95);color:#f3e3b4;font:600 9px "Barlow Semi Condensed",sans-serif;text-transform:uppercase;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.6)}
+.hb-ghost img,.hb-ghost canvas{width:28px;height:28px}
+#tbf.hb-dragging{cursor:grabbing}
+#tbf .tbtop .tbff.hb-ed svg{display:block;margin:auto}
+#tbf.c2 .tbtop .fdc-menu .tbff.hb-ed svg{flex:none;margin:0}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -4610,6 +4682,7 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 <script src="tbtips.js"></script>
 <script src="tbui.js"></script>
 <script src="fightctl.js"></script>
+<script src="hotbar.js"></script>
 <script src="fightread.js"></script>
 <script src="spellfx.js"></script>
 <script src="potionfx.js"></script>
@@ -4792,6 +4865,7 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 <script src="i18n_balfear.js"></script>
 <script src="i18n_combat2.js"></script>
 <script src="i18n_fightdeclutter.js"></script>
+<script src="i18n_hotbar.js"></script>
 <script src="i18n_busts.js"></script>
 <script src="i18n_fightset.js"></script>
 <script src="i18n_stacks.js"></script>
