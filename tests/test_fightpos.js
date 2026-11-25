@@ -46,18 +46,18 @@ for (const st of STAGES) for (const foe of FOES) for (const p of PARTY) for (con
   }
   // feet: on the ground line, back rows a little higher, never below it (the foreground strip)
   ok(Math.abs(L.hero.y - gy) < 0.01 && Math.abs(L.foe.y - gy) < 0.01, `${tag}: you or the foe not on the ground line`);
-  for (const [who, f] of all) ok(f.y <= gy + 0.01 && f.y >= gy - (L.rows + 2) * F.ROW_LIFT * s - 0.01, `${tag}: ${who} feet off the ground (${f.y.toFixed(1)} vs ${gy.toFixed(1)})`);
+  for (const [who, f] of all) ok(f.y <= gy + 0.01 && f.y >= Math.min(gy - (L.rows + 2) * Math.max(L.lift, L.wlift) * s, who.startsWith("waiting") ? L.foe.top : gy) - 0.01, `${tag}: ${who} feet off the ground (${f.y.toFixed(1)} vs ${gy.toFixed(1)})`);   // (a crowd waiting over the foe's shoulder stands further back, never higher than its head)
   // sides: your company left of the foe, you facing it with a gap
   ok(L.hero.x < L.foe.x, `${tag}: you stand right of the foe`);
   ok(L.hero.right <= L.foe.x, `${tag}: you stand inside the foe`);
   for (const a of L.allies) ok(a.x < L.foe.x, `${tag}: ally ${a.name} on the foe's side`);
-  for (const w of L.waiting) ok(w.x > L.foe.x, `${tag}: a waiting foe in front of the foe`);
+  for (const w of L.waiting) ok(w.x > L.foe.x || w.y < L.foe.y - 0.3 * (L.foe.y - L.foe.top), `${tag}: a waiting foe in front of the foe`);   // (or well back, over its shoulder)
   // rows: one scale per row, back rows smaller and higher
   const byRow = {};
   for (const a of L.allies) (byRow[a.row] = byRow[a.row] || []).push(a);
   for (const [r, list] of Object.entries(byRow)) {
-    ok(list.every((a) => Math.abs(a.sc - F.ROW_SC ** r) < 1e-6), `${tag}: row ${r} has mixed sizes`);
-    ok(list.every((a) => Math.abs(a.y - (gy - r * F.ROW_LIFT * s)) < 0.01), `${tag}: row ${r} not on its depth line`);
+    ok(list.every((a) => Math.abs(a.sc - L.rowSc[r]) < 1e-6 && L.rowSc[r] <= F.ROW_SC ** r + 1e-9 && L.rowSc[r] >= 0.78 * F.ROW_SC ** r - 1e-9), `${tag}: row ${r} has mixed sizes`);
+    ok(list.every((a) => Math.abs(a.y - (gy - r * L.lift * s)) < 0.01), `${tag}: row ${r} not on its depth line`);
   }
   ok(L.rows <= 5, `${tag}: ${L.rows} rows`);
   // nobody fully hidden: two allies in one row never share a spot
