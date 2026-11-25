@@ -117,6 +117,11 @@ const SKILLUP = (() => {
     if (!live) return;
     if (document.querySelector("#tbf, #tbwatch") && waited < 8000) { waited += 300; waitT = setTimeout(next, 300); return; }
     waited = 0;
+    const nx = queue[0];   // [notify] one banner at a time across the game: wait for our turn
+    if (nx && typeof NOTIFY !== "undefined" && !NOTIFY.lease(nx.kind === "level" ? "level" : "skill", nx.kind === "level" ? `Level ${nx.lvl}` : `${nx.name} ${nx.lvl}`, dur(nx) + 400, nx.name, nx.lvl - Math.max(1, crossings(nx)), nx.lvl)) {
+      if (cur) { cur = null; const h = host(); if (h) { h.classList.remove("on"); h.innerHTML = ""; } }
+      waitT = setTimeout(next, 250); return;
+    }
     const el = host(); cur = queue.shift() || null;
     if (!el) return;
     if (!cur) { el.classList.remove("on"); el.innerHTML = ""; place(); return; }

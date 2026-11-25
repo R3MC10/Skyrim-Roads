@@ -42,7 +42,12 @@ const POLISH = (() => {
     if (typeof PCMAP !== "undefined" && PCMAP.on && PCMAP.on()) return document.documentElement.classList.contains("pc-full");   // PC: the map stays in sight beside a side screen
     return !!(ui && ui.tab && ui.tab !== "map");
   }
+  /* [notify] every banner goes through notify.js first (priorities, merges, one at a time); it calls raw() when it's this one's turn */
   function banner(kind, title, big, icon = "") {
+    if (typeof NOTIFY !== "undefined") return NOTIFY.banner(kind, title, big, icon);
+    return raw(kind, title, big, icon);
+  }
+  function raw(kind, title, big, icon = "", life = 0) {
     if (typeof document === "undefined") return;
     if (kind === "objective" && typeof HUD2 !== "undefined" && !busy() && HUD2.objFlash(big)) return;
     if (typeof SKILLUP !== "undefined" && SKILLUP.claim(kind, big)) return;   // skillup.js: skill-ups and level-ups get the Skyrim toast with a bar   // hud2.js: a new objective flashes on the line under the compass
@@ -50,7 +55,7 @@ const POLISH = (() => {
     const last = queue[queue.length - 1];
     if (last && last.kind === kind && kind === "skill" && queue.length) { last.big += ` · ${big}`; return; }
     if (queue.length >= 4) queue.shift();
-    queue.push({ kind, title, big, icon });
+    queue.push({ kind, title, big, icon, life });
     if (!showing) next();
   }
   function next() {
@@ -63,7 +68,7 @@ const POLISH = (() => {
     el.className = `pban pban-${b.kind}`;
     el.innerHTML = `<i class="pl"></i>${b.icon ? `<span class="pic">${b.icon}</span>` : ""}<span class="ptx"><small>${esc(b.title)}</small><b>${esc(b.big)}</b></span><i class="pr"></i>`;
     host().appendChild(el);
-    const life = b.kind === "level" ? 3200 : 2500;
+    const life = b.life || (b.kind === "level" ? 3200 : 2500);
     setTimeout(() => { el.classList.add("out"); setTimeout(() => { el.remove(); next(); }, reduce ? 0 : 320); }, life);
   }
 
@@ -158,5 +163,5 @@ const POLISH = (() => {
     el.classList.remove("pswap"); void el.offsetWidth; el.classList.add("pswap");
   }
 
-  return { banner, fromText, levelUp, gold, toast, swap, texture, burst };
+  return { banner, raw, fromText, levelUp, gold, toast, swap, texture, burst };
 })();

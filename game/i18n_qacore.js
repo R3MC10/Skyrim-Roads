@@ -137,7 +137,7 @@ const I18N_QACORE = (() => {
     "Miner and adventurer from Darkwater Crossing. Good with a bow.": "Górniczka i poszukiwaczka przygód z Darkwater Crossing. Dobra z łukiem.",
     "Orc warrior who wants out of her stronghold. Axe and shield.": "Orcza wojowniczka, która chce się wyrwać z twierdzy. Topór i tarcza.",
     "Dunmer spellsword for hire at the Retching Netch. Chitin, steel and fire.": "Dunmerski miecz-mag do wynajęcia w Retching Netch. Chityna, stal i ogień.",
-    // patch note b255
+    // patch note b256
     "Title screen in Polish and the level-up tip": "Ekran tytułowy po polsku i wskazówka o awansie",
     "Fixed: in Polish, the title screen, How to Play, Credits, Settings and the Updates page still had lines in English.":
       "Naprawione: po polsku ekran tytułowy, Jak grać, Twórcy, Ustawienia i strona Aktualizacje miały jeszcze linijki po angielsku.",

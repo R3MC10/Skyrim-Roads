@@ -3,10 +3,17 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b255-qacore2", build: 255, date: "25 Nov 2026", title: "Title screen in Polish and the level-up tip", items: [
+    { id: "b256-qacore2", build: 256, date: "25 Nov 2026", title: "Title screen in Polish and the level-up tip", items: [
       "Fixed: in Polish, the title screen, How to Play, Credits, Settings and the Updates page still had lines in English.",
       "Fixed: in Polish, every perk description, the hirelings' descriptions and the patch-note dates were still in English.",
       "Fixed: the first level-up tip and one Dawnguard line still sent you to the Hero tab; it's called Character now."
+    ] },
+    { id: "b255-notify", build: 255, date: "25 Nov 2026", title: "Tidier pop-ups", items: [
+      "All the pop-up messages now take turns: at most one message and one banner at a time, never on top of each other. Level ups and finished quests go first.",
+      "Loot and gold that arrive together are added up into one line (\"Iron Dagger ×3\", one gold total), and a skill that rises a few times in a row shows as \"21 → 24\".",
+      "Achievements earned together share one banner, so \"First Steps\" and \"Coin Hoarder\" no longer pop one after the other when you start.",
+      "Nothing pops up over the perk stars, item details, character creation, mini-games, party votes or your fight buttons any more. Big news waits until you're done; small loot lines go straight to the history.",
+      "New: a message history. Tap the little scroll next to the messages at the top left to see the last 200, sorted into Rewards, Quests, Party and World.",
     ] },
     { id: "b254-qafight", build: 254, date: "25 Nov 2026", title: "Party dungeon fixes", items: [
       "Fixed: in a party dungeon, the waiting screen still said only the leader decides. It now says everyone votes on each choice.",
