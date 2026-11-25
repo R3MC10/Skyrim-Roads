@@ -4,6 +4,12 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
   Object.assign(I18N_EXTRA.words, {
     "14 more painted battle backdrops":
       "14 nowych malowanych teł bitew",
+    "Small Polish fixes": "Drobne poprawki tłumaczenia",
+    "In Polish, the \"stage done\" line of the vampire war quests is fully translated again.":
+      "Po polsku linijka o ukończonym etapie w zadaniach wojny z wampirami znowu jest w całości przetłumaczona.",
+    "The Coming next list is up to date.": "Lista „Wkrótce” jest aktualna.",
+    "Hands-on gathering: a little harvest game for every kind of plant":
+      "Zbieranie na serio: mała gra przy zbiorze każdego rodzaju rośliny",
     "Mentoring: play side by side with friends of any level":
       "Mentorowanie: graj ramię w ramię z przyjaciółmi na dowolnym poziomie",
     "Shrines of your own: build a Daedric altar at your longhouse":

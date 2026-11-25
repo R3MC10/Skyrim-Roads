@@ -3,8 +3,10 @@ the leader stops for an encounter and decides, gold found on the road is split, 
 per room, and a big party (7 beside you) fits in the fight scene. Usage: python3 partyplay_ui.py PORT"""
 import asyncio, sys
 from playwright.async_api import async_playwright
+_SHOTS = (__import__("os").environ.get("SHOTS") or __import__("os").path.join(__import__("tempfile").gettempdir(), "rotn_shots")).replace("\\", "/").rstrip("/") + "/"   # screenshots: $SHOTS or the temp folder
+__import__("os").makedirs(_SHOTS, exist_ok=True)
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8850"
-SHOT = "/home/claude/tests/pp_"
+SHOT = _SHOTS + "pp_"
 results = []
 async def safe_shot(el, path):
     try: await el.screenshot(path=path)

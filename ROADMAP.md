@@ -72,6 +72,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: tests green (testsgreen; tests/*, small game fixes only): run every node + screen test on main and fix the red ones; screen tests take CHROME=/path (else /usr/bin/google-chrome, else Playwright's Chromium) and a port argument. Branch claude/testsgreen (b232).
 - Claude: no mounted combat (nomountfight; mountcombat.js + i18n_mountcombat.js new, engine.js, mountfight.js, ui.js): MOUNTCOMBAT.enabled = false, every fight on foot, the horse waits off-field and you ride on afterwards. Mounted combat itself keeps growing behind the flag on claude/riding (b231).
 - Claude: 4K-sharp painted map (map4k; maptiles.js new, map.js, ui.js, scripts/map_tiles.py, mapt-* tiles): an 8000 px tile pyramid of the painting (2 levels of 512 px WebP tiles, only the tiles in view load, small cache), edge-directed upscale + painted detail from ChatGPT swatches, a fine painted grain past the top level's pixels; the ink chart is now only the fallback. Branch claude/map4k (b230).
 - Claude: gathering fix (gatherfix2; ui.js, gather.js, i18n_gather.js new): on PC the Gathering card lived in the side panel that the map home screen hides, so nobody on a PC could pick or forage; it now floats over the map. Half-filled old gathering records no longer throw. Regression: test_gather.js + gatherfix_ui.py (real taps and clicks).

@@ -1,8 +1,10 @@
 """Tab compass menu (tabmenu.js): swipes open the right menus, the bottom bar shows the right values. Usage: python3 tabmenu_ui.py PORT"""
 import asyncio, sys, json, os
 from playwright.async_api import async_playwright
+_SHOTS = (__import__("os").environ.get("SHOTS") or __import__("os").path.join(__import__("tempfile").gettempdir(), "rotn_shots")).replace("\\", "/").rstrip("/") + "/"   # screenshots: $SHOTS or the temp folder
+__import__("os").makedirs(_SHOTS, exist_ok=True)
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
-OUT = "/home/claude/tests/tabmenu/"
+OUT = _SHOTS + "tabmenu/"
 fails = []
 def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)

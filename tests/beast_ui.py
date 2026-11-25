@@ -3,8 +3,10 @@
 import asyncio, sys, io
 from playwright.async_api import async_playwright
 from PIL import Image
+_SHOTS = (__import__("os").environ.get("SHOTS") or __import__("os").path.join(__import__("tempfile").gettempdir(), "rotn_shots")).replace("\\", "/").rstrip("/") + "/"   # screenshots: $SHOTS or the temp folder
+__import__("os").makedirs(_SHOTS, exist_ok=True)
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8839"
-OUT = "/home/claude/tests/"
+OUT = _SHOTS
 
 JS = r"""
 window.__bx = {
@@ -27,7 +29,7 @@ async def main():
         print(("ok   " if c else "FAIL ") + m)
         if not c: fails.append(m)
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
+        b = await p.chromium.launch(executable_path=(__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None)), args=["--no-sandbox"])
         pg = await b.new_page(viewport={"width": 412, "height": 915}, device_scale_factor=2)
         pg.on("pageerror", lambda e: errs.append(str(e)))
         await pg.goto(f"http://localhost:{PORT}/index.html?p=bx1&notut&fightanim"); await pg.wait_for_timeout(1800)

@@ -11,7 +11,7 @@ import asyncio, sys, os, json
 from playwright.async_api import async_playwright
 GP = sys.argv[1] if len(sys.argv) > 1 else "8901"
 SP = sys.argv[2] if len(sys.argv) > 2 else "8788"
-CHROME = os.environ.get("CHROME", "/usr/bin/google-chrome")
+CHROME = (__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None))
 fails = []
 def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)
@@ -56,7 +56,7 @@ def backups(pg_eval):
 async def main():
     user = "Safe" + TAG
     async with async_playwright() as p:
-        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
+        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if CHROME and os.path.exists(CHROME) else {}
         b = await p.chromium.launch(**kw)
         ctx = await b.new_context(viewport={"width": 412, "height": 915})
         errs = []

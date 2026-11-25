@@ -5,7 +5,7 @@ from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_travelscene")
 os.makedirs(OUT, exist_ok=True)
-CHROME = "/usr/bin/google-chrome"
+CHROME = (__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None))
 
 SKIES = {
     "day": "{tod:'day',season:'summer',weather:'clear'}",
@@ -17,7 +17,7 @@ SKIES = {
 async def main():
     async with async_playwright() as p:
         opts = {"args": ["--no-sandbox"]}
-        if os.path.exists(CHROME): opts["executable_path"] = CHROME
+        if CHROME and os.path.exists(CHROME): opts["executable_path"] = CHROME
         b = await p.chromium.launch(**opts)
         ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=3)
         errs = []

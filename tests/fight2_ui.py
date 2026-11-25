@@ -2,8 +2,10 @@
 import asyncio, sys, io, json
 from playwright.async_api import async_playwright
 from PIL import Image, ImageDraw
+_SHOTS = (__import__("os").environ.get("SHOTS") or __import__("os").path.join(__import__("tempfile").gettempdir(), "rotn_shots")).replace("\\", "/").rstrip("/") + "/"   # screenshots: $SHOTS or the temp folder
+__import__("os").makedirs(_SHOTS, exist_ok=True)
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8799"
-OUT = "/home/claude/tests/"
+OUT = _SHOTS
 WEAPONS = ["dagger", "sword", "axe", "mace", "greatsword", "battleaxe", "warhammer", "spear", "bow", "crossbow", "staff", "fist", "shield bash", "block"]
 SPELLS = [("firebolt", "Firebolt: 31"), ("ice_spike", "Ice Spike: 28"), ("lightning_bolt", "Lightning Bolt: 30"), ("sun_fire", "Sun Fire: 40"), ("healing", "Healing: +25 health"),
           ("lesser_ward", "Lesser Ward: a shimmering ward (40)"), ("oakflesh", "Oakflesh: +40 armor"), ("fire_rune", "Fire Rune: a glowing rune waits on the ground"),
@@ -69,7 +71,7 @@ def sheet(rows, path, title):
 
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
+        b = await p.chromium.launch(executable_path=(__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None)), args=["--no-sandbox"])
         errs, report = [], {}
         for style in ["ink"]:
             ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2)
