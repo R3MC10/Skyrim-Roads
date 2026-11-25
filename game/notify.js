@@ -19,7 +19,7 @@ const NOTIFY = (() => {
   // kind: [priority, ms on screen, history filter]
   const RULE = {
     vote: [0, 0, "party"], disconnect: [0, 0, "party"],
-    level: [1, 3500, "rewards"], questdone: [1, 3500, "quests"], trophy: [1, 3500, "rewards"],
+    level: [1, 3500, "rewards"], promoted: [1, 3500, "rewards"], questdone: [1, 3500, "quests"], trophy: [1, 3500, "rewards"],
     skill: [2, 2500, "rewards"], ach: [2, 2500, "rewards"], queststart: [2, 2500, "quests"], objective: [2, 2500, "quests"],
     event: [2, 2500, "world"], place: [2, 2500, "world"], party: [2, 2500, "party"],
     loot: [3, 2000, "rewards"], gold: [3, 2000, "rewards"], weather: [3, 2000, "world"],
@@ -45,7 +45,7 @@ const NOTIFY = (() => {
   /* a polish.js banner (kind, small title) → our kind */
   function bannerKind(kind, title) {
     const t = String(title || "");
-    if (kind === "level") return "level";
+    if (kind === "level") return /^Promoted/i.test(t) ? "promoted" : "level";   // a side rank-up: P1, drawn by polish.js
     if (kind === "skill") return "skill";
     if (kind === "ach") return "ach";
     if (kind === "place") return "place";
@@ -172,6 +172,9 @@ const NOTIFY = (() => {
     "just now": "przed chwilą", "{0} min ago": "{0} min temu", "{0} h ago": "{0} godz. temu",
     // the patch note
     "Tidier pop-ups": "Porządniejsze powiadomienia",
+    "Promotions and tips back in their place": "Awanse i podpowiedzi na swoim miejscu",
+    "When you're promoted on a side, the banner shows again (it was quietly swallowed before).": "Gdy awansujesz u jakiejś strony, baner znów się pokazuje (wcześniej znikał bez śladu).",
+    "The tips for new players no longer sit on top of the dungeon's route buttons: they move below them, or wait until there's room.": "Podpowiedzi dla nowych graczy nie zasłaniają już przycisków trasy w lochu: przesuwają się pod nie albo czekają, aż będzie miejsce.",
     "All the pop-up messages now take turns: at most one message and one banner at a time, never on top of each other. Level ups and finished quests go first.":
       "Wszystkie wyskakujące komunikaty czekają teraz na swoją kolej: naraz najwyżej jedna wiadomość i jeden baner, nigdy jeden na drugim. Nowy poziom i ukończone zadania mają pierwszeństwo.",
     "Loot and gold that arrive together are added up into one line (\"Iron Dagger ×3\", one gold total), and a skill that rises a few times in a row shows as \"21 → 24\".":

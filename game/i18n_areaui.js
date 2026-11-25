@@ -21,6 +21,20 @@
     "Players' houses": "Domy graczy", "Build a hall": "Zbuduj dwór", "Everyone builds it": "Budują go wszyscy", "Duel for a stake": "Pojedynek o stawkę", "Cast a line": "Zarzuć wędkę",
     "Open": "Otwarte", "Night prices": "Nocne ceny", "Closed till 08:00": "Zamknięte do 08:00", "You have a follower": "Masz towarzysza", "None left this level": "Brak lekcji na tym poziomie",
     "Garden ripe": "Ogród dojrzał", "Your horse": "Twój koń",
+    // phone layout: shut places fold away; Social's More line
+    "Closed": "Zamknięte", "Messages, trades, chat": "Wiadomości, wymiany, czat", "Sort by": "Sortuj według",
+    // patch note b262
+    "Tidier screens on phones": "Porządniejsze ekrany na telefonie",
+    "On a phone, the Area tab lists places in full-width rows: icon, name and whether it's open. Open places come first; shut ones fold away under \"Closed\". Two columns only when every name fits.":
+      "Na telefonie zakładka Okolica pokazuje miejsca w wierszach na całą szerokość: ikona, nazwa i czy jest otwarte. Otwarte są na górze, zamknięte chowają się pod „Zamknięte”. Dwie kolumny tylko wtedy, gdy mieszczą się wszystkie nazwy.",
+    "On a phone, the Company tab shows your longhouse right under the Party / Company / Friends / Realm row. Messages, trades and chat fold away under More.":
+      "Na telefonie zakładka Kompania pokazuje twój długi dom zaraz pod rzędem Drużyna / Kompania / Znajomi / Królestwo. Wiadomości, wymiany i czat chowają się pod Więcej.",
+    "On a phone, the Items menu has one Sort button (pick what to sort by) next to the up/down switch, instead of a row of tiny buttons.":
+      "Na telefonie menu Przedmioty ma jeden przycisk Sortuj (wybierasz, według czego) obok przełącznika góra/dół, zamiast rzędu malutkich przycisków.",
+    "On a phone, holding a finger on an item opens its details in a panel at the bottom of the screen. The list stays where it was; tap elsewhere to close it.":
+      "Na telefonie przytrzymanie palca na przedmiocie otwiera jego opis w panelu na dole ekranu. Lista zostaje tam, gdzie była; stuknij gdzie indziej, żeby zamknąć.",
+    "On a PC map, the floating Gathering card and the world event cards on the left no longer cover each other: the cards stop above it and scroll.":
+      "Na mapie na PC pływająca karta Zbieractwa i karty wydarzeń po lewej już się nie zasłaniają: karty kończą się nad nią i można je przewijać.",
     // map panel
     "What to do next": "Co dalej", "Show less": "Pokaż mniej", "Towns": "Miasta", "Dungeons": "Lochy", "Not visited": "Nieodwiedzone", "Other": "Inne", "All": "Wszystko",
     "No places of this kind yet. Tap All to see every place.": "Na razie brak takich miejsc. Dotknij Wszystko, by zobaczyć wszystkie.",

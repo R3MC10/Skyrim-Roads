@@ -107,7 +107,7 @@ async def run(b, vw, vh, style, fails):
     await pg.evaluate("document.querySelector('.nextcard')?.scrollIntoView({block:'start'})"); await shot("ideas")
     await pg.evaluate("(()=>{const S=__dbg.save(); S.inv=S.inv.filter(r=>r.item!=='mat_iron');})()")
     first = nx[0] if nx else ""
-    await pg.click(".obrow .obx"); await pg.wait_for_timeout(400)
+    if await pg.query_selector(".obrow .obx"): await pg.click(".obrow .obx"); await pg.wait_for_timeout(400)   # no ideas is already a failed check above: carry on
     nx2 = await pg.evaluate("[...document.querySelectorAll('.obrow .t')].map(x=>x.firstChild.textContent.trim())")
     check(first not in nx2, "hiding an idea didn't hide it")
     # a level 3 with gold: a dungeon and a horse come up
@@ -127,6 +127,10 @@ async def run(b, vw, vh, style, fails):
         await pg.click("#side [data-act=enter]"); await pg.wait_for_timeout(1800)
         tip = await pg.evaluate(TIP); print(tag, "11 dungeon", dn, "tip:", tip[:60]); check("dungeon" in tip.lower(), "no first-dungeon tip")
         await shot("dungeon_tip")
+        cover = await pg.evaluate("""(()=>{ const t=document.querySelector('#obtip'); if(!t || t.classList.contains('obwait')) return 'waiting';
+          const a=t.getBoundingClientRect(); return [...document.querySelectorAll('#dun .dstrip button, #dun .dstrip')].filter(e=>{const b=e.getBoundingClientRect();
+          return b.height>0 && a.left<b.right && b.left<a.right && a.top<b.bottom && b.top<a.bottom;}).length; })()""")
+        check(cover == 0 or cover == "waiting", f"the dungeon tip covers the route strip ({cover})")
         await pg.click("#obtip [data-obt=off]"); await pg.wait_for_timeout(300)
         check(await pg.evaluate("ONBOARD.tipsOn()===false && !document.querySelector('#obtip')"), "Don't show tips didn't stick")
         await pg.evaluate("(()=>{const S=__dbg.save(); S.dungeon=null; S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; document.querySelector('#dun')?.remove();})()")

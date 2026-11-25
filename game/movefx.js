@@ -194,6 +194,90 @@ const MOVEFX = (() => {
     soul_rend: R("soul", "wisps", "lance", "drainin", 0, 1.2, 1),
   };
 
+  /* Weapon moves, shouts, powers and forms (batch 2). Extra parts for these:
+     charge   glint (a gleam runs up the blade and dust gathers: power attacks) · inhale (air pulled into the mouth: shouts)
+              · growl (red breath: beasts)
+     delivery swing (a painted crescent where the blade passed; variant 0 diagonal, 1 wide sweep, 2 overhead chop, 3 hook)
+              · thrust (a stab streak; 1 = long) · jab (a short punch) · shove (a shield bash: one hard arc) · rake (three
+              claw streaks) · maw (jaws snapping shut) · leap (a pounce arc) · voice (rings of sound rolling out of the
+              mouth; the variant sets their shape) · toss (a flask on an arc)
+     impact   cut · cleave · crush · pierce · punch · stun · rend · bite (weapons, at every blow) · push · splash
+     ground   gouge (a groove) · crack (cracked earth)
+     A weapon recipe (w) plays its delivery and impact at every blow of the move (a dagger stabs twice). On top of any
+     weapon blow: a critical flashes white, a sneak attack leaves a dark second cut, an enchantment sprays its element,
+     and a combo (Shatter, Overload, Steam, Thermal shock, Opening) bursts in its own colours. */
+  const Wm = (p, c, d, i, g = 0, z = 1, k = 0) => ({ p, c, d, i, g, z, k, w: 1 });
+  const V = (p, d, i, g = 0, z = 1, k = 0) => ({ p, c: "inhale", d, i, g, z, k, mouth: 1 });
+  const MOVE = {
+    "atk:dagger": Wm("steel", "none", "thrust", "cut", 0, 0.75, 0),
+    "atk:sword": Wm("steel", "none", "swing", "cut", 0, 1, 0),
+    "atk:greatsword": Wm("steel", "none", "swing", "cleave", 0, 1.3, 1),
+    "atk:axe": Wm("iron", "none", "swing", "cleave", 0, 1, 2),
+    "atk:battleaxe": Wm("iron", "none", "swing", "cleave", "crack", 1.3, 2),
+    "atk:mace": Wm("stone", "none", "swing", "crush", 0, 1, 3),
+    "atk:club": Wm("oak", "none", "swing", "crush", 0, 0.95, 3),
+    "atk:warhammer": Wm("stone", "none", "swing", "crush", "crack", 1.35, 2),
+    "atk:spear": Wm("steel", "none", "thrust", "pierce", 0, 1.1, 1),
+    "atk:fist": Wm("dust", "none", "jab", "punch", 0, 0.8, 0),
+  };
+  for (const k of Object.keys(MOVE)) { const r = MOVE[k]; MOVE["pow:" + k.slice(4)] = { ...r, c: "glint", z: r.z * 1.3, g: r.g || "gouge", pw: 1 }; }   // a power attack: wound up, bigger, and it marks the ground
+  Object.assign(MOVE, {
+    bash: Wm("iron", "none", "shove", "stun", 0, 1, 0),
+    guard: R("steel", "glint", "none", "none", 0, 0.8, 9),
+    // ---- shouts
+    "shout:unrelenting_force": V("voice", "voice", "push", "gouge", 1.2, 0),
+    "shout:disarm": V("steel", "voice", "glint", 0, 0.9, 1),
+    "shout:fire_breath": V("fire", "jet", "scorch", "scorch", 1.35, 0),
+    "shout:frost_breath": V("frost", "mist", "creep", "frost", 1.35, 0),
+    "shout:ice_form": V("frost", "voice", "impale", "frost", 1.1, 2),
+    "shout:become_ethereal": V("ward", "none", "shimmer", 0, 1.1, 3),
+    "shout:kynes_peace": V("nature", "voice", "ripple", 0, 1, 4),
+    "shout:dragon_aspect": V("dragon", "none", "plates", "ring", 1.4, 5),
+    "shout:bend_will": V("gold", "voice", "ripple", 0, 1.1, 6),
+    "shout:marked_for_death": V("shadow", "voice", "sear", 0, 1, 7),
+    "shout:slow_time": V("myst", "none", "ring", 0, 1.2, 4),
+    "shout:dragonrend": V("blood", "voice", "chains", 0, 1.2, 8),
+    "shout:storm_call": V("shock", "sky", "fork", "char", 1.4, 0),
+    "shout:elemental_fury": R("voice", "inhale", "none", "weapon", 0, 1, 4),
+    "shout:throw_voice": V("calm", "voice", "ripple", 0, 0.8, 9),
+    "shout:animal_allegiance": V("nature", "voice", "feathers", 0, 1, 10),
+    "shout:call_of_valor": V("sun", "rift", "rift", 0, 1.2, 3),
+    "shout:call_dragon": V("dragon", "voice", "pillar", "ring", 1.3, 11),
+    "shout:dismay": V("dread", "voice", "ripple", 0, 1.2, 12),
+    // ---- race powers
+    "race:nord": V("rage", "voice", "ripple", 0, 1.3, 13),
+    "race:imperial": R("gold", "rays", "aura", "ripple", "ring", 1.3, 14),
+    "race:breton": R("ward", "hex", "none", "hex", 0, 1.3, 8),
+    "race:redguard": R("nature", "motes", "none", "pillar", 0, 1.1, 15),
+    "race:altmer": R("myst", "rays", "none", "pillar", 0, 1.2, 16),
+    "race:bosmer": R("nature", "wisps", "none", "feathers", 0, 1.1, 17),
+    "race:dunmer": R("fire", "flame", "none", "cloak", 0, 1.3, 18),
+    "race:orc": R("rage", "smoke", "none", "cloak", 0, 1.3, 19),
+    "race:khajiit": R("gold", "wisps", "none", "glint", 0, 1, 20),
+    "race:argonian": R("water", "motes", "none", "bubbles", 0, 1.2, 21),
+    // ---- werewolf, Vampire Lord, vampire
+    "beast:claw": Wm("blood", "growl", "rake", "rend", 0, 1, 0),
+    "beast:maul": Wm("blood", "growl", "rake", "rend", "gouge", 1.4, 1),
+    "beast:pounce": Wm("blood", "growl", "leap", "rend", "gouge", 1.2, 2),
+    "beast:feast": Wm("blood", "growl", "maw", "bite", 0, 1.2, 4),
+    "beast:howl": V("rage", "voice", "push", "gouge", 1.3, 22),
+    "beast:revert": R("rage", "growl", "none", "flash", 0, 0.9, 31),
+    "lord:claw": Wm("shadow", "growl", "rake", "rend", 0, 1.1, 5),
+    "lord:drain": R("blood", "smoke", "pull", "drainin", 0, 1.2, 23),
+    "lord:grip": R("blood", "smoke", "pull", "chains", 0, 1.2, 24),
+    "lord:raise": R("necro", "smoke", "none", "necro", "glyph", 1.2, 25),
+    "lord:rise": R("shadow", "smoke", "none", "feathers", 0, 1.4, 27),
+    "lord:revert": R("shadow", "wisps", "none", "flash", 0, 1, 29),
+    "vamp:seduce": R("blood", "ripple", "wave", "ripple", 0, 1, 28),
+    "vamp:shadows": R("shadow", "smoke", "none", "shimmer", 0, 1.3, 32),
+    "vamp:bite": Wm("blood", "growl", "maw", "bite", 0, 0.9, 6),
+    // ---- reactions and Breathe
+    "rx:oil": R("oil", "none", "toss", "splash", 0, 1, 0),
+    "rx:mark": R("gold", "rays", "brand", "sigil", 0, 0.9, 33),
+    "rx:cover": R("steel", "hex", "thread", "hex", 0, 1, 34),
+    recover: R("calm", "wisps", "none", "motes", 0, 0.9, 35),
+  });
+
   // ---------------------------------------------------------------- which recipe a beat plays
   const spells = () => (typeof D !== "undefined" && D.SPELLS) || {};
   /* the spell a crafted/custom spell looks like (deliberately shared: its first damage part, else its first part) */
@@ -213,7 +297,17 @@ const MOVEFX = (() => {
       if (!SPELL[id]) return null;
       return (k === "dual" || b.dual ? "dual:" : "spell:") + id;
     }
-    if (b.move === "staff" && line?.a !== "power_attack") return null;   // staffs keep their own bolt for now
+    // [movefx2] shouts, powers, forms, reactions and weapon blows
+    if (k === "shout") return MOVE["shout:" + arg] ? "shout:" + arg : null;
+    if (k === "power") { if (arg === "beast") return "beast:howl"; if (arg === "lord") return "lord:rise"; return MOVE["race:" + arg] ? "race:" + arg : null; }
+    if (k === "beast" || k === "lord" || k === "vamp") return MOVE[k + ":" + arg] ? k + ":" + arg : null;
+    if (MOVE[k + ":" + arg] && k === "rx") return k + ":" + arg;
+    if (k === "recover") return "recover";
+    if (b.move === "bash") return "bash";
+    if (b.move === "block") return "guard";
+    if (b.move === "claw" && (b.st?.lord || b.st?.beast)) return b.st.lord ? "lord:claw" : b.power ? "beast:maul" : "beast:claw";
+    if (b.move === "staff" || b.move === "bow" || b.move === "crossbow") return null;   // staffs keep their bolt, bows shoot arrowfx.js arrows
+    if (MOVE["atk:" + b.move]) return (b.power ? "pow:" : "atk:") + b.move;
     return null;
   }
   /* the recipe for a key: dual casting is the same spell, bigger, from both hands */
@@ -222,10 +316,10 @@ const MOVEFX = (() => {
     const i = key.indexOf(":"), k = key.slice(0, i), id = key.slice(i + 1);
     if (k === "spell") return SPELL[id] || null;
     if (k === "dual") { const r = SPELL[id]; return r ? { ...r, z: r.z * 1.35, dual: 1 } : null; }
-    return null;
+    return MOVE[key] || null;
   }
   /* every key this file knows (tests: each one its own effect) */
-  function keys() { const out = []; for (const id of Object.keys(SPELL)) out.push("spell:" + id, "dual:" + id); return out; }
+  function keys() { const out = []; for (const id of Object.keys(SPELL)) out.push("spell:" + id, "dual:" + id); return out.concat(Object.keys(MOVE)); }
   const sig = (r) => [r.p, r.c, r.d, r.i, r.g, r.z.toFixed(2), r.k, r.dual ? 1 : 0].join("|");
 
   // ---------------------------------------------------------------- the scene: particles, shapes, ground marks
@@ -256,6 +350,8 @@ const MOVEFX = (() => {
   const GLOW = 0, EMBER = 1, SPARK = 2, CRYSTAL = 3, PUFF = 4, CHIP = 5, MOTE = 6, WISP = 7, GRAIN = 8;
   const ADD = [true, true, true, false, false, false, true, true, true];
 
+  // swoosh shapes: [start angle, end angle, radius ×, squash, tilt] → 0 diagonal, 1 wide sweep, 2 overhead chop, 3 hook
+  const SWO = [[-1.2, 1.1, 1, 1, 0.35], [-1.0, 1.0, 1.3, 0.42, 0.1], [-1.6, 0.9, 0.95, 1.2, -0.25], [1.1, -1.0, 0.9, 0.8, -0.3]];
   function scene(o) {
     const s = o.s || 1, W = o.W || 520, H = o.H || 240, gy = o.groundY ?? H * 0.8;
     const lite = !!(o.reduce || o.low), NP = lite ? 70 : 180, pmul = lite ? 0.4 : 1;
@@ -290,14 +386,21 @@ const MOVEFX = (() => {
     let cur = null;   // { key, r, pal, b, m, u, G, launched, hitDone }
     function begin(b, line, m) {
       const key = keyOf(b, line), r = recipe(key);
-      cur = r ? { key, r, pal: PAL[r.p] || PAL.fire, b, m, u: 0, launched: false, hits: 0, last: -1 } : null;
+      cur = r ? { key, r, pal: PAL[r.p] || PAL.fire, b, m, line, u: 0, launched: false, hits: 0, last: -1, blow: 0 } : null;
       return cur;
     }
     /* one step of a beat. G: positions this frame { hand, hand2, from, to, ally, gy }. Returns true when this file draws the beat */
     function step(dt, b, line, m, u, G) {
       if (!cur || cur.b !== b) begin(b, line, m);   // fightart ticks the scene itself
       if (!cur) return false;
+      if (cur.r.mouth) G = mouthG(G);   // a shout comes out of the mouth, not the hand
       cur.u = u; cur.G = G; cur.dt = dt;
+      if (cur.r.w) {   // a weapon blow: a wind-up (power attacks), then the swoosh at every blow of the move
+        const r = cur.r, hs = m.hits && m.hits.length ? m.hits : [0.5];
+        if (r.c !== "none") { const c0 = 0.06, c1 = Math.max(0.1, hs[0] - 0.1); if (u > c0 && u < c1) charge(r, cur.pal, r.z, G, (u - c0) / (c1 - c0), dt); }
+        while (cur.blow < hs.length && u >= hs[cur.blow] - 0.08) { blow(r, cur.pal, r.z, G, cur.blow, hs.length); cur.blow++; }
+        return true;
+      }
       const r = cur.r, pal = cur.pal, z = r.z, ch = m.charge || [0.08, Math.max(0.1, (m.hits?.[0] ?? 0.5) - 0.12)];
       if (u > ch[0] && u < ch[1]) charge(r, pal, z, G, (u - ch[0]) / (ch[1] - ch[0]), dt);
       const pw = m.proj ? [m.proj[0], m.proj[1]] : [Math.max(0, (m.hits?.[0] ?? 0.5) - 0.12), m.hits?.[0] ?? 0.5];
@@ -306,6 +409,55 @@ const MOVEFX = (() => {
       return true;
     }
     const owns = (b) => !!cur && cur.b === b;
+    const dirOf = (G) => Math.sign(G.to[0] - G.from[0]) || 1;
+    const mouthOf = (G) => [G.from[0] + dirOf(G) * 6 * s, G.from[1] - 22 * s];
+    const MG = { hand: [0, 0], hand2: [0, 0], from: null, to: null, ally: null, gy };
+    function mouthG(G) { const [mx, my] = mouthOf(G); MG.hand[0] = MG.hand2[0] = mx; MG.hand[1] = MG.hand2[1] = my; MG.from = G.from; MG.to = G.to; MG.ally = G.ally; MG.gy = G.gy; return MG; }
+    /* a weapon blow lands its painted stroke: blow i of n */
+    function blow(r, pal, z, G, i, n) {
+      const [hx, hy] = G.hand, [tx, ty] = G.to, dir = dirOf(G), b = cur.b, miss = b.miss, Z = z * (b.final && i === n - 1 ? 1.15 : 1);
+      const cy = ty - (miss ? 18 : 4) * s, al = miss ? 0.5 : 1, alt = i % 2 ? -1 : 1;
+      switch (r.d) {
+        case "swing": S("swoosh", { x: tx - dir * 6 * s, y: cy, r: 30 * s * Z, life: 0.3, pal, k: i % 2 ? 3 : r.k, dir, al, pw: r.pw ? 1 : 0 }); break;   // the second blow of a pair comes back the other way
+        case "thrust": S("streak", { x: hx, y: hy, x2: tx + (miss ? dir * 26 : -dir * 2) * s, y2: cy + alt * 4 * s, w: (r.k ? 4.6 : 3.4) * Z, life: 0.22, pal, al }); break;
+        case "jab": S("streak", { x: tx - dir * 30 * s, y: cy + (alt - 1) * 4 * s, x2: tx - dir * 2 * s, y2: cy + (alt - 1) * 4 * s, w: 5.5 * Z, life: 0.16, pal, al, blunt: 1 }); break;
+        case "shove": S("voice", { x: G.from[0] + dir * 16 * s, y: G.from[1], x2: tx - dir * 8 * s, y2: ty, life: 0.26, pal, k: 0, n: 1, w: 4.4 * Z, r: 20 * s * Z }); break;
+        case "rake": for (let j = 0; j < 3; j++) S("streak", { x: tx - dir * (22 - j * 5) * s, y: ty - (28 - j * 7) * s, x2: tx + dir * (14 + j * 5) * s, y2: ty + (12 + j * 7) * s, w: 2.4 * Z, life: 0.26, delay: j * 0.03, pal, al }); break;
+        case "maw": S("jaws", { x: tx - dir * 4 * s, y: ty - 6 * s, r: 16 * s * Z, life: 0.4, pal, dir }); break;
+        case "leap": S("streak", { x: G.from[0], y: G.from[1], x2: tx, y2: ty, w: 3.6 * Z, life: 0.3, pal, al, bow: 40 * s }); spray(PUFF, PAL.dust, G.from[0], (G.gy ?? gy) - 2 * s, 6, 60, 0.8, 6, -10, -Math.PI / 2, 1.6, 1, 3); break;
+      }
+    }
+    /* a weapon blow's impact, then what rides on it: crit, sneak attack, enchantment, combo */
+    function blowHit(b, last) {
+      const r = cur.r, pal = cur.pal, G = cur.G; if (!G) return true;
+      const [tx, ty] = G.to, dir = dirOf(G), gyy = G.gy ?? gy, z = r.z * (last ? (b.final ? 1.2 : 1) : 0.7), fwd = dir > 0 ? 0 : Math.PI, up = dir > 0 ? -0.6 : Math.PI + 0.6;
+      if (b.miss) { if (last) spray(PUFF, PAL.dust, tx + dir * 16 * s, gyy - 2 * s, 4, 40, 0.7, 5, -6, null, TAU, 1, 3); return true; }
+      const ax = tx - dir * 4 * s, ay = ty;
+      switch (r.i) {
+        case "cut": S("gash", { x: ax, y: ay, r: 18 * s * z, life: 0.32, pal, rot: -0.7 * dir }); spray(SPARK, pal, ax, ay, 8 * z, 240, 0.25, 1.4, 200, fwd, 1.6, 0, 2); spray(CHIP, pal, ax, ay, 3, 120, 0.5, 1.6, 300, up, 1.2, 2, 4); break;
+        case "cleave": S("gash", { x: ax, y: ay, r: 26 * s * z, life: 0.38, pal, rot: -1.1 * dir, wide: 1 }); spray(SPARK, pal, ax, ay, 10 * z, 260, 0.3, 1.6, 220, fwd, 1.8, 0, 2); spray(CHIP, pal, ax, ay, 6 * z, 180, 0.7, 2.4, 320, up, 1.4, 2, 4); break;
+        case "crush": S("dent", { x: ax, y: ay, r: 22 * s * z, life: 0.3, pal }); S("ring", { x: ax, y: gyy, r0: 6 * s, r1: 46 * s * z, life: 0.45, pal: PAL.dust, flat: 0.22, w: 2.6 }); spray(PUFF, PAL.dust, ax, gyy - 4 * s, 6 * z, 90, 0.9, 7, -8, up, 1.6, 1, 3); spray(CHIP, PAL.dust, ax, ay, 5 * z, 160, 0.6, 2, 320, up, 1.6, 1, 4); break;
+        case "pierce": S("streak", { x: ax - dir * 6 * s, y: ay, x2: ax + dir * 40 * s * z, y2: ay + 2 * s, w: 2.6 * z, life: 0.24, pal }); spray(SPARK, pal, ax, ay, 10 * z, 300, 0.25, 1.4, 120, fwd, 0.5, 0, 2); break;
+        case "punch": S("flash", { x: ax, y: ay, r: 18 * s * z, life: 0.16, pal }); S("ring", { x: ax, y: ay, r0: 4 * s, r1: 20 * s * z, life: 0.25, pal, flat: 1, w: 1.6 }); spray(PUFF, pal, ax, ay, 3, 40, 0.5, 4, 0, fwd, 1.4, 1, 3); break;
+        case "stun": S("dizzy", { x: tx, y: ty - 36 * s, r: 13 * s, life: 1.1, pal: PAL.gold }); S("ring", { x: ax, y: ay, r0: 6 * s, r1: 30 * s * z, life: 0.3, pal, flat: 1, w: 2.4 }); spray(SPARK, pal, ax, ay, 8, 220, 0.25, 1.4, 200, fwd, 1.8, 0, 2); break;
+        case "rend": spray(CHIP, PAL.blood, ax, ay, 8 * z, 180, 0.6, 2, 340, fwd, 1.6, 1, 3); break;
+        case "bite": spray(CHIP, PAL.blood, ax, ay, 8 * z, 140, 0.6, 2.2, 340, up, 1.4, 1, 3); S("flash", { x: ax, y: ay - 4 * s, r: 18 * s, life: 0.18, pal }); break;
+      }
+      if (!last) return true;
+      if (b.crit) { S("star", { x: ax, y: ay - 4 * s, r: 30 * s * z, life: 0.3, pal: PAL.steel }); S("flash", { x: ax, y: ay, r: 36 * s * z, life: 0.2, pal: PAL.steel }); }
+      if (b.sneak) { S("gash", { x: ax, y: ay - 6 * s, r: 24 * s * z, life: 0.5, pal: PAL.shadow, rot: 0.8 * dir }); spray(PUFF, PAL.shadow, ax, ay, 5, 30, 1, 7, -8, null, TAU, 1, 3); }
+      if (b.enchant) { const ep = PAL[b.enchant === "drain" ? "blood" : b.enchant] || PAL.myst; spray(b.enchant === "frost" ? CRYSTAL : b.enchant === "shock" ? SPARK : b.enchant === "fire" ? EMBER : GLOW, ep, ax, ay, 12, 160, 0.5, 2.4, b.enchant === "fire" ? -40 : 0, null, TAU, 0, 2);
+        if (b.enchant === "shock") S("bolt", { x: ax, y: ay, x2: ax + dir * 26 * s, y2: ay + 16 * s, life: 0.16, pal: ep, w: 1.6, forks: 0, jag: 8 }); }
+      const said = String(cur.line?.me || "");   // combos and openings
+      if (/shatter/i.test(said)) { spray(CRYSTAL, PAL.frost, ax, ay, 16, 240, 0.8, 3, 360); S("star", { x: ax, y: ay, r: 26 * s, life: 0.25, pal: PAL.frost }); }
+      if (/overload/i.test(said)) for (let i = 0; i < 3; i++) { const an = rnd() * TAU; S("bolt", { x: ax, y: ay, x2: ax + Math.cos(an) * 34 * s, y2: ay + Math.sin(an) * 34 * s, life: 0.22, pal: PAL.shock, w: 1.8, forks: 0, jag: 8 }); }
+      if (/steam/i.test(said)) spray(PUFF, PAL.voice, ax, ay, 10, 60, 1.3, 9, -30, -Math.PI / 2, 1.4, 0, 2);
+      if (/thermal shock/i.test(said)) { spray(EMBER, PAL.fire, ax, ay, 8, 160, 0.5, 2.4, -30); spray(CRYSTAL, PAL.frost, ax, ay, 8, 160, 0.6, 2.4, 300); }
+      if (/opening|exploit|precision/i.test(said)) S("ring", { x: ax, y: ay, r0: 4 * s, r1: 34 * s, life: 0.5, pal: PAL.gold, flat: 1, w: 2 });
+      if (r.pw || b.power) S("ring", { x: tx, y: gyy, r0: 6 * s, r1: 60 * s * z, life: 0.5, pal: PAL.dust, flat: 0.22, w: 2.4 });
+      if (r.g) mark(r.g, tx, 40 * s * z, pal, r.k);
+      return true;
+    }
 
     // ---------------------------------------------------------------- 1. the charge in the hand(s)
     function charge(r, pal, z, G, p, dt) {
@@ -323,6 +475,10 @@ const MOVEFX = (() => {
           case "flakes": if (rnd() < 0.6 * q) { const a = rnd() * TAU, d = R0 * 2.4; P(CHIP, pick(pal, 1, 3), hx + Math.cos(a) * d, hy + Math.sin(a) * d, -Math.cos(a) * d * 3, -Math.sin(a) * d * 3, 0.32, 2.2 * z, 0, 0.9); } break;
           case "wisps": if (rnd() < 0.6 * q) P(WISP, pick(pal, 1, 3), hx + (rnd() - 0.5) * R0, hy + (rnd() - 0.5) * R0, (rnd() - 0.5) * 30 * s, -(10 + rnd() * 20) * s, 0.6, 3.2 * z, 0, 0.95); break;
           case "smoke": if (rnd() < 0.5 * q) P(PUFF, pick(pal, 2, 4), hx + (rnd() - 0.5) * R0, hy, (rnd() - 0.5) * 10 * s, -14 * s, 0.9, 4 * z, -4); if (rnd() < 0.3 * q) P(GLOW, pal[1], hx, hy, (rnd() - 0.5) * 20 * s, -20 * s, 0.4, 1.6); break;
+          case "glint": if (rnd() < 0.14 * q) S("star", { x: hx + (rnd() - 0.5) * 6 * s, y: hy - p * 26 * s, r: (6 + 6 * p) * s * Math.min(1.3, z), life: 0.22, pal }); if (rnd() < 0.5 * q) P(MOTE, pick(pal, 0, 2), hx, hy - rnd() * 26 * s, (rnd() - 0.5) * 20 * s, -10 * s, 0.4, 1.6);
+            if (r.pw && rnd() < 0.4 * q) { const sd = rnd() < 0.5 ? -1 : 1; P(PUFF, pick(PAL.dust, 1, 3), G.from[0] + sd * 36 * s, (G.gy ?? gy) - 2 * s, -sd * 50 * s, -4 * s, 0.6, 5, 0); } break;
+          case "inhale": { const [mx, my] = mouthOf(G); if (rnd() < 0.7 * q) { const an = rnd() * TAU, d = (30 + rnd() * 30) * s; P(WISP, pick(pal, 1, 3), mx + Math.cos(an) * d, my + Math.sin(an) * d * 0.7, -Math.cos(an) * d * 2.4, -Math.sin(an) * d * 1.7, 0.35, 2.4 * z, 0, 0.9); } break; }
+          case "growl": { const [mx, my] = mouthOf(G); if (rnd() < 0.5 * q) P(PUFF, pick(PAL.blood, 2, 3), mx, my, dirOf(G) * 20 * s, -10 * s, 0.6, 3.5, -4); if (rnd() < 0.4 * q) P(EMBER, pick(pal, 1, 2), hx + (rnd() - 0.5) * 10 * s, hy, 0, -20 * s, 0.4, 1.8, -20); break; }
           case "rays": if (rnd() < 0.15 * q) S("rays", { x: hx, y: hy, r: R0 * 2.4, life: 0.3, pal, n: 6 }); if (rnd() < 0.5 * q) P(MOTE, pick(pal, 0, 2), hx, hy, (rnd() - 0.5) * 40 * s, (rnd() - 0.5) * 40 * s, 0.4, 1.8); break;
         }
       }
@@ -346,6 +502,7 @@ const MOVEFX = (() => {
         case "thread": S("thread", { x: hx, y: hy, x2: G.ally[0], y2: G.ally[1], life: 0.7, pal, w: 2.2 * z }); break;
         case "rift": S("rift", { x: G.from[0] + 46 * s, y: gyy, h: 60 * s * z, life: 0.95, pal, k: r.k }); break;
         case "pull": S("thread", { x: tx, y: ty, x2: hx, y2: hy, life: 0.6, pal, w: 2 * z, back: 1 }); break;
+        case "voice": S("voice", { x: hx, y: hy, x2: tx, y2: ty, life: 0.5, pal, k: r.k, n: 3 + (r.k % 2), w: 3 * z, r: 16 * s * Math.min(1.4, z) }); break;
         case "meteor": for (let i = 0; i < 3; i++) S("meteor", { x: tx + (i - 1) * 26 * s + 60 * s, y: -20, x2: tx + (i - 1) * 22 * s, y2: gyy - 6 * s, life: 0.36, delay: i * 0.1, pal, w: 7 * z }); break;
         case "vortex": S("vortex", { x: hx, y: hy, x2: tx, y2: gyy, h: 80 * s * z, life: 0.75, pal }); break;
       }
@@ -390,6 +547,8 @@ const MOVEFX = (() => {
         case "rift": if (rnd() < 0.6 * q) P(GLOW, pick(pal, 0, 2), G.from[0] + 46 * s + (rnd() - 0.5) * 16 * s, gy - rnd() * 50 * s, (rnd() - 0.5) * 30 * s, -30 * s, 0.6, 2.6, 0); break;
         case "pull": if (rnd() < q) P(r.p === "soul" ? WISP : GLOW, pick(pal, 0, 3), tx, ty, (hx - tx) * 1.6, (hy - ty) * 1.6 - 30 * s, 0.6, 3, 0, 1); break;
         case "thread": if (rnd() < 0.8 * q) P(MOTE, pick(pal, 0, 2), lerp(hx, G.ally[0], rnd()), lerp(hy, G.ally[1], rnd()), 0, -20 * s, 0.6, 2, -4); break;
+        case "toss": { const Yl = lerp(hy, ty, p) - Math.sin(p * Math.PI) * 34 * s; cur.proj = { k: "flask", x: X, y: Yl, rot: p * 9 * dir }; if (rnd() < 0.3 * q) P(CHIP, pick(pal, 1, 3), X, Yl, 0, 0, 0.3, 1.4, 200); break; }
+        case "voice": if (rnd() < 0.5 * q) P(PUFF, pick(PAL.dust, 1, 3), X, (G.gy ?? gy) - 3 * s, dir * 90 * s, -6 * s, 0.6, 5, 0); break;
       }
     }
 
@@ -398,6 +557,7 @@ const MOVEFX = (() => {
       if (!owns(b)) return false;
       const r = cur.r, pal = cur.pal, z = r.z, G = cur.G; if (!G) return true;
       const [tx, ty] = G.to, [fx, fy] = G.from, gyy = G.gy ?? gy, dir = Math.sign(tx - fx) || 1, miss = b.miss;
+      if (r.w) return blowHit(b, last);
       if (!last) return true;
       if (miss && !["none", "thread", "rift"].includes(r.d) && !["hex", "plates", "motes", "pillar", "orb", "cloak", "weapon", "shimmer", "ring", "glint", "swap", "bubbles", "feathers", "rift", "necro"].includes(r.i)) {
         spray(PUFF, pal, tx + dir * 20 * s, ty, 4, 40, 0.6, 5, 0, null, TAU, 2, 4); return true;   // it fizzles past
@@ -439,6 +599,8 @@ const MOVEFX = (() => {
         case "bubbles": spray(GLOW, pal, ax, ay, 16 * z, 40, 1.4, 2.6, -50, -Math.PI / 2, 1.8, 0, 2); S("ring", { x: ax, y: ay, r0: 4 * s, r1: 22 * s, life: 0.6, pal, flat: 1, w: 1.6 }); break;
         case "feathers": spray(CHIP, pal, ax, ay - 30 * s, 12 * z, 60, 1.6, 2.6, 25, -Math.PI / 2, 2.4, 0, 2); break;
         case "banish": S("rift", { x: tx, y: gyy, h: 70 * s * z, life: 0.7, pal, k: 1, close: 1 }); S("flash", { x: tx, y: ty, r: 50 * s * z, life: 0.3, pal }); spray(GLOW, pal, tx, ty, 18, 160, 0.6, 3, 0); break;
+        case "push": S("ring", { x: ax, y: gyy, r0: 6 * s, r1: 90 * s * z, life: 0.6, pal: PAL.dust, flat: 0.2, w: 4 }); spray(PUFF, PAL.dust, ax, gyy - 4 * s, 10 * z, 160, 0.9, 8, -6, dir > 0 ? -0.2 : Math.PI + 0.2, 0.9, 1, 3); spray(CHIP, PAL.dust, ax, gyy - 6 * s, 10, 220, 0.8, 2.4, 300, dir > 0 ? -0.6 : Math.PI + 0.6, 1, 1, 4); break;
+        case "splash": S("burst", { x: ax, y: ay, r: 22 * s * z, life: 0.35, pal }); spray(CHIP, pal, ax, ay, 14, 180, 0.8, 2.6, 300); spray(PUFF, pal, ax, ay, 5, 40, 1, 7, 10, null, TAU, 2, 4); break;
         case "drainin": spray(GLOW, pal, fx, fy, 14 * z, 60, 0.7, 2.6, 0, null, TAU, 0, 2); S("ring", { x: fx, y: fy, r0: 30 * s, r1: 4 * s, life: 0.5, pal, flat: 1, w: 2 }); break;
       }
       if (r.dual) S("ring", { x: ax, y: ay, r0: 10 * s, r1: 50 * s * z, life: 0.45, pal, flat: 0.8, w: 2.4 });
@@ -498,6 +660,11 @@ const MOVEFX = (() => {
           g.globalAlpha = 0.55 * a; g.strokeStyle = p[1]; g.lineWidth = Math.max(1, 1.2 * s);
           for (let i = 0; i < 9; i++) { const x0 = mk.x + (sr() - 0.5) * mk.w * 1.2, len = (6 + sr() * 12) * s; g.beginPath(); g.moveTo(x0, gy + 1); g.lineTo(x0 + (sr() - 0.5) * len, gy - len * 0.3); g.moveTo(x0, gy + 1); g.lineTo(x0 + (sr() - 0.5) * len * 1.5, gy + 2 * s); g.stroke(); }
           for (let i = 0; i < 4; i++) blob(g, 2, p[1], mk.x + (sr() - 0.5) * mk.w, gy, mk.w * 0.4, 0.22 * a);
+        } else if (mk.type === "gouge" || mk.type === "crack") {   // a heavy blow: a groove or cracks in the earth, with dirt thrown up
+          g.globalAlpha = 0.5 * a; g.strokeStyle = "#2a221a"; g.lineWidth = Math.max(1, 1.6 * s); g.lineCap = "round"; g.beginPath();
+          if (mk.type === "gouge") { g.moveTo(mk.x - mk.w * 0.5, gy + 1); g.quadraticCurveTo(mk.x, gy + 3 * s, mk.x + mk.w * 0.5, gy); }
+          else for (let i = 0; i < 7; i++) { let x0 = mk.x, y0 = gy; const an = (sr() - 0.5) * 0.8 + (i % 2 ? 0 : Math.PI); for (let j = 0; j < 3; j++) { const x1 = x0 + Math.cos(an + (sr() - 0.5)) * mk.w * 0.18, y1 = gy + (sr() - 0.3) * 3 * s; g.moveTo(x0, y0); g.lineTo(x1, y1); x0 = x1; y0 = y1; } }
+          g.stroke(); for (let i = 0; i < 3; i++) blob(g, 2, "#4a3e30", mk.x + (sr() - 0.5) * mk.w, gy, mk.w * 0.25, 0.22 * a);
         } else if (mk.type === "sigil" || mk.type === "glyph" || mk.type === "ring") {
           g.globalCompositeOperation = "lighter"; g.globalAlpha = 0.35 * a; g.strokeStyle = p[2]; g.lineWidth = Math.max(1, 1.4 * s);
           g.beginPath(); g.ellipse(mk.x, gy, mk.w * 0.7, mk.w * 0.16, 0, 0, TAU); g.stroke();
@@ -658,6 +825,49 @@ const MOVEFX = (() => {
               else { g.moveTo(q.x, q.y); g.lineTo(q.x + L * 0.5, q.y - L); if (q.k === 2) { g.moveTo(q.x + L * 0.42, q.y - L * 0.8); g.quadraticCurveTo(q.x + L * 0.75, q.y - L * 0.75, q.x + L * 0.55, q.y - L * 0.5); } if (q.k === 4) { g.moveTo(q.x - 8 * s, q.y); g.lineTo(q.x - 8 * s + L * 0.4, q.y - L * 0.8); } }
             }, p, 2.6 * s, a);
             break; }
+          case "swoosh": {   // a painted crescent where the blade passed: diagonal, wide sweep, overhead chop or a short hook
+            const V2 = SWO[q.k] || SWO[0], head = Math.min(1, u * 3.2), tail = Math.max(0, (u - 0.35) / 0.65), R = q.r * V2[2], th = q.r * (q.pw ? 0.34 : 0.24), al = (q.al ?? 1) * a, n = 12;
+            const A = (f) => lerp(V2[0], V2[1], lerp(tail, head, f));
+            g.save(); g.translate(q.x - q.dir * R * 0.5, q.y); g.scale(q.dir, 1); g.rotate(V2[4]); g.scale(1, V2[3]);
+            const outer = () => { for (let i = 0; i <= n; i++) { const an = A(i / n); i ? g.lineTo(Math.cos(an) * R, Math.sin(an) * R) : g.moveTo(Math.cos(an) * R, Math.sin(an) * R); } };
+            g.lineCap = "round"; g.globalAlpha = al * 0.3; g.strokeStyle = p[4]; g.lineWidth = 3 * s; g.beginPath(); outer(); g.stroke();
+            g.beginPath(); outer(); for (let i = n; i >= 0; i--) { const an = A(i / n), w = th * Math.pow(i / n, 0.8); g.lineTo(Math.cos(an) * (R - w), Math.sin(an) * (R - w)); } g.closePath();
+            g.globalCompositeOperation = "lighter"; g.globalAlpha = al * 0.55; g.fillStyle = p[2]; g.fill();
+            g.globalAlpha = al; g.strokeStyle = p[0]; g.lineWidth = Math.max(1, 1.6 * s); g.beginPath(); outer(); g.stroke();
+            g.globalCompositeOperation = "source-over"; g.restore(); break;
+          }
+          case "streak": {   // a stab, a punch, a claw or a pounce: a tapered streak that shoots in and fades from the back
+            const head = Math.min(1, u * 4), tail = Math.max(0, (u - 0.25) / 0.75), al = (q.al ?? 1) * a, n = 5, w = q.w * s;
+            const X = (f) => lerp(q.x, q.x2, f), Y = (f) => lerp(q.y, q.y2, f) - (q.bow ? Math.sin(f * Math.PI) * q.bow : 0);
+            for (let i = 0; i < n; i++) { const t0 = lerp(tail, head, i / n), t1 = lerp(tail, head, (i + 1) / n); strokePath(g, () => { g.moveTo(X(t0), Y(t0)); g.lineTo(X(t1), Y(t1)); }, p, w * (0.25 + 0.75 * (i + 1) / n), al); }
+            if (q.blunt) { g.globalCompositeOperation = "lighter"; blob(g, 2, p[1], X(head), Y(head), w * 2.2, al); g.globalCompositeOperation = "source-over"; }
+            break;
+          }
+          case "gash": {   // a bright slit across the target
+            const L = q.r * Math.min(1, u * 5), hw = L * (q.wide ? 0.16 : 0.1); g.save(); g.translate(q.x, q.y); g.rotate(q.rot || 0);
+            g.globalAlpha = a * 0.35; g.fillStyle = p[4]; g.beginPath(); g.moveTo(-L, 1.5 * s); g.quadraticCurveTo(0, -hw + 1.5 * s, L, 1.5 * s); g.quadraticCurveTo(0, hw + 1.5 * s, -L, 1.5 * s); g.fill();
+            g.globalCompositeOperation = "lighter"; g.globalAlpha = a; g.fillStyle = p[1]; g.beginPath(); g.moveTo(-L, 0); g.quadraticCurveTo(0, -hw, L, 0); g.quadraticCurveTo(0, hw, -L, 0); g.fill();
+            g.strokeStyle = p[0]; g.lineWidth = Math.max(1, s); g.beginPath(); g.moveTo(-L * 0.8, 0); g.lineTo(L * 0.8, 0); g.stroke(); g.globalCompositeOperation = "source-over"; g.restore(); break;
+          }
+          case "dent": { const R = q.r * (0.5 + 0.5 * Math.min(1, u * 4)); strokePath(g, () => { for (let i = 0; i < 8; i++) { const an = i * TAU / 8 + 0.2; g.moveTo(q.x + Math.cos(an) * R * 0.45, q.y + Math.sin(an) * R * 0.45); g.lineTo(q.x + Math.cos(an) * R, q.y + Math.sin(an) * R); } }, p, 1.6 * s, a, false); break; }
+          case "voice": {   // the Voice: rings of sound rolling out of the mouth (a shield bash: one hard arc)
+            const n = q.n || 3, dir = Math.sign(q.x2 - q.x) || 1, a0 = dir > 0 ? -1.1 : Math.PI - 1.1, a1 = a0 + 2.2;
+            for (let i = 0; i < n; i++) { const f = u * 1.3 - i * 0.16; if (f <= 0 || f >= 1) continue;
+              const X = lerp(q.x, q.x2, f), Y = lerp(q.y, q.y2, f), R = (q.r || 14 * s) * (0.5 + f * 1.4), al = a * (1 - f * 0.6);
+              strokePath(g, () => {
+                if (q.k % 3 === 1) { for (let j = 0; j <= 12; j++) { const an = lerp(a0, a1, j / 12), w2 = R * (1 + 0.1 * Math.sin(j * 2 + t * 20)), xx = X + Math.cos(an) * w2 * 0.5, yy = Y + Math.sin(an) * w2; j ? g.lineTo(xx, yy) : g.moveTo(xx, yy); } }
+                else { g.moveTo(X + Math.cos(a0) * R * 0.5, Y + Math.sin(a0) * R); g.ellipse(X, Y, R * 0.5, R, 0, a0, a1); if (q.k % 3 === 2) { g.moveTo(X + Math.cos(a0) * R * 0.35, Y + Math.sin(a0) * R * 0.7); g.ellipse(X, Y, R * 0.35, R * 0.7, 0, a0, a1); } }
+              }, p, (q.w || 3) * s * (1 - f * 0.4), al);
+            }
+            break;
+          }
+          case "dizzy": { g.globalCompositeOperation = "lighter"; for (let i = 0; i < 3; i++) { const an = t * 5 + i * TAU / 3, X = q.x + Math.cos(an) * q.r, Y = q.y + Math.sin(an) * q.r * 0.35; blob(g, 2, p[1], X, Y, 5 * s, a);
+              g.globalAlpha = a; g.fillStyle = p[0]; g.beginPath(); for (let j = 0; j < 8; j++) { const aa = j * Math.PI / 4, rr = (j % 2 ? 1.2 : 3) * s; j ? g.lineTo(X + Math.cos(aa) * rr, Y + Math.sin(aa) * rr) : g.moveTo(X + Math.cos(aa) * rr, Y + Math.sin(aa) * rr); } g.fill(); }
+            g.globalCompositeOperation = "source-over"; break; }
+          case "jaws": {   // a bite: two rows of teeth snapping shut
+            const o = q.r * (1 - Math.min(1, u * 3.5)) + 2 * s, R = q.r;
+            strokePath(g, () => { g.moveTo(q.x - R, q.y - o); g.quadraticCurveTo(q.x, q.y - o - R * 0.5, q.x + R, q.y - o); g.moveTo(q.x - R, q.y + o); g.quadraticCurveTo(q.x, q.y + o + R * 0.5, q.x + R, q.y + o); }, p, 2.2 * s, a, false);
+            g.globalAlpha = a; g.fillStyle = p[0]; g.beginPath(); for (let j = 0; j < 4; j++) { const xx = q.x - R * 0.7 + j * R * 0.46; g.moveTo(xx - 2 * s, q.y - o); g.lineTo(xx, q.y - o + 5 * s); g.lineTo(xx + 2 * s, q.y - o); g.moveTo(xx - 2 * s, q.y + o); g.lineTo(xx, q.y + o - 5 * s); g.lineTo(xx + 2 * s, q.y + o); } g.fill(); break; }
           case "glint": { g.globalCompositeOperation = "lighter"; blob(g, 0, p[1], q.x, q.y, q.r, a, t * 4); blob(g, 0, p[0], q.x, q.y, q.r * 0.6, a, -t * 4); g.globalCompositeOperation = "source-over"; break; }
           case "rays": { g.globalCompositeOperation = "lighter"; strokePath(g, () => { for (let i = 0; i < q.n; i++) { const an = i * TAU / q.n + t; g.moveTo(q.x + Math.cos(an) * q.r * 0.3, q.y + Math.sin(an) * q.r * 0.3); g.lineTo(q.x + Math.cos(an) * q.r, q.y + Math.sin(an) * q.r); } }, p, 1 * s, a * 0.6); g.globalCompositeOperation = "source-over"; break; }
         }
@@ -668,6 +878,8 @@ const MOVEFX = (() => {
         g.globalCompositeOperation = "lighter";
         if (pr.k === "jet") { for (let i = 0; i < 4; i++) { const f = i / 3; blob(g, 0, cp[i % 3], lerp(pr.x, pr.x2, f), lerp(pr.y, pr.y2, f), (6 + f * 10) * s * z, 0.6, Math.atan2(pr.y2 - pr.y, pr.x2 - pr.x)); } }
         else if (pr.k === "comet") { const dir = Math.sign(cur.G.to[0] - cur.G.hand[0]) || 1; for (let i = 0; i < 4; i++) blob(g, 0, cp[i % 3], pr.x - dir * i * 7 * s, pr.y, (9 - i * 1.5) * s * z, 0.8 - i * 0.15, dir > 0 ? Math.PI : 0); blob(g, 2, cp[0], pr.x, pr.y, 6 * s * z, 1); }
+        else if (pr.k === "flask") { g.globalCompositeOperation = "source-over"; g.save(); g.translate(pr.x, pr.y); g.rotate(pr.rot); g.globalAlpha = 1; g.fillStyle = cp[2]; g.strokeStyle = cp[4]; g.lineWidth = Math.max(1, s);
+          g.beginPath(); g.ellipse(0, 2 * s, 4.5 * s, 5 * s, 0, 0, TAU); g.fill(); g.stroke(); g.fillStyle = cp[1]; g.fillRect(-1.6 * s, -6 * s, 3.2 * s, 5 * s); g.strokeRect(-1.6 * s, -6 * s, 3.2 * s, 5 * s); g.restore(); }
         else if (pr.k === "orb") { blob(g, 2, cp[2], pr.x, pr.y, 14 * s * z, 0.8); blob(g, 2, cp[1], pr.x, pr.y, 9 * s * z, 1); blob(g, 2, cp[0], pr.x, pr.y, 5 * s * z, 1); }
         else if (pr.k === "brand") { blob(g, 1, cp[1], pr.x, pr.y, 10 * s, 0.9); g.globalCompositeOperation = "source-over"; strokePath(g, () => { g.ellipse(pr.x, pr.y, 6 * s, 6 * s, 0, 0, TAU); g.moveTo(pr.x - 4 * s, pr.y); g.lineTo(pr.x + 4 * s, pr.y); }, cp, 1.2 * s, 1); }
         else if (pr.k === "shard") { g.globalCompositeOperation = "source-over"; const dir = Math.sign(cur.G.to[0] - cur.G.hand[0]) || 1, L = pr.len * s * z * 0.8, hw = (pr.len > 20 ? 4.5 : 3) * s;
@@ -701,6 +913,6 @@ const MOVEFX = (() => {
     return { begin, step, hit, owns, tick, clear, drawGround, drawFront, key: () => cur?.key || null, count: () => alive, cap: NP, shapes: () => SH.filter((q) => q.on).length };
   }
 
-  return { PAL, SPELL, keyOf, recipe, keys, sig, scene, baseSpell };
+  return { PAL, SPELL, MOVE, keyOf, recipe, keys, sig, scene, baseSpell };
 })();
 if (typeof module !== "undefined") module.exports = MOVEFX;
