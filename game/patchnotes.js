@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b244-fighthotfix", build: 244, date: "25 Nov 2026", title: "Fight fix", items: [
+      "Fixed: in some fights your attacks did nothing. If the little timing game after a move gets stuck or vanishes, your next press goes through as a normal hit.",
+    ] },
     { id: "b243-gptqa", build: 243, date: "25 Nov 2026", title: "Dungeon rooms and small fixes", items: [
       "Fixed: foes in dungeons were met with road lines, like webs stretched \"across the road\" deep in a barrow. Bandits, wolves, spiders, draugr and the rest now get their own lines for caves, mines, forts, barrows and other places.",
       "Fixed: a weapon's details said \"One-handed weapon · One-Handed\". Now it just says \"One-handed weapon\".",
