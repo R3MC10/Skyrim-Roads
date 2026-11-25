@@ -15,7 +15,17 @@
      (movepreview.js), so there's no long press to edit.
    - A slot greys out when you can't use it (not enough stamina or magicka, a shout still cooling down, none left) and says
      why; a potion slot shows how many you have. In a party fight each player's phone shows their own hero's bar.
-   Pure parts (layout, defaults, keys, cleaning bad saves) work without a page: tests/test_hotbar.js. */
+   - Drag and drop (build 302, "the combat hotbar should work with drag and drop for either single or dual cast spells"):
+     drag a move from the picker onto a slot, a slot onto another (they swap) or off the bar (it's cleared). A mouse drags
+     straight away; a finger holds a picker row for a moment (it lifts, the phone buzzes) and then drags, so the list
+     still scrolls under a quick swipe. Slots drag straight away under a finger too (the bar doesn't scroll). A ghost
+     icon follows, the slot under it lights up. Tapping still works the old way.
+   - Single or dual cast: a spell slot has a small 1x / 2x badge in edit mode; tap it to switch. A 2x slot holds
+     "dual:<id>" and casts the dual version (MAGIC.DUAL_COST / DUAL_POWER, Impact and the rest, the rune minigame too),
+     so the same spell can sit twice, once each way. The picker lists each spell once and a dropped spell starts as 1x.
+     A spell that can't be dual cast (MAGIC.dualable) can't switch, and an old 2x slot of one shows dimmed and says why.
+     Old saves need nothing: their "spell:" slots are 1x, their "dual:" slots 2x. The AI and Auto never read the bar.
+   Pure parts (layout, defaults, keys, cleaning bad saves, modes) work without a page: tests/test_hotbar.js. */
 const HOTBAR = (() => {
   const N = 10;
   const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
@@ -119,6 +129,27 @@ const HOTBAR = (() => {
     const L = layout(s, f).slice(); L[i] = null; store(s, L); return true;
   }
   function reset(s) { if (s) delete s.hotbar; }
+  /* single (1) or dual (2) cast for a spell slot's move; 0 for anything that isn't a spell */
+  const mode = (a) => (typeof a !== "string" ? 0 : a.startsWith("spell:") ? 1 : a.startsWith("dual:") ? 2 : 0);
+  /* why a spell can't be dual cast ("" = it can). The game's own rule (MAGIC.dualable: damage, healing, wards, runes,
+     cloaks, armour... not utility or summons); a dual cast in a fight still needs the magicka, which the slot says then. */
+  function dualWhy(id) {
+    const sp = typeof D !== "undefined" ? D.SPELLS[id] : null;
+    if (!sp) return "Not known";
+    if (typeof MAGIC === "undefined" || !MAGIC.dualable) return "No dual casting";
+    return MAGIC.dualable(sp) ? "" : "This spell can't be dual cast";
+  }
+  /* switch slot i between single and dual cast. If the other version already sits in another slot, that slot takes
+     this one's old version (both stay on the bar, one each way). */
+  function toggle(s, i, f) {
+    if (!(i >= 0 && i < N)) return false;
+    const L = layout(s, f).slice(), a = L[i], m = mode(a); if (!m) return false;
+    const id = a.slice(a.indexOf(":") + 1);
+    if (m === 1 && dualWhy(id)) return false;
+    const b = (m === 1 ? "dual:" : "spell:") + id, j = L.indexOf(b);
+    if (j >= 0) L[j] = a;
+    L[i] = b; store(s, L); return true;
+  }
 
   // ------------------------------------------------------------------ the picker's lists
   function names(s, f, a) {
@@ -143,6 +174,7 @@ const HOTBAR = (() => {
   function short(s, f, a) {
     const [k, arg] = a.split(":");
     if (k === "potion") return cap(arg);
+    if (k === "dual") return D.SPELLS[arg]?.name || arg;   // the 2x badge says it's a dual cast
     if (k === "scroll") return names(s, f, a).replace(/^Scroll of /i, "");
     if (k === "poison") return names(s, f, a).replace(/^Poison of /i, "");
     if (k === "shout") { const w = typeof POWERS !== "undefined" && POWERS.SHOUTS[arg]?.[1]?.[0]; return w || names(s, f, a); }
@@ -158,8 +190,7 @@ const HOTBAR = (() => {
     if (hasShield(s, f)) R("weapons", "bash");
     for (const [id, sp] of spellsOf(s)) {
       const mc = typeof G !== "undefined" && G.spellCost ? Math.round(G.spellCost(s, sp)) : sp.cost;
-      R("spells", "spell:" + id, `${sp.level || (typeof TOMES !== "undefined" && TOMES.level ? TOMES.level(id) : "Novice")} · ${mc} magicka`);
-      if (typeof MAGIC !== "undefined" && MAGIC.dualable && MAGIC.dualable(sp)) R("spells", "dual:" + id, "Both hands");
+      R("spells", "spell:" + id, `${sp.level || (typeof TOMES !== "undefined" && TOMES.level ? TOMES.level(id) : "Novice")} · ${mc} magicka`);   // one row a spell: the slot's 1x/2x badge picks dual
     }
     for (const a of shoutsOf(s)) R("shouts", a, "Shout");
     if (typeof POWERS !== "undefined" && s?.race && POWERS.RACE?.[s.race]) R("shouts", "power:race", POWERS.RACE[s.race][0]);
@@ -176,7 +207,7 @@ const HOTBAR = (() => {
   /* is this slot's move still yours? (a forgotten spell or a shout you don't know shows greyed out as "Not known") */
   function known(s, f, a) {
     const [k, arg] = a.split(":");
-    if (k === "spell" || k === "dual") return spellsOf(s).some(([id]) => id === arg) && (k === "spell" || (typeof MAGIC !== "undefined" && MAGIC.dualable(D.SPELLS[arg])));
+    if (k === "spell" || k === "dual") return spellsOf(s).some(([id]) => id === arg);   // a 2x slot of a spell that can't be dual cast is known, but dimmed (dualWhy)
     if (k === "shout") return shoutsOf(s).includes(a);
     if (a === "bash") return hasShield(s, f);
     if (a === "recover") return typeof STRAT !== "undefined";
@@ -202,24 +233,37 @@ const HOTBAR = (() => {
     const slots = L.map((a, i) => {
       const k = slotKey(i);
       if (!a) return `<button class="hb-s hb-empty" type="button" data-hbx="slot" data-hbs="${i}" aria-label="Empty slot ${k}. Tap to set it up"><span class="ic" aria-hidden="true"></span><b></b><kbd class="fc-k" aria-hidden="true">${k}</kbd></button>`;
-      if (!known(s, f, a)) return `<button class="tbact fc-b hb-s hb-gone off" type="button" disabled data-hbs="${i}" aria-label="${esc(names(s, f, a))}: not known"><span class="ic" aria-hidden="true">${ui.icon(f, a)}</span><b>${esc(short(s, f, a))}</b><small class="fc-why">Not known</small><kbd class="fc-k" aria-hidden="true">${k}</kbd></button>`;
-      const extra = "hb-s fc-q" + (/^(shout|power):/.test(a) ? " shout" : "") + (a === "recover" ? " rec" : "") + (a === "power_attack" ? " pw" : "") + (a === "block" || a === "bash" ? " gd" : "");
-      return ui.btn(sess, api, a, { label: short(s, f, a), extra, key: k, badge: a.startsWith("potion:") ? potCount(s, f, a.split(":")[1]) : null }).replace("<button ", `<button data-hbs="${i}" `);
+      const m = mode(a), dw = m === 2 ? dualWhy(a.slice(5)) : "", mb = m === 2 ? `<span class="hb-x2" aria-hidden="true">2×</span>` : "";
+      if (!known(s, f, a) || dw) {   // a spell you forgot, or a 2x slot of a spell that can't be dual cast: dimmed, and it says why
+        const why = known(s, f, a) ? dw : "Not known";
+        return `<button class="tbact fc-b hb-s hb-gone off${m === 2 ? " hb-dual" : ""}" type="button" disabled data-hbs="${i}" data-tip="${esc(why)}" aria-label="${esc(names(s, f, a))}: ${esc(why)}"><span class="ic" aria-hidden="true">${ui.icon(f, a)}</span><b>${esc(short(s, f, a))}</b><small class="fc-why">${esc(why === "Not known" ? why : "No dual cast")}</small>${mb}<kbd class="fc-k" aria-hidden="true">${k}</kbd></button>`;
+      }
+      const extra = "hb-s fc-q" + (/^(shout|power):/.test(a) ? " shout" : "") + (a === "recover" ? " rec" : "") + (a === "power_attack" ? " pw" : "") + (a === "block" || a === "bash" ? " gd" : "") + (m === 2 ? " hb-dual" : "");
+      const html = ui.btn(sess, api, a, { label: short(s, f, a), extra, key: k, badge: a.startsWith("potion:") ? potCount(s, f, a.split(":")[1]) : null }).replace("<button ", `<button data-hbs="${i}" `);
+      return mb ? html.replace(/<\/button>\s*$/, mb + "</button>") : html;
     }).join("");
     return `<div class="hb-bar" role="toolbar" aria-label="Hotbar">${slots}</div>`;
   }
   function editHTML(sess, api, ui) {
     const f = sess.f, s = f.s, L = layout(s, f), cat = catalog(s, f);
     if (!cat[tab]?.length) tab = "weapons";
-    const where = new Map(L.map((a, i) => [a, i]).filter(([a]) => a));
+    const where = new Map();   // a spell's row lights up for its 1x or 2x slot
+    L.forEach((a, i) => { if (!a) return; const k = mode(a) === 2 ? "spell:" + a.slice(5) : a; if (!where.has(k) || mode(a) === 1) where.set(k, i); });
     const tabs = CATS.map(([id, label]) => `<button class="hb-tab${tab === id ? " on" : ""}" type="button" data-hbtab="${id}" aria-pressed="${tab === id}">${label}<i>${cat[id].length}</i></button>`).join("");
     const rows = cat[tab].map((e) => {
       const at = where.get(e.a);
       return `<button class="hb-p${at != null ? " in" : ""}" type="button" data-hbp="${esc(e.a)}" aria-label="${esc(e.name)}${at != null ? `, in slot ${slotKey(at)}` : ""}"><span class="hb-pic" aria-hidden="true">${ui.icon(f, e.a, 26)}</span><span class="hb-pn">${esc(e.name)}<small>${esc(e.sub)}</small></span>${at != null ? `<kbd class="hb-at">${slotKey(at)}</kbd>` : ""}</button>`;
     }).join("") || `<p class="sub">Nothing here yet.</p>`;
-    const slots = L.map((a, i) => `<button class="hb-slot${i === sel ? " sel" : ""}${a ? "" : " hb-none"}${a && !known(s, f, a) ? " gone" : ""}" type="button" data-hbs="${i}" aria-pressed="${i === sel}" aria-label="Slot ${slotKey(i)}: ${a ? esc(names(s, f, a)) : "empty"}"><span class="ic" aria-hidden="true">${a ? ui.icon(f, a, 26) : "+"}</span><b>${a ? esc(short(s, f, a)) : ""}</b><kbd class="fc-k" aria-hidden="true">${slotKey(i)}</kbd></button>`).join("");
+    const slots = L.map((a, i) => {
+      const m = mode(a), id = m ? a.slice(a.indexOf(":") + 1) : "", dw = m ? dualWhy(id) : "", bad = a && (!known(s, f, a) || (m === 2 && dw));
+      const slot = `<button class="hb-slot${i === sel ? " sel" : ""}${a ? "" : " hb-none"}${bad ? " gone" : ""}${m === 2 ? " hb-dual" : ""}" type="button" data-hbs="${i}" aria-pressed="${i === sel}" aria-label="Slot ${slotKey(i)}: ${a ? esc(names(s, f, a)) : "empty"}"${m === 2 && dw ? ` data-tip="${esc(dw)}"` : ""}><span class="ic" aria-hidden="true">${a ? ui.icon(f, a, 26) : "+"}</span><b>${a ? esc(short(s, f, a)) : ""}</b><kbd class="fc-k" aria-hidden="true">${slotKey(i)}</kbd></button>`;
+      // the 1x / 2x switch: its own button on the slot's corner (a button can't sit inside a button)
+      const tip = m === 1 && dw ? dw : m === 1 ? "Single cast (one hand). Tap for dual cast: both hands, stronger, costs more" : "Dual cast (both hands). Tap for single cast";
+      const sw = m ? `<button class="hb-mode${m === 2 ? " x2" : ""}" type="button" data-hbmode="${i}"${m === 1 && dw ? " disabled" : ""} data-tip="${esc(tip)}" aria-label="${m === 2 ? "Dual cast" : "Single cast"}${m === 1 && dw ? ": " + esc(dw) : ""}" aria-pressed="${m === 2}">${m === 2 ? "2×" : "1×"}</button>` : "";
+      return `<div class="hb-cell" data-hbc="${i}">${slot}${sw}</div>`;
+    }).join("");
     const fine = typeof matchMedia === "function" && matchMedia("(hover: hover) and (pointer: fine)").matches;
-    const hint = sel >= 0 ? `Slot ${slotKey(sel)}: tap a move to put it here, or another slot to swap.` : fine ? "Drag a move onto a slot. Drag slots to swap, or off the bar to clear. Or click a slot, then a move." : "Tap a slot, then tap what goes in it. Tap two slots to swap them.";
+    const hint = sel >= 0 ? `Slot ${slotKey(sel)}: tap a move to put it here, or another slot to swap.` : fine ? "Drag a move onto a slot. Drag slots to swap, or off the bar to clear. 1× / 2× on a spell: single or dual cast." : "Hold a move, then drag it onto a slot (or tap a slot, then a move). Drag slots to swap, or off the bar to clear. 1× / 2×: single or dual cast.";
     return `<div class="hb-edit" role="group" aria-label="Edit hotbar">
       <div class="hb-pick"><div class="hb-tabs" role="tablist">${tabs}</div><div class="hb-list">${rows}</div></div>
       <p class="hb-hint" role="status">${esc(hint)}</p>
@@ -252,6 +296,7 @@ const HOTBAR = (() => {
     if (x === "done") { setEdit(false); return true; }
     if (x === "reset") { reset(s); sel = -1; persist(); return true; }
     if (x === "clear") { if (sel >= 0) { clear(s, sel, f); persist(); } return true; }
+    if (b.dataset.hbmode != null) { if (toggle(s, +b.dataset.hbmode, f)) { persist(); buzz(12); } return true; }   // 1x / 2x
     if (b.dataset.hbs != null && b.classList.contains("hb-slot")) {
       const i = +b.dataset.hbs;
       if (sel < 0) sel = i;
@@ -300,42 +345,80 @@ const HOTBAR = (() => {
     const r = root(); if (!r || !r.querySelector(".hb-edit")) return false;
     if (ev.key === "Escape") { ev.preventDefault(); r.querySelector('[data-hbx="done"]')?.click(); return true; }
     if ((ev.key === "Delete" || ev.key === "Backspace") && sel >= 0) { ev.preventDefault(); r.querySelector('[data-hbx="clear"]')?.click(); return true; }
+    if ((ev.key === "d" || ev.key === "D") && sel >= 0) { const m = r.querySelector(`[data-hbmode="${sel}"]`); if (m) { ev.preventDefault(); m.click(); return true; } }   // D: single / dual cast
     const i = keyToSlot(ev.key); if (i < 0) return false;
     ev.preventDefault(); r.querySelector(`.hb-slot[data-hbs="${i}"]`)?.click(); return true;
   }
 
-  // ------------------------------------------------------------------ dragging (mouse) in edit mode
-  /* no long press on the bar any more: holding a slot shows what the move will do (movepreview.js) and its tooltip,
-     so edit mode opens from the … menu or a tap on an empty slot */
+  // ------------------------------------------------------------------ drag and drop in edit mode (mouse and touch)
+  /* no long press on the bar outside edit mode: holding a slot there shows what the move will do (movepreview.js), so
+     edit mode opens from the … menu or a tap on an empty slot. In edit mode:
+     - a mouse (or pen) drags anything once it moves 8px;
+     - a finger drags a slot once it moves (the slots don't scroll: touch-action none);
+     - a finger on a picker row has to hold still for LIFT ms first (the row lifts, the phone buzzes), then it drags.
+       Moving before that is a scroll of the list, and the drag is called off. While a lifted row drags, touchmove is
+       cancelled so the list doesn't scroll under it. */
+  const LIFT = 380;
+  const SLOT_AT = (x, y) => document.elementFromPoint(x, y)?.closest?.("#tbf .hb-edit .hb-cell")?.querySelector(".hb-slot[data-hbs]") || null;
   function onDown(ev) {
     const r = root(); if (!r || !editing) return;
     const src = ev.target.closest?.("#tbf .hb-edit [data-hbp], #tbf .hb-edit .hb-slot[data-hbs]"); if (!src || ev.button > 0) return;
-    if (src.dataset.hbp && ev.pointerType !== "mouse" && ev.pointerType !== "pen") return;   // the list scrolls under a finger: taps only
+    cancelDrag();
     drag = { src, x: ev.clientX, y: ev.clientY, id: ev.pointerId, on: false };
+    if (src.dataset.hbp && ev.pointerType === "touch") {   // the list scrolls under a finger: hold first
+      drag.lp = true;
+      const d = drag;
+      d.t = setTimeout(() => { if (drag !== d) return; d.armed = true; src.classList.add("hb-lift"); buzz(15); hush(d.id); start(d, d.x, d.y); }, LIFT);
+    }
+  }
+  /* the lift is a drag, not a hold: tell the hold-for-a-tooltip (tooltip.js: a row's name shows after 450ms and eats the
+     next tap) and the move preview that this finger is taken, with a pointercancel our own handler ignores */
+  let hushing = false;
+  function hush(id) {
+    hushing = true;
+    try { document.dispatchEvent(new PointerEvent("pointercancel", { bubbles: true, pointerId: id, pointerType: "touch" })); } catch { /* old browser */ } finally { hushing = false; }
+  }
+  function start(d, x, y) {
+    if (d.on) return;
+    d.on = true;
+    const g = document.createElement("div"); g.className = "hb-ghost"; g.setAttribute("aria-hidden", "true");
+    g.innerHTML = (d.src.querySelector(".hb-pic, .ic")?.innerHTML || "") + `<b>${esc(d.src.querySelector(".hb-pn")?.firstChild?.textContent || d.src.querySelector("b")?.textContent || "")}</b>`;
+    document.body.appendChild(g); d.g = g; root()?.classList.add("hb-dragging");
+    follow(d, x, y);
+  }
+  function follow(d, x, y) {
+    if (d.g) d.g.style.transform = `translate(${x - 26}px,${y - 30}px)`;
+    const over = SLOT_AT(x, y);
+    if (over !== d.over) { d.over?.classList.remove("hb-over"); over?.classList.add("hb-over"); d.over = over; }
+  }
+  /* tidy up a drag that ends without a drop (a scroll, a cancelled touch, edit mode closing) */
+  function cancelDrag() {
+    const d = drag; drag = null; if (!d) return;
+    clearTimeout(d.t); d.g?.remove(); d.over?.classList.remove("hb-over"); d.src.classList.remove("hb-lift"); root()?.classList.remove("hb-dragging");
+    if (d.on) swallowT = Date.now() + 250;   // the click the browser sends right after the drop is not a tap
   }
   let pendSel = -1;
   function onMove(ev) {
     if (!drag || ev.pointerId !== drag.id) return;
     if (!drag.on) {
-      if (Math.hypot(ev.clientX - drag.x, ev.clientY - drag.y) < 8) return;
-      drag.on = true;
-      const g = document.createElement("div"); g.className = "hb-ghost"; g.setAttribute("aria-hidden", "true");
-      g.innerHTML = (drag.src.querySelector(".hb-pic, .ic")?.innerHTML || "") + `<b>${esc(drag.src.querySelector(".hb-pn")?.firstChild?.textContent || drag.src.querySelector("b")?.textContent || "")}</b>`;
-      document.body.appendChild(g); drag.g = g; root()?.classList.add("hb-dragging");
+      const far = Math.hypot(ev.clientX - drag.x, ev.clientY - drag.y);
+      if (drag.lp) { if (far > 10) { drag.lp = false; clearTimeout(drag.t); drag = null; } return; }   // a swipe before the lift: the list scrolls
+      if (far < 8) return;
+      start(drag, ev.clientX, ev.clientY);
     }
     ev.preventDefault();
-    drag.g.style.transform = `translate(${ev.clientX - 24}px,${ev.clientY - 24}px)`;
-    const over = document.elementFromPoint(ev.clientX, ev.clientY)?.closest?.("#tbf .hb-edit .hb-slot[data-hbs]") || null;
-    if (over !== drag.over) { drag.over?.classList.remove("hb-over"); over?.classList.add("hb-over"); drag.over = over; }
+    follow(drag, ev.clientX, ev.clientY);
   }
   function onUp(ev) {
-    if (!drag || ev.pointerId !== drag.id) return;
-    const d = drag; drag = null;
-    if (!d.on) return;   // a plain tap: the click does it
-    d.g?.remove(); d.over?.classList.remove("hb-over"); root()?.classList.remove("hb-dragging");
-    swallowT = Date.now() + 400;
-    const sess = typeof TB !== "undefined" ? TB.session : null; if (!sess || ev.type !== "pointerup") return;
-    const s = sess.f.s, f = sess.f, to = d.over ? +d.over.dataset.hbs : -1;
+    if (!drag || ev.pointerId !== drag.id || hushing) return;
+    const d = drag;
+    if (!d.on || ev.type !== "pointerup") { cancelDrag(); return; }   // a plain tap: the click does it. pointercancel: nothing changes
+    const moved = Math.hypot(ev.clientX - d.x, ev.clientY - d.y) >= 8;
+    const to = d.over ? +d.over.dataset.hbs : SLOT_AT(ev.clientX, ev.clientY) ? +SLOT_AT(ev.clientX, ev.clientY).dataset.hbs : -1;
+    cancelDrag();
+    const sess = typeof TB !== "undefined" ? TB.session : null; if (!sess) return;
+    if (!moved) { redraw(); return; }   // lifted and let go on the spot: nothing moves
+    const s = sess.f.s, f = sess.f;
     if (d.src.dataset.hbp) { if (to >= 0) { put(s, to, d.src.dataset.hbp, f); sel = -1; } }
     else {
       const from = +d.src.dataset.hbs;
@@ -357,12 +440,18 @@ const HOTBAR = (() => {
       ev.stopImmediatePropagation(); ev.preventDefault(); swallowT = 0;
     }
   }
+  /* a lifted row: the finger moves the ghost, not the list. A held finger: no long-press menu */
+  const noScroll = (ev) => { if (drag && (drag.on || drag.lp) && ev.cancelable) ev.preventDefault(); };
+  const onScroll = (ev) => { if (drag && !drag.on && ev.target?.closest?.("#tbf .hb-list")) cancelDrag(); };
   if (DOM && typeof addEventListener === "function") {
     addEventListener("pointerdown", onDown, true);
     addEventListener("pointermove", onMove, { capture: true, passive: false });
     addEventListener("pointerup", onUp, true);
     addEventListener("pointercancel", onUp, true);
     addEventListener("click", eat, true);
+    addEventListener("touchmove", (ev) => { if (drag && drag.on) noScroll(ev); }, { capture: true, passive: false });
+    addEventListener("contextmenu", noScroll, true);
+    addEventListener("scroll", onScroll, true);
   }
 
   /* after each redraw: the "Edit hotbar" item for the … menu (fightdeclutter.js moves it there) */
@@ -375,9 +464,9 @@ const HOTBAR = (() => {
     el.classList.toggle("hb-editing", editing && !!el.querySelector(".hb-edit"));
   }
   /* the fight closed: leave edit mode */
-  function reset0() { editing = false; sel = -1; pendSel = -1; }
+  function reset0() { editing = false; sel = -1; pendSel = -1; cancelDrag(); }
 
-  return { N, KEYS, keyToSlot, slotKey, clean, saved, isCustom, defaults, layout, store, put, swap, clear, reset, catalog, known, names, short, CATS,
+  return { N, KEYS, keyToSlot, slotKey, clean, saved, isCustom, defaults, layout, store, put, swap, clear, reset, catalog, known, names, short, CATS, mode, dualWhy, toggle,
     bar, click, blocked, editKey, decorate, setEdit, reset0, potCount,
     get editing() { return editing; }, get sel() { return sel; } };
 })();
