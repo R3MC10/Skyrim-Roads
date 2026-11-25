@@ -559,7 +559,7 @@ const WORLDEV = (() => {
   function announce(S, t) {
     S.wevSeen = S.wevSeen || {};
     let changed = false, shown = 0;
-    const quiet = (S.level || 1) < 3;   // brand-new characters: just a Journal line, no pop-ups over the first steps
+    const quiet = (S.level || 1) < 3 || (typeof UNLOCKS !== "undefined" && !UNLOCKS.open(S, "worldevents"));   // brand-new characters: just a Journal line, no pop-ups over the first steps (unlocks.js: world events open at 11)
     for (const ev of active(t)) {
       if (S.wevSeen[ev.id]) continue;
       S.wevSeen[ev.id] = ev.end; changed = true;

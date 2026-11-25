@@ -45,13 +45,13 @@ const UNLOCKS = (() => {
       hide: ["#gnear", "#huntBtn", ".gath-bar", ".ul-gathering"],
       used: (s) => has(s.gather && s.gather.got) || has(s.gather && s.gather.picked) || has(s.fishLog) || lt(s, "hunts") > 0 },
     { id: "cooking", level: 3, name: "Cooking and recipes", teaser: "Cook hot meals at an inn's pot and learn simple recipes.",
-      sections: ["cook"], acts: ["cook", "camp", "cfread"], hide: [".ul-cooking"],
+      sections: ["cook"], acts: ["cook", "cfread"], hide: [".ul-cooking"],
       used: (s) => has(s.recipes) || has(s.craftLog) || lt(s, "cooked") > 0 || has(s.camp) },
     { id: "smithing", level: 4, name: "Smithing", teaser: "Use the forge: make, improve and refine your own gear.",
       sections: ["forge", "mine"], acts: ["smake", "srefine", "srefineall", "temper", "mine", "ftab", "fgroup"], hide: [".ul-smithing"],
       used: (s) => lt(s, "crafted") > 0 || has(s.mined) || has(s.cmGot) },
     { id: "followers", level: 5, name: "Followers and hirelings", teaser: "Hire someone to fight at your side.",
-      sections: ["hire"], subs: ["follower"], acts: ["hire", "fol2", "dismiss"], hide: [".ul-followers"],
+      sections: ["hire"], subs: ["follower"], acts: ["hire", "fol2"], hide: [".ul-followers"],
       used: (s) => !!s.follower || has(s.folData) || !!s.hire || !!s.pet },
     { id: "alchemy", level: 5, name: "Alchemy", teaser: "Mix ingredients into potions and poisons.",
       sections: ["alchemy"], acts: ["alch", "brew"], hide: [".ul-alchemy"],
@@ -70,13 +70,13 @@ const UNLOCKS = (() => {
       sections: ["home", "homes", "market", "homestead", "hall", "halls"],
       acts: ["buyhome", "homebed", "homejump", "harvest", "stash", "unstash", "hstash2", "hsact", "hplot", "htab", "hbuild", "hdecor", "hundecor", "hhire", "hfire", "hdep", "hwd", "hrest", "hpray", "hstash", "hunstash", "hmount", "hunmount", "mlist", "mbuy", "mpull", "bclaim", "hallgold", "hallmat", "hallput", "halltake", "hallrest", "hcoat"],
       hide: [".ul-housing"],
-      used: (s) => has(s.homes) || !!s.home || has(s.homestead) || !!s.hall || has(s.stash) },
+      used: (s) => has(s.homes) || !!s.home || ownsHomestead(s) || !!s.hall || has(s.stash) },
     { id: "clanjobs", level: 9, name: "Clan wars", teaser: "Earn points for your clan and fight over the holds.",
       hide: [".ul-clanjobs", ".clan-war", ".clanwar"],
-      used: (s) => !!s.clan && lt(s, "warpts") > 0 },
+      used: (s) => !!s.clan && has(s.war && s.war.h) },
     { id: "enchanting", level: 9, name: "Enchanting and spell crafting", teaser: "Learn enchantments and put them on your gear.",
       sections: ["enchanter", "craft"], acts: ["enchant", "disench", "craftgo", "runetable", "craftdel"], hide: [".ul-enchanting"],
-      used: (s) => has(s.enchants) || has(s.runeSpells) || has(s.runes) },
+      used: (s) => has(s.enchants) || has(s.runeSpells) },   // s.runes fills in by itself (runecraft.js), so it proves nothing
     { id: "harddungeons", level: 10, name: "Deadly dungeons", teaser: "The deadliest dungeons, deep delves and difficulty tiers.",
       dungeonTier: 3, acts: ["ddtier"], hide: [".ul-harddungeons"],
       used: (s) => clearedTier(s) >= 3 },
@@ -84,18 +84,18 @@ const UNLOCKS = (() => {
       acts: ["unlock", "roadshout"], hide: [".ul-shouts"],
       used: (s) => has(s.words) || has(s.unlocked) || (s.souls || 0) > 0 || has(s.dragons) },
     { id: "worldevents", level: 11, name: "World events", teaser: "Invasions, hunts, caravans, blizzards and other world news.",
-      sections: ["caravans", "festival", "pit", "heist"], subs: ["world"], acts: ["raidfight", "cvsign", "cvleave", "cvbuy", "festclaim", "festgift", "pickpocket"],
-      hide: ["#wev", "#raid", ".wev-card", ".wg-card", ".wagons", ".cr-strip", ".tny-card", ".ul-worldevents"],
-      used: (s) => has(s.wevStats) || has(s.wev && s.wev.joined) || !!s.caravanJob || has(s.fest) || has(s.tourney) || has(s.heist) || lt(s, "raids") > 0 },
+      sections: ["caravans", "festival", "pit"], subs: ["world"], acts: ["raidfight", "cvsign", "cvbuy", "festclaim", "festgift"],
+      hide: ["#wev", "#gev", "#raid", ".wev-card", ".wg-card", ".wagons", ".cr-strip", ".tny-card", ".ul-worldevents"],
+      used: (s) => has(s.wevStats) || !!s.caravanJob || Object.values(s.fest || {}).some((f) => f && (f.n > 0 || f.claimed)) || has(s.tourney && s.tourney.got) || has(s.tourney && s.tourney.claimed) || lt(s, "raids") > 0 },
     { id: "worldbosses", level: 12, name: "World bosses and expeditions", teaser: "Dragons, rifts and sieges for everyone, and long expeditions.",
-      hide: ["#gev", ".gev-banner", ".gev-strip", ".exp-card", ".ul-worldbosses"],
-      used: (s) => has(s.gevStats) || has(s.gevOut) || has(s.exp) || has(s.expDone) || has(s.expHist) },
+      hide: [".gev-banner", ".exp-card", ".ul-worldbosses"],
+      used: (s) => has(s.gevStats) || has(s.expDone) || has(s.expHist) || !!(s.exp && s.exp.key) },   // gevOut fills in by itself (events you missed), so it proves nothing
     { id: "elite", level: 15, name: "Elite encounters", teaser: "Giants, hagravens, Thalmor and assassins on the road.",
       enc: ["thalmor", "vigilant", "giant", "assassin", "hagraven", "wisp", "nightvamp"], hide: [".ul-elite"],
       used: (s) => false },
     { id: "legendary", level: 20, name: "Legendary hunts", teaser: "Hunt legendary beasts across Skyrim.",
       sections: ["hunts"], acts: ["lhact"], hide: [".lh-card", ".lh-wild", ".ul-legendary"],
-      used: (s) => has(s.lhunt) },
+      used: (s) => !!(s.lhunt && (has(s.lhunt.done) || has(s.lhunt.best) || s.lhunt.cur)) },
   ];
   const BY = Object.fromEntries(TABLE.map((f) => [f.id, f]));
   const ACT = {}, SECTION = {}, SUB = {}, ENCOUNTER = {};
@@ -105,6 +105,7 @@ const UNLOCKS = (() => {
     for (const x of f.subs || []) SUB[x] = f.id;
     for (const x of f.enc || []) ENCOUNTER[x] = f.id;
   }
+  function ownsHomestead(s) { try { return typeof HOMESTEAD !== "undefined" ? HOMESTEAD.owned(s).length > 0 : has(s.homestead && s.homestead.plots); } catch { return false; } }
   /* the hardest dungeon tier this hero has cleared (old saves: proof they already go to hard dungeons) */
   function clearedTier(s) {
     let t = 0;
@@ -154,19 +155,24 @@ const UNLOCKS = (() => {
   }
 
   // ------------------------------------------------------------ the wiring helpers
+  let cur = null;   // the hero on this screen (set by applyBody) for modules that don't hold S (menus.js)
+  const tabNow = (sub) => !cur || tab(cur, sub);
+  const openNow = (id) => !cur || open(cur, id);
+  const sectionFeature = (sec) => SECTION[sec] || null;
   const section = (S, sec) => !SECTION[sec] || open(S, SECTION[sec]);
   const sections = (S, list) => (list || []).filter((x) => section(S, x));
   const act = (S, a) => (ACT[a] && !open(S, ACT[a]) ? ACT[a] : null);
   const tab = (S, sub) => !SUB[sub] || open(S, SUB[sub]);
   const encounter = (S, encId) => !ENCOUNTER[encId] || open(S, ENCOUNTER[encId]);
   const featureOfAct = (a) => ACT[a] || null;
-  /* entering a dungeon: easy ones always; hard from 7, deadly from 10. A quest that leads there, or a party, lets you in as a guest. */
+  /* entering a dungeon: easy ones always; hard from 7, deadly from 10. A quest that leads there, or a party with someone who has it
+     open (opt.mates: their cards; opt.party: true when the leader already took you in), lets you in as a guest. */
   function dungeon(S, place, opt = {}) {
     let tier = 1;
     try { const i = typeof DUNGEONS !== "undefined" && DUNGEONS.info(place); if (i) tier = i.tier || 1; } catch { /* unknown */ }
     const id = tier >= 3 ? "harddungeons" : tier >= 2 ? "dungeons" : null;
     if (!id || open(S, id)) return { ok: true, guest: false, id, level: 1, tier };
-    const f = BY[id], quest = questLeads(S, place), party = !!opt.party;
+    const f = BY[id], quest = questLeads(S, place), party = !!opt.party || (Array.isArray(opt.mates) && opt.mates.some((m) => m && !lockedFor([m], id).length));   // a friend who has it open takes you along
     if (quest || party) return { ok: true, guest: true, id, level: f.level, tier, why: party ? "party" : "quest" };
     return { ok: false, guest: false, id, level: f.level, tier, why: "level" };
   }
@@ -178,12 +184,19 @@ const UNLOCKS = (() => {
   }
   /* party members (objects with name/level and maybe unlocks) for whom a feature is still locked */
   function lockedFor(members, id) {
-    return (members || []).filter((m) => m && !open({ level: m.level || m.lv || 1, unlocks: m.unlocks || m.ul || null }, id)).map((m) => m.name || "Someone");
+    return (members || []).filter((m) => m && !open({ level: m.level || m.lv || 1, unlocks: m.unlocks || (Array.isArray(m.ul) ? Object.fromEntries(m.ul.map((x) => [x, 0])) : null) }, id)).map((m) => m.name || "Someone");
+  }
+  /* what a solo hero sees at a dungeon door that isn't open yet */
+  const dungeonLine = (g) => (g && !g.ok ? `This place is too dangerous for now. ${BY[g.id].name} open at level ${g.level}; easy dungeons are open already.` : "");
+  /* what other players need to know (party cards): features this hero opened early (a quest, a party, an old save) */
+  function cardBits(S) {
+    const u = (S && S.unlocks) || {}, ids = TABLE.filter((f) => u[f.id] != null && lv(S) < f.level).map((f) => f.id);
+    return ids.length ? { ul: ids } : {};
   }
   const note = (id) => (BY[id] ? `You're here as a guest. ${BY[id].name} opens for you at level ${BY[id].level}.` : "");
   const lockedLine = (id) => (BY[id] ? `${BY[id].name} opens at level ${BY[id].level}.` : "");
-  function teaserHTML(S, cls = "") {
-    const nx = next(S, 2);
+  function teaserHTML(S, cls = "", n = 2) {
+    const nx = next(S, n);
     if (!nx.length) return "";
     const one = (f) => `<span class="ul-tz-i"><b>Level ${f.level}</b> · ${esc(f.name)}</span>`;
     return `<div class="ul-tz ${esc(cls)}" title="${esc(nx[0].teaser)}"><span class="ul-tz-k">Next unlock</span>${nx.map(one).join('<span class="ul-tz-s" aria-hidden="true">·</span>')}</div>`;
@@ -208,7 +221,9 @@ const UNLOCKS = (() => {
   }
   function rememberLevel(L) { try { if (typeof localStorage !== "undefined" && L > (+localStorage.getItem(BEST_KEY) || 0)) localStorage.setItem(BEST_KEY, String(L)); } catch { /* storage blocked */ } }
   /* called when a new character is made: remember how far the account already got */
-  function newHero(S) { if (S) { const b = bestLevel(); if (b > 1) S.acctLv = b; } return S; }
+  function newHero(S) { if (S) { S.unlocks = {}; S.unlocksV = 1; const b = bestLevel(); if (b > 1) S.acctLv = b; } return S; }
+  /* a new hero on an account that already got past the first trip skips the guided first trip */
+  const skipFirstTrip = (S) => !!(S && (S.acctLv || 0) >= 3);
   const skipTip = (S, id) => !!(S && S.acctLv && (S.acctLv >= level(id)));
 
   // ------------------------------------------------------------ the page: hide what is locked
@@ -217,6 +232,7 @@ const UNLOCKS = (() => {
     return TABLE.map((f) => (f.hide || []).length ? `${f.hide.map((h) => `body.ul-lock-${f.id} ${h}`).join(",")}{display:none!important}` : "").join("\n");
   }
   function applyBody(S) {
+    cur = S || null;
     if (!DOM || !document.body) return;
     if (!styled) { styled = true; const st = document.createElement("style"); st.id = "unlocks-css"; st.textContent = css(); document.head.appendChild(st); }
     for (const f of TABLE) document.body.classList.toggle("ul-lock-" + f.id, !!S && !open(S, f.id));
@@ -225,6 +241,6 @@ const UNLOCKS = (() => {
   // level-ups (levelup.js) open things: sync right away so the event fires once, at the level-up
   try { if (typeof LEVELUP !== "undefined" && LEVELUP.on) LEVELUP.on("level", (d) => { if (d && d.s) sync(d.s); }); } catch { /* node without levelup.js */ }
 
-  return { TABLE, get, level, name, open, next, justOpened, on, migrate, sync, section, sections, act, tab, dungeon, encounter, featureOfAct,
-    lockedFor, note, lockedLine, teaserHTML, skipTip, newHero, bestLevel, applyBody, css, questLeads };
+  return { TABLE, get, level, name, open, next, justOpened, on, migrate, sync, section, sections, sectionFeature, act, tab, tabNow, openNow, dungeon, encounter, featureOfAct,
+    lockedFor, note, lockedLine, dungeonLine, cardBits, teaserHTML, skipTip, skipFirstTrip, newHero, bestLevel, applyBody, css, questLeads };
 })();

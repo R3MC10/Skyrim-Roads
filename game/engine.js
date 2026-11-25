@@ -148,6 +148,7 @@ const G = (() => {
     // (no Dragonstone needed), and a missing quest item a stage needs comes back (questitems.js)
     if (typeof QUESTS !== "undefined") { QUESTS.ensure(s); QUESTS.check(s); }
     if (typeof LEVELUP !== "undefined") { const m = LEVELUP.migrate(s); if (m) note(s, m); }   // levelup.js: keeps your level, tidies odd numbers
+    if (typeof UNLOCKS !== "undefined") UNLOCKS.migrate(s);   // unlocks.js: features open by level; anything this hero already used stays open
     return s;
   }
   function note(s, text) { s.journal.unshift({ t: now(), text }); s.journal = s.journal.slice(0, 60); }

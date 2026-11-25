@@ -210,7 +210,7 @@ const TABMENU = (() => {
   function barHTML(b) {
     const t = b.task;
     return `<button class="tw-task ${t.hot ? "hot" : ""}" data-twa="task" data-k="${t.k}"><span class="tw-ti">${t.icon}</span><span class="tw-tt"><b>${esc(t.text)}</b><small>${esc(t.sub)}</small></span>${t.progress != null ? `<i class="tw-tp"><i style="width:${t.progress}%"></i></i>` : ""}</button>
-      <div class="tw-stats"><div class="tw-lv${b.ready ? " tw-lvgo" : ""}"><span class="tw-lvn num" aria-label="Level ${b.level}"><span>${b.level}</span></span><span class="tw-xp"><small>Level ${b.level}${b.ready ? ` <em class="tw-lvup">· Level up!</em>` : b.perks ? ` <em class="gold">· ${b.perks} to spend</em>` : ""}<span class="num">${b.xp}/${b.need}</span></small><i class="tw-xpb"><i style="width:${b.pct}%"></i></i></span></div>
+      <div class="tw-stats"><div class="tw-lv${b.ready ? " tw-lvgo" : ""}"><span class="tw-lvn num" aria-label="Level ${b.level}"><span>${b.level}</span></span><span class="tw-xp"><small>Level ${b.level}${b.ready ? ` <em class="tw-lvup">· Level up!</em>` : b.perks ? ` <em class="gold">· ${b.perks} to spend</em>` : ""}<span class="num">${b.xp}/${b.need}</span></small><i class="tw-xpb"><i style="width:${b.pct}%"></i></i>${typeof UNLOCKS !== "undefined" ? UNLOCKS.teaserHTML(save(), "ul-tz-bar", 1) : ""}</span></div>
       <div class="tw-st gold">${ico("gold")}<b class="num">${b.gold}</b></div><div class="tw-st ${b.over ? "over" : ""}">${ico("weight")}<b class="num">${b.w}/${b.cap}</b></div></div>`;
   }
   function hubHTML(S) {

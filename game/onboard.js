@@ -24,6 +24,9 @@ const ONBOARD = (() => {
   const veteran = (s) => (s.level || 1) >= VETERAN;
   const cleared = (s) => Object.keys(s.cleared || {}).length;
   const foesBeaten = (s) => (s.lt && s.lt.foes) || 0;
+  const UL = (s, id) => typeof UNLOCKS === "undefined" || UNLOCKS.open(s, id);   // unlocks.js: no ideas for features that open later
+  /* a new hero on an account that already played past a tip skips it (S.acctLv, unlocks.js): the level each tip belongs to */
+  const TIP_LV = { level: 2, heavy: 3, dungeon: 3, invite: 3, rumour: 4 };
   const inTutorial = (s) => !!(s.tut && !s.tut.off && s.tut.step > 0);
 
   // ------------------------------------------------------------------ ideas: what to do next
@@ -56,12 +59,12 @@ const ONBOARD = (() => {
     }
     // a dungeon, once you've a level or two
     if (lv >= 3 && !cleared(s) && !s.dungeon && !moving && (typeof DUNGEONS !== "undefined")) {
-      const n = nearest(s, ctx, (x) => DUNGEONS.enterable(x) && !(DUNGEONS.refillLeft && DUNGEONS.refillLeft(s, x)));
+      const n = nearest(s, ctx, (x) => DUNGEONS.enterable(x) && !(DUNGEONS.refillLeft && DUNGEONS.refillLeft(s, x)) && (typeof UNLOCKS === "undefined" || UNLOCKS.dungeon(s, x).ok));   // unlocks.js: only dungeons open at this level
       if (n) add({ id: "dungeon", pri: 65, ico: "", title: "Try a dungeon", sub: `Dungeons hold the best loot. ${esc(n)} is ~${eta(n)} away. Go room by room; you can leave between rooms.`, btn: go(n) });
     }
     // a horse once you can afford one with change to spare
     const hp = D.HORSE_PRICE || 1000;
-    if (!s.horse && gold >= hp + 150 && lv < VETERAN && (typeof HORSES !== "undefined")) {
+    if (!s.horse && gold >= hp + 150 && lv < VETERAN && (typeof HORSES !== "undefined") && UL(s, "horses")) {
       const n = HORSES.nearestStables([s.x, s.y]);
       add({ id: "horse", pri: 55, ico: "", title: "Buy a horse", sub: `You have the ${hp} gold. Riding is much faster and the horse carries things for you. Stables are outside the big cities; ${esc(n)} is closest.`, btn: s.location === n ? tabBtn("town", "Area") : go(n) });
     }
@@ -71,12 +74,12 @@ const ONBOARD = (() => {
     if (lv >= 4 && (typeof RUMOURS !== "undefined") && !(s.rw && s.rw.seen) && !RUMOURS.leads(s).length && s.location && TOWNS.INNS && TOWNS.INNS[s.location] && !moving)
       add({ id: "rumour", pri: 40, ico: "", title: "Listen for rumours", sub: "Buy a round at the inn (Area tab) and the locals point you at treasure, trouble or a hidden place. Some of it is just gossip.", btn: tabBtn("town", "Area") });
     // world events, once you can survive them
-    if (lv >= 8 && (typeof WORLDEV !== "undefined")) {
+    if (lv >= 8 && (typeof WORLDEV !== "undefined") && UL(s, "worldevents")) {
       const ev = WORLDEV.active()[0];
       if (ev) add({ id: "wev-" + ev.kind, pri: 35, ico: ev.icon || "✶", title: `Join in: ${esc(ev.name)}`, sub: "Everyone in the world works on this together for a while. See the Journal → Misc for what to do.", btn: tabBtn("log", "Journal") });
     }
     // a homestead when you're rich and settled
-    if ((typeof HOMESTEAD !== "undefined") && !HOMESTEAD.owned(s).length && (gold >= 4000 || lv >= 12))
+    if ((typeof HOMESTEAD !== "undefined") && !HOMESTEAD.owned(s).length && (gold >= 4000 || lv >= 12) && UL(s, "housing"))
       add({ id: "homestead", pri: 30, ico: "", title: "Build your own house", sub: "Buy land near Falkreath, Morthal or Dawnstar from the Jarl's steward and build a home stage by stage. A deed costs about 5000 gold.", btn: s.location !== "Falkreath" ? go("Falkreath") : tabBtn("town", "Area") });
     // the next guide step as a fallback
     if ((typeof GUIDE !== "undefined")) { const g = GUIDE.STEPS.find((x) => !x[3](s)); if (g) add({ id: "guide-" + g[0], pri: 20, ico: "", title: `Next step: ${esc(g[1])}`, sub: esc(g[2]), btn: { label: "Show me", act: "guidego", attrs: `data-id="${g[0]}"` } }); }
@@ -114,7 +117,7 @@ const ONBOARD = (() => {
     if (!s || !tipsOn()) return null;
     const seen = st(s).seen;
     for (const [id, ok, title, text, o = {}] of TIPS) {
-      if (seen[id] || (veteran(s) && !o.any)) continue;
+      if (seen[id] || (veteran(s) && !o.any) || ((s.acctLv || 0) > (TIP_LV[id] || 99) && !o.any)) continue;
       if (c.fightOpen) continue;                                 // nothing over a fight (its hints are pinned to the controls)
       try { if (ok(s, c)) return { id, title, text: text(s, c), btn: o.btn || null }; } catch { /* a module isn't loaded */ }
     }

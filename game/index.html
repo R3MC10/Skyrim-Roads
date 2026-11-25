@@ -5436,6 +5436,17 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
   #tbf.c2.fz .fc.fc-hb:not(.fc-pick) .hb-side>.tbact{grid-column:1;min-height:44px;--d:30px}
   #tbf.c2.fz .fc.fc-hb:not(.fc-pick) .hb-side>.tbact.end{grid-column:2;grid-row:1 / span 3;min-height:0;min-width:0;width:76px;padding:6px 3px}
 }
+/* ==== features that open by level (unlocks.js): the small "Next unlock" teaser ==== */
+.ul-tz{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 6px;font-size:12px;line-height:1.3;color:var(--muted,#b9ad92);margin:6px 0 0}
+.ul-tz-k{font-variant:small-caps;letter-spacing:.06em;color:var(--gold,#d8b25a);font-weight:700}
+.ul-tz-i b{color:var(--ink,#efe4c8);font-weight:600}
+.ul-tz-s{opacity:.55}
+#ultz{grid-column:2/-1;grid-row:3;min-width:0;pointer-events:none}
+#ultz .ul-tz{margin:0;font-size:11px;flex-wrap:nowrap;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tw-xp .ul-tz{margin:1px 0 0;font-size:11px;white-space:nowrap;overflow:hidden}
+.ul-dunlock{border-left:3px solid var(--gold,#d8b25a);padding-left:8px;margin-top:8px}
+.ul-tz.ul-tz-pcb{margin:0;font-size:10.5px;opacity:.85;white-space:nowrap}
+.pcb-nm .ul-tz-pcb b{font-family:inherit;font-size:inherit;letter-spacing:0;max-width:none}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -5859,6 +5870,7 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
 <script src="i18n_samever.js"></script>
 <script src="i18n_smooth.js"></script>
 <script src="i18n_partyfoeturns.js"></script>
+<script src="i18n_unlocks.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

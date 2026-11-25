@@ -44,7 +44,8 @@ const MENUS = (() => {
     return last[g] && grp[3].some(([s]) => s === last[g]) ? last[g] : grp[2];
   }
   /* the Character sub-tabs, for the compass's Skills page (tabmenu.js) */
-  const charTabs = () => BY.hero[3].map(([id, l]) => [id, l]);
+  const ulOk = (s) => typeof UNLOCKS === "undefined" || UNLOCKS.tabNow(s);   // unlocks.js: sub-tabs of features that open later stay hidden
+  const charTabs = () => BY.hero[3].filter(([id]) => ulOk(id)).map(([id, l]) => [id, l]);
   /* every screen id reachable from the tabs */
   const screens = () => GROUPS.flatMap(([, , , subs]) => subs.map(([s]) => s));
 
@@ -59,7 +60,7 @@ const MENUS = (() => {
   }
   /* the sub-tab row at the top of a screen (SkyUI's category strip) */
   function subnav(tab) {
-    const g = groupOf(tab), subs = BY[g]?.[3] || [];
+    const g = groupOf(tab), subs = (BY[g]?.[3] || []).filter(([s]) => ulOk(s));
     if (subs.some(([s]) => s === tab)) last[g] = tab;
     if (subs.length < 2) return "";
     if (live && document.body.classList.contains("tw-char")) return "";   // the compass's Skills page has its own bar

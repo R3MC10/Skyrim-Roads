@@ -571,13 +571,14 @@ const LONGHOUSE = (() => {
     const d = mine(S);
     const off = typeof Store !== "undefined" && !Store.online ? `<p class="sub">${T("You're playing offline: the longhouse is shared once you go online.")}</p>` : "";
     const wrap = (html) => o.inner ? `<div class="lng lng-inner" id="lng-root">${html}</div>` : `<div class="panel lng" id="lng-root"><h2> ${T("Company")}</h2>${html}</div>`;
-    if (!d) return wrap(`${off}${typeof EXPEDITION !== "undefined" ? EXPEDITION.trackerHTML(S) : ""}${outsideHTML(S)}`);
+    const expOk = typeof EXPEDITION !== "undefined" && (typeof UNLOCKS === "undefined" || UNLOCKS.open(S, "worldbosses"));   // unlocks.js: expeditions open at 12
+    if (!d) return wrap(`${off}${expOk ? EXPEDITION.trackerHTML(S) : ""}${outsideHTML(S)}`);
     const x = derive(d);
     /* [smallpolish] four main tabs on one row; Plan, Trophies and Log sit in a small "More" row under them (like Social) */
-    const tabs = [["rooms", T("Rooms")], ...(typeof EXPEDITION !== "undefined" ? [["exp", T("Expeditions")]] : []), ...(typeof COMMISSIONS !== "undefined" ? [["cms", T("Commissions")]] : []), ["gold", T("Treasury")], ["members", T("Members")]];
+    const tabs = [["rooms", T("Rooms")], ...(expOk ? [["exp", T("Expeditions")]] : []), ...(typeof COMMISSIONS !== "undefined" ? [["cms", T("Commissions")]] : []), ["gold", T("Treasury")], ["members", T("Members")]];
     const more = [["plan", T("Plan")], ["trophy", T("Trophies")], ["log", T("Log")]];
     const tbtn = ([k, l]) => `<button class="${tab === k ? "on" : ""}" data-lng="tab" data-id="${k}" aria-pressed="${tab === k}">${l}</button>`;
-    const body = tab === "exp" && typeof EXPEDITION !== "undefined" ? EXPEDITION.panelHTML(S, d) : tab === "cms" && typeof COMMISSIONS !== "undefined" ? COMMISSIONS.panelHTML(S, d) : tab === "plan" ? planHTML(S, d, x) : tab === "trophy" ? trophyHTML(S, x) : tab === "gold" ? treasuryHTML(S, d, x) : tab === "members" ? membersHTML(S, d) : tab === "log" ? logHTML(x) : roomsHTML(S, d, x);
+    const body = tab === "exp" && expOk ? EXPEDITION.panelHTML(S, d) : tab === "cms" && typeof COMMISSIONS !== "undefined" ? COMMISSIONS.panelHTML(S, d) : tab === "plan" ? planHTML(S, d, x) : tab === "trophy" ? trophyHTML(S, x) : tab === "gold" ? treasuryHTML(S, d, x) : tab === "members" ? membersHTML(S, d) : tab === "log" ? logHTML(x) : roomsHTML(S, d, x);
     return wrap(`${banner(d, x, body.includes('class="lng-view"'))}${off}
       <div class="seg lng-seg" role="group" aria-label="${T("Company")}">${tabs.map(tbtn).join("")}</div><div class="socmore lng-more" role="group" aria-label="${T("More")}"><span class="socmore-l">${T("More")}</span>${more.map(tbtn).join("")}</div>${body}`);
   }
