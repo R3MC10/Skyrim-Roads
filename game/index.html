@@ -5249,6 +5249,10 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 .fj-t .fj-fight{color:#f0a08a;border-color:rgba(240,120,100,.45)}.fj-t .fj-dungeon{color:#b6a6e8;border-color:rgba(170,150,230,.45)}.fj-t .fj-trade{color:#e8cf7a;border-color:rgba(230,200,110,.45)}
 .fj-t .fj-party{display:block;color:#cbb98f}.fj-t .fj-party.full{color:#e39a7c}.fj-t .fj-why{display:block;font-style:italic;opacity:.75}
 .fbtns .btn[data-act=fjoin][disabled]{opacity:.45;cursor:not-allowed}
+/* [notices] notices.js stacks pop-ups with translate (it composes with their own transform animations, and jumps at once so two never overlap mid-slide); one with no room waits hidden */
+.nq-wait{visibility:hidden!important}
+body.nq-fighthold .rxban,body.nq-fighthold #fhints,body.nq-fighthold .bfov.bfphase{visibility:hidden!important}
+.bfov.bfphase{pointer-events:none}
 /* [phonefight] phonefight.js: on a phone (the tall fight layout) the log folds to its newest line behind a small arrow,
    and the foe's health shows in numbers under its bar */
 #tbf.c2.pff .c2ov .tblog.fpl-log{padding-left:28px}
@@ -5780,6 +5784,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="i18n_phantom.js"></script>
 <script src="i18n_pcupdate.js"></script>
 <script src="i18n_friendjoin.js"></script>
+<script src="i18n_notices.js"></script>
 <script src="i18n_dundropout.js"></script>
 <script src="i18n_dollrig.js"></script>
 <script src="i18n_partyinvites.js"></script>
@@ -5805,6 +5810,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="hud2.js"></script>
 <script src="skillup.js"></script>
 <script src="notify.js"></script>
+<script src="notices.js"></script>
 <script src="nocover.js"></script>
 <script src="invites.js"></script>
 <script src="friendjoin.js"></script>

@@ -11,6 +11,12 @@ const PATCHNOTES = (() => {
       "In big fights everyone stands in proper rows with shadows under their feet. On a phone your whole party and all five foes now fit on screen, with every head visible.",
       "With Reduce motion on, there's no freeze or shaking, but you still see what each blow did.",
     ] },
+    { id: "b329-notices", build: 329, date: "25 Nov 2026", title: "Pop-ups take turns", items: [
+      "Windows that pop up on their own (a quest, a courier, a world event) now open one at a time. If one arrives while another window, a fight or a menu is open, it waits and opens right after, instead of replacing the one you were reading.",
+      "The same message arriving twice shows once.",
+      "Banners, messages, tips and a stranger's greeting stack neatly under each other and never cover each other or the top and bottom bar buttons. If there's no room, they wait.",
+      "In fights, combo banners and a boss's phase card never sit on your action buttons, and they wait while Items, Magic or the result is open. Taps go through the boss's phase card to your buttons.",
+    ] },
     { id: "b328-dunloop", build: 328, date: "25 Nov 2026", title: "Dungeons no longer send you round in circles", items: [
       "Dungeons no longer send you round in circles: every room you finish moves you on to the next one, all the way to the boss and out.",
       "On a deep expedition in a party, the others now follow the leader down the stairs and through every new level, instead of waiting at the camp for good.",
