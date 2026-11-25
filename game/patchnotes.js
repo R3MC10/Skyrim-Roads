@@ -3,12 +3,18 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b315-avatars", build: 315, date: "25 Nov 2026", title: "Your portrait follows your sex", items: [
+    { id: "b316-avatars", build: 316, date: "25 Nov 2026", title: "Your portrait follows your sex", items: [
       "Your round portrait now always shows someone of your hero's sex. A Breton man no longer gets the Breton woman's face: until every race has a painting of both a man and a woman, you get the closest one of your sex.",
       "Pick your own portrait: tap it on your Character page, or choose one on the Race tab when you make a hero (or remake one). Automatic follows your race and sex.",
       "Your Friends list shows each friend's painted portrait, the one they picked. Friends who are offline keep the portrait you last saw; someone you've never seen shows a plain outline.",
       "The tiny figure squeezed next to each face in the Friends and travellers lists is gone, so rows are easier to read.",
       "Party lists, party vote chips, Ask to join and party invite cards, and your face in fights all show the same portrait.",
+    { id: "b315-hourlyupdates", build: 315, date: "25 Nov 2026", title: "Updates arrive on time", items: [
+      "New versions now reach the app reliably within about an hour of a change, instead of sometimes waiting many hours.",
+    ] },
+    { id: "b314-reportname", build: 314, date: "25 Nov 2026", title: "Reports show who sent them", items: [
+      "When you report a problem, your player name (your account name, or your hero's name if you're not signed in) now goes with it, so we know who to ask if we need more details.",
+      "The report window shows the name it's sent as, right above the Send button.",
     ] },
     { id: "b313-fightnums", build: 313, date: "25 Nov 2026", title: "Fight numbers you can read", items: [
       "Damage, heal and crit numbers in fights have a thick dark outline and grow with your screen, so they're easy to read on a phone and on a big PC monitor. Crits are big and gold.",

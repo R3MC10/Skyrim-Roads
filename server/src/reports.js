@@ -17,15 +17,23 @@ const REPO = "R3MC10/Skyrim-Roads";
 const clean = (v, max) => String(v ?? "").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "").slice(0, max);
 const noPing = (t) => t.replace(/@(?=\w)/g, "@​");            // a player's text never pings anyone on GitHub
 const fence = (t) => t.replace(/```/g, "'''");                      // can't break out of a code block
+/* a name (player or hero): one line, no control characters at all, at most 40 characters; empty → null */
+const nameOf = (v) => { const t = typeof v === "string" || typeof v === "number" ? String(v).replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, "").replace(/\s+/g, " ").trim().slice(0, 40) : ""; return t || null; };
+/* a name shown in the issue's markdown: no pings, no HTML, no bold/links breaking out */
+const mdName = (t) => noPing(String(t)).replace(/[<>]/g, (c) => (c === "<" ? "&lt;" : "&gt;")).replace(/([\\`*_[\]])/g, "\\$1");
 
 function issueOf(r) {
+  const player = nameOf(r.player), hero = nameOf(r.character);
   const info = r.info && typeof r.info === "object" ? r.info : {};
   const rows = Object.entries(info).slice(0, 30).map(([k, v]) => `- **${clean(k, 40)}**: ${noPing(clean(typeof v === "object" ? JSON.stringify(v) : v, 200))}`);
   if (r.character) rows.unshift(`- **character**: ${noPing(clean(r.character, 40))}`);
   const log = Array.isArray(r.log) ? r.log.slice(-40).map((l) => clean(l, 400)).join("\n") : "";
   let state = ""; try { state = JSON.stringify(r.state ?? null, null, 1); } catch { state = "null"; }
   if (state.length > 30000) state = state.slice(0, 30000) + "\n… (cut)";
+  if (player) rows.unshift(`- **player**: ${noPing(player)}`);
+  const from = player ? `**From:** ${mdName(player)}${hero ? ` (hero: ${mdName(hero)})` : ""}` : hero ? `**From:** hero ${mdName(hero)}` : null;
   const body = [
+    ...(from ? [from, ""] : []),
     noPing(r.text || "_(no description)_"),
     "",
     "<details><summary>Game info, log and snapshot</summary>",
@@ -41,7 +49,7 @@ function issueOf(r) {
     "",
     "_Sent from the game's Report a problem window._",
   ].join("\n");
-  return { title: `[Report] ${r.title}`, body: body.slice(0, REPORT_LIMITS.issueBody), labels: ["player-report", r.category] };
+  return { title: `[Report] ${r.title}${player ? ` — ${noPing(player)}` : ""}`, body: body.slice(0, REPORT_LIMITS.issueBody), labels: ["player-report", r.category] };
 }
 
 /* createReports({ store, limiter, env, fetch, log }) → async (body, ip) => { ok, issue } or throws { status, code, message } */
@@ -59,6 +67,7 @@ function createReports({ store, limiter, env = process.env, fetch: fetchImpl = g
       title: (title || text.trim()).slice(0, REPORT_LIMITS.title).replace(/\s+/g, " "),
       text: text.trim(),
       category: CATS.includes(b.category) ? b.category : "bug",
+      player: nameOf(b.player),          // the player's account name (or hero name); old clients don't send it
       character: b.character ? clean(b.character, 40) : null,
       info: b.info && typeof b.info === "object" && !Array.isArray(b.info) ? b.info : {},
       log: Array.isArray(b.log) ? b.log.slice(-40).map((l) => clean(l, 400)) : [],
@@ -94,4 +103,4 @@ function createReports({ store, limiter, env = process.env, fetch: fetchImpl = g
   };
 }
 
-module.exports = { createReports, issueOf, REPORT_LIMITS, CATS };
+module.exports = { createReports, issueOf, nameOf, REPORT_LIMITS, CATS };

@@ -1,7 +1,12 @@
 name: Hourly game update
 # Game updates go out once per full hour: if main changed since the last build, start a build.
 # Hotfix: run "Build the Android app" by hand (Actions tab > Run workflow) to ship at once.
+# GitHub skips scheduled runs a lot, so every push to main also starts this: it waits until an hour
+# has passed since the last release, then builds. A newer push cancels the waiting run (concurrency),
+# so there is always at most one release per hour and every merge reaches phones.
 on:
+  push:
+    branches: [main]
   schedule:
     # GitHub often skips crons at minute 0 (busiest time); run off-peak at :07 (still once per hour).
     - cron: "7 * * * *"
@@ -9,10 +14,24 @@ on:
 permissions:
   contents: read
   actions: write
+concurrency:
+  group: hourly-release
+  cancel-in-progress: true
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 75
     steps:
+      - name: Wait until an hour has passed since the last release
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          AT=$(gh release list --limit 1 --json publishedAt -q '.[0].publishedAt')
+          if [ -z "$AT" ]; then exit 0; fi
+          WAIT=$(( $(date -d "$AT" +%s) + 3600 - $(date +%s) ))
+          if [ "$WAIT" -gt 0 ]; then echo "Last release at $AT, waiting ${WAIT}s"; sleep "$WAIT"; fi
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
