@@ -2,6 +2,8 @@
 import asyncio, sys, base64, io
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8786"
+import os, tempfile
+VWX = os.path.join(os.environ.get("SHOTS") or tempfile.gettempdir(), "vwx"); os.makedirs(VWX, exist_ok=True)   # pictures: $SHOTS/vwx or the temp folder
 COMBOS = [("day","clear","summer",False),("dawn","fog","spring",False),("dusk","rain","autumn",False),("night","clear","winter",True),
           ("night","snow","winter",False),("day","storm","summer",False),("day","clear","autumn",False),("dusk","clear","spring",False),
           ("day","blizzard","winter",True),("night","clear","summer",False),("day","cloudy","winter",False),("dawn","clear","autumn",True)]
@@ -52,19 +54,19 @@ async def main():
                     if im: sheet.paste(im, (x, y))
                     x += (im.width if im else 260) + 10
                 y += h + 6
-            sheet.save(f"vwx/sheet_{style}.png"); sheets[style] = len(rows)
+            sheet.save(f"{VWX}/sheet_{style}.png"); sheets[style] = len(rows)
         # a real fight scene mid-replay with weather particles (snow at night, winter)
         shot = await pg.evaluate("""async()=>{ const S=window.__dbg.save(); const st=SKY.make({tod:'night',weather:'snow',season:'winter',north:true,cold:true}); const orig=SKY.state; SKY.state=()=>st;
             const base=D.ENCOUNTERS.find(e=>e.name==='Lone wolf')||D.ENCOUNTERS[0]; const f=new G.Fight(S,G.scaleEnemy(base,S.level)); f.run();
             const d=document.createElement('div'); d.style.width='360px'; d.innerHTML=FIGHTART.placeholder(f,S); document.body.appendChild(d); SKY.state=orig;
             await new Promise(r=>setTimeout(r,450)); const u=d.querySelector('canvas').toDataURL(); await new Promise(r=>setTimeout(r,500)); const u2=d.querySelector('canvas').toDataURL(); d.remove(); return [u,u2]; }""")
-        for i, u in enumerate(shot): open(f"vwx/fight_anim_{i}.png", "wb").write(base64.b64decode(u.split(",")[1]))
+        for i, u in enumerate(shot): open(f"{VWX}/fight_anim_{i}.png", "wb").write(base64.b64decode(u.split(",")[1]))
         print("fight frames differ (snow moving):", shot[0] != shot[1])
         # top bar at different moods (patch SKY.state)
         for tod, wx in [("day","clear"),("night","snow"),("dusk","storm")]:
             await pg.evaluate(f"(()=>{{ const st=SKY.make({{tod:'{tod}',weather:'{wx}'}}); const o=SKY.state; SKY.state=()=>st; window.__dbg && 0; setTimeout(()=>SKY.state=o, 2500); }})()")
             await pg.wait_for_timeout(1300)
-            el = await pg.query_selector(".top"); await el.screenshot(path=f"vwx/top_{tod}_{wx}.png")
+            el = await pg.query_selector(".top"); await el.screenshot(path=f"{VWX}/top_{tod}_{wx}.png")
         print("sheets:", sheets)
         print("errors:", errs)
         await b.close()
