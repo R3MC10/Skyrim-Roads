@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b342-redtests", build: 342, date: "26 Nov 2026", title: "A fresh Coming next", items: [
+      "The Coming next list in Patch notes shows what's really being built now: a clearer turn order, parts of the game that open up as you level, and simpler menus.",
+    ] },
     { id: "b341-first30", build: 341, date: "25 Nov 2026", title: "A guided start for new heroes", items: [
       "New characters no longer get a welcome popup and a pile of tips. Instead there's one short quest line, Before the Storm, with one goal at a time and one button that does it.",
       "Your first fight starts a minute after you make your hero: a bandit at Riverwood's mill. While you fight, one short hint at a time shows you how to attack, how to read what the foe does next, and how to guard when it winds up a huge blow.",
@@ -2263,10 +2266,11 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 338;
+  const NEXT_AT = 342;
   const NEXT = [
-    "Mentoring: play side by side with friends of any level",
-    "Shrines of your own: build a Daedric altar at your longhouse",
+    "A turn order you can read at a glance: who acts next, and in what order",
+    "Parts of the game open up step by step as you level, so there's less to take in at the start",
+    "The menus in five simple tabs",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];
