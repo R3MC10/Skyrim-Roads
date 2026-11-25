@@ -1,6 +1,6 @@
 /* Follower and horse bonds (bonds.js). [OURS, after Skyrim's followers and horses]
    Builds on followerbonds.js (BONDS: loyalty 0-100, moods, talk, gifts, personal quests, signature moves) and
-   horses.js / horseback.js / mountfight.js / hunting.js. Hooks only; nothing here can kill a follower or a horse.
+   horses.js / horsetravel.js / hunting.js. Hooks only; nothing here can kill a follower or a horse.
 
    FOLLOWERS: loyalty ranks. Loyalty already moves with your deeds, talks, gifts and won fights; now it also grows from
    time on the road together and from hard fights (bosses, dragons, dangerous foes). Each rank unlocks something real:
@@ -12,9 +12,9 @@
    Personal quests (followerbonds.js: go to a town, clear a place, make a last choice) now show Skyrim's
    QUEST STARTED / OBJECTIVE banners.
 
-   HORSES: a bond level 1-5 from riding on the road, fights won in the saddle, hunting on horseback and a daily grooming
+   HORSES: a bond level 1-5 from riding on the road, hunting on horseback and a daily grooming
    at a stables. At level 3 you pick ONE speciality; it gets stronger at 4 and 5:
-     warhorse  harder mounted charge, the horse shrugs off more blows, a little more from the saddle
+     warhorse  fearless on the road: fewer fights find you while you ride (fights are always on foot)
      mountain  faster off the road, and snow and storms slow you less
      courier   faster on roads and bridges
      packhorse carries more
@@ -150,9 +150,9 @@ const BONDS2 = (() => {
   const HLV = [0, 40, 100, 200, 350];          // bond points for levels 1..5
   const HNAMES = ["Wary", "Used to you", "Bonded", "Close friends", "Heart-bound"];
   const SPEC_AT = 3, GROOM_COST = 20, GROOM_XP = 6, RETRAIN_COST = 500;
-  const XP = { ride: 1, fight: 4, hunt: 3 };   // per real minute ridden on the road / fight won in the saddle / animal taken from the saddle
+  const XP = { ride: 1, hunt: 3 };   // per real minute ridden on the road / animal taken from the saddle
   const SPECS = {
-    warhorse: { name: "Warhorse", icon: "", text: "Trained for battle." },
+    warhorse: { name: "Warhorse", icon: "", text: "Fearless on the road." },
     mountain: { name: "Mountain horse", icon: "▲", text: "Sure-footed off the road." },
     courier: { name: "Courier", icon: "➤", text: "Built for long roads." },
     packhorse: { name: "Packhorse", icon: "▣", text: "Strong back, steady pace." },
@@ -166,7 +166,7 @@ const BONDS2 = (() => {
   const is = (s, k) => spec(s) === k;
   /* the numbers, for the effects and the screen */
   const num = {
-    charge: (m) => 0.12 * m, guard: (m) => 0.08 * m, saddle: (m) => 0.02 * m,
+    calm: (m) => 0.06 * m,   // warhorse: fewer road fights while you ride
     offroad: (m) => 0.08 * m, weather: (m) => Math.min(0.5, 0.25 * m),
     road: (m) => 0.06 * m,
     pack: (m) => Math.round(30 * m),
@@ -175,7 +175,7 @@ const BONDS2 = (() => {
   const pc = (x) => Math.round(x * 100);
   function specText(k, m) {
     if (!m) m = 1;
-    if (k === "warhorse") return F("Mounted charge +{0}%, horse takes {1}% less damage, +{2}% from the saddle.", pc(num.charge(m)), pc(num.guard(m)), pc(num.saddle(m)));
+    if (k === "warhorse") return F("{0}% fewer fights on the road while you ride.", pc(num.calm(m)));
     if (k === "mountain") return F("{0}% faster off the road; snow and storms slow you {1}% less.", pc(num.offroad(m)), pc(num.weather(m)));
     if (k === "courier") return F("{0}% faster on roads and bridges.", pc(num.road(m)));
     if (k === "packhorse") return F("Carries {0} more.", num.pack(m));
@@ -231,7 +231,7 @@ const BONDS2 = (() => {
     }).join("");
     return `<div class="hbond"><h3 style="margin-top:12px">${esc(F("Bond with {0}", n))}</h3>
       <div class="hbondm"><span class="bondl"><span>${esc(T("Level"))} <b>${l}</b>/5 · ${esc(T(HNAMES[l - 1]))}</span><span class="bondnx num">${esc(nextLabel)}</span></span><div class="bondbar hbbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div></div>
-      <p class="sub">${esc(T("Grows as you ride on the road, win fights in the saddle, hunt on horseback and groom them."))}${l < SPEC_AT ? " " + esc(F("At level {0} you pick one speciality.", SPEC_AT)) : ""}</p>
+      <p class="sub">${esc(T("Grows as you ride on the road, hunt on horseback and groom them."))}${l < SPEC_AT ? " " + esc(F("At level {0} you pick one speciality.", SPEC_AT)) : ""}</p>
       <div class="chips"><button class="btn sm" data-act="fol2" data-op="hbond" data-b="groom" ${at && !groomLeft && s.gold >= GROOM_COST ? "" : "disabled"}>${esc(F("Groom ({0} gold)", GROOM_COST))}${groomLeft ? ` · ${Math.ceil(groomLeft / 60)} min` : ""}</button></div>
       <div class="hsps">${cards}</div></div>`;
   }
@@ -319,30 +319,12 @@ const BONDS2 = (() => {
       const ca0 = HORSES.carry;
       HORSES.carry = function (s, ...rest) { const v = ca0.call(this, s, ...rest); return s?.horse && is(s, "packhorse") ? v + num.pack(tier(s)) : v; };
     }
-    if (typeof HORSEBACK !== "undefined") {
-      const en0 = HORSEBACK.engage;
-      HORSEBACK.engage = function (f, t) {
-        const up = en0.call(this, f, t);
-        try { if (f?.mount && is(f.s, "warhorse")) { f.mount.guard = Math.min(0.6, (f.mount.guard || 0) + num.guard(tier(f.s))); f.mount.war = true; } } catch (e) { /* plain mount */ }
-        return up;
-      };
-      const st0 = HORSEBACK.strike;
-      HORSEBACK.strike = function (f, power, sneak) {
-        const r = st0.call(this, f, power, sneak);
-        try {
-          if (r && !r.miss && f?.mount?.up && is(f.s, "warhorse")) {
-            const m = tier(f.s);
-            if (r.sure && /charge/i.test(r.label || "")) { r.mult *= 1 + num.charge(m); r.label = (r.label || "").replace(/×[\d.]+/, "×" + (Math.round(r.mult * 10) / 10)) + ` (${T("warhorse")})`; }
-            else r.mult *= 1 + num.saddle(m);
-          }
-        } catch (e) { /* plain strike */ }
-        return r;
-      };
-      const af0 = HORSEBACK.after;
-      HORSEBACK.after = function (f, t) {
-        const msgs = af0.call(this, f, t) || [];
-        try { if (f?.s?.horse && f.mount?.rode && f.won && !(f.mount.downTurn > 0)) { const up = hgain(f.s, XP.fight, "fight"); if (up) msgs.push(" " + up); } } catch (e) { /* keep */ }
-        return msgs;
+    if (typeof HORSETRAVEL !== "undefined") {   // warhorse: fewer road fights while you ride (horses are for travel)
+      const em0 = HORSETRAVEL.encounterMult;
+      HORSETRAVEL.encounterMult = function (s, ...rest) {
+        const v = em0.call(this, s, ...rest);
+        try { if (typeof HORSES !== "undefined" && HORSES.riding(s) && is(s, "warhorse")) return Math.max(0.5, v * (1 - num.calm(tier(s)))); } catch (e) { /* plain */ }
+        return v;
       };
     }
     if (typeof HUNT !== "undefined") {
