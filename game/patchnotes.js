@@ -9,6 +9,12 @@ const PATCHNOTES = (() => {
       "A Perfect blow shakes the screen a little. When you're done, a haul card shows everything you dug, with how many Perfect blows you landed.",
       "Works on small phones and big PC screens, in both the ink and pixel styles. Quick dig still skips straight to the result.",
     ] },
+    { id: "b195-afflart", build: 195, date: "25 Nov 2026", title: "Painted affliction scenes", items: [
+      "The black shrine by the road is now a painting: an obsidian altar in a ring of standing stones under the moon, glowing purple.",
+      "Catching the Draugr Curse shows a frozen barrow altar, and catching the Dwemer Resonance (or the humming pipe on the road) shows a glowing Dwemer pipe in a ruined hall.",
+      "The priests' rites at a temple (lifting the curse, or the Vow of Cleansing) now open with a candlelit temple of Arkay.",
+      "Werewolf moments (the Change and the silver-trap hunters) show a werewolf howling at the full moon.",
+    ] },
     { id: "b194-lockgame", build: 194, date: "25 Nov 2026", title: "Painted lockpicking", items: [
       "Picking a lock is now a painted close-up: a real lock on a chest, your pick and the tension wrench. Drag on the lock to aim the pick (it points at your finger), then hold Turn.",
       "The lock shakes harder the further you are from the sweet spot. Keep forcing it and the pick bends, glows and snaps, with bits of metal flying. Turn it all the way and the shackle clicks open in a little burst of light.",

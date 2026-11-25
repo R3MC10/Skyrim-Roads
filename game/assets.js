@@ -35,6 +35,9 @@
             fence arena mine — raw 3:2 paintings go through art/conv: crop the middle band, WebP q80
      fest-<id>                1600×600   8:3 painted headers for the festival and Grand Arena screens (tourneyui.js), WebP q85.
        ids: harvest olaf tourney derby hunt forgefire midwinter arena. The ink drawing stays as the fallback.
+     gev-<scene>              1280×480   8:3 painted affliction scenes (afflictions.js PAINT → EVENTART.PAINTED), WebP q82: black-shrine
+                                         draugr-altar dwemer-pipe arkay-temple werewolf-moon. Shown in road events and story popups
+                                         (cover-fit into 360×150); the drawing stays until the file loads. (gev-<kind> are the Great Events.)
      room-<type>-<theme>      1600×900   painted dungeon rooms (dunrooms.js), shown above the room text. WebP q80.
        types: fight elite trap treasure puzzle rest boss (mystery optional). themes: cave barrow dwemer mine forsworn
        vampire temple fort banditcamp thalmor giantcamp lair. Just drop a file in: a missing one borrows the closest
