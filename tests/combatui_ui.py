@@ -1,5 +1,5 @@
 """Fight controls (fightctl.js): the action bar on the turn-based fight screen. Usage: python combatui_ui.py PORT -> RESULT OK
-Serve game/ first:  python -m http.server PORT --directory ../game
+Serve game/ first:  node serve.js PORT
 At 390x844 (phone, touch) and 1920x1080 (PC, mouse + keys), in both art styles:
 - big drawn-icon buttons, AP pips on every move, the AP counter, nothing wider than the screen
 - a move spends AP (tap on the phone, key 1 on the PC)
@@ -12,7 +12,7 @@ import asyncio, sys, os
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_combatui") + os.sep; os.makedirs(OUT, exist_ok=True)
-CHROME = os.environ.get("CHROME", "/usr/bin/google-chrome")   # falls back to Playwright's own Chromium when missing
+CHROME = (__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None))   # falls back to Playwright's own Chromium when missing
 fails = []
 def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)
@@ -39,7 +39,7 @@ async def my_turn(pg, tries=60):
     return False
 
 async def run(p, w, h, touch):
-    kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
+    kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if CHROME and os.path.exists(CHROME) else {}
     b = await p.chromium.launch(**kw)
     ctx = await b.new_context(viewport={"width": w, "height": h}, device_scale_factor=2 if touch else 1, has_touch=touch, is_mobile=touch)
     errs = []
@@ -96,7 +96,7 @@ async def run(p, w, h, touch):
                 ok(await pg.evaluate("!!document.querySelector('#tbf .fc-aimbar') && document.querySelectorAll('#tbf .tbu.fc-tgt').length >= 2"), f"{tag}: healing asks who gets it")
                 await pg.screenshot(path=OUT + f"{tag}_aim.png")
                 ap0 = await pg.evaluate("-TB.session.myActs")
-                await pg.click("#tbf .tbu.ally.fc-tgt"); await pg.wait_for_timeout(600)
+                await pg.click("#tbf .fc-aimbar .fc-who:not(.me)"); await pg.wait_for_timeout(600)   # the name button (the open Magic menu covers the portraits on phones)
                 ap1 = await pg.evaluate("TB.session ? -TB.session.myActs : -1")
                 ok(not await pg.evaluate("!!document.querySelector('#tbf .fc-aimbar')") and (ap1 < ap0 or ap1 == -1 or not await pg.evaluate("!!document.querySelector('#tbf .fc [data-tba=attack]')")), f"{tag}: tapping the follower casts it on them")
                 ok(await pg.evaluate(r"/Healing on Lydia: \+\d/.test([...document.querySelectorAll('#tbf .tbl')].map(e=>e.textContent).join(' '))"), f"{tag}: the log shows the heal on the follower")

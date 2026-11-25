@@ -6,7 +6,7 @@ var I18N_CHARGEN = {
     "height:Short": "Niski", "hair:Short": "Krótkie", "beard:Short": "Krótka", "beard:Long": "Długa", "beard:Full": "Pełna", "beard:None": "Bez brody", "hair:Long": "Długie",
     "scar:None": "Bez blizny", "paint:None": "Bez barw", "tattoo:None": "Bez tatuażu", "build:Average": "Przeciętna", "height:Average": "Przeciętny", "brows:Normal": "Zwykłe",
     // the screen
-    "Create your character": "Stwórz postać", "Character creation": "Tworzenie postaci", "The barber": "Fryzjer", "Your mirror": "Twoje lustro",
+    "Close-up": "Zbliżenie", "Create your character": "Stwórz postać", "Character creation": "Tworzenie postaci", "The barber": "Fryzjer", "Your mirror": "Twoje lustro",
     "A shared Skyrim you travel in real time. Walking from Whiterun to Windhelm takes about ten minutes, and the road is rarely empty.":
       "Wspólny Skyrim, po którym podróżujesz w prawdziwym czasie. Droga z Whiterun do Windhelm zajmuje około dziesięciu minut, a na szlaku rzadko bywa pusto.",
     "A new look for {g} gold. Your race, name and stone stay as they are.": "Nowy wygląd za {g} sztuk złota. Rasa, imię i kamień zostają bez zmian.",
@@ -106,3 +106,24 @@ var I18N_CHARGEN = {
     [/^"(.+)" is taken by half of Skyrim\. Pick your own nickname\.$/, (m) => `„${m[1]}” nosi pół Skyrim. Wybierz własny pseudonim.`],
   );
 })();
+
+
+
+// [chargenrig] patch note
+Object.assign(I18N_EXTRA.words, {
+  "Character creation shows your real fighter": "Tworzenie postaci pokazuje twojego prawdziwego wojownika",
+  "Character creation now shows the same painted hero you fight with: armour, weapon and all. Stand, Walk and Fight show how you'll really look on the road and in battle.": "Tworzenie postaci pokazuje teraz tego samego malowanego bohatera, którym walczysz: ze zbroją, bronią i wszystkim. Stój, Idź i Walka pokazują, jak naprawdę wyglądasz na szlaku i w bitwie.",
+  "Picking a race swaps the painted head (Dunmer, Khajiit and Argonian have their own) and skin colour; everything else you chose stays.": "Wybór rasy zmienia malowaną głowę (Dunmerowie, Khajiici i Argonianie mają własne) i kolor skóry; reszta twoich wyborów zostaje.",
+  "Face zooms right in on your hero's head. On the Head, Face, Hair and Scars tabs a small close-up shows the details you pick.": "Twarz przybliża głowę bohatera. Na kartach Głowa, Twarz, Włosy oraz Blizny i barwy małe zbliżenie pokazuje wybrane szczegóły.",
+  "The race card shows the painted bust of the race instead of the little drawn figure.": "Karta rasy pokazuje malowane popiersie rasy zamiast małej rysowanej postaci.",
+});
+// [/chargenrig]
+
+// [raceheads] patch note
+Object.assign(I18N_EXTRA.words, {
+  "Every race has its own painted face": "Każda rasa ma własną malowaną twarz",
+  "Imperials, Bretons, Redguards, Altmer, Bosmer and Orcs now have their own painted heads, for men and women, in fights and in character creation. Every race in the game has one now.": "Cesarscy, Bretoni, Redgardzi, Altmerowie, Bosmerowie i Orkowie mają teraz własne malowane głowy, dla mężczyzn i kobiet, w walce i w tworzeniu postaci. Każda rasa w grze ma już swoją.",
+  "Switching race in character creation no longer flashes a Nord head for a moment: the hero appears once the right face is ready.": "Zmiana rasy w tworzeniu postaci nie pokazuje już na chwilę głowy Norda: bohater pojawia się, gdy właściwa twarz jest gotowa.",
+  "On a phone, your hero's head and a raised sword stay below the turn and Face buttons instead of hiding behind them.": "Na telefonie głowa bohatera i uniesiony miecz zostają pod przyciskami obrotu i Twarzy, zamiast chować się za nimi.",
+});
+// [/raceheads]

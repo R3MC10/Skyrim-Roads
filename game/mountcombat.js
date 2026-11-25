@@ -6,7 +6,7 @@
    the horse's health bar, teammates' horses. Callers check (typeof MOUNTCOMBAT === "undefined" || MOUNTCOMBAT.enabled),
    so node tests that don't load this file keep testing the mounted system as if it were on. */
 const MOUNTCOMBAT = {
-  enabled: typeof location !== "undefined" && /[?&]mountcombat\b/.test(location.search || ""),   // off; ?mountcombat turns it on for screen tests and screenshots
+  enabled: true,   // on for everyone since build 237 (user decision 25 Nov 2026); set false to send everyone back to fighting on foot
   /* the encounter card's line about your horse while mounted combat is off */
   note(s) {
     if (typeof HORSES === "undefined" || !s || !HORSES.present(s)) return "";

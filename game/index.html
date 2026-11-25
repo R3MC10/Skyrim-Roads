@@ -4523,6 +4523,70 @@ html.mo-on .evc-fx{display:block}
 #gpop{display:none}
 html.pcmap.pc-home #gpop:not(:empty){display:block;position:fixed;left:14px;bottom:96px;width:340px;max-height:min(52vh,calc(100vh - 400px));overflow:auto;z-index:4;overscroll-behavior:contain}
 html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);background:linear-gradient(180deg,rgba(26,28,31,.95),rgba(12,13,15,.95))}
+/* a caravan's card over the map (wagons.js): SkyUI-style, docked at the bottom of the map on phones */
+.wgcard{position:absolute;z-index:7;width:318px;max-height:calc(100% - 16px);overflow:auto;overscroll-behavior:contain;padding:10px 12px 12px;border-radius:3px;background:linear-gradient(180deg,rgba(20,21,23,.95),rgba(8,9,10,.95));border:1px solid rgba(226,226,226,.22);border-top:2px solid rgba(226,187,100,.55);box-shadow:0 10px 28px rgba(0,0,0,.65);color:#e9e5da;font-size:14px}
+.wgcard.dock{left:8px!important;right:8px;bottom:8px;width:auto;max-height:68%}
+.wgcard .wg-x{position:absolute;top:4px;right:4px;width:32px;height:32px;min-height:0;font-size:14px}
+.wgcard .wg-h{display:flex;align-items:center;gap:10px;padding-right:30px}
+.wgcard .wg-pic{flex:0 0 58px;height:40px;display:grid;place-items:center}.wgcard .wg-pic>*{max-width:58px;max-height:40px}
+.wgcard .wg-h b{display:block;font-family:Cinzel,serif;letter-spacing:.06em;text-transform:uppercase;font-size:15px;line-height:1.15}
+.wgcard .wg-h span{color:#a9a294;font-size:12.5px}
+.wgcard .wg-route{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;margin:8px 0 6px;font-size:12.5px;color:#cfc8b6}
+.wgcard .wg-route i{height:4px;background:rgba(255,255,255,.12);border-radius:2px;overflow:hidden}.wgcard .wg-route em{display:block;height:100%;background:#d8b46a}
+.wgcard .wg-row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-top:1px solid rgba(255,255,255,.08);font-size:13px}
+.wgcard .wg-row span{color:#9d978a;text-transform:uppercase;letter-spacing:.06em;font-size:11.5px;padding-top:2px;white-space:nowrap}.wgcard .wg-row b{font-weight:600;text-align:right}
+.wgcard .wg-row b.bad{color:#ff8f7a}.wgcard .wg-row b.warn{color:#f0c46a}.wgcard .wg-row b.good{color:#a8d88a}
+.wgcard .wg-acts{display:grid;gap:4px;margin-top:8px;border-top:1px solid rgba(226,187,100,.3);padding-top:8px}
+.wgcard .wg-act{display:flex;flex-direction:column;align-items:flex-start;gap:1px;width:100%;min-height:44px;padding:6px 10px;text-align:left;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:2px;color:#efe9da;font:inherit;cursor:pointer}
+.wgcard .wg-act span{font-weight:600;letter-spacing:.02em}.wgcard .wg-act small{color:#a9a294;font-size:12px}
+.wgcard .wg-act:hover:not([disabled]),.wgcard .wg-act:focus-visible{background:rgba(226,187,100,.14);border-color:rgba(226,187,100,.55)}
+.wgcard .wg-act.pri{border-color:rgba(226,187,100,.5)}.wgcard .wg-act.pri span{color:#ffe6a0}
+.wgcard .wg-act.danger span{color:#ff9d8a}
+.wgcard .wg-act[disabled]{opacity:.5;cursor:default}
+.wgcard .wg-trade{margin-top:8px;border-top:1px solid rgba(255,255,255,.12)}
+.wgcard .wg-item{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.wgcard .wg-item .nm small{display:block;color:#9d978a;font-size:11.5px}.wgcard .wg-item .gold{color:#e8c66a}
+.wgcard .wg-item .btn{min-height:36px}
+.wgcard .wg-note{margin:6px 0 0;color:#a9a294;font-size:12px}
+/* hands-on harvesting (harvestgame.js): the mini-game, its SkyUI-style result list, the "in reach" prompt over the map */
+.hg-wrap{position:fixed;inset:0;z-index:61;display:grid;place-items:center;background:radial-gradient(70% 60% at 50% 45%,rgba(0,0,0,.62),rgba(0,0,0,.9));padding:12px}
+.hg-box{position:relative;width:min(380px,100%);max-height:100%;overflow:auto;background:linear-gradient(180deg,rgba(16,17,19,.97),rgba(6,7,8,.985));box-shadow:0 0 0 1px rgba(228,220,200,.18),0 20px 60px rgba(0,0,0,.6);padding:12px 12px 14px}
+.hg-head{display:flex;align-items:center;gap:8px}
+.hg-title{flex:1;font-family:"Barlow Condensed",Cinzel,serif;letter-spacing:.18em;text-transform:uppercase;font-size:17px;font-weight:600}
+.hg-x{background:none;border:1px solid rgba(228,220,200,.25);color:var(--mute,#a9a395);width:36px;height:36px;font-size:16px;cursor:pointer}
+.hg-tip{margin:4px 0 8px;color:var(--mute,#a9a395);font-size:14px;min-height:1.3em}
+.hg-stage{position:relative}
+.hg-stage canvas{width:100%;max-width:340px;height:auto;aspect-ratio:320/340;display:block;margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:4px;box-shadow:inset 0 0 0 1px rgba(228,220,200,.12)}
+.hg-time{height:5px;margin:8px auto 0;max-width:340px;background:rgba(255,255,255,.08)}
+.hg-time i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#8fc46a,#e0b04a)}
+.hg-over .hg-stage{opacity:.35;transition:opacity .3s}
+.hg-over .hg-tip{visibility:hidden}
+.hg-res{position:absolute;left:12px;right:12px;top:58px}
+.hg-res:empty{display:none}
+.hg-result{background:rgba(8,9,10,.93);box-shadow:0 0 0 1px rgba(228,220,200,.2),0 14px 40px rgba(0,0,0,.6);padding:14px;animation:hgIn .25s ease-out}
+@keyframes hgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.hg-grade{font-family:"Barlow Condensed",Cinzel,serif;text-transform:uppercase;letter-spacing:.22em;font-size:20px;text-align:center}
+.hg-perfect{color:#f1cf72;text-shadow:0 0 12px rgba(241,207,114,.45)}.hg-good{color:#b9dc8a}.hg-fail{color:#b8b0a0}
+.hg-why{margin:4px 0 0;text-align:center;color:var(--mute,#a9a395);font-size:13px}
+.hg-list{margin:10px 0 6px;border-top:1px solid rgba(228,220,200,.22)}
+.hg-cap{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute,#a9a395);padding:6px 4px 2px}
+.hg-row{display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid rgba(228,220,200,.1);font-size:15px}
+.hg-row .hg-nm{flex:1}.hg-row .hg-n{color:#e8e1cf;font-variant-numeric:tabular-nums}
+.hg-row.hg-sub{color:var(--mute,#a9a395);font-size:13px}
+.hg-row.hg-rare{background:linear-gradient(90deg,rgba(241,207,114,.14),transparent);color:#f1dc9a}
+.hg-row.hg-rare.hg-l{background:linear-gradient(90deg,rgba(160,215,255,.16),transparent);color:#cfeaff}
+.hg-note{font-size:13px;color:var(--mute,#a9a395);margin:6px 0 10px}
+.hg-done{width:100%;min-height:44px}
+.hg-tag{font-weight:600;font-size:11px;letter-spacing:.04em;padding:0 4px;border-radius:3px;white-space:nowrap}
+.hg-tag.hg-p{color:#f1cf72;background:rgba(241,207,114,.12)}.hg-tag.hg-l{color:#cfeaff;background:rgba(160,215,255,.14)}
+.hg-foot{font-size:12px;margin-top:6px}
+#gnear{display:none}
+#gnear:not(:empty){display:block;position:fixed;left:12px;right:72px;margin:0 auto;max-width:420px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:5}
+.gnear{display:flex;align-items:center;gap:8px;padding:8px 10px;background:linear-gradient(180deg,rgba(26,30,24,.95),rgba(10,12,9,.96));box-shadow:0 0 0 1px rgba(170,220,130,.35),0 8px 24px rgba(0,0,0,.55);animation:hgIn .25s ease-out}
+.gnear .gn-t{flex:1;display:flex;flex-direction:column;line-height:1.2;min-width:0}
+.gnear .gn-t small{color:var(--mute,#a9a395);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gnear .btn{min-height:40px}
+.hg-order .item{align-items:center}
 /* [rewardtips] reward icons: the item card on hover / tap (rewardtips.js) */
 .tip .tt-have{color:var(--mute);font-size:.92em;margin-top:4px}.tip .tt-stack{color:var(--gold);font-size:.92em}
 [data-rtip]{cursor:help;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
@@ -4536,6 +4600,277 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 .mapbtns .ridebtn{display:grid;place-items:center}
 .mapbtns .ridebtn.hide{display:none}
 .mapbtns .ridebtn.on{color:#ffe2a8;background:rgba(58,40,18,.88);box-shadow:inset 0 0 0 1px rgba(226,187,100,.7),0 0 10px rgba(226,187,100,.35)}
+/* [phonelayout] Area, Company and Items on a phone: 12px edges, 44px taps, 15-16px text */
+.au-tile b{overflow-wrap:normal;word-break:normal;hyphens:none}
+.au-closed{margin:0 0 6px}
+.au-closed>summary{list-style:none;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;cursor:pointer;user-select:none;border:1px dashed var(--sk-line,#3a3a3a);border-radius:6px;color:var(--sk-mute,#9d978a);font-family:var(--sk-ui,system-ui);font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+.au-closed>summary::-webkit-details-marker{display:none}
+.au-closed>summary::after{content:"";margin-left:auto;width:7px;height:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
+.au-closed[open]>summary::after{transform:rotate(45deg) translate(-2px,-2px)}
+.au-closed[open]>summary{margin-bottom:6px}
+.au-closed .au-tiles{padding-bottom:0}
+@media (max-width:699px){
+  html:not(.pcmap) body:not(.tw-char) #side[data-tab=town],html:not(.pcmap) body:not(.tw-char) #side[data-tab=social]{margin-left:-12px;margin-right:-12px}
+  #side[data-tab=town] .panel,#side[data-tab=social] .panel{padding-left:12px;padding-right:12px}
+  #side[data-tab=town] .panel .panel,#side[data-tab=social] .panel .panel{padding-left:10px;padding-right:10px}
+  .au-tiles,.au-tiles.au-two{grid-template-columns:minmax(0,1fr);gap:6px}
+  .au-tiles.au-two{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #side .au-tile{grid-template-columns:28px minmax(0,1fr);column-gap:12px;min-height:52px;padding:7px 12px}
+  .au-tile .au-ic{font-size:22px;width:28px}
+  .au-tile b,.au-tile small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .au-tile b{font-size:16px;line-height:1.2;-webkit-line-clamp:unset}
+  .au-tile small{font-size:13px;line-height:1.25}
+  .au-g>summary{min-height:44px}
+  .au-gh{font-size:13px}
+  /* Social: the hall right under the tab row; More folds to one line */
+  .soc-co .lng-inner{margin-top:10px}
+  .soc-co .lng-banner{margin-top:0}
+}
+.socmore-d{margin:6px 0 2px}
+.socmore-d>summary{list-style:none;display:flex;align-items:center;gap:10px;min-height:44px;padding:0 4px;cursor:pointer;user-select:none;border-bottom:1px solid rgba(236,232,222,.1)}
+.socmore-d>summary::-webkit-details-marker{display:none}
+.socmore-d>summary .socmore-l{grid-column:auto}
+.socmore-s{flex:1;min-width:0;font-size:13px;color:var(--sk-mute,#8f8a7e);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.socmore-n{min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--gold,#e2bb64);color:#1a1408;font-size:12px;line-height:20px;text-align:center}
+.socmore-d>summary::after{content:"";width:7px;height:7px;margin-right:6px;border-right:1.5px solid var(--sk-mute,#8f8a7e);border-bottom:1.5px solid var(--sk-mute,#8f8a7e);transform:rotate(45deg) translate(-2px,-2px);transition:transform .15s}
+.socmore-d[open]>summary::after{transform:rotate(-135deg)}
+.socmore-d .socmore{margin-top:6px}
+.lng-inner{position:relative}
+/* Items: one Sort button (a picker underneath) and the direction toggle on a phone; chips on wider screens */
+.m2-one{display:none;position:relative;flex:1;min-width:0;align-items:center;gap:8px;min-height:44px;padding:0 12px;background:rgba(0,0,0,.3);border:1px solid rgba(228,220,200,.22);color:#ece8de;cursor:pointer}
+.m2-one .m2-ol{font-family:var(--sk-ui,system-ui);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--sk-mute,#9d978a)}
+.m2-one b{flex:1;min-width:0;font-family:var(--sk-ui,system-ui);font-weight:600;font-size:15px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m2-one i{font-style:normal;font-size:12px;color:#f3d98b}
+.m2-one select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;cursor:pointer;-webkit-appearance:none;appearance:none}
+.m2-one:focus-within{border-color:rgba(236,232,222,.7)}
+@media (max-width:600px){
+  .m2-sort .m2-sc,.m2-sort .m2-sl{display:none}
+  .m2-one{display:flex}
+  .m2-dir{min-height:44px;padding:0 12px}
+  .m2-dir span{display:inline;font-size:13px}
+}
+/* the phone tooltip as a bottom sheet */
+.tip.tt-sheet{position:fixed;left:0;right:0;top:auto;bottom:0;width:100%;max-width:none;min-height:35vh;max-height:45vh;overflow-y:auto;overscroll-behavior:contain;padding:14px 16px calc(16px + env(safe-area-inset-bottom,0px));font-size:16px;line-height:1.4;border-radius:0;border-left:0;border-right:0;border-bottom:0;border-top:1px solid rgba(226,187,100,.7);box-shadow:0 -12px 32px rgba(0,0,0,.7);pointer-events:none;transform:translateY(12px);transition:opacity .14s,transform .14s}
+.tip.tt-sheet.on{transform:none;pointer-events:auto}
+.tip.tt-sheet::after{display:none}
+.tip.tt-sheet::before{content:"";display:block;width:40px;height:4px;margin:-4px auto 10px;border-radius:2px;background:rgba(236,230,214,.28)}
+@media (prefers-reduced-motion:reduce){.tip.tt-sheet{transition:none;transform:none}.au-closed>summary::after,.socmore-d>summary::after{transition:none}}
+/* notify.js: the message history button and window, and nothing else on screen during a party vote */
+#nfhbtn{position:absolute;right:0;top:0;width:36px;height:36px;padding:7px;border-radius:50%;border:1px solid rgba(226,187,100,.45);background:rgba(8,9,11,.72);color:#e2bb64;pointer-events:auto;cursor:pointer;z-index:2}
+#nfhbtn::before{content:"";position:absolute;inset:-5px}
+#nfhbtn svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#hudlane.inmodal #nfhbtn,body.tw-on #nfhbtn,body.tw-char #nfhbtn{display:none}
+#hudlane{padding-right:42px;box-sizing:border-box}
+body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{visibility:hidden}
+#nfhist{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
+#nfhist .nf-sheet{width:min(560px,100%);max-height:min(78vh,640px);display:flex;flex-direction:column;background:var(--tex,#16181b) #16181b;border:1px solid rgba(226,187,100,.35);border-bottom:0;border-radius:10px 10px 0 0;padding:12px 12px calc(12px + env(safe-area-inset-bottom));box-sizing:border-box;color:#f3ecdb}
+@media (min-width:900px){#nfhist{align-items:center}#nfhist .nf-sheet{border-bottom:1px solid rgba(226,187,100,.35);border-radius:10px}}
+#nfhist .nf-hd{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#nfhist .nf-hd h3{margin:0;font-size:18px;letter-spacing:.06em;text-transform:uppercase}
+#nfhist .nf-x{min-width:44px;min-height:44px}
+#nfhist .nf-f{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+#nfhist .nf-f .btn{min-height:40px;padding:6px 12px;font-size:14px}
+#nfhist .nf-l{list-style:none;margin:0;padding:0;overflow:auto;flex:1;min-height:80px}
+#nfhist .nf-l li{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:8px 4px 8px 10px;border-left:2px solid rgba(226,187,100,.5);border-bottom:1px solid rgba(255,255,255,.06);font-size:15px;line-height:1.35}
+#nfhist .nf-l li.nf-quests{border-left-color:#9fc3e8}#nfhist .nf-l li.nf-party{border-left-color:#d9776a}#nfhist .nf-l li.nf-world{border-left-color:#8fb07a}
+#nfhist .nf-l li.nf-none{border:0;color:rgba(233,226,208,.6)}
+#nfhist .nf-t{overflow-wrap:anywhere}#nfhist .nf-t small{display:block;font-size:12px;color:rgba(233,226,208,.65);text-transform:uppercase;letter-spacing:.05em}
+#nfhist time{flex:none;font-size:12px;color:rgba(233,226,208,.55)}
+/* perklayout (skyui.js): the perk sky at real size in a box you pan with a finger and pinch to zoom; names never overlap */
+.skc.skv{overflow:auto;overscroll-behavior:contain;touch-action:pan-x pan-y;max-height:62vh;scrollbar-width:thin}
+.skc.skv{display:flex}.skc.skv>svg{max-width:none;flex:none;margin:auto}
+.skc .lbl{font-size:var(--skfs,11px);font-weight:500;paint-order:stroke;stroke:rgba(4,8,16,.85);stroke-width:3px;stroke-linejoin:round}
+.skc .st.sel .lbl{fill:#ffe7a8}
+.skc.far .st:not(.can):not(.sel) .lbl{display:none}
+.tw-starp>.tw-bigw .tw-big.skv{max-height:none}
+@media (max-width:899.98px){
+  .tw-starp>.tw-sdet{position:sticky;bottom:0;z-index:3;min-height:150px;max-height:180px;overflow:auto;overscroll-behavior:contain;margin:0 -2px;padding:0 2px 6px;background:linear-gradient(180deg,rgba(7,11,18,.9),rgba(7,11,18,.98))}
+  .tw-starp>.tw-sdet .tw-perk{margin-top:6px}
+  .tw-starp .skc.tw-big.skv{max-height:max(260px,calc(100vh - 330px))}
+}
+/* chargenrig.js: character creation drawn with the painted fight figure; a small drawn close-up of the face details on
+   the Head / Face / Hair / Scars tabs (the painted head is one per race); the race card shows the painted bust */
+.cgdetail{display:none}
+.cg-painted .cgdetail.on{display:flex;flex-direction:column;align-items:center;gap:2px;position:absolute;left:12px;top:64px;z-index:2;pointer-events:none}
+.cgdetail img{border-radius:50%;box-shadow:0 0 0 2px rgba(214,178,94,.5),0 2px 10px rgba(0,0,0,.55);margin:0}
+.cgdetail span{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:#d9cfb6;text-shadow:0 1px 3px #000}
+.rshow .cgbust .bust-hero.ok{width:150px;height:150px}
+.rshow .cgbust .bust-hero.ok.bust-crest{width:136px;height:136px;margin:7px}
+@media (min-width:900px){.cg-painted .cgdetail.on{left:24px;top:96px}.cgdetail img{width:104px;height:104px}}
+
+/* [longhousegrow] painted room patches on the hall, the crossfade after a build, and the tap areas */
+.lng-view svg .lng-ov{pointer-events:none}
+.lng-view svg .lng-in{animation:lngIn .55s ease-out both}
+.lng-view svg .lng-out{animation:lngOut .55s ease-in both}
+@keyframes lngIn{from{opacity:0}to{opacity:1}}
+@keyframes lngOut{from{opacity:1}to{opacity:0}}
+.lng-view svg .lng-tap{fill:transparent;cursor:pointer;pointer-events:all;-webkit-tap-highlight-color:transparent}
+.lng-view svg .lng-tap:hover,.lng-view svg .lng-tap:focus{fill:rgba(255,214,140,.07);stroke:rgba(214,178,94,.55);stroke-width:1.5;stroke-dasharray:6 4}
+.lng-room.lng-flash{animation:lngFlash 1.2s ease-out}
+@keyframes lngFlash{0%{box-shadow:0 0 0 2px rgba(214,178,94,.9),0 0 18px rgba(214,178,94,.5)}100%{box-shadow:0 0 0 0 rgba(214,178,94,0)}}
+@media (prefers-reduced-motion:reduce){.lng-view svg .lng-in,.lng-view svg .lng-out,.lng-room.lng-flash{animation-duration:.01s}}
+/* tbfight.js: the same foe's 2nd/3rd move in the turn order, so it doesn't read as another foe */
+.tbini.again{border-style:dashed;opacity:.85}
+.tbini .tbag{font:700 9px/1 "Barlow Semi Condensed",sans-serif;margin-left:3px;padding:1px 3px;border-radius:4px;background:rgba(230,90,70,.3);color:#ffd9cf}
+#tbf.c2 .tbini.again .c2pt{width:18px;height:18px;opacity:.8}
+#tbf.c2 .tbini.again .tbag{margin:0 0 0 1px}
+/* fightctl.js: who gets a heal - name buttons in the aim bar (an open menu covers the portraits on phones) */
+#tbf .fc-aimbar{flex-wrap:wrap}
+#tbf .fc-aimbar em{font-style:normal}
+#tbf .fc-aimbar .fc-whos{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px}
+#tbf .fc-aimbar .fc-who{min-height:40px;padding:6px 14px;border-radius:8px;border:1px solid rgba(226,187,100,.6);background:rgba(58,40,18,.9);color:#f3d98b;font:inherit;font-weight:600;cursor:pointer}
+#tbf .fc-aimbar .fc-who:active{background:rgba(96,66,24,.95)}
+/* [notify-2] an onboarding tip waits, hidden, while it would cover the dungeon route strip */
+#obtip.obwait{visibility:hidden;pointer-events:none}
+/* [nocover] nocover.js: nothing floats on a button. The history button starts the message lane (or sits right of "World news"
+   on a PC), banners keep to a slim band at the top, the Gather prompt docks on the bottom bar on phones */
+#nfhbtn{position:fixed;right:auto}
+#hudlane{padding-right:0}
+#hudlane.nc-hb{padding-left:44px}
+#nfhbtn.nc-off{display:none}
+#pbanners.nc-fit{align-items:center}
+#pbanners.nc-fit .pban{min-width:0;max-width:100%;box-sizing:border-box;max-height:64px;overflow:hidden;padding:6px 18px}
+#pbanners.nc-fit .pban .ptx b{-webkit-line-clamp:1;line-clamp:1}
+#pbanners.nc-fit .pban .ptx{max-width:100%}
+#pbanners.nc-fit .pban .pic img{max-height:44px;width:auto}
+#pbanners.nc-fit .pban img.pmini{width:auto;max-height:44px}
+body.nc-gdock #gnear:not(:empty){left:0;right:0;max-width:none;margin:0;z-index:6}
+body.nc-gdock #gnear .gnear{padding:8px max(12px,env(safe-area-inset-left)) 8px max(12px,env(safe-area-inset-right));box-shadow:0 -1px 0 rgba(170,220,130,.35),0 -8px 20px rgba(0,0,0,.45)}
+body.nc-gdock .app{padding-bottom:calc(140px + var(--nc-gnear,0px) + env(safe-area-inset-bottom))}
+body:has(#tbf) #gnear{display:none!important}
+/* [movepreview] movepreview.js: what a move will do while you hover or hold it */
+#tbf .tbbar .mpv{position:absolute;top:0;bottom:0;z-index:2;pointer-events:none;border-radius:2px}
+#tbf .tbbar .mpv.lose.maybe{background:repeating-linear-gradient(135deg,rgba(255,236,190,.85) 0 3px,rgba(120,20,10,.35) 3px 7px);box-shadow:inset 0 0 0 1px rgba(255,230,170,.7)}
+#tbf .tbbar .mpv.lose.sure{background:repeating-linear-gradient(135deg,rgba(255,255,255,.95) 0 3px,rgba(255,190,120,.75) 3px 7px);box-shadow:inset 0 0 0 1px #fff;animation:mpvpulse 1.1s ease-in-out infinite}
+#tbf .tbbar .mpv.cost{background:repeating-linear-gradient(135deg,rgba(0,0,0,.55) 0 3px,rgba(0,0,0,.3) 3px 6px)}
+#tbf .tbbar .mpv.heal{background:repeating-linear-gradient(135deg,rgba(140,240,150,.9) 0 3px,rgba(40,120,50,.5) 3px 7px)}
+#tbf .tbbar .mpv-n{position:absolute;z-index:3;right:0;bottom:calc(100% + 2px);font:700 11px/1 "Barlow Semi Condensed",sans-serif;font-style:normal;color:#ffe2b0;text-shadow:0 1px 2px #000,0 0 4px #000;pointer-events:none;white-space:nowrap}
+#tbf .tbbar .mpv-n.heal{color:#b8f5b0;left:auto}
+#tbf .c2arcs .mpv-arc{fill:none;stroke-width:7.5;stroke-linecap:butt;stroke:rgba(10,6,4,.78)!important;transition:none}
+#tbf .c2mpn.mpv-num::after,#tbf .c2spn.mpv-num::after{content:" " attr(data-mpv);color:#ffb39a}
+#tbf .c2glass .mpv-heal{position:absolute;left:0;right:0;z-index:1;background:repeating-linear-gradient(135deg,rgba(140,240,150,.75) 0 3px,rgba(40,120,50,.35) 3px 7px)}
+#tbf .c2orb.mpv-guarded .c2glass{box-shadow:0 0 0 3px rgba(150,200,255,.75),0 0 20px rgba(150,200,255,.55),inset 0 0 14px #000}
+#tbf .mpv-guard{margin-top:4px;padding:3px 8px;border-radius:6px;background:rgba(20,32,52,.88);border:1px solid rgba(150,200,255,.6);color:#d6e8ff;font-size:11px;line-height:1.25;max-width:220px;pointer-events:none}
+#tbf .tbap i.ap.mpv-use{opacity:.3;animation:none!important;box-shadow:none!important;transform:scale(.85)}
+#tbf .tbact.mpv-src{outline:2px solid rgba(255,226,160,.8);outline-offset:1px}
+@keyframes mpvpulse{50%{opacity:.6}}
+@media (prefers-reduced-motion:reduce){#tbf .tbbar .mpv.lose.sure{animation:none}}
+/* [stations] a place's page opens on the work: folded town news, a capped painting, the keeper on one line, the note under the list */
+.au-news{margin:0 0 4px}
+#side .au-newsb{display:flex;align-items:center;gap:6px;width:100%;min-height:40px;padding:6px 10px;background:rgba(20,16,12,.55);border:1px solid rgba(214,178,94,.25);border-radius:6px;color:var(--sk-mute,#9d978a);font:600 13px/1.2 var(--sk-ui,GameIcons,system-ui);letter-spacing:.05em;text-transform:uppercase;cursor:pointer;text-align:left}
+#side .au-newsb .au-nn{color:var(--gold)}#side .au-newsb .au-chev{margin-left:auto;font-size:12px}
+.au-news.on .au-newsb{border-bottom-left-radius:0;border-bottom-right-radius:0;color:var(--sk-ink,#ece8de)}
+.au-newsin{padding:2px 8px 4px;border:1px solid rgba(214,178,94,.25);border-top:0;border-radius:0 0 6px 6px}
+.au-in img.art.scene.sec{max-height:22vh;object-fit:cover;margin:6px 0 4px}
+@media (min-width:900px){.au-in img.art.scene.sec{max-height:150px}}
+.au-in .npctalk{gap:8px;margin:4px 0 6px;padding:5px 6px}
+.au-in .npctalk .npcport{width:48px!important;height:48px!important;flex:none;object-fit:cover}
+.au-in .npctalk .npcport img{width:100%;height:100%;object-fit:cover}
+.au-in .npct{flex:1;min-width:0}
+.au-in .npct b{display:inline;font-size:13px;letter-spacing:.12em}
+.au-in .npcrole{display:inline;margin-left:6px;font-size:10px}
+.au-in .npct q{display:block;margin-top:2px;font-size:13px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.au-in .list+p.au-note,.au-in .list+.au-more{margin-top:10px}
+.au-in .rw-day{margin-top:6px}
+.cr-chip .cr-w{font-style:normal;font-weight:600}
+/* the Company banner as a name strip when the growing hall is painted right below it */
+.lng-banner.lng-strip{min-height:0;background:linear-gradient(90deg,rgba(40,30,16,.9),rgba(15,12,9,.85))}
+.lng-banner.lng-strip .lng-bt{position:static;background:none;padding:8px 12px}
+/* [npcportraits] painted NPC portraits (npcart.js): a slot the size of the drawing; a dark rounded panel like the race busts once the painting loads; guards get their hold's colour as the frame */
+.npcslot{display:inline-flex;flex:none;width:var(--nps,64px);height:var(--nps,64px);border-radius:6px;overflow:hidden;box-sizing:border-box;vertical-align:middle}
+.npcslot>img{display:block;width:100%;height:100%;max-width:none;border-radius:0}
+.npcslot.ok{background:radial-gradient(ellipse at 50% 38%,#353a43 0%,#1d2027 58%,#121418 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 2px 6px rgba(0,0,0,.4)}
+.npcslot.ok img.npcimg{object-fit:cover;object-position:50% 20%;border:0;box-shadow:none}
+.npcslot.npcguard{border:2px solid var(--npch,#8a5a34)}
+.npctalk .npcport{width:64px;height:64px}
+@media (min-width:900px){.npctalk .npcport{width:96px;height:96px}}
+/* [itemdetail] itemcmp.js: an item against what you wear (Items side panel and the tooltip / phone sheet) */
+.ic-cmp{margin:8px 0 4px;padding:6px 0 4px;border-top:1px solid rgba(236,230,214,.12);font-size:.94em}
+.ic-cmp .ic-h{margin:0 0 3px;color:#a49d8c}.ic-cmp .ic-h b{color:#f4ecd8;font-weight:600}
+.ic-cmp .ic-r{display:flex;justify-content:space-between;gap:12px;padding:1px 0;color:#cfc8b6}
+.ic-cmp .ic-r b{font-weight:600;font-variant-numeric:tabular-nums}
+.ic-cmp .ic-up,.tip .ic-cmp .ic-up{color:#8fdc8a}.ic-cmp .ic-dn,.tip .ic-cmp .ic-dn{color:#ff8b7e}
+.sky-detail .ic-cmp .ic-h.tt-up{color:#8fdc8a}.sky-detail .tt-eq{color:var(--gold)}
+/* the phone's details sheet: solid (the list never shows through) and at most 55% of the screen */
+.tip.tt-sheet{background:#0b0b0a;max-height:55vh}
+/* perksky (skyui.js): star states - taken gold, can take bright with a slow pulsing ring, skill too low blue-grey,
+   needs another perk first dim, picked a gold outline; lines that skip tiers are faint dashed curves until they matter */
+.skc .st circle.hit{fill:transparent}
+.skc .st.low circle.core{fill:#7f8fab}
+.skc .st.lock circle.core{fill:#4e5869}.skc .st.lock .lbl{fill:#7a8496}.skc .st.lock{opacity:.7}
+.skc .st.on circle.core{fill:#ffd56e}.skc .st.on .glow{fill:url(#skglowg);opacity:.95}.skc .st.on .lbl{fill:#eedcab}
+.skc .st.can circle.core{fill:#f4f9ff}.skc .st.can .glow{opacity:.8}.skc .st.can .lbl{fill:#eef5ff}
+.skc .st .ring{fill:none;stroke:#d8ebff;stroke-width:1.3;transform-box:fill-box;transform-origin:center;animation:skpulse 2.6s ease-in-out infinite}
+@keyframes skpulse{0%,100%{transform:scale(1);opacity:.95}50%{transform:scale(1.5);opacity:.3}}
+.skc .st .pk{fill:none;stroke:#ffd56e;stroke-width:1.8}
+.skc line.on{stroke:#e9c46a;stroke-width:1.6}
+.skc path.lk{fill:none;stroke:#5f6f88;stroke-width:1;stroke-dasharray:3 5;opacity:.45}
+.skc path.lk.on{stroke:#e9c46a;stroke-width:1.4;opacity:.9}.skc path.lk.pick{stroke:#cfe3ff;stroke-width:1.3;opacity:.9}
+@media (prefers-reduced-motion:reduce){.skc .st .ring{animation:none}}
+/* the "Tap a star..." hint sits under the sky, never over it (only a picked perk's panel docks at the bottom) */
+@media (max-width:899.98px){.tw-starp>.tw-sdet.hint{position:static;min-height:0;max-height:none;background:none}}
+/* [magicaim] fightfit.js: the Magic / Items drawer's list has a height from the screen size (the scene, your orb and the
+   party plates move up above the drawer, so it never hides anyone you can cast on); short landscape phones drop the
+   hint line and the filter chips; a full party gets more columns, then slim plates */
+#tbf.c2 .fc-list{max-height:var(--c2list,min(30vh,300px))}
+@media (max-height:559.98px){
+  #tbf.c2 .fc-pick .fc-head>small,#tbf.c2 .fc-pick .fc-chips{display:none}
+  #tbf.c2 .fc-pick .fc-back{min-height:34px}#tbf.c2 .fc-pick .fc-tab{min-height:32px}
+  #tbf.c2 .fc-pick .fc-list{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:4px}
+  #tbf.c2 .fc-pick .tbsp{grid-template-columns:minmax(0,1fr) 64px 64px;grid-template-rows:auto;align-items:center;padding:3px 4px}
+  #tbf.c2 .fc-pick .tbsp .nm{grid-column:1;min-height:0;padding-right:32px}
+  #tbf.c2 .fc-pick .tbsp .fc-star{top:50%;right:140px;transform:translateY(-50%)}
+  #tbf.c2 .fc-pick .tbsp .tbact{min-height:40px}
+  #tbf.c2 .fc-pick .tbsp:has(>span:last-child:empty) .fc-cast{grid-column:2 / -1}
+  #tbf.c2 .c2ov .tbu.foe .tbints{flex-wrap:nowrap;overflow:hidden}
+}
+#tbf.c2 .c2ov .tbparty.c2slim .tbu.ally{padding:1px 4px 2px}
+#tbf.c2 .c2ov .tbparty.c2slim .tbu.ally .nm{font-size:9.5px;line-height:1.1}
+#tbf.c2 .c2ov .tbparty.c2slim .tbu.ally .tbbar.mid{height:5px}
+#tbf.c2 .c2ov .tbparty.c2slim .tbu.ally .tbbar .num,#tbf.c2 .c2ov .tbparty.c2slim .tbu.ally .c2fx,#tbf.c2 .c2ov .tbparty.c2slim .tbu.ally .c2ord{display:none}
+#tbf.c2.c2wide .c2ov .tbparty.c2cols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,150px);width:auto;max-width:none}
+#tbf.c2.c2wide .c2ov .tbparty.c2cols.c2slim{grid-auto-columns:minmax(0,104px)}
+#tbf.c2.c2wide .c2ov .tbparty.c2cols .tbu.ally{width:auto;padding:3px 6px 4px}
+#tbf.c2.c2wide .c2ov .tbparty.c2cols .tbu.ally .fairow{display:none}
+
+/* compass in two layers: the ring stays put, only the star tilts and follows your finger (like it used to) */
+.tw-ringart{display:none}
+:root.has-ui-compass-ring.has-ui-compass-star .tw-ringart{display:block;position:absolute;left:50%;top:50%;width:calc(var(--R)*2);height:calc(var(--R)*2);margin:calc(var(--R)*-1) 0 0 calc(var(--R)*-1);background:var(--asset-compass-ring) center/100% no-repeat;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6));pointer-events:none}
+:root.has-ui-compass-ring.has-ui-compass-star .tw-disc{transform:translate(calc(var(--tx,0)*.35px),calc(var(--ty,0)*.35px));transition:none;animation:none}
+:root.has-ui-compass-ring.has-ui-compass-star .tw.drag .tw-disc{transition:none;animation:none}
+:root.has-ui-compass-ring.has-ui-compass-star .tw-face,:root.has-ui-compass-ring.has-ui-compass-star .tw-face.art-flat{inset:0;background:var(--asset-compass-star) center/100% no-repeat;filter:drop-shadow(0 calc(6px + var(--pull,0)*10px) calc(8px + var(--pull,0)*8px) rgba(0,0,0,.75))}
+:root.has-ui-compass-ring.has-ui-compass-star .tw[data-glow] .tw-face{filter:drop-shadow(0 0 calc(4px + var(--pull,0)*14px) rgba(255,206,110,.6)) drop-shadow(0 12px 12px rgba(0,0,0,.7))}
+:root.has-ui-compass-ring.has-ui-compass-star .tw-shine,:root.has-ui-compass-ring.has-ui-compass-star .tw-depth{display:none}
+@media (prefers-reduced-motion:reduce){:root.has-ui-compass-ring.has-ui-compass-star .tw-disc{animation:none;transition:none}}
+/* the chosen direction lights up in gold (while you drag toward it, or point at it with a mouse) */
+.tw[data-glow=up] .tw-up b,.tw[data-glow=down] .tw-down b,.tw[data-glow=left] .tw-left b,.tw[data-glow=right] .tw-right b{color:#ffe7a6;text-shadow:0 0 6px rgba(255,214,120,.95),0 0 18px rgba(240,180,70,.75),0 0 34px rgba(220,150,40,.45),0 2px 6px #000}
+.tw[data-glow=up] .tw-up .tw-i,.tw[data-glow=down] .tw-down .tw-i,.tw[data-glow=left] .tw-left .tw-i,.tw[data-glow=right] .tw-right .tw-i{stroke:#ffd98a;filter:drop-shadow(0 0 6px rgba(255,200,100,.9)) drop-shadow(0 1px 3px #000)}
+.tw[data-glow=up] .tw-up small,.tw[data-glow=down] .tw-down small,.tw[data-glow=left] .tw-left small,.tw[data-glow=right] .tw-right small{color:#e8cf8f}
+@media (hover:hover){.tw-dir:hover b,.tw-dir:focus-visible b{color:#ffe7a6;text-shadow:0 0 6px rgba(255,214,120,.95),0 0 18px rgba(240,180,70,.75),0 2px 6px #000}.tw-dir:hover .tw-i,.tw-dir:focus-visible .tw-i{stroke:#ffd98a;filter:drop-shadow(0 0 6px rgba(255,200,100,.9))}}
+.tw-dir b,.tw-dir .tw-i,.tw-dir small{transition:color .15s,text-shadow .2s,stroke .15s,filter .2s}
+
+/* main-menu title (titlelogo.js): ROADS / of the / N✦RTH with a map trail, mountains and pines round it */
+.title .tlogo{position:relative;font-size:clamp(40px,15vw,72px);text-align:center;margin:.42em 0 .66em;padding-left:.22em;line-height:1;animation:tfade 1.4s ease both}
+.tlogo .tl-road{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:1}
+.tlogo .tl-l1{position:relative;z-index:2;font-family:Cinzel,serif;font-weight:700;font-size:.606em;letter-spacing:.32em;padding-left:.32em;background:linear-gradient(180deg,#fffaf0 0%,#ddd5c2 50%,#9e9581 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 3px rgba(0,0,0,.9)) drop-shadow(0 0 16px rgba(0,0,0,.6))}
+.tlogo .tl-of{position:relative;z-index:2;font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-weight:600;font-size:.379em;margin:.48em 0 .64em;color:#e8d3a0;text-shadow:0 2px 6px #000}
+.tlogo .tl-of span{padding:0 10px}
+.tlogo .tl-l2{position:relative;z-index:2;font-family:Cinzel,serif;font-weight:700;letter-spacing:.05em;display:flex;justify-content:center;align-items:center}
+.tlogo .tl-g{background:linear-gradient(180deg,#fff7dc 0%,#f0d595 30%,#c99a4b 62%,#8c6428 85%,#6a4a1c 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 1px 0 rgba(255,240,200,.25)) drop-shadow(0 -1px 0 rgba(40,25,5,.6)) drop-shadow(0 3px 3px rgba(0,0,0,.85)) drop-shadow(0 0 18px rgba(0,0,0,.55))}
+.tlogo .tl-cmp{position:relative;display:inline-block;width:1.03em;height:1.03em;margin:0 .045em 0 .075em}
+.tlogo .tl-cmp i{position:absolute;inset:0;background:center/100% no-repeat}
+.tlogo .tl-cmp .tl-o{font-style:normal;display:grid;place-items:center;line-height:1}
+.tlogo .tl-cmp .tl-r,.tlogo .tl-cmp .tl-s{display:none}
+:root.has-ui-compass-ring.has-ui-compass-star .tlogo .tl-cmp .tl-o{display:none}
+:root.has-ui-compass-ring.has-ui-compass-star .tlogo .tl-cmp .tl-r{display:block;background-image:var(--asset-compass-ring);transform:scale(.94)}
+:root.has-ui-compass-ring.has-ui-compass-star .tlogo .tl-cmp .tl-s{display:block;background-image:var(--asset-compass-star);transform:scale(1.04);filter:drop-shadow(0 3px 4px rgba(0,0,0,.8));animation:tlspin 1.6s cubic-bezier(.2,1.4,.4,1) both}
+.tlogo .tl-cmp:before{content:"";position:absolute;inset:-30%;border-radius:50%;background:radial-gradient(circle,rgba(255,200,110,.28),transparent 62%)}
+@keyframes tlspin{0%{transform:scale(1.04) rotate(-140deg);opacity:0}25%{opacity:1}100%{transform:scale(1.04) rotate(0)}}
+.tlogo .tl-grow{stroke-dasharray:1 1;stroke-dashoffset:0}
+.tlogo .tl-grow.go{animation:tlgrow 1.5s .35s ease-in-out both}
+@keyframes tlgrow{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.tlogo .tl-decos.go{animation:tfade 1s 1.2s ease both}
+@media (prefers-reduced-motion:reduce){.tlogo,.tlogo .tl-cmp .tl-s,.tlogo .tl-grow.go,.tlogo .tl-decos.go{animation:none!important}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -4552,6 +4887,7 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 <script src="terrain.js"></script>
 <script src="solworld.js"></script>
 <script src="formulas.js"></script>
+<script src="i18n_perkdesc.js"></script>
 <script src="perks.js"></script>
 <script src="respec.js"></script>
 <script src="perkfx.js"></script>
@@ -4566,7 +4902,9 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 <script src="foecap.js"></script>
 <script src="stacks.js"></script>
 <script src="events.js"></script>
+<script src="dunlines.js"></script>
 <script src="dungeons.js"></script>
+<script src="dunevents.js"></script>
 <script src="towns.js"></script>
 <script src="wevents.js"></script>
 <script src="weatherfx.js"></script>
@@ -4627,12 +4965,15 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 <script src="fightread.js"></script>
 <script src="spellfx.js"></script>
 <script src="potionfx.js"></script>
+<script src="fightpos.js"></script>
 <script src="foeintent.js"></script>
 <script src="fxicons.js"></script>
 <script src="strategy.js"></script>
 <script src="fightset.js"></script>
 <script src="combat2.js"></script>
+<script src="fightfit.js"></script>
 <script src="fightdeclutter.js"></script>
+<script src="movepreview.js"></script>
 <script src="guide.js"></script>
 <script src="patchnotes.js"></script>
 <script src="market.js"></script>
@@ -4679,6 +5020,8 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 <script src="battlescene.js"></script>
 <script src="foerig.js"></script>
 <script src="allyanim.js"></script>
+<script src="arrowfx.js"></script>
+<script src="movefx.js"></script>
 <script src="fightart.js"></script>
 <script src="beastart.js"></script>
 <script src="gearlook.js"></script>
@@ -4712,6 +5055,7 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 <script src="raidart.js"></script>
 <script src="homeart.js"></script>
 <script src="titleart.js"></script>
+<script src="chargenrig.js"></script>
 <script src="chargen.js"></script>
 <script src="fxart.js"></script>
 <script src="travelart.js"></script>
@@ -4808,7 +5152,8 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 <script src="i18n_balfear.js"></script>
 <script src="i18n_combat2.js"></script>
 <script src="i18n_fightdeclutter.js"></script>
-<script src="i18n_busts.js"></script>
+<script src="i18n_movepreview.js"></script>
+<script src="i18n_busts.js"></script><script src="i18n_npcportraits.js"></script>
 <script src="i18n_fightset.js"></script>
 <script src="i18n_stacks.js"></script>
 <script src="i18n_fighttips.js"></script>
@@ -4825,7 +5170,13 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 <script src="i18n_levelup.js"></script>
 <script src="i18n_mountfight.js"></script>
 <script src="i18n_mountcombat.js"></script>
+<script src="i18n_fighthotfix.js"></script>
+<script src="i18n_herorig.js"></script>
 <script src="i18n_folsex.js"></script>
+<script src="i18n_qaside.js"></script>
+<script src="i18n_qafight.js"></script>
+<script src="i18n_fightpos.js"></script>
+<script src="i18n_movefx.js"></script>
 <script src="i18n_riding.js"></script>
 <script src="i18n_bugreport.js"></script>
 <script src="i18n_paintedmap.js"></script>
@@ -4836,6 +5187,7 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 <script src="i18n_holds.js"></script>
 <script src="i18n_partyvote.js"></script>
 <script src="i18n_deepdelve.js"></script>
+<script src="i18n_dunevents.js"></script>
 <script src="i18n_netsync.js"></script>
 <script src="i18n_pcmap.js"></script>
 <script src="i18n_eventart.js"></script>
@@ -4859,6 +5211,21 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 <script src="i18n_longhouse.js"></script>
 <script src="i18n_expedition.js"></script>
 <script src="i18n_sweep2.js"></script>
+<script src="i18n_gather.js"></script>
+<script src="i18n_caravans.js"></script>
+<script src="i18n_qacore.js"></script>
+<script src="i18n_foes.js"></script>
+<script src="i18n_qacore4.js"></script>
+<script src="i18n_qaside2.js"></script>
+<script src="i18n_gptqa.js"></script>
+<script src="i18n_perklayout.js"></script>
+<script src="i18n_nocover.js"></script>
+<script src="i18n_magicaim.js"></script>
+<script src="i18n_perksky.js"></script>
+<script src="i18n_crafticons.js"></script>
+<script src="i18n_stations.js"></script>
+<script src="i18n_itemdetail.js"></script>
+<script src="i18n_roadart.js"></script>
 <script src="i18n_rewardtips.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
@@ -4871,12 +5238,15 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 <script src="areaui.js"></script>
 <script src="mappanel.js"></script>
 <script src="beastpaths.js"></script>
+<script src="itemcmp.js"></script>
 <script src="tooltip.js"></script>
 <script src="rewardtips.js"></script>
 <script src="fighttips.js"></script>
 <script src="bossfight.js"></script>
 <script src="hud2.js"></script>
 <script src="skillup.js"></script>
+<script src="notify.js"></script>
+<script src="nocover.js"></script>
 <script src="invites.js"></script>
 <script src="tourney.js"></script>
 <script src="holdui.js"></script>
@@ -4890,7 +5260,10 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 <script src="expedition.js"></script>
 <script src="longhouse.js"></script>
 <script src="eventcards.js"></script>
-<script src="i18n_gather.js"></script>
+<script src="wagons.js"></script>
+<script src="harvest.js"></script>
+<script src="harvestgame.js"></script>
+<script src="titlelogo.js"></script>
 <script src="ui.js"></script>
 </body>
 </html>

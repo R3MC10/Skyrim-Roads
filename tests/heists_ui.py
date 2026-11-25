@@ -21,7 +21,7 @@ PREP = """() => { const S = window.__dbg.save(); S.level = 20; S.trip = null; S.
 TOWN = "(() => { const l = [...document.querySelectorAll('[data-tab=town]')]; (l.find((e) => e.tagName === 'BUTTON') || l[0])?.click(); })()"
 
 async def main():
-    srv = subprocess.Popen([sys.executable, "-m", "http.server", str(PORT), "--directory", os.path.join(ROOT, "game")], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    srv = subprocess.Popen(["node", os.path.join(ROOT, "tests", "serve.js"), str(PORT), os.path.join(ROOT, "game")], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)   # node: python's server refuses connections under load
     time.sleep(1.0)
     errs, bad, shots = [], [], []
     def check(ok, what):
@@ -41,10 +41,11 @@ async def main():
                     if el: await el.screenshot(path=path)
                     else: await pg.screenshot(path=path)
                     shots.append(path)
+                n0 = len(errs)
                 for _ in range(3):
                     await pg.goto(f"http://localhost:{PORT}/index.html?notut&p=hz{tag}")
                     try: await pg.wait_for_selector(".press", timeout=10000); break
-                    except Exception: print(tag, "title screen didn't come up, reloading")
+                    except Exception: print(tag, "title screen didn't come up, reloading"); del errs[n0:]   # a half-loaded page doesn't count
                 await pg.wait_for_timeout(800)
                 await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Hrodny"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
                 await pg.evaluate(PREP)

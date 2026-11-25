@@ -29,10 +29,12 @@ const MENUS2 = (() => {
   function sortItems(rows, k, dir) { const c = compare(k, dir); return [...rows].sort((a, b) => (b.eq - a.eq) || c(a, b)); }
   function sortMagic(rows, k, dir) { return [...rows].sort(compare(k || "name", dir || 1)); }
   const dirLabel = (k, dir) => TEXT_KEYS.has(k) ? (dir > 0 ? "A–Z" : "Z–A") : (dir * (LOW_FIRST.has(k) ? -1 : 1) > 0 ? "High first" : "Low first");
-  /* the one sort row: chips + a direction toggle */
+  /* the one sort row: chips + a direction toggle. On a phone the chips give way to one "Sort: Name" button (a native
+     picker underneath, so the phone's own list opens) next to the same direction toggle. */
   function sortBar(sorts, cur, dir, act, dirAct) {
-    const k = sorts.some(([x]) => x === cur) ? cur : sorts[0][0];
-    return `<div class="m2-sort" role="group" aria-label="Sort"><span class="m2-sl">Sort</span><div class="m2-sc">${sorts.map(([x, l]) => `<button class="chip ${x === k ? "on" : ""}" data-act="${act}" data-id="${x}" aria-pressed="${x === k}">${l}</button>`).join("")}</div>`
+    const k = sorts.some(([x]) => x === cur) ? cur : sorts[0][0], kl = (sorts.find(([x]) => x === k) || sorts[0])[1];
+    const one = `<label class="m2-one"><span class="m2-ol">Sort</span><b>${kl}</b><i aria-hidden="true">▾</i><select class="m2-pick-s" data-sact="${act}" aria-label="Sort by">${sorts.map(([x, l]) => `<option value="${x}"${x === k ? " selected" : ""}>${l}</option>`).join("")}</select></label>`;
+    return `<div class="m2-sort" role="group" aria-label="Sort"><span class="m2-sl">Sort</span>${one}<div class="m2-sc">${sorts.map(([x, l]) => `<button class="chip ${x === k ? "on" : ""}" data-act="${act}" data-id="${x}" aria-pressed="${x === k}">${l}</button>`).join("")}</div>`
       + `<button class="m2-dir" data-act="${dirAct}" aria-label="Sort direction: ${dirLabel(k, dir)}" title="${dirLabel(k, dir)}"><b aria-hidden="true">${dir > 0 ? "▼" : "▲"}</b><span>${dirLabel(k, dir)}</span></button></div>`;
   }
   const itemSortBar = (sky) => sortBar(itemSorts(sky.cat), sky.sort, sky.dir || 1, "skysort", "m2dir");
@@ -90,6 +92,12 @@ const MENUS2 = (() => {
       filterJournal(side);
     }
   }
+  /* the phone's sort picker presses the matching (hidden) chip, so ui.js handles it like any other sort tap */
+  if (live) document.addEventListener("change", (e) => {
+    const t = e.target; if (!t || !t.matches || !t.matches("select.m2-pick-s")) return;
+    const box = t.closest(".m2-sort"), b = box && [...box.querySelectorAll(`[data-act="${t.dataset.sact}"]`)].find((x) => x.dataset.id === t.value);
+    if (b && !b.classList.contains("on")) b.click();
+  });
   if (live) document.addEventListener("input", (e) => { if (e.target && e.target.id === "m2jq") { jq = e.target.value; filterJournal(document.getElementById("side")); } });
 
   return { ITEM_SORTS, MAGIC_SORTS, itemSorts, compare, sortItems, sortMagic, dirLabel, sortBar, itemSortBar, magicSortBar, counts, badge, pickHint, fold, isOpen, open, matches, filterJournal, afterPanel };

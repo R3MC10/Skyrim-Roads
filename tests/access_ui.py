@@ -1,5 +1,5 @@
 """Accessibility screen test (access.js): every text size and colour mode on two phone sizes.
-Run:  python -m http.server 9150 --directory game   then   python tests/access_ui.py 9150 [outdir]
+Run:  node tests/serve.js 9150   then   python tests/access_ui.py 9150 [outdir]
 Screenshots land in outdir (default: access_shots in the temp folder); look at them for cut-off text. The script also fails on
 page errors, sideways scrolling, and controls that stick out of the screen."""
 import asyncio, os, sys, tempfile

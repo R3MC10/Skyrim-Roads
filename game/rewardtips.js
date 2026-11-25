@@ -10,7 +10,8 @@
    - Every item icon drawn without a pack row (ICONART.item(id)) carries the item's tooltip too.
    - G.give is watched: take() hands a result window what you were just given, so text-only results
      (road events, quests, crisis rewards...) can show their icons.
-   - Input: PC hover (tooltip.js); phone: tap an icon (or hold it), tap anywhere else to close. A reward icon under a
+   - Input: PC hover (tooltip.js); phone: tap an icon (or hold it) and the card slides up as the bottom sheet (tooltip.js
+     tt-sheet), tap anywhere else to close. The comparison is itemcmp.js's block (via TIP.itemHTML), as in the Items menu. A reward icon under a
      higher overlay (overlays.js: a VICTORY card over a dungeon room) shows nothing. */
 const RTIP = (() => {
   const DOM = typeof document !== "undefined" && typeof window !== "undefined";
@@ -144,7 +145,7 @@ const RTIP = (() => {
     e.stopPropagation(); e.preventDefault();
     if (openOn === el) { TIP.hide(); openOn = null; return; }   // the same icon again: close
     const k = el.dataset.tipK; if (!k) return;
-    TIP.show({ el, k });
+    TIP.show({ el, k, tap: true });   // a phone: the bottom sheet (tooltip.js), like a held finger
   }
 
   function mount() {

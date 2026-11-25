@@ -3,14 +3,26 @@ the leader stops for an encounter and decides, gold found on the road is split, 
 per room, and a big party (7 beside you) fits in the fight scene. Usage: python3 partyplay_ui.py PORT"""
 import asyncio, sys
 from playwright.async_api import async_playwright
+_SHOTS = (__import__("os").environ.get("SHOTS") or __import__("os").path.join(__import__("tempfile").gettempdir(), "rotn_shots")).replace("\\", "/").rstrip("/") + "/"   # screenshots: $SHOTS or the temp folder
+__import__("os").makedirs(_SHOTS, exist_ok=True)
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8850"
-SHOT = "/home/claude/tests/pp_"
+SHOT = _SHOTS + "pp_"
 results = []
 async def safe_shot(el, path):
     try: await el.screenshot(path=path)
     except Exception as e: print("shot skipped", path, str(e)[:60])
 def check(name, cond, extra=""):
     results.append(bool(cond)); print(("ok  " if cond else "FAIL"), name, extra)
+
+VOTE = """(k) => { const b = document.querySelector(`.pvote [data-act=pvv][data-k="${k}"]`); if (!b) return false; if (!b.classList.contains('pvmine')) b.click(); return true; }"""
+async def pvote(pages, key, tries=16):
+    """party votes (partyvote.js): in a party run every dungeon choice is a vote; the members tap the same option as the leader"""
+    left = list(pages)
+    for _ in range(tries):
+        left = [pg for pg in left if not await pg.evaluate(VOTE, key)]
+        if not left: return True
+        await pages[0].wait_for_timeout(300)
+    return False
 
 async def main():
     async with async_playwright() as p:
@@ -158,7 +170,8 @@ async def main():
             wv = await A.evaluate("""() => { const S = window.__dbg.save(), d = S.dungeon; const opts = d.rows[0].map((n, i) => [n.type, i]); const f = opts.find(o => o[0] === 'fight' || o[0] === 'elite');
                 if (!f) { d.rows[0][0].type = 'fight'; } const col = f ? f[1] : 0;
                 const b = document.createElement('button'); b.dataset.act = 'droom'; b.dataset.c = col; document.querySelector('#dun')?.appendChild(b); b.click(); b.remove();
-                return 0; }""")
+                return String(col); }""")
+            await pvote([B, C], wv, 8)   # the fork is a party vote when there are two ways
             for _ in range(10):
                 await A.wait_for_timeout(500)
                 wv = await A.evaluate("() => { const r = window.__dbg.save().dungeon?.room; return r ? r.waves || 1 : -1; }")
@@ -174,10 +187,12 @@ async def main():
             await B.wait_for_timeout(400)
             broom1 = await B.evaluate("() => JSON.stringify(window.__dbg.save().dungeon?.room?.enemy?.hp ?? null)")
             waitTxt = await B.evaluate("() => document.querySelector('#dun .lv-wait')?.innerText || ''")
+            if not waitTxt: waitTxt = await B.evaluate("() => document.querySelector('#dun .pvote') ? 'choosing together: ' + document.querySelector('#dun .pvote h3').innerText : ''")   # a party vote: Beta's tap is only a vote
             check(f"[{style}] a member can't act in the leader's room", broom0 == broom1 and "choosing" in waitTxt.lower(), f"{broom0} {broom1} | {waitTxt[:60]}")
             if "choosing" in waitTxt.lower(): await safe_shot(B, f"{SHOT}{style}_member_wait.png")
             for pg in (A, B, C): await pg.evaluate("() => { const S = window.__dbg.save(); S.hpBonus = 4000; G.setHealth(S, G.maxHealth(S)); }")
             await A.evaluate("() => { const b = document.createElement('button'); b.dataset.act = 'dact'; b.dataset.c = 'fight'; document.querySelector('#dun').appendChild(b); b.click(); b.remove(); }")
+            await pvote([B, C], 'fight', 10)
             mir = False
             for _ in range(16):
                 await B.wait_for_timeout(500)
@@ -274,4 +289,5 @@ async def main():
         check("no page errors", not errs, str(errs[:3]))
         await b.close()
         print("RESULT", "OK" if all(results) else "FAIL")
+        if not all(results): sys.exit(1)
 asyncio.run(main())

@@ -2,7 +2,7 @@
 own terrain, tinted, with magenta dots at every city and town at pixel (x*w, y*h)) and checks that each dot lands under
 its place on the real map screen, zoomed out and zoomed in (where the 2x picture takes over). Screenshots of the
 procedural map, the placeholder, zoomed in, with roads off, in tests/out_paintedmap/.
-   python3 -m http.server 8765 --directory ../game &
+   node serve.js 8765 &
    python3 paintedmap_ui.py 8765
 """
 import asyncio, sys, os, json
@@ -10,7 +10,7 @@ from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_paintedmap") + os.sep
 os.makedirs(OUT, exist_ok=True)
-CHROME = "/usr/bin/google-chrome"
+CHROME = (__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None))
 
 PLACEHOLDER = """([key, scale, tint]) => new Promise((done) => {
   const base = WorldMap.paintBase({ scale, labels: false, compass: false, frame: false, roads: false });
@@ -51,7 +51,7 @@ PROBE = """() => {
 
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(**({"executable_path": CHROME} if os.path.exists(CHROME) else {}), args=["--no-sandbox"])
+        b = await p.chromium.launch(**({"executable_path": CHROME} if CHROME and os.path.exists(CHROME) else {}), args=["--no-sandbox"])
         ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2)
         errs = []
         pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))

@@ -7,7 +7,7 @@ const fs = require("fs"), vm = require("vm");
 const W = process.env.W || __GAME + "";
 const c = { process: { env: process.env }, console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String };
 vm.createContext(c);
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "enchants2.js", "quests.js", "cooking.js", "curses.js", "smithing.js", "ammo.js", "tomes.js", "magic.js", "spellcraft.js", "colorcode.js", "skillinfo.js", "potionfx.js", "tooltip.js", "rewardtips.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "enchants2.js", "quests.js", "cooking.js", "curses.js", "smithing.js", "ammo.js", "tomes.js", "magic.js", "spellcraft.js", "colorcode.js", "skillinfo.js", "potionfx.js", "itemcmp.js", "tooltip.js", "rewardtips.js"])
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 vm.runInContext(`
 let fails = 0, n = 0; const ok = (c, m) => { n++; if (!c) { fails++; console.log("FAIL", m); } };
@@ -37,7 +37,7 @@ ok(TIP.keyForText(D.ITEMS[mace].name) === "item:" + mace, "tooltip.js finds ench
   ok(/Numbing Cold/.test(t) && /frost damage/.test(t), "the enchantment and what it does " + t);
   ok(/tt-h q-[a-z]+/.test(h), "rarity colour class " + h.slice(0, 60));
   ok(/Already have 1/.test(t), "already have 1 " + t);
-  ok(/vs|Nothing worn there yet/.test(t), "comparison with what you wear " + t);
+  ok(/Against what you wear|Nothing worn there yet/.test(t) && /ic-cmp/.test(h), "itemcmp's compare block " + t);
 }
 // equip a weaker weapon: the mace compares green, a weaker one red
 { const id = G.give(s, "iron_dagger" in D.ITEMS ? "iron_dagger" : "iron_sword"); G.equip(s, id);
@@ -45,8 +45,10 @@ ok(TIP.keyForText(D.ITEMS[mace].name) === "item:" + mace, "tooltip.js finds ench
   if (worn.skill === D.ITEMS[mace].skill) ok(/tt-up/.test(TIP.html("rw:" + mace)), "a better weapon shows green");
   const sw = Object.keys(D.ITEMS).filter((k) => D.ITEMS[k].slot === "weapon" && D.ITEMS[k].skill === worn.skill && !k.startsWith("ench|"));
   const weaker = sw.find((k) => D.ITEMS[k].damage < worn.damage), better = sw.find((k) => D.ITEMS[k].damage > worn.damage);
-  if (weaker) ok(/tt-dn/.test(TIP.html("rw:" + weaker)) && /▼/.test(TIP.html("rw:" + weaker)), "a weaker weapon shows red");
-  if (better) ok(/tt-up/.test(TIP.html("rw:" + better)) && /▲/.test(TIP.html("rw:" + better)), "a better weapon shows green");
+  const dmg = (k) => (String(TIP.html("rw:" + k)).match(/<div class="ic-r ([^"]*)"><span>Damage/) || [])[1];
+  ok(/Against what you wear/.test(text(TIP.html("rw:" + mace))) && text(TIP.html("rw:" + mace)).includes(worn.name), "compares against the worn weapon by name");
+  if (weaker) ok(/ic-dn/.test(dmg(weaker) || ""), "a weaker weapon's damage shows red " + dmg(weaker));
+  if (better) ok(/ic-up/.test(dmg(better) || ""), "a better weapon's damage shows green " + dmg(better));
 }
 // potions: effect and how long it works
 { const t = text(TIP.html("rw:potion_health_minor"));

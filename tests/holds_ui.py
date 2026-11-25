@@ -11,7 +11,7 @@ LANG = os.environ.get("LANG_UI", "en")
 W = {"en": {"chal": "Challenge the champion", "jarl": "You are the Jarl", "raid": "Raid the hold", "ruled": "is ruled by"},
      "pl": {"chal": "Wyzwij czempiona", "jarl": "Jesteś jarlem", "raid": "Najedź twierdzę", "ruled": "rządzi"}}[LANG]
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_holds") + os.sep; os.makedirs(OUT, exist_ok=True)
-CHROME = os.environ.get("CHROME", "/usr/bin/google-chrome")
+CHROME = (__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None))
 fails = []
 def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)
@@ -41,7 +41,7 @@ CLAIM = """() => { const S = window.__dbg.save(), h = HOLDRULE.st(S);
 
 async def main():
     async with async_playwright() as p:
-        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
+        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if CHROME and os.path.exists(CHROME) else {}
         b = await p.chromium.launch(**kw)
         errs = []
         for dev, vp, touch in [d for d in [("phone", {"width": 390, "height": 844}, True), ("pc", {"width": 1280, "height": 800}, False)] if d[0] in os.environ.get("DEVS", "phone,pc")]:

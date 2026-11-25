@@ -19,6 +19,7 @@ Owners: Remigiusz (R3MC10) and Kacper (Kacper297). Neither writes code by hand â
 4. Add a player-facing entry at the top of `game/patchnotes.js` (plain words, no code talk).
 5. Open a pull request into `main`. CI runs the tests. Remigiusz's Claude merges in its loop (or a human presses Merge once tests pass).
 6. Write your name + feature under "In progress" in `ROADMAP.md` before you start, so two people don't rebuild the same thing.
+7. **Two Claudes work on this game (Remigiusz's and Kacper's).** Before starting any task or spawning an agent, read the pinned coordination issue (#255, `gh issue view 255 --comments`) and post a `CLAIM:` comment there; post `DONE:` when merged. Don't start work that overlaps an open claim: ask in the issue and wait. Check the issue at least every 30 min while working. The repo is public: no secrets or personal details there.
 
 Every merge to `main` builds a new APK release; phones that already have build 68+ update themselves in the background.
 
@@ -36,7 +37,7 @@ Every merge to `main` builds a new APK release; phones that already have build 6
 cd tests
 node test_engine.js            # any node test, uses ../game/
 W=/path/to/game/ node test_x.js
-python3 -m http.server 8765 --directory ../game &   # for screen tests
+node serve.js 8765 &   # for screen tests (python -m http.server drops scripts on busy machines -> fake "X is not defined" errors)
 python3 tabmenu_ui.py 8765
 ```
 Long balance sims: `test_bal_sim.js`, `test_qscale.js` (skip in quick runs).

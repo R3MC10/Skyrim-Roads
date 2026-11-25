@@ -145,7 +145,7 @@ const PERKS = (() => {
     ],
     "Speechcraft": [
       ["persuasion", "Persuasion", 1, [50], [], "Persuasion attempts are 30% easier. [Skyrim]"],
-      ["intimidation", "Intimidation", 1, [70], ["persuasion"], "Intimidation is twice as successful. [Skyrim] (toll guards, bounty hunters)"],
+      ["intimidation", "Intimidation", 1, [70], ["persuasion"], "Intimidation is twice as successful (toll guards, bounty hunters). [Skyrim]"],
       ["bribery", "Bribery", 1, [30], [], "You can bribe guards to ignore your crimes. [Skyrim]"],
     ],
     "Etiquette": [
@@ -213,19 +213,23 @@ const PERKS = (() => {
   /* a ranked perk's text at one rank: "10/15/20%" ladders become the value for that rank, "X per rank" becomes X × rank.
      Used so menus show only what you have now (and the next rank), never the whole ladder. */
   const LADDER = /(\d+(?:\.\d+)?)((?:\/\d+(?:\.\d+)?)+)/g;
-  const clean = (d) => String(d || "").replace(/\s*\[[^\]]*\]\s*$/, "");
+  const clean0 = (d) => String(d || "").replace(/\s*\[[^\]]*\]\s*$/, "");
+  /* Polish: the whole description from i18n_perkdesc.js (same ladders, "na rangę" for "per rank"); English otherwise */
+  const isPl = () => { try { return typeof I18N !== "undefined" && I18N.lang() === "pl"; } catch (e) { return false; } };
+  const clean = (d) => { const en = clean0(d); return isPl() && typeof PERKDESC_PL !== "undefined" && PERKDESC_PL[en] ? clean0(PERKDESC_PL[en]) : en; };
+  const PER_RANK = / (?:per rank|na rangę)/.source;
   function rankText(id, r) {
     const p = BY_ID[id]; if (!p) return "";
     const k = Math.max(1, Math.min(r, p.ranks));
     return clean(p.desc).replace(LADDER, (m) => { const v = m.split("/"); return v[Math.min(k, v.length) - 1]; })
-      .replace(/(\d+(?:\.\d+)?)(%?)( [^.;,]*?) per rank/g, (m, n, pc, mid) => `${+(n * k).toFixed(2)}${pc}${mid}`);
+      .replace(new RegExp(String.raw`(\d+(?:\.\d+)?)(%?)( [^.;,]*?)${PER_RANK}`, "g"), (m, n, pc, mid) => `${+(n * k).toFixed(2)}${pc}${mid}`);
   }
   /* just the numbers that change at rank r ("15% · 50%"), for a compact "Next:" */
   function rankNums(id, r) {
     const p = BY_ID[id]; if (!p || r > p.ranks) return "";
     const d = clean(p.desc), out = [];
-    d.replace(LADDER, (m) => { const v = m.split("/"); const unit = d.slice(d.indexOf(m) + m.length).match(/^\s*(%|times)?/)[1] || ""; out.push(v[Math.min(r, v.length) - 1] + (unit === "%" ? "%" : unit ? " " + unit : "")); return m; });
-    d.replace(/(\d+(?:\.\d+)?)(%?) [^.;,]*? per rank/g, (m, n, pc) => { out.push(`${+(n * r).toFixed(2)}${pc}`); return m; });
+    d.replace(LADDER, (m) => { const v = m.split("/"); const unit = d.slice(d.indexOf(m) + m.length).match(/^\s*(%|times|razy)?/)[1] || ""; out.push(v[Math.min(r, v.length) - 1] + (unit === "%" ? "%" : unit ? " " + unit : "")); return m; });
+    d.replace(new RegExp(String.raw`(\d+(?:\.\d+)?)(%?) [^.;,]*?${PER_RANK}`, "g"), (m, n, pc) => { out.push(`${+(n * r).toFixed(2)}${pc}`); return m; });
     return out.join(" · ");
   }
   /* what to show for a perk: what rank 1 gives if you don't have it, else what you have now plus the next rank's numbers */
@@ -233,7 +237,7 @@ const PERKS = (() => {
     const p = BY_ID[id], r = rank(s, id); if (!p) return "";
     if (!r) return rankText(id, 1);
     const nx = r < p.ranks ? rankNums(id, r + 1) : "";
-    return rankText(id, r) + (nx ? ` Next: ${nx}.` : "");
+    return rankText(id, r) + (nx ? (isPl() ? ` Następna ranga: ${nx}.` : ` Next: ${nx}.`) : "");
   }
   return { nowText, rankText, rankNums, TREES: T, BY_ID, rank, pointsLeft, canTake, take };
 })();

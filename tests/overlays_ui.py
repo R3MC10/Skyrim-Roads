@@ -1,5 +1,5 @@
 """One overlay at a time (overlays.js + the fight hints in onboard.js), on a phone (390x844) and a PC (1920x1080).
-  python -m http.server 8765 --directory ../game &   then   python overlays_ui.py 8765 [outdir]   — prints RESULT OK.
+  node serve.js 8765 &   then   python overlays_ui.py 8765 [outdir]   — prints RESULT OK.
 Checks: the first fight shows short hints pinned to the turn order and the moves (no tip card), none of them covers a
 button, a move swaps them for the End turn hint, the VICTORY card shows with no tip or hint on top, a tip that comes up
 while a window is open waits under it and shows once the window closes, and the courier's letter waits while a PC menu

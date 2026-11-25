@@ -30,7 +30,7 @@ LIT = "[...document.querySelectorAll('#tabs .tab.on')].map((b) => b.dataset.tab)
 
 async def main():
     with socket.socket() as t: busy = t.connect_ex(("127.0.0.1", PORT)) == 0   # a server already running there: use it
-    srv = None if busy else subprocess.Popen([sys.executable, "-m", "http.server", str(PORT), "--directory", os.path.join(ROOT, "game")], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    srv = None if busy else subprocess.Popen(["node", os.path.join(ROOT, "tests", "serve.js"), str(PORT), os.path.join(ROOT, "game")], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)   # node: python's server refuses connections under load
     time.sleep(1.0)
     errs, bad, shots = [], [], []
     def check(ok, what):

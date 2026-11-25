@@ -1,6 +1,6 @@
 """Rings and amulets on the paper doll (jewelry.js): the amulet + two ring slots under the figure, the ring picker,
 putting on two rings, item details with the plain-words enchantment, the enchanter taking a ring. Both art styles.
-Run:  python -m http.server 9451 --directory game   then   python tests/jewelry_ui.py 9451 [outdir]   — prints "jewelry_ui: all good"."""
+Run:  node tests/serve.js 9451   then   python tests/jewelry_ui.py 9451 [outdir]   — prints "jewelry_ui: all good"."""
 import asyncio, os, sys
 from playwright.async_api import async_playwright
 

@@ -1,7 +1,7 @@
 """Map hero screen test (maphero.js): your character on the world map as a little figure instead of a dot,
 standing, walking along a road, and sitting on a horse (standing / riding), plus another player on the map.
 Both art styles, zoomed in and out, reduce motion, on a phone and a PC window.
-Run:  python -m http.server 9560 --directory game   then   python tests/maphero_ui.py 9560 [outdir]
+Run:  node tests/serve.js 9560   then   python tests/maphero_ui.py 9560 [outdir]
 Screenshots land in outdir (default: maphero_shots in the temp folder). Fails on page errors or if the figure
 isn't drawn (the map falls back to the old round token)."""
 import asyncio, os, sys, tempfile

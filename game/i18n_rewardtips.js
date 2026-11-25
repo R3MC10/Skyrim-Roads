@@ -6,9 +6,11 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "In a party, gold is split evenly.": "W drużynie złoto dzieli się po równo.",
     "Daedric artifact": "Artefakt daedryczny",
     "Item cards on rewards": "Karty przedmiotów przy nagrodach",
-    "Every loot and reward icon now shows the full item card, like in your pack: damage or armour, weight, value, the enchantment and what it does, potion effects, a green or red comparison with what you wear, and how many you already have. On a PC rest the mouse on it; on a phone tap the icon (tap anywhere else to close).":
-      "Każda ikona łupu i nagrody pokazuje teraz pełną kartę przedmiotu, jak w plecaku: obrażenia albo pancerz, wagę, wartość, zaklęcie i jego działanie, efekty mikstur, zielone lub czerwone porównanie z tym, co nosisz, i ile już masz. Na PC najedź myszką; na telefonie stuknij ikonę (stuknij gdziekolwiek indziej, żeby zamknąć).",
-    "Gold and stacks get a short card too, and the box never covers the buttons.": "Złoto i stosy też mają krótką kartę, a okienko nigdy nie zasłania przycisków.",
+    "Every loot and reward icon now shows the full item card, like in your pack: damage or armour, weight, value, the enchantment and what it does, potion effects, how many you already have, and the same \"against what you wear\" lines as the Items menu (damage, weight and value, better in green, worse in red).":
+      "Każda ikona łupu i nagrody pokazuje teraz pełną kartę przedmiotu, jak w plecaku: obrażenia albo pancerz, wagę, wartość, zaklęcie i jego działanie, efekty mikstur, ile już masz, i te same linijki „w porównaniu z tym, co nosisz” co w menu Przedmioty (obrażenia, waga i wartość, lepsze na zielono, gorsze na czerwono).",
+    "On a PC rest the mouse on an icon. On a phone tap it: the card slides up from the bottom of the screen, so it never covers the loot or the buttons. Tap anywhere else to close it.":
+      "Na PC najedź myszką na ikonę. Na telefonie stuknij ją: karta wysuwa się z dołu ekranu, więc nigdy nie zasłania łupu ani przycisków. Stuknij gdziekolwiek indziej, żeby ją zamknąć.",
+    "Gold and stacks get a short card too.": "Złoto i stosy też mają krótką kartę.",
     "Dungeon loot, fight loot, boss loot, the party loot vote, road events, quest and crisis rewards, expeditions, heists, Daedric artifacts, fishing, hunting, mining and market stalls all have it.":
       "Mają to łupy z lochów, walk i bossów, głosowanie drużyny nad łupem, wydarzenia na drodze, nagrody za zadania i kryzysy, wyprawy, skoki, artefakty daedryczne, łowienie, polowanie, kopanie i stragany.",
   });

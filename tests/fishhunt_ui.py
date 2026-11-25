@@ -1,6 +1,6 @@
 # Fishing and hunting mini-games on screen: cast, bite, reel (tension meter); stalk, draw, shoot, skin; the road "Stalk and shoot"
 # choice. Phone and PC widths, ink and pixel art. Screenshots: fh_*.png next to this file.
-#   python3 -m http.server 8765 --directory ../game &   then   python3 fishhunt_ui.py 8765
+#   node serve.js 8765 &   then   python3 fishhunt_ui.py 8765
 # Chrome: CHROME=/path/to/chrome (default /usr/bin/google-chrome if it exists, else Playwright's own Chromium).
 import asyncio, os, sys
 from playwright.async_api import async_playwright
@@ -99,7 +99,7 @@ async def run(p, w, h, tag, pixel=False):
 
     # ---------------------------------------------------------------- Area tab: the hunting grounds tile and card
     await clean()
-    await pg.click("[data-tab=town]"); await pg.wait_for_timeout(400)
+    await pg.evaluate("window.__ui.go('town')"); await pg.wait_for_timeout(400)   # no tab bar on a PC layout
     hub = await pg.query_selector("[data-id=hunt]")
     ok(hub is not None, f"{tag}: Riverwood shows hunting grounds in the Area tab")
     if hub:

@@ -1,12 +1,13 @@
 """Area tab as a place (areaui.js) and the tidier Map panel (mappanel.js): the board of grouped tiles, opening a place
    and coming back, folding a group, one merged "What to do next" card with no repeats, place filters, Polish,
    both art styles, and nothing sticking out at 360 / 430 / 1920 wide.
-   usage: python3 areaui_ui.py [port]   (shots in tests/out_areaui/)"""
+   usage: python3 areaui_ui.py [port]   (shots in $SHOTS/out_areaui/, or the temp folder)"""
 import asyncio, os, sys
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 CHROME = os.environ.get("CHROME") or ("/usr/bin/google-chrome" if os.path.exists("/usr/bin/google-chrome") else None)
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_areaui"); os.makedirs(OUT, exist_ok=True)
+import tempfile
+OUT = os.path.join(os.environ.get("SHOTS") or tempfile.gettempdir(), "out_areaui"); os.makedirs(OUT, exist_ok=True)
 fails = []
 def check(ok, what):
     print(("ok   " if ok else "FAIL ") + what)
@@ -46,7 +47,7 @@ async def main():
                         hd = await pg.evaluate("document.querySelector('#side .au-g .au-gh')?.textContent")
                         check(hd == "Karczma", f"{tag}: group names in Polish ({hd})")
                     hh = await pg.evaluate("document.querySelector('#side').scrollHeight")
-                    check(hh < 2200, f"{tag}: the board is short ({hh}px)")
+                    check(hh < 2400, f"{tag}: the board is short ({hh}px)")   # phones list places one per row since b262
                     check(await pg.evaluate(OVER) == [], f"{tag}: nothing sticks out on the board {await pg.evaluate(OVER)}")
                     check(await pg.evaluate(CLIP) == [], f"{tag}: no clipped tile names {await pg.evaluate(CLIP)}")
                     await pg.evaluate("scrollTo(0,0)"); await pg.screenshot(path=f"{OUT}/board_{tag}.png", full_page=True)
@@ -88,8 +89,8 @@ async def main():
                     check(await pg.evaluate("document.querySelectorAll('#side #rmd-card').length") == 1 and await pg.evaluate("document.querySelectorAll('#side .nextcard').length") == 1, f"{tag}: one What to do next card (Today merged in)")
                     txt = await pg.evaluate("[...document.querySelectorAll('#rmd-card .item .t')].map(e=>e.firstChild.textContent.trim())")
                     check(len(txt) == len(set(txt)), f"{tag}: no repeated rows {txt}")
-                    perk = await pg.evaluate("[...document.querySelectorAll('#rmd-card .item')].filter(e=>/perk point|punkt/i.test(e.textContent)).length")
-                    check(perk == 1, f"{tag}: perk points listed once ({perk})")
+                    perk = await pg.evaluate("[...document.querySelectorAll('#rmd-card .item')].filter(e=>/perk point|punkt|level up|awansow/i.test(e.textContent)).length")   # a pending level and perk points share one row
+                    check(perk == 1, f"{tag}: level-up / perk points listed once ({perk})")
                     n = await pg.evaluate("document.querySelectorAll('#rmd-card .list > .item').length")
                     check(n <= 5, f"{tag}: at most five rows before 'Show more' ({n})")
                     if await pg.query_selector("#rmd-card [data-mp=more]"):

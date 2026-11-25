@@ -29,6 +29,8 @@ const SKILL_BOOKS = [["Fire and Darkness", "One-Handed"], ["Battle of Red Mounta
   ["Last Scabbard of Akrash", "Smithing"], ["Enchanter's Primer", "Enchanting"], ["Song of the Alchemists", "Alchemy"],
   ["A Dance in Fire", "Athletics"], ["The Black Arrow", "Acrobatics"], ["The Wolf Queen, Book I", "Etiquette"], ["Thief", "Streetwise"]];
 const LOCK_TIERS = [["Novice", 2], ["Apprentice", 3], ["Adept", 5], ["Expert", 8], ["Master", 13]];   // [Skyrim] Lockpicking base XP per lock
+/* how a lock of that tier reads in a sentence: "The lock looks tricky (Adept)." */
+const lockLooks = (tier) => `The lock looks ${["simple", "fairly easy", "tricky", "hard", "very hard"][tier]} (${LOCK_TIERS[tier][0]}).`;
 const DIVINES = ["Akatosh", "Arkay", "Dibella", "Julianos", "Kynareth", "Mara", "Stendarr", "Zenithar", "Talos"];
 
 const ROAD_EVENTS = (() => {
@@ -44,7 +46,7 @@ const ROAD_EVENTS = (() => {
       gather: (s, e) => { const n = rint(1, 3) * (G.P(s, "green_thumb") ? 2 : 1); G.give(s, e.item, n); return { text: `You gather ${n} ${D.ITEMS[e.item].name}. Ingredients will be used for alchemy; for now you can sell them.` }; } },
 
     { id: "chest", weight: 3,
-      make: () => { const tier = rint(0, 4) > 3 ? rint(3, 4) : rint(0, 2); return { tier, tries: 3, text: `In the ruins of a wayside shrine sits an iron-banded chest. The lock looks ${LOCK_TIERS[tier][0].toLowerCase()}.` }; },
+      make: () => { const tier = rint(0, 4) > 3 ? rint(3, 4) : rint(0, 2); return { tier, tries: 3, text: `In the ruins of a wayside shrine sits an iron-banded chest. ${lockLooks(tier)}` }; },
       choices: (e, s) => [["pick", `Pick the lock (${e.tries} picks left)`], ...(POWERS.stone(s) === "tower" && e.tier <= 3 && POWERS.powerReady(s, "stone") ? [["tower", "Use the Tower Stone's power"]] : []), ["smash", "Smash it open"], ["leave", "Leave it"]],
       tower: (s, e) => { s.stonePowerAt = G.now(); return byId.chest.pick(s, e, true); },
       pick: (s, e, sure) => {

@@ -4,9 +4,11 @@
 # usage: python3 chargen_ui.py [port] [out_dir]   (serve ../game on the port)
 import asyncio, sys, os, json
 from playwright.async_api import async_playwright
+_SHOTS = (__import__("os").environ.get("SHOTS") or __import__("os").path.join(__import__("tempfile").gettempdir(), "rotn_shots")).replace("\\", "/").rstrip("/") + "/"   # screenshots: $SHOTS or the temp folder
+__import__("os").makedirs(_SHOTS, exist_ok=True)
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 HOST = os.environ.get("HOST", "localhost")
-OUT = sys.argv[2] if len(sys.argv) > 2 else os.environ.get("OUT", "/home/claude/tests/")
+OUT = sys.argv[2] if len(sys.argv) > 2 else os.environ.get("OUT", _SHOTS)
 os.makedirs(OUT, exist_ok=True)
 SIZES = [("phone", 390, 844, 3, "khajiit"), ("pc", 1920, 1080, 1, "nord"), ("wide", 2560, 1080, 1, "argonian")]
 TABS = ["race", "body", "head", "face", "hair", "marks", "start"]
@@ -37,6 +39,15 @@ async def main():
             card = await pg.evaluate("document.querySelector('.rshow')?.innerText||''")
             ok(len(card) > 80, f"{tag}: race card for {race} has lore, gift and power ({len(card)} chars)")
             ok(await pg.evaluate("!!document.querySelector('.rshow .heroprev img')"), f"{tag}: race card portrait")
+            # [chargenrig] the preview is the painted fight figure (chargenrig.js) once its parts load, in every pose
+            try: await pg.wait_for_function("document.querySelector('.cg').classList.contains('cg-painted')", timeout=30000)
+            except Exception: pass
+            ok(await pg.evaluate("document.querySelector('.cg').classList.contains('cg-painted')"), f"{tag}: preview uses the painted fight figure")
+            ok(await pg.evaluate("!!document.querySelector('.rshow .bust-hero')"), f"{tag}: race card shows the painted bust")
+            for pose in ["walk", "attack", "idle"]:
+                await pg.click(f"[data-cg=pose][data-pose={pose}]"); await pg.wait_for_timeout(300)
+                ink = await pg.evaluate(INK)
+                ok(ink > 0.01 and await pg.evaluate("document.querySelector('.cg').classList.contains('cg-painted')"), f"{tag}: painted {pose} pose draws ({ink:.3f})")
             for t in TABS:
                 await pg.click(f".cgtab[data-tab={t}]"); await pg.wait_for_timeout(250)
                 ok(await pg.evaluate(f"document.querySelector('.cgtab[data-tab={t}]').getAttribute('aria-selected')") == "true", f"{tag}: {t} tab selected")

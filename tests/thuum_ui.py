@@ -4,12 +4,12 @@
 import asyncio, os, sys
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8851"
-CHROME = os.environ.get("CHROME", "/usr/bin/google-chrome")
+CHROME = (__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None))
 OUT = os.environ.get("OUT", ".")
 FORCE = """(id)=>{ if (!window.__wx0) window.__wx0 = WEVENTS.weather; const r = window.__wx0; WEVENTS.weather = (p, t) => ({ ...r(p, t), id, name: WEVENTS.W[id][0], icon: WEVENTS.W[id][1], speed: WEVENTS.W[id][2], sneak: WEVENTS.W[id][3], encounters: WEVENTS.W[id][4] }); }"""
 async def main():
     async with async_playwright() as p:
-        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
+        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if CHROME and os.path.exists(CHROME) else {}
         b = await p.chromium.launch(**kw)
         bad, errs = [], []
         def ok(v, m):

@@ -2,13 +2,13 @@
 Beta's phone opens the same fight on the full fight screen (not the small "Fighting beside" box). On Beta's turn she casts
 a real spell with her own magicka from her own Magic menu; both screens then show the same foe health and Beta's line
 in the log; the leader's moves show on Beta's screen under his name. The fight ends the same for both.
-Usage: python partysync_ui.py PORT  (serve game/ first: python -m http.server PORT --directory ../game)
+Usage: python partysync_ui.py PORT  (serve game/ first: node serve.js PORT)
 Screenshots in tests/out_partysync/."""
 import asyncio, sys, os
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_partysync") + os.sep; os.makedirs(OUT, exist_ok=True)
-CHROME = os.environ.get("CHROME", "/usr/bin/google-chrome")   # falls back to Playwright's own Chromium when missing
+CHROME = (__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None))   # falls back to Playwright's own Chromium when missing
 fails = []
 def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)
@@ -28,7 +28,7 @@ STATE = """() => { const s = TB.session || (typeof SHAREDFIGHT !== 'undefined' ?
 
 async def main():
     async with async_playwright() as p:
-        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
+        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if CHROME and os.path.exists(CHROME) else {}
         b = await p.chromium.launch(**kw)
         ctx = await b.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2, has_touch=True)
         await ctx.add_init_script("localStorage.setItem('rotn_prefs', JSON.stringify({artStyle:'ink', tbFast:true}))")

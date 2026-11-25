@@ -1,7 +1,7 @@
 """Accessibility screen sweep (access.js): the main screens at Huge text, Small text and in each colour-blind mode,
 on a phone and on a PC. Fails on page errors, sideways scrolling and controls that stick out or clip their text.
 Also checks the colour-blind shapes/patterns show up and that Easy timing reaches the mining game.
-Run:  py -m http.server 9151 --directory game   then   py tests/a11y_screens_ui.py 9151 [outdir]"""
+Run:  node tests/serve.js 9151   then   py tests/a11y_screens_ui.py 9151 [outdir]"""
 import asyncio, os, sys, tempfile
 from playwright.async_api import async_playwright
 
@@ -14,6 +14,7 @@ OVERFLOW = """(()=>{ const W=innerWidth, bad=[];
     const r=e.getBoundingClientRect(); if (!r.width || !r.height) continue;
     const cs=getComputedStyle(e); if (cs.visibility==='hidden' || cs.display==='none') continue;
     if (e.closest('.hide')) continue;
+    if (r.left >= W - 1) continue;   // parked fully off-screen on purpose (the PC quest card and its pull tab slide out: pcmap.js)
     let sc=false; for (let a=e.parentElement; a && a!==document.body; a=a.parentElement) { const o=getComputedStyle(a).overflowX; if (o==='auto'||o==='scroll') { sc=true; break; } }
     if (sc) continue;
     if (r.right > W + 1 || r.left < -1) bad.push((e.id||e.className||e.tagName)+' x '+Math.round(r.left)+'..'+Math.round(r.right));
@@ -57,7 +58,7 @@ async def main():
                     await shot(f"{cname}_{t}")
                     await pg.evaluate(CLEAR)
                 await pg.evaluate("document.querySelector('[data-tab=map]')?.click()"); await pg.wait_for_timeout(250)
-                await pg.click("#sndBtn"); await pg.wait_for_timeout(300)
+                await pg.evaluate("document.getElementById('sndBtn').click()")   # on a PC the top strip is hidden (pcmap.js menu does the same); await pg.wait_for_timeout(300)
                 await pg.evaluate("[...document.querySelectorAll('#modal h3')].find(h=>/Accessibility/.test(h.textContent))?.scrollIntoView({block:'start'})")
                 await shot(f"{cname}_settings")
                 if mode != "none":
@@ -71,7 +72,7 @@ async def main():
                 print(vname, cname, "ok")
             await pg.evaluate("ACCESS.pref('a11yText','0'); ACCESS.pref('a11yColour','none')")
             # Easy timing: tap it in Settings, then the mining band is wider than without
-            await pg.click("#sndBtn"); await pg.wait_for_timeout(300)
+            await pg.evaluate("document.getElementById('sndBtn').click()"); await pg.wait_for_timeout(300)
             await pg.click("#modal [data-k=a11yTiming][data-v=true]"); await pg.wait_for_timeout(200)
             if not await pg.evaluate("A11Y.timingEase()===1.5 && JSON.parse(localStorage.getItem('rotn_prefs')).a11yTiming===true"): fails.append(f"{vname}: Easy timing tap did not stick")
             await pg.evaluate(CLEAR)

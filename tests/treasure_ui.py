@@ -10,7 +10,7 @@ LANG = os.environ.get("LANG_UI", "en")
 WORDS = {"en": ["Treasure hunt", "Nothing here", "Buried treasure"], "pl": ["Poszukiwanie skarbu", "Nic tu nie ma", "Zakopany skarb"]}[LANG]
 OUT = os.environ.get("OUT") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_treasure")
 OUT = OUT.rstrip("/\\") + os.sep; os.makedirs(OUT, exist_ok=True)
-CHROME = os.environ.get("CHROME", "/usr/bin/google-chrome")
+CHROME = (__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None))
 fails = []
 def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)
@@ -25,7 +25,7 @@ SETUP = """(seed) => { const S = window.__dbg.save(); S.gold = 5000; S.level = 2
 
 async def main():
     async with async_playwright() as p:
-        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
+        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if CHROME and os.path.exists(CHROME) else {}
         b = await p.chromium.launch(**kw)
         errs = []
         for dev in ["phone", "pc"]:

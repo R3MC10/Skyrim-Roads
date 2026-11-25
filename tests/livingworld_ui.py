@@ -2,7 +2,7 @@
 the inn in the evening (who's in, ask a shopkeeper to open up, whispers of things to come, the notice board),
 the streets (who's about, doors that open as your name grows), a whisper that came true (map mark, card, the fight),
 News of the realm in World news, and a scorned hold (shutters closed, make amends).
-python livingworld_ui.py <port> [out_dir] [pl]   (serve game/ first: python -m http.server <port> --directory game)
+python livingworld_ui.py <port> [out_dir] [pl]   (serve game/ first: node tests/serve.js <port>)
 With "pl" the game runs in Polish: the same checks, and nothing this module shows may be left in English."""
 import asyncio, os, sys
 from playwright.async_api import async_playwright

@@ -275,7 +275,14 @@ const FIGHTCTL = (() => {
     r.querySelectorAll(`[data-tbzone~="${z}"]`).forEach((e) => { if (e.classList.contains("tbu")) e.classList.add("drop-ok", "fc-tgt"); });
     b.classList.add("fc-armed");
     const bar = document.createElement("div"); bar.className = "fc-aimbar"; bar.setAttribute("role", "status");
-    bar.innerHTML = `<span>Who gets <b>${esc(b.closest(".tbsp")?.querySelector(".fc-nm")?.firstChild?.textContent || b.querySelector("b")?.textContent || "it")}</b>? Tap a portrait${z === "self" ? " (or this button again for yourself)" : ""}.</span><button class="fc-cancel" data-fcx="cancel" aria-label="Cancel">✕</button>`;
+    /* one button per target right in the bar: on phones an open menu (Magic, Items) covers the portraits */
+    const T = (t) => (typeof I18N !== "undefined" && I18N.tr && I18N.lang?.() === "pl" ? I18N.tr(t) ?? t : t);
+    const who = [...r.querySelectorAll(".tbu.fc-tgt")].map((e) => {
+      const me = e.classList.contains("me"), nm = me ? T("You") : (e.querySelector(".nm")?.firstChild?.textContent || "").replace(/^[-\s]+/, "").trim();
+      return `<button class="fc-who fc-tgt${me ? " me" : ""}"${me ? "" : ` data-ally="${esc(e.dataset.ally)}"`}>${esc(nm || "?")}</button>`;
+    }).join("");
+    const what = esc(b.closest(".tbsp")?.querySelector(".fc-nm")?.firstChild?.textContent || b.querySelector("b")?.textContent || "");
+    bar.innerHTML = `<span>${what ? `<b>${what}</b> ` : ""}<em>${esc(T(who ? "Who gets it? Tap a name, their plate or them in the scene." : "Who gets it? Tap a portrait."))}</em></span><button class="fc-cancel" data-fcx="cancel" aria-label="Cancel">✕</button>${who ? `<div class="fc-whos">${who}</div>` : ""}`;
     r.appendChild(bar); aim.bar = bar;
     buzz(10);
   }
@@ -295,12 +302,32 @@ const FIGHTCTL = (() => {
     zone?.classList.add("fc-hitme"); buzz(14);
     x.b.click();
   }
+  /* [magicaim] a tap on someone's figure in the fight scene (fightpos.js knows where everyone stands): their plate */
+  function sceneTgt(r, ev) {
+    if (typeof FIGHTPOS === "undefined" || ev.clientX == null || !ev.target.closest?.(".tbstage")) return null;
+    const cv = r.querySelector(".fscene canvas"), L = cv && cv.__fp, f = typeof TB !== "undefined" ? TB.session?.f : null;
+    if (!L || !f) return null;
+    const hit = (who) => {
+      const p = FIGHTPOS.screenOf(cv, who); if (!p) return Infinity;
+      const m = 6 * p.s;
+      return ev.clientX >= p.left - m && ev.clientX <= p.right + m && ev.clientY >= p.top - m && ev.clientY <= p.y + m ? Math.abs(ev.clientX - p.x) : Infinity;
+    };
+    let best = null, bd = Infinity;
+    for (const card of r.querySelectorAll(".tbu.ally.fc-tgt[data-ally]")) {
+      const i = +card.dataset.ally, a = i >= 1000 ? (f._downed || [])[i - 1000] : (f.allies || [])[i];
+      const d = a && a.name ? hit(a.name) : Infinity;
+      if (d < bd) { bd = d; best = card; }
+    }
+    const me = r.querySelector(".tbu.me.fc-tgt");
+    if (me) { const d = hit("me"); if (d < bd) { bd = d; best = me; } }
+    return best;
+  }
   function onClickCap(ev) {
     const r = root(); if (!r || !r.contains(ev.target)) { if (aim && !r) aim = null; return; }
     if (aim) {
       if (!aim.b.isConnected) { cancelAim(); return; }
       if (ev.target.closest("[data-fcx=cancel]")) { ev.stopImmediatePropagation(); ev.preventDefault(); cancelAim(); return; }
-      const zone = ev.target.closest(".fc-tgt");
+      const zone = ev.target.closest(".fc-tgt") || sceneTgt(r, ev);
       const sameBtn = ev.target.closest("button") === aim.b;
       if (zone || (sameBtn && aim.z === "self")) {
         ev.stopImmediatePropagation(); ev.preventDefault();

@@ -10,7 +10,7 @@ close on Whiterun at three zoom levels. Checks:
 - PC: the event / caravan cards sit in one column at the left edge (mapdock.js), at most ~380px wide, and the map
   keeps names out from under them; on the phone they stay in the page as before
 Popups, banners, toasts and tooltips are closed before every shot so the map itself is what's seen.
-Run:  py -m http.server 8765 --directory game   then   py tests/mapvisuals_ui.py 8765 [outdir]
+Run:  node tests/serve.js 8765   then   py tests/mapvisuals_ui.py 8765 [outdir]
 Screenshots land in outdir (default: tests/out_mapvisuals)."""
 import asyncio, os, sys
 from playwright.async_api import async_playwright

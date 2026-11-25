@@ -3,8 +3,10 @@ phones, 3 columns on wide screens, folding Character sections, one follower tab 
 Usage: python3 menus2_ui.py PORT   (screenshots go to $OUT or /home/claude/tests/menus2/)"""
 import asyncio, sys, os
 from playwright.async_api import async_playwright
+_SHOTS = (__import__("os").environ.get("SHOTS") or __import__("os").path.join(__import__("tempfile").gettempdir(), "rotn_shots")).replace("\\", "/").rstrip("/") + "/"   # screenshots: $SHOTS or the temp folder
+__import__("os").makedirs(_SHOTS, exist_ok=True)
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
-OUT = os.environ.get("OUT", "/home/claude/tests/menus2/")
+OUT = os.environ.get("OUT", _SHOTS + "menus2/")
 os.makedirs(OUT, exist_ok=True)
 fails = []
 def ok(c, m):
@@ -44,7 +46,7 @@ async def main():
         ok(n and int(n) == rows, f"All badge {n} = rows {rows}")
         ok(await pg.evaluate("document.querySelectorAll('#sky .m2-sort').length") == 1, "one sort row")
         ok(await pg.evaluate("!!document.querySelector('#sky [data-act=skysort][data-id=dmg]')") and await pg.evaluate("!!document.querySelector('#sky [data-act=skysort][data-id=arm]')"), "Damage and Armour sorts")
-        await pg.click("#sky [data-act=skysort][data-id=value]"); await pg.wait_for_timeout(250)
+        await pg.select_option("#sky .m2-pick-s", "value"); await pg.wait_for_timeout(250)   # phones: one Sort picker, the chips are hidden
         vals = await pg.evaluate("[...document.querySelectorAll('#sky .sky-list .sky-row:not(.eq)')].map(r=>+r.lastElementChild.innerText.replace(/[^0-9.]/g,''))")
         ok(vals == sorted(vals, reverse=True), f"value high first {vals[:6]}")
         await pg.click("#sky .m2-dir"); await pg.wait_for_timeout(250)
@@ -63,7 +65,7 @@ async def main():
         # magic
         await pg.evaluate("window.__ui.closeMenu(); window.__ui.openMenu('magic')"); await pg.wait_for_timeout(400)
         ok(await pg.evaluate("!!document.querySelector('#sky [data-act=skymsort][data-id=school]')"), "magic sort by school")
-        await pg.click("#sky [data-act=skymsort][data-id=cost]"); await pg.wait_for_timeout(250)
+        await pg.select_option("#sky .m2-pick-s", "cost"); await pg.wait_for_timeout(250)
         await pg.fill("#skysearch", "fire"); await pg.wait_for_timeout(400)
         mn = await pg.evaluate("[...document.querySelectorAll('#sky .sky-list .sky-row')].map(e=>e.innerText.toLowerCase())")
         ok(mn and all("fire" in x for x in mn), f"spell search {mn}")

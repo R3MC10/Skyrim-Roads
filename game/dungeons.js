@@ -181,6 +181,7 @@ const DUNGEONS = (() => {
       s.dungeon = { place: name, theme: i.theme, tier: i.tier, rows: [[{ type: "boss", links: [] }]], row: -1, col: 0, room: null, found: [], gold: 0, t };
       s.dungeon.boss = key;
     } else s.dungeon = { place: name, theme: i.theme, tier: i.tier, rows: layout(i.theme, i.tier), row: -1, col: 0, room: null, found: [], gold: 0, t };
+    if (typeof DUNEVENTS !== "undefined") DUNEVENTS.clear(s);   // an old blessing or curse from a dungeon you never walked out of
     if (typeof PRIESTS !== "undefined") PRIESTS.onEnter(s);   // [Skyrim] a dragon priest sleeps at the end
     G.setHealth(s, G.curHealth(s, t), t);
     G.note(s, ` Entered ${name}`);
@@ -195,16 +196,19 @@ const DUNGEONS = (() => {
 
   function buildRoom(s, type) {
     const d = s.dungeon, T = THEMES[d.theme];
-    if (type === "fight") { const e = foe(s, weighted(T.foes), d.tier); return { type, enemy: e, text: e.text }; }
-    if (type === "elite") { const e = foe(s, pick(T.elite), d.tier); return { type, enemy: e, text: e.text }; }
+    // road foes (bandits, wolves, spiders...) get an indoor line instead of their road text (dunlines.js)
+    const inside = (key, e) => (typeof DUNLINES !== "undefined" && DUNLINES.line(key, d.theme)) || e.text;
+    if (type === "fight") { const key = weighted(T.foes), e = foe(s, key, d.tier); return { type, enemy: e, text: inside(key, e) }; }
+    if (type === "elite") { const key = pick(T.elite), e = foe(s, key, d.tier); return { type, enemy: e, text: inside(key, e) }; }
     if (type === "boss" && d.deep?.level && typeof DEEPDELVE !== "undefined") return DEEPDELVE.bossRoom(s, (k, b) => foe(s, k, d.tier, b));   // the major fight of a deeper level
     if (type === "boss") {
       const key = d.boss || T.boss[d.tier - 1], e = foe(s, key, d.tier, true);
       e.boss = true;
-      return { type, enemy: e, text: d.boss ? e.text : `${e.text} This is the master of ${d.place}.` };
+      const tx = inside(key, e);
+      return { type, enemy: e, text: d.boss ? tx : `${tx} This is the master of ${d.place}.` };
     }
     if (type === "trap") { const trap = pick(T.traps); return { type, trap, text: `The way ahead is guarded by ${trap}.` }; }
-    if (type === "treasure") { const tier = clamp(d.tier - 1 + rint(0, 2), 0, 4); return { type, tier, tries: 3, text: `A heavy chest sits in an alcove. The lock looks ${LOCK_TIERS[tier][0].toLowerCase()}.` }; }
+    if (type === "treasure") { const tier = clamp(d.tier - 1 + rint(0, 2), 0, 4); return { type, tier, tries: 3, text: `A heavy chest sits in an alcove. ${lockLooks(tier)}` }; }
     if (type === "rest") return { type, text: d.theme === "barrow" || d.theme === "temple" ? "A quiet side chamber with a smouldering brazier and a row of burial urns." : "A quiet nook with an old bedroll and a few crates." };
     if (type === "puzzle") {
       const order = [...ANIMALS].sort(() => Math.random() - 0.5).slice(0, 3);
@@ -218,7 +222,8 @@ const DUNGEONS = (() => {
     }
     // mystery: one of a few odd things
     const pool = ["corpse", "book", "shrine", "egg"].concat(d.theme === "barrow" || d.theme === "temple" ? ["coffin", "coffin"] : []).concat(["cave", "mine", "fort"].includes(d.theme) ? ["stash"] : []);
-    const m = pick(pool);
+    if (typeof DUNEVENTS !== "undefined") { const ev = DUNEVENTS.room(s); if (ev) return { type, ...ev }; }   // sealed doors, patrols, bridges... (dunevents.js)
+    const m = typeof DUNEVENTS !== "undefined" ? DUNEVENTS.pickOld(s, pool) : pick(pool);   // the same find on every phone of a party run
     if (m === "book") { const [title, skill] = pick(SKILL_BOOKS); return { type, m, title, skill, text: `On a stone pedestal lies a dusty book: "${title}".` }; }
     const texts = {
       corpse: "A dead adventurer slumps against the wall, still holding a torch. Someone got here before you. Not far enough, though.",
@@ -247,6 +252,7 @@ const DUNGEONS = (() => {
     if (r.type === "treasure") return [["pick", `Pick the lock (${r.tries} picks left)`], ...(POWERS.stone(s) === "tower" && r.tier <= 3 && POWERS.powerReady(s, "stone") ? [["tower", "Use the Tower Stone's power"]] : []), ["smash", "Smash it open"], ["skip", "Leave it"]];
     if (r.type === "rest") return [["rest", "Rest and bandage your wounds"], ["search", "Search the place"]];
     if (r.type === "puzzle") return [...r.options.map((o) => [`set:${o}`, `Set them to ${o.replace(/-/g, ", ")}`]), ["skip", "Ignore it"]];
+    if (r.ev && typeof DUNEVENTS !== "undefined") return [...DUNEVENTS.choices(s), ...pot];   // each choice names its skill and chance
     if (r.m === "book") return [["read", "Read it"], ["skip", "Leave it"]];
     if (r.m === "shrine") return [["pray", "Pray"], ["skip", "Walk on"]];
     if (r.m === "egg") return [["burn", "Cut through and gather the eggs"], ["skip", "Find a way round"]];
@@ -258,6 +264,7 @@ const DUNGEONS = (() => {
 
   function fight(s, e, opts, t) {
     const f = new G.Fight(s, e, null, t);
+    if (opts.stagger) f.stagger = true;   // an ambush: the foe loses its first move (dunevents.js)
     f.run({ t, enemyFirst: !!opts.enemyFirst });
     const skills = f.apply(t);
     if (!f.won) return { f, skills };
@@ -318,14 +325,16 @@ const DUNGEONS = (() => {
         if (!res.f.won) return lose({ ...res, fight: res.f }, e.name);
         return done({ ...res, fight: res.f });
       }
-      const res = fight(s, e, {}, t);
-      if (!res.f.won) return lose({ text: "", fight: res.f, skills: res.skills }, e.name);
+      const amb = typeof DUNEVENTS !== "undefined" ? DUNEVENTS.opening(s, e) : null;   // set up by a mystery room: an ambush, or they heard you coming
+      const pre = amb?.line ? amb.line + " " : "";
+      const res = fight(s, e, amb || {}, t);
+      if (!res.f.won) return lose({ text: pre, fight: res.f, skills: res.skills }, e.name);
       if (r.type !== "boss") {
         if (r.waves > 1 && typeof PARTYPLAY !== "undefined") {   // [OURS] a big party meets more foes: the next one steps out (partyplay.js)
           const msg = PARTYPLAY.nextWave(s, r, () => (typeof COOP !== "undefined" && r.wkey ? COOP.foe(s, r.wkey, d.tier, r.wn || 1, true) : foe(s, weighted(THEMES[d.theme].foes), d.tier)));
           if (msg) return { text: `The ${e.name.toLowerCase()} falls. ${msg}`, fight: res.f, skills: res.skills, gold: res.gold, loot: res.loot, stay: true, wave: true };
         }
-        return done({ text: `The ${e.name.toLowerCase()} falls.`, fight: res.f, skills: res.skills, gold: res.gold, loot: res.loot });
+        return done({ text: `${pre}The ${e.name.toLowerCase()} falls.`, fight: res.f, skills: res.skills, gold: res.gold, loot: res.loot });
       }
       if (d.deep?.level && typeof DEEPDELVE !== "undefined") return DEEPDELVE.majorDown(s, e, res, t);   // a deeper level's major fight: the hoard, then the camp
       // boss down: the big chest, maybe a word wall, the place is cleared
@@ -360,7 +369,7 @@ const DUNGEONS = (() => {
       d.room = null; d.done = true;
       G.note(s, ` Cleared ${d.place}`);
       if (typeof DEEPDELVE !== "undefined" && DEEPDELVE.offer(s)) { d.done = false; d.room = DEEPDELVE.campRoom(s); word += " Behind the throne, worn stairs lead further down."; }   // deep expedition: Extract / Descend
-      const falls = e.priest ? `${e.name.split(",")[0]} falls, and the mask clatters to the floor.` : `The ${e.name.toLowerCase()} falls.`;   // dragon priests have names
+      const falls = pre + (e.priest ? `${e.name.split(",")[0]} falls, and the mask clatters to the floor.` : `The ${e.name.toLowerCase()} falls.`);   // dragon priests have names
       if (partyChest) return { text: `${falls} Behind it stands a chest full of treasure: ${g} gold${partyChest.items.length ? ", " + partyChest.items.map((i) => D.ITEMS[i].name).join(", ") : ""}. It belongs to the whole party... for now.${word}`, fight: res.f, skills: res.skills, gold: res.gold, loot: res.loot, cleared: true, partyChest };
       return { text: `${falls} In the chest behind it: ${g} gold${extra.length ? ", " + extra.join(", ") : ""}.${word}`, fight: res.f, skills: res.skills, gold: res.gold, loot: res.loot, cleared: true };
     }
@@ -445,6 +454,8 @@ const DUNGEONS = (() => {
     }
 
     // mystery rooms
+    if (r.ev && typeof DUNEVENTS !== "undefined") return DUNEVENTS.act(s, choice, q, t, { done, lose, fight: (e, op) => fight(s, e, op || {}, t), foe: (k) => foe(s, k, d.tier),
+      goldFound: (g) => goldFound(s, g), giveFound: (item, n) => giveFound(s, item, n), themeLoot: (c) => themeLoot(s, c), dmg: (lo, hi) => dmg(s, lo, hi) });
     if (choice === "skip") return done({ text: "You leave it and move on." });
     if (r.m === "book") {
       const sk = s.skills[r.skill];
@@ -476,6 +487,7 @@ const DUNGEONS = (() => {
   function leave(s, t = G.now()) {
     const d = s.dungeon;
     if (!d) return "";
+    if (typeof DUNEVENTS !== "undefined") DUNEVENTS.clear(s);   // a mystery room's blessing or curse stays inside
     const deepMsg = typeof DEEPDELVE !== "undefined" ? DEEPDELVE.onLeave(s) : "";   // mid-expedition: the finds stay below unless you have Pathfinder
     s.dungeon = null;
     G.setHealth(s, G.curHealth(s), t);   // regeneration starts again outside
@@ -511,5 +523,5 @@ const DUNGEONS = (() => {
   function hasDragonstone(s) {
     return (s.inv || []).some((x) => x.item === "dragonstone") || Object.values(s.homes || {}).some((h) => (h?.chest || []).some((x) => x.item === "dragonstone"));
   }
-  return { odds, parseChoice, REFILL_SECONDS, enterable, info, describe, refillLeft, enter, nextChoices, enterRoom, roomChoices, act, leave, repair, ICON, LABEL, THEMES, ENEMY, layout, hasDragonstone };
+  return { odds, parseChoice, REFILL_SECONDS, enterable, info, describe, refillLeft, enter, nextChoices, enterRoom, roomChoices, act, leave, repair, ICON, LABEL, THEMES, ENEMY, layout, hasDragonstone, buildRoom };
 })();

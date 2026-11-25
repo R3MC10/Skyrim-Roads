@@ -159,7 +159,7 @@ const LOOTVOTE = (() => {
 
     // -- room actions: only the leader chooses
     function memberLocked() { return inPartyRun() && !leader(); }
-    function lockedHTML() { const r = run(); return `<div class="card lv-wait"><h3> ${esc(r?.leaderName || "The leader")} is choosing…</h3><p class="sub">In a party only the leader decides. What they pick happens to you too, and everything found goes into the party's loot pile.</p></div>`; }
+    function lockedHTML() { return `<div class="card lv-wait"><h3> <span>Waiting for the next party vote…</span></h3><p class="sub">In a party, everyone votes on each choice. The vote opens on your screen as soon as the leader starts it. What the party picks happens to you too, and everything found goes into the party's loot pile.</p></div>`; }
     /* wrap the leader's room action: shared pile + record the choice for the others */
     async function aroundAct(c, doAct) {
       const s = S(), r = run();
@@ -170,7 +170,7 @@ const LOOTVOTE = (() => {
       const got = strip(s, before);
       if (leader()) {
         if ((got.items.length || got.gold) && res) res.text = `${res.text || ""} Into the party's loot pile: ${[got.gold ? got.gold + " gold" : "", ...got.items.map((x) => (x.qty > 1 ? `${x.qty}× ` : "") + (D.ITEMS[x.item]?.name || x.item))].filter(Boolean).join(", ")}.`.trim();
-        const rec = c === "pick" && res ? (/^Click/.test(res.text || "") ? "pick@1" : "pick@0") : c;   // the lock: members replay whether it opened, not a roll of their own
+        const rec = res?.rec ? res.rec : c === "pick" && res ? (/^Click/.test(res.text || "") ? "pick@1" : "pick@0") : c;   // the lock: members replay whether it opened, not a roll of their own; a mystery room's check rides on res.rec (dunevents.js)
         const tok = Math.random().toString(36).slice(2);   // a busy store answers null: try again, but never write the same choice twice (members would replay it twice)
         for (let k = 0; k < 4; k++) {
           if (k) await new Promise((ok) => setTimeout(ok, 250 * k));

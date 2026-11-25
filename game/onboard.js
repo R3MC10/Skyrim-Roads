@@ -98,7 +98,7 @@ const ONBOARD = (() => {
   /* id, applies(s, ctx), title, text (may depend on ctx) */
   const TIPS = [
     ["welcome", (s, c) => !c.fightOpen && s.tut && !s.tut.off && s.tut.step === 1 && !s.trip, "Welcome to Skyrim", (s) => `The gold card under the map (<b>Your first trip</b>) shows you what to do, one step at a time. Tips like this one pop up the first time something new happens.`, { btn: ["@tut", "Show me"] }],
-    ["level", (s) => s.pendingLevels > 0 && (s.level || 1) <= 4, "Level up!", () => "Open <b>Hero</b>: pick Health, Magicka or Stamina, then spend your perk point on a skill you use. Skills rise by using them.", { btn: ["hero", "Open Hero"] }],
+    ["level", (s) => s.pendingLevels > 0 && (s.level || 1) <= 4, "Level up!", () => "Open <b>Character</b>: pick Health, Magicka or Stamina, then spend your perk point on a skill you use. Skills rise by using them.", { btn: ["hero", "Open Character"] }],
     ["heavy", (s) => typeof G.overweight === "function" && G.overweight(s), "Too heavy", () => "You're carrying more than you can, so you walk slowly. Sell loot in a town, keep things in a house chest, or let a horse or follower carry them."],
     ["dungeon", (s) => !!s.dungeon && !cleared(s), "Your first dungeon", () => "Go room by room. Each room may hold foes, a trap or loot; you can leave between rooms and come back later. The boss and the best chest wait at the end."],
     ["invite", (s, c) => c.invites > 0, "A party invite", () => (typeof INVITES !== "undefined" ? "Someone wants you in their party. Tap Accept on the card at the top to join, or Decline. The leader picks where to go and you travel together; gold is split evenly." : "Someone wants you in their party. Open \uE106 <b>Friends → Party</b> to join. The leader picks where to go and you travel together; gold is split evenly."), { btn: ["social", "Friends"] }],
@@ -130,7 +130,7 @@ const ONBOARD = (() => {
     if (!tip) { if (el) el.remove(); shown = null; return; }
     if (!el) { el = document.createElement("div"); el.id = "obtip"; el.setAttribute("role", "status"); el.addEventListener("click", onTipClick); document.body.appendChild(el); }
     el.className = "obtip";
-    el.innerHTML = `<div class="obtip-h"><b> ${esc(tip.title)}</b><button class="obx" data-obt="ok" aria-label="Close tip">✕</button></div><p>${tip.text}</p>
+    el.innerHTML = `<div class="obtip-h"><b> ${esc(tip.title)}</b><button class="obx" data-obt="ok" aria-label="Close tip">✕</button></div><p>${typeof I18N !== "undefined" && I18N.t ? I18N.t(tip.text) : tip.text}</p>
       <div class="obtip-b">${tip.btn ? `<button class="btn sm pri" data-obt="go" data-id="${tip.btn[0]}">${esc(tip.btn[1])}</button>` : ""}<button class="btn sm" data-obt="ok">Got it</button><button class="linkbtn" data-obt="off">Don't show tips</button></div>`;
     shown = tip.id;
     place();
@@ -140,7 +140,21 @@ const ONBOARD = (() => {
     const el = document.getElementById("obtip"); if (!el) return;
     if (shown === "invite" && typeof INVITES !== "undefined") { el.style.top = "auto"; el.style.bottom = "calc(84px + env(safe-area-inset-bottom))"; return; }   // the invite card sits on top: keep clear of it
     const bar = document.querySelector("#dun .hd") || document.querySelector("#app .top"), b = bar ? bar.getBoundingClientRect().bottom / zoom() : 0;
-    el.style.top = Math.max(10, Math.min(b + 6, innerHeight * 0.3)) + "px"; el.style.bottom = "auto";
+    const y0 = Math.max(10, Math.min(b + 6, innerHeight * 0.3));
+    el.style.top = y0 + "px"; el.style.bottom = "auto";
+    /* [notify-2] never on top of the dungeon's route buttons: slide below the strip, or wait (hidden) until it's clear */
+    const z = zoom(), r = el.getBoundingClientRect(), bl = [...document.querySelectorAll("#dun .dstrip")]
+      .map((e) => e.getBoundingClientRect()).filter((q) => q.height > 0).map((q) => ({ left: q.left / z, right: q.right / z, top: q.top / z, bottom: q.bottom / z }));
+    const y = clearTop(y0, r.height / z, r.left / z, r.right / z, bl, innerHeight / z * 0.8);
+    el.classList.toggle("obwait", y < 0);
+    if (y >= 0) el.style.top = y + "px";
+  }
+  /* the first top at or below y0 where a box h tall (x0..x1) touches none of the blockers and ends above maxY; -1 if none. Pure. */
+  function clearTop(y0, h, x0, x1, blockers, maxY) {
+    const hit = (y) => blockers.some((b) => x0 < b.right && b.left < x1 && y < b.bottom && b.top < y + h);
+    for (const y of [y0, ...blockers.map((b) => b.bottom + 6).filter((v) => v > y0).sort((a, b) => a - b)])
+      if (!hit(y) && y + h <= maxY) return y;
+    return -1;
   }
   function onTipClick(e) {
     const b = e.target.closest("[data-obt]"); if (!b || !bound) return;
@@ -304,5 +318,5 @@ const ONBOARD = (() => {
     return true;
   }
 
-  return { VETERAN, TIPS, HINTS, hintsFor, freeY, candidates, ideas, rows, foot, pickTip, markSeen, mount, tick, settingsHTML, pref, ideasOn, tipsOn, veteran };
+  return { VETERAN, TIPS, HINTS, hintsFor, freeY, clearTop, candidates, ideas, rows, foot, pickTip, markSeen, mount, tick, settingsHTML, pref, ideasOn, tipsOn, veteran };
 })();

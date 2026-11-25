@@ -14,6 +14,8 @@
        slugs: tundra pineforest snowfield marsh reach rift hotsprings mountain coast ashlands cave nordruin dwemerruin falmercave
      foe-<slug>               1254×1254  transparent PNG, full body, feet at the bottom, facing right (any shape is drawn
                                          true to shape: foe-dragon is 1536×1024)
+     foe-<slug>-<role>        1254×1254  the same foe painted for its fighting role (archer, mage): listed in FOE_ROLES below,
+                                         foeKey(name, kind, arch) picks it first (foe-bandit-archer shoots, it has no axe)
        slugs: bandit banditchief draugr deathlord wolf bear sabrecat troll frosttroll giant mammoth spider skeever falmer
               centurion dwarvenspider spriggan hagraven vampire necromancer thalmor dragon icewraith flameatronach
               frostatronach stormatronach dremora chaurus mudcrab horker riekling ashspawn
@@ -27,7 +29,7 @@
                                          iron steel (both nordm and nordf) · part: head torso pelvis uparm forearm hand-open hand-fist
                                          thigh shin foot leg-bent. A set is used once all 11 parts load; until then the ink figure stays.
      rig-head-<race><m|f>     ~430-650   painted heads for other races on the same bodies (rig.js; RIGDATA.HEADS): dunmer khajiit
-                                         argonian, m/f. Scaled so the neck is 110 px at 1x (like the Nord necks), trimmed, 2x, WebP q84.
+                                         argonian imperial breton redguard altmer bosmer orc, m/f. Scaled so the neck is 110 px at 1x (like the Nord necks), trimmed, 2x, WebP q84.
                                          A missing one keeps the Nord head with a skin tint.
      rig-w-<pic>              ~200-460   painted weapons and shields the painted fighters hold (riggear.js; grip points in its
                                          PIV table): transparent, trimmed, WebP q86. Weapons lie flat, point right: sword
@@ -39,6 +41,15 @@
                                          bosmer dunmer orc khajiit argonian. One sex each (BUSTART.SEX: m f f m f m f m f m); for the
                                          other sex the bust shows as a round race crest. Shown in the race picker, the Hero page and
                                          the paper doll's corner; the drawn portrait stays until the file loads.
+     npc-<name-slug>          256×256    painted NPC portraits (npcart.js): transparent, chest up, 3/4 view facing right, upper-left
+                                         light, same painted look as bust-*.webp, WebP q85 (made at 512, shipped at 256). Named people
+                                         first (npc-adrianne-avenicci), then generics npcg-<role>-<race>-<sex> (guard, merchant,
+                                         innkeeper). Only the names in ASSETS.NPC below are asked for; the drawn face stays until it loads.
+                                         Planned first batch (NPCART.PLAN): npc- adrianne-avenicci belethor farengar-secret-fire hulda
+                                         arcadia balgruuf-the-greater proventus-avenicci alvor orgnar lucan-valerius beirand corpulus-vinius
+                                         sybille-stentor sayma elisif-the-fair oengul-war-anvil elda-early-dawn wuunferth-the-unliving
+                                         revyn-sadri ulfric-stormcloak balimund keerava wylandriah bersi-honey-hand laila-law-giver arngeir;
+                                         npcg- guard-nord-m guard-nord-f merchant-nord-m merchant-nord-f innkeeper-nord-m innkeeper-nord-f.
      shop-<id>                1200×375   painted banners for town sections (shown above each shop's list)
        ids: general forge (also blacksmith) inn (also cook) alchemy wizard (also enchanter) market stables home hall
             fence arena mine — raw 3:2 paintings go through art/conv: crop the middle band, WebP q80
@@ -106,6 +117,12 @@
                                          built room (window light, forge glow, trophies, banners, a stable lantern), placed in a
                                          1024×576 frame: keep the hall where it is if it's repainted. longhouse-plate-wide: spare,
                                          a calmer view of the same hall (not used yet).
+     harvest-<kind>           256×256    painted plants for the harvest mini-game (harvestgame.js) and the map's plant markers,
+                                         transparent, bottom-aligned, WebP q82: flower root fungus nirn berry egg. The
+                                         mini-game knows where the berries and the egg sit in these pictures (BERRIES, EGG).
+     lhgrow-<room>-<1|2|3>    ~250-580   painted room patches over longhouse-plate (longhouse.js GROW): transparent, cut from
+                                         ChatGPT paint-overs of the plate at its own 2048 px scale, one fixed box per room
+                                         (forge trophy plan library stables) so none overlap; only the highest level shows. WebP q80.
      art-<prince>             256×256    painted Daedric artifact icons (bargains.js), transparent, WebP q85:
                                          dagon azura nocturnal hircine boethiah meridia. The line glyph stays as the fallback.
      expedition-table         1920×1080  the Expedition Table backdrop (expedition.js), shown darkened behind the offers, WebP q80
@@ -116,6 +133,8 @@
      ui-panel                 1024×1024  tileable dark panel texture
      ui-parchment             1024×1024  tileable parchment texture
      ui-compass               1254×1254  transparent compass rose
+     ui-compass-ring          1024×1024  the compass ring alone (stays still)
+     ui-compass-star          1024×1024  the compass star alone (the part that moves)
      ui-compass3d             2240×2240  7x7 Blender renders of ui-compass tilted ±26° (scripts/compass3d.py)
      ui-nightsky              1080×1920  night sky for the skills (constellation) page
      ui-frame                 1024×1024  transparent 9-slice frame, 96px corners
@@ -128,7 +147,7 @@
 
    API: ASSETS.img(key) → a loaded HTMLImageElement or null (asks for the file the first time).
         ASSETS.state(key) → "ok" | "loading" | "none" (asks for the file the first time).
-        ASSETS.url(key) → its URL or "" · ASSETS.stateOf(key) → "loading" / "ok" / "none" · ASSETS.placeKey(name) · ASSETS.biomeKey(name) · ASSETS.foeKey(name, kind)
+        ASSETS.url(key) → its URL or "" · ASSETS.stateOf(key) → "loading" / "ok" / "none" · ASSETS.placeKey(name) · ASSETS.biomeKey(name) · ASSETS.foeKey(name, kind, arch)
         ASSETS.cover(g, img, w, h) draws an image to fill w×h. ASSETS.on(fn) runs fn when any picture arrives.
    Under browser automation nothing is fetched unless the URL has ?assets (keeps tests quiet).
    Quality (artfit.js, tests/art_quality_ui.py): pictures are cropped, never squashed, and never shown bigger than the
@@ -140,6 +159,16 @@ const ASSETS = (() => {
   /* [artfit] pictures that also come as a bigger <name>@2x.webp (twice the size above): PCs and sharp screens load it.
      Add a name here when its @2x file is dropped in the game folder. */
   const HI = new Set([]);
+  /* Pictures the game only guesses at: a painted icon for any item (icon-<item-id>) and the close-zoom map. Asking for
+     every one of those made hundreds of failed downloads (3 tries each), so only the files listed here are fetched.
+     When you drop in a new icon-*.webp (or map-world-2x.webp), add its name here; tests/test_qacore.js checks the list. */
+  const PAINTED = new Set(["icon-hs-brooch", "icon-hs-compass", "icon-hs-draught", "icon-hs-goblet", "icon-hs-papers", "icon-hs-signet", "icon-hs-torc",
+    "icon-ing-blue-flower", "icon-ing-fire-salts", "icon-ing-garlic", "icon-ing-lavender", "icon-ing-salt", "icon-ing-wheat",
+    "icon-mat-dwarven", "icon-mat-firewood", "icon-mat-iron", "icon-mat-leather", "icon-mat-moonstone", "icon-mat-steel"]);
+  /* [npcportraits] painted NPC portraits that are in the game folder (npcart.js only asks for these; the rest of
+     NPCART.PLAN keeps the drawing). Add a name here when its file lands; tests/test_npcart.js checks each file exists. */
+  const NPC = new Set([]);
+  const guessed = (key) => /^icon-/.test(key) || key === "map-world-2x";
   const wantHi = () => { try { return innerWidth >= 1100 || (devicePixelRatio || 1) > 1.5; } catch { return false; } };
   const state = new Map();   // key -> { st: "loading"|"ok"|"none", img, url }
   const subs = [];
@@ -164,6 +193,7 @@ const ASSETS = (() => {
     const rec = { st: "none", img: null, url: "" };
     state.set(key, rec);
     if (!auto || missing[key] || typeof Image === "undefined") return rec;   // no pictures outside a browser (node tests)
+    if (guessed(key) && !PAINTED.has(key)) return rec;   // not painted yet: keep the drawn one, don't ask the server
     rec.st = "loading"; pending++;
     const hi = HI.has(key) && wantHi();
     const tryExt = (i) => {
@@ -252,10 +282,20 @@ const ASSETS = (() => {
     lich: "deathlord", troll: "troll", giant: "giant", wolf: "wolf", bear: "bear", cat: "sabrecat", spider: "spider", skeever: "skeever", dragon: "dragon", mammoth: "mammoth",
     centurion: "centurion", sphere: "dwarvenspider", dspider: "dwarvenspider", crab: "mudcrab", wisp: "icewraith", atronach: "flameatronach", flame_atronach: "flameatronach",
     frost_atronach: "frostatronach", storm_atronach: "stormatronach", dremora: "dremora", beast: "bear" };
-  function foeKey(name, kind) {
+  /* [movepreview] foes painted for their role (foegroups.js archetypes): an archer holds a bow, a mage a staff and a
+     spell. Only the pictures listed here are asked for; any other role keeps the foe's own picture. */
+  const FOE_ROLES = new Set(["foe-bandit-archer", "foe-bandit-mage", "foe-forsworn-archer", "foe-draugr-archer"]);
+  function foeKey(name, kind, arch) {
     const n = String(name || "").toLowerCase();
-    for (const [re, s] of FOE_RULES) if (re.test(n)) return "foe-" + s;
-    return KIND[kind] ? "foe-" + KIND[kind] : null;
+    let k = null;
+    for (const [re, s] of FOE_RULES) if (re.test(n)) { k = "foe-" + s; break; }
+    if (!k) k = KIND[kind] ? "foe-" + KIND[kind] : null;
+    const role = String(arch || "").toLowerCase();
+    if (k && /^(archer|mage)$/.test(role)) {
+      const tribe = /forsworn/.test(n) || kind === "forsworn" ? "foe-forsworn" : k;   // the Forsworn share the bandit picture, but have their own archer
+      for (const c of [tribe + "-" + role, k + "-" + role]) if (FOE_ROLES.has(c)) return c;
+    }
+    return k;
   }
 
   // ---- drawing helpers
@@ -266,7 +306,7 @@ const ASSETS = (() => {
     if (typeof ART !== "undefined" && ART.noteSrc) ART.noteSrc(1 / r);   // the file's pixels per drawing unit: ART.url draws it no blurrier
   }
   /* UI textures go to CSS variables so the stylesheet picks them up */
-  const CSS_KEYS = { "ui-panel": "--asset-panel", "ui-parchment": "--asset-parchment", "ui-compass": "--asset-compass", "ui-compass3d": "--asset-compass3d", "ui-nightsky": "--asset-nightsky", "ui-frame": "--asset-frame", title: "--asset-title" };
+  const CSS_KEYS = { "ui-panel": "--asset-panel", "ui-parchment": "--asset-parchment", "ui-compass": "--asset-compass", "ui-compass3d": "--asset-compass3d", "ui-compass-ring": "--asset-compass-ring", "ui-compass-star": "--asset-compass-star", "ui-nightsky": "--asset-nightsky", "ui-frame": "--asset-frame", title: "--asset-title" };
   function applyCss() {
     try {
       const root = document.documentElement;
@@ -281,5 +321,5 @@ const ASSETS = (() => {
 
   const loading = (i) => img(`bg-loading-${1 + (Math.abs(i | 0) % 4)}`);
   const status = () => [...state].map(([k, r]) => [k, r.st]);
-  return { HI, img, url, state: stateOf, stateOf, provide, on, enable, placeKey, biomeKey, foeKey, cover, loading, status, slug, CSS_KEYS, get pending() { return pending; } };
+  return { HI, PAINTED, FOE_ROLES, NPC, img, url, state: stateOf, stateOf, provide, on, enable, placeKey, biomeKey, foeKey, cover, loading, status, slug, CSS_KEYS, get pending() { return pending; } };
 })();
