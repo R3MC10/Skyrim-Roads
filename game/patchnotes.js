@@ -1,4 +1,4 @@
-/* Patch notes:     { id: "b211-longhouse", build: 211, date: "25 Nov 2026", title: "Your own adventuring company", items: [
+/* Patch notes:     { id: "b212-longhouse", build: 212, date: "25 Nov 2026", title: "Your own adventuring company", items: [
       "Found an adventuring company with your party or your friends: up to 8 players (followers don't count). Open Social, then Company.",
       "Founding costs 3000 gold in a town or village, and that's where your longhouse stands. Everyone in the company sees the same longhouse, live.",
       "A shared treasury: anyone can put gold in, and the founder chooses who may take it out and how much a day. Every coin and every gift is in the log.",
@@ -13,6 +13,11 @@ what changed in each build, newest first, in plain words. [OURS]
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b211-partyspells", build: 211, date: "25 Nov 2026", title: "Your own spells in party fights", items: [
+      "Spells you made at the Rune table or combined at the College now show up properly on your friends' phones in a party fight: the right name, icon and effect in the battle scene.",
+      "Only the spells you actually cast in that fight are sent, and nobody can change your spell on your phone.",
+      "In a party fight, the target a foe shows is now always the one it hits, healers included.",
+    ] },
     { id: "b210-stables", build: 210, date: "25 Nov 2026", title: "Tidier stables", items: [
       "The stables screen is now fully in Polish: saddlebags, horseshoes, horse armor, breeds, coats, the cart and renaming your horse.",
       "Your horse's card shows its painted picture in its own coat, in a proper frame, instead of a tiny icon. A knocked-down horse lies down in the picture.",
@@ -1486,7 +1491,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 211;
+  const NEXT_AT = 212;
   const NEXT = [
     "Daedric bargains and artifacts that awaken",
     "Heists in the big cities",
