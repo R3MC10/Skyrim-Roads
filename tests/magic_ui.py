@@ -1,5 +1,7 @@
 import asyncio, sys
 from playwright.async_api import async_playwright
+_SHOTS = (__import__("os").environ.get("SHOTS") or __import__("os").path.join(__import__("tempfile").gettempdir(), "rotn_shots")).replace("\\", "/").rstrip("/") + "/"   # screenshots: $SHOTS or the temp folder
+__import__("os").makedirs(_SHOTS, exist_ok=True)
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8771"
 async def main():
     async with async_playwright() as p:
@@ -7,7 +9,7 @@ async def main():
         ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2)
         errs = []
         pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
-        await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=mg"); await pg.wait_for_timeout(1800)
+        await pg.goto(f"http://127.0.0.1:{PORT}/index.html?net=bc&notut&p=mg"); await pg.wait_for_timeout(1800)
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Magus"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
         clr = "document.querySelectorAll('#modal').forEach(m=>m.remove())"
         await pg.evaluate("()=>{const S=window.__dbg.save(); S.location='Winterhold'; [S.x,S.y]=WORLD.places.Winterhold; S.discovered.push('Winterhold'); S.gold=5000; for (const k of ['Destruction','Alteration','Illusion','Conjuration','Restoration']) S.skills[k].lvl=60; S.mpBonus=300;}")
@@ -31,7 +33,7 @@ async def main():
         idx = next(i for i, t in enumerate(rows) if "Candlelight" in t)
         await pg.click(f"#sky .sky-row >> nth={idx}"); await pg.wait_for_timeout(200)
         print("detail:", (await pg.inner_text("#sky .sky-detail"))[:200].replace("\n", " | "))
-        await pg.screenshot(path="magic_menu.png")
+        await pg.screenshot(path=_SHOTS + "magic_menu.png")
         await pg.click("[data-act=castout]"); await pg.wait_for_timeout(400)
         print("candle fx:", await pg.evaluate("G.fxSum(window.__dbg.save(),'trapdodge')"), "| toast:", await pg.evaluate("document.querySelector('#toast')?.textContent"))
         idx = next(i for i, t in enumerate(await pg.evaluate("[...document.querySelectorAll('#sky .sky-row')].map(b=>b.textContent.trim())")) if "Flame Cloak" in t)
@@ -41,13 +43,14 @@ async def main():
         await pg.evaluate("() => { const L=G.loadout(window.__dbg.save()); if(!L.rules.some(r=>r.do==='spell:flame_cloak')) L.rules.unshift({if:'always',do:'spell:flame_cloak'}); }")
         # test fight in tactics
         await pg.evaluate("()=>{ document.querySelector('#sky')?.remove(); }")
-        await pg.evaluate(clr); await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(250); await pg.click("[data-act=tabgo][data-id=tactics]"); await pg.wait_for_timeout(400)
+        await pg.evaluate(clr); await pg.evaluate("window.__ui.go('tactics')"); await pg.wait_for_timeout(400)   # the Tactics screen (rules, loadouts, test fight) has no menu button since fights went turn-based; open it directly
         opts = await pg.evaluate("[...document.querySelectorAll('select option')].map(o=>o.value).filter(v=>v.startsWith('dual:')).length")
         print("dual options in tactics:", opts)
         await pg.select_option("#te", index=1); await pg.click("[data-act=test]"); await pg.wait_for_timeout(600)
         log = await pg.inner_text("#side")
         print("test fight used cloak:", "Flame Cloak" in log)
-        await pg.screenshot(path="magic_tactics.png", full_page=False)
+        await pg.screenshot(path=_SHOTS + "magic_tactics.png", full_page=False)
         print("errors:", errs)
+        print("RESULT", "OK" if not errs and opts and "Flame Cloak" in log else "FAIL")
         await b.close()
 asyncio.run(main())

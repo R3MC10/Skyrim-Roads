@@ -28,7 +28,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Once a day": "Raz dziennie",
     "Racial power": "Moc rasy",
     "Standing stone": "Kamień",
-    // patch note (build 279)
+    // patch note (build 280)
     "Your own hotbar in fights": "Własny pasek skrótów w walce",
     "Your moves in a fight now sit on a hotbar of 10 slots, numbered 1 to 0. Put anything you like on it: blows, power attacks, guard, spells (your own rune spells too), shouts, potions, scrolls and abilities like Breathe or an oil flask.":
       "Twoje ruchy w walce są teraz na pasku z 10 miejscami, ponumerowanymi od 1 do 0. Wstaw tam, co chcesz: ciosy, potężne ataki, gardę, czary (także własne runiczne), krzyki, mikstury, zwoje i umiejętności jak Oddech czy flaszka oleju.",
