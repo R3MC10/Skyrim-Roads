@@ -149,7 +149,7 @@ const TB = (() => {
   /* ------------------------------------------------------------------ the AI adapter (one place, so better AIs can plug in) */
   function aiPick(f, actor = "me", settings) {
     if (typeof COMBATAI !== "undefined" && COMBATAI.decide) {
-      try { const r = COMBATAI.decide(f, actor, settings || f.aiSettings || null); if (r) return Array.isArray(r) ? r[0] : r.action || r; } catch (e) { /* fall back */ }
+      try { const r = COMBATAI.decide(f, actor, settings || f.aiSettings || null); if (r) { if (actor === "me" && r.action) f.aiPickWhy = r.rule ? `your rule ${r.rule}` : COMBATAI.shortWhy ? COMBATAI.shortWhy(r.action, r.why) : r.why || ""; return Array.isArray(r) ? r[0] : r.action || r; } } catch (e) { /* fall back */ }
     }
     try { const [, a] = f.choose(); return a || "attack"; } catch (e) { return "attack"; }
   }
@@ -407,7 +407,9 @@ const TB = (() => {
       const idx0 = this.idx;
       let guard = 0;
       while (!this.over && this.idx === idx0 && guard++ < MAX_ACTS + 2) {
+        f.aiPickWhy = "";
         let a = aiPick(f, "me");
+        const a0 = a;   // the AI's own pick, before the fight tricks below swap it
         if (!this.canAfford(a)) a = this.canAfford("attack") ? "attack" : null;
         if (typeof STRAT !== "undefined") a = STRAT.ai(this, a);   // cash in openings, catch your breath
         if (typeof REACT !== "undefined") a = REACT.ai(this, a);   // set up and cash in combos
@@ -415,11 +417,19 @@ const TB = (() => {
         if (!a) break;
         if (a === "block" && this.myActs > 0) break;   // keep the guard from moves you don't make instead of a second raise
         if (this.used[a] >= 2 && this.myActs >= 2) break;   // a third of the same move costs double: save the breath, keep some guard
-        const r = this.act(a);
+        const n0 = this.ev.length, r = this.act(a);
+        this.aiNote(n0, a, a === a0 ? f.aiPickWhy : "plays the opening");   // "[AI] reason" on the log line of a move the AI picked
         if (!r || r.turn !== "me" || r.err) break;
       }
       if (this.idx === idx0 && !this.over) this.endTurn(true);
       return { turn: "next" };
+    }
+    /* the auto-played move's log line says why: "… [AI] finishing blow". Only for moves the AI picked, never yours. */
+    aiNote(n0, a, why) {
+      this.aiRound = this.round;
+      if (!why) return;
+      for (let i = this.ev.length - 1; i >= n0; i--) { const e = this.ev[i]; if (e.who === "me" && e.kind === "me" && e.a === a) { e.text += ` [AI] ${why}`; e.aiWhy = why; break; } }
+      if (!(this.aiWhys = this.aiWhys || []).includes(why)) this.aiWhys.push(why);
     }
     /* ---- everyone else */
     autoActor(o) {
@@ -571,7 +581,8 @@ const TB = (() => {
     endRound() {
       if (typeof SHIELDFX !== "undefined") SHIELDFX.endRound(this.f, this.round);
       const f = this.f, line = { turn: this.round, rule: null, me: this.lines.me.join(" · "), them: this.lines.them.join(" · "), a: this.lines.a || "attack", wt: f.wt, tb: true };
-      if (f.ai) line.ai = true;
+      if (this.aiRound === this.round) { line.ai = true; if (this.aiWhys && this.aiWhys.length) line.why = this.aiWhys.join(" · "); }   // only rounds the AI played for you
+      this.aiWhys = [];
       if (f.bleed.length && f.ehp > 0) { const b = f.bleed.reduce((x, y) => x + y.dmg, 0); f.ehp -= b; f.bleed = f.bleed.map((y) => ({ ...y, turns: y.turns - 1 })).filter((y) => y.turns > 0); line.me += ` · bleeds ${Math.round(b)}`; }
       const n0 = line.me.length, t0 = line.them.length;
       if (typeof PFX !== "undefined") PFX.tick(f, line);

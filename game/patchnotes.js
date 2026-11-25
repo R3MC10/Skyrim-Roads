@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b290-aitester", build: 290, date: "25 Nov 2026", title: "What would the AI do?", items: [
+      "Character → AI & Loadouts has a new card, What would the AI do?: set your health, stamina and magicka, the foe's health, what kind of foe (normal, strong, boss, dragon, caster), how many and whether a friend is down, and it shows the move your loadout would play right now and why.",
+      "In Custom and Hybrid it goes through your rules from the top: a tick for the one that fires, a cross and the reason for the ones it skips (like \"health is 80%, rule needs below 40%\").",
+      "With Smart AI on, your own rules fold into one row (they're kept for Custom and Hybrid) instead of sitting there greyed out.",
+      "In fights, moves the AI plays for you end with a short [AI] reason in the log. Moves you pick yourself don't.",
+    ] },
     { id: "b286-titlesilent", build: 286, date: "25 Nov 2026", title: "Quiet start", items: [
       "Tapping \"Tap to begin\" on the title screen no longer plays a sound.",
     ] },
