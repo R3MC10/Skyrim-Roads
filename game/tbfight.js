@@ -124,6 +124,9 @@ const TB = (() => {
     if (foes.length < 2 || typeof AISET === "undefined" || !AISET.pickTarget) return foes;
     try { return AISET.pickTarget(G.loadout(f.s), foes); } catch (e) { return foes; }
   }
+  /* which of the foe's moves this round a turn-order entry is: "foe" is its 1st, "foe2" its 2nd... (one foe, several moves) */
+  const moveNo = (o) => { const m = /^foe(\d+)$/.exec(o?.id || ""); return m ? +m[1] : 1; };
+  const ORD = (n) => (n === 2 ? "2nd" : n === 3 ? "3rd" : n + "th");
   // ------------------------------------------------------------------ one fight, played round by round
   class Session {
     constructor(f, opts = {}) {
@@ -773,7 +776,10 @@ const TB = (() => {
     const pe = playing ? vis[vis.length - 1] : null;
     const acting = (o) => (pe ? (pe.kind === "foe" ? o.id.startsWith("foe") : pe.kind === "me" ? o.id === "me" : pe.kind === "ally" ? o.name === pe.name || (pe.pid && o.pid === pe.pid) : pe.kind === "sum" ? o.id === "sum" : false) : o.id === sess.cur?.id && !sess.done);
     const actIdx = sess.order.findIndex(acting);
-    const order = sess.order.map((o, i) => `<span class="tbini ${acting(o) ? "now" : ""} ${(playing ? actIdx >= 0 && i < actIdx : i < sess.idx) ? "gone" : ""} ${o.id.startsWith("foe") ? "foe" : o.id === "me" ? "me" : "ally"}" data-tip="${esc(o.name)}: initiative ${o.init}. Higher initiative acts earlier in the round.">${icon(o, f)} ${esc(o.name.split(" ")[0])}<i>${o.init}</i></span>`).join("");
+    // a foe that acts 2 or 3 times a round has one chip per move: the later ones are marked as its 2nd/3rd move, so the bar
+    // doesn't read as three bandits when one is standing there (a group's next foe only steps in when this one falls)
+    const order = sess.order.map((o, i) => { const mv = moveNo(o);
+      return `<span class="tbini ${acting(o) ? "now" : ""} ${(playing ? actIdx >= 0 && i < actIdx : i < sess.idx) ? "gone" : ""} ${o.id.startsWith("foe") ? "foe" : o.id === "me" ? "me" : "ally"}${mv > 1 ? " again" : ""}" data-tip="${mv > 1 ? `${esc(o.name)} acts again: its ${ORD(mv)} move this round.` : `${esc(o.name)}: initiative ${o.init}. Higher initiative acts earlier in the round.`}">${icon(o, f)} ${esc(o.name.split(" ")[0])}${mv > 1 ? `<b class="tbag">${ORD(mv)}</b>` : ""}<i>${o.init}</i></span>`; }).join("");
     const pips = (n, m, cls) => Array.from({ length: m }, (_, i) => `<i class="${i < n ? "on" : ""} ${cls}"></i>`).join("");
     const allies = partyHTML(f);
     const mine = state.turn === "me";
