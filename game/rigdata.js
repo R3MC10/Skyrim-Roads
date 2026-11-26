@@ -185,19 +185,19 @@ const RIGDATA = (() => {
     cast: { len: 1.0, hit: 0.64, hand: "open", keys: [K(0, { aim: -0.55, back: 0.1, ...ST }), K(0.3, { aim: -1.5, back: -1.4, lean: -0.1, dy: 1, cast: 0.6, ...WIDE }, "out"),
       K(0.44, { aim: -1.6, back: -1.5, lean: -0.12, dy: 1.2, cast: 1, ...WIDE }), K(0.64, { aim: -0.2, back: -0.3, lean: 0.16, dy: 1.4, hipx: 1.6, cast: 1, fn: [10, 0], ff: [-6, 0] }, "in"),
       K(0.8, { aim: -0.3, back: -0.2, lean: 0.08, dy: 1, cast: 0.3, fn: [10, 0], ff: [-6, 0] }, "out"), K(1, { aim: -0.55, back: 0.1, ...ST })] },
-    /* hit (played by real time after the blow, ~0.4 s): the head snaps back first, the body follows and the near foot
+    /* hit (played by real time after the blow, ~0.4 s): [riglayers] the weapon arm is thrown out forward, never the blade across the face; the head snaps back first, the body follows and the near foot
        steps back to catch the weight, the head comes forward a touch past upright (the follow-through), then settles */
     hit: { len: 0.42, hit: 0, keys: [K(0, { aim: -0.55, back: 0.1, ...ST }),
-      K(0.1, { aim: -0.85, back: 0.6, lean: -0.16, tilt: -0.5, dy: 0.5, ...ST }, "out"),
-      K(0.32, { aim: -1.05, back: 0.95, lean: -0.32, tilt: -0.34, dy: 1.2, hipx: -1.2, fn: [2.5, 0], ff: [-8.5, 0] }, "out"),
-      K(0.62, { aim: -0.7, back: 0.4, lean: 0.06, tilt: 0.08, dy: 1, hipx: -0.6, fn: [3, 0], ff: [-8, 0] }, "io"),
+      K(0.1, { aim: -0.4, back: 0.6, lean: -0.16, tilt: -0.5, dy: 0.5, ...ST }, "out"),
+      K(0.32, { aim: -0.25, back: 0.95, lean: -0.32, tilt: -0.34, dy: 1.2, hipx: -1.2, fn: [2.5, 0], ff: [-8.5, 0] }, "out"),
+      K(0.62, { aim: -0.45, back: 0.4, lean: 0.06, tilt: 0.08, dy: 1, hipx: -0.6, fn: [3, 0], ff: [-8, 0] }, "io"),
       K(1, { aim: -0.55, back: 0.1, lean: 0.02, tilt: 0.02, dy: 0.3, fn: [4.5, 0], ff: [-6.5, 0] }, "io")] },
     /* stagger (a hard blow, ~0.6 s): the head whips, the body is thrown back, two stumbling steps, then it rights itself */
     stagger: { len: 0.6, hit: 0, keys: [K(0, { aim: -0.55, back: 0.1, ...ST }),
-      K(0.08, { aim: -0.95, back: 0.8, lean: -0.24, tilt: -0.6, dy: 0.8, ...ST }, "out"),
-      K(0.3, { aim: -1.2, back: 1.1, lean: -0.42, tilt: -0.36, ox: -2, dy: 1.8, hipx: -1.6, fn: [2, -2], ff: [-9, 0] }, "out"),
-      K(0.55, { aim: -1.05, back: 0.9, lean: -0.26, tilt: -0.2, ox: -4, dy: 2.2, hipx: -1, fn: [-2, 0], ff: [-10, -1.5] }),
-      K(0.78, { aim: -0.75, back: 0.4, lean: 0.08, tilt: 0.1, ox: -5, dy: 1.4, fn: [-1, 0], ff: [-11, 0] }),
+      K(0.08, { aim: -0.35, back: 0.8, lean: -0.24, tilt: -0.6, dy: 0.8, ...ST }, "out"),
+      K(0.3, { aim: -0.2, back: 1.1, lean: -0.42, tilt: -0.36, ox: -2, dy: 1.8, hipx: -1.6, fn: [2, -2], ff: [-9, 0] }, "out"),
+      K(0.55, { aim: -0.3, back: 0.9, lean: -0.26, tilt: -0.2, ox: -4, dy: 2.2, hipx: -1, fn: [-2, 0], ff: [-10, -1.5] }),
+      K(0.78, { aim: -0.45, back: 0.4, lean: 0.08, tilt: 0.1, ox: -5, dy: 1.4, fn: [-1, 0], ff: [-11, 0] }),
       K(1, { aim: -0.55, back: 0.1, ox: -5, lean: 0.02, ...ST }, "io")] },
     /* knocked down: buckle at the knees, fall back, lie there (followers, horses and you only ever go down) */
     down: { len: 0.9, hold: true, hand: "open", keys: [K(0, { aim: -0.55, back: 0.1, ...ST }), K(0.25, { aim: -1.4, back: 1, lean: -0.3, tilt: -0.25, dy: 4, ox: -2, fn: [4, 0], ff: [-6, 0] }, "out"),
