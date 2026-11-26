@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b373-uisfx", build: 373, date: "26 Nov 2026", title: "New menu sounds", items: [
+      "Menus have new sounds: a soft wooden tap for lists and small buttons, a fuller one for big buttons like Begin and Okay, and their own sounds for going back, opening a window, switching tabs and flipping a switch.",
+      "Volume sliders tick as you drag them slowly and grind when you whip them across, along with the sparks.",
+      "Pressing a greyed-out button gives a dull knock, so you know it can't be done right now. On a computer, moving the mouse over a button makes a faint breath of air.",
+    ] },
     { id: "b372-coldstart", build: 372, date: "26 Nov 2026", title: "Calmer start-up", items: [
       "On phones the main menu shows the painting straight away, the first frame of its moving picture, instead of a rough drawn stand-in that swapped out a moment later.",
       "Checking for updates no longer darkens the whole screen. If an update is really downloading, a small note shows at the bottom; if there's nothing new, you see nothing at all.",
