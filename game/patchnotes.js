@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b366-uinordic", build: 366, date: "26 Nov 2026", title: "Nordic menus", items: [
+      "Buttons now have bronze knotwork frames, section titles get a knotwork line underneath, and the chosen option in a switch sits on a small bronze plate. On a phone, settings with three or more choices get their own row so nothing is squashed.",
+      "Volume and other sliders have a compass for a knob: the star spins as you drag it and throws sparks off the track, the gold part of the track glows, and it ticks softly as it moves.",
+      "Pressing a button sends a glint across its bronze and sinks it slightly; a new choice flashes gold; a window opening catches the light along its frame.",
+      "The panels on the Hero page have the bronze frame too, text boxes have a bronze edge, and Settings no longer goes see-through for a moment after you change something.",
+      "All of it calms down with the Motion setting (Lite or Off) or when your phone asks for less motion.",
+    ] },
     { id: "b365-uiframes", build: 365, date: "26 Nov 2026", title: "Nordic frames", items: [
       "Settings, the other main menu pages and pop-up windows now sit in a painted bronze frame with Nordic knotwork corners, to match the compass.",
     ] },
