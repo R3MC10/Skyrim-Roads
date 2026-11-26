@@ -523,7 +523,7 @@ const TOWNS = (() => {
     s.gold -= h[1];
     s.homes = { ...(s.homes || {}), [s.location]: { chest: [], garden: 0 } };
     G.note(s, ` Bought ${h[0]} in ${s.location}.`);
-    return `The steward hands you the key to ${h[0]}. Your chest is safe even if you die, your bed makes you Well Rested, and the garden grows ingredients.`;
+    return `The steward hands you the key to ${h[0]}. Your chest holds your things, your bed makes you Well Rested, and the garden grows ingredients.`;
   }
   function sleepHome(s, t = G.now()) {
     if (!home(s)) return "You don't own a house here.";

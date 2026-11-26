@@ -272,7 +272,7 @@ const IMM = (() => {
     "Guard a caravan between the capitals for good pay.",
     "Write a verse at an inn. The best become the Song of the North.",
     "Your market stall sells while you're away.",
-    "A house keeps your things safe even if you die.",
+    "A house gives you a chest for your things and a bed to rest in.",
     "Show off trophies in your house's display case.",
     "Donate to the Hall of the North to help it grow.",
     "Clans can capture whole holds in the war.",

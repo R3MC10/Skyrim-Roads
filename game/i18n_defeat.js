@@ -7,6 +7,10 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     // the defeat screen
     "Defeated": "Pokonany", "Beaten by": "Pokonał cię:", "Retry": "Spróbuj ponownie", "Adjust gear": "Zmień ekwipunek", "Retreat": "Wycofaj się",
     "Fell back": "Wycofałeś się",
+    // home storage lines that used to say "safe even if you die"
+    "Chests and barrels. Holds 30 things for you, and the other wings keep 2 more days of goods.": "Skrzynie i beczki. Mieści 30 rzeczy, a pozostałe skrzydła trzymają towary 2 dni dłużej.",
+    "Empty. Leave things here to lighten your pack.": "Pusto. Zostaw tu rzeczy, żeby odciążyć plecak.",
+    "Your home. Leave things in the chest to lighten your pack.": "Twój dom. Zostaw rzeczy w skrzyni, żeby odciążyć plecak.",
     "Difficulty for the next try": "Poziom trudności następnej próby",
     "You lose nothing: gold, items, XP and progress are just as they were before the fight.": "Nic nie tracisz: złoto, przedmioty, doświadczenie i postępy są takie jak przed walką.",
     "The same foe, a fresh start": "Ten sam wróg, czysty start",
