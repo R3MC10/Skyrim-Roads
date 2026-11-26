@@ -40,12 +40,19 @@ const UINORDIC = (() => {
     };
     K.raf = requestAnimationFrame(step);
   }
-  /* sparks: the shared spark system (sparks.js), like a grinder: thrown backwards off the spinning star and up */
-  function sparks(el, K, speed, dir) {
+  /* sparks (sparks.js), like a grinding wheel: the star rolls along the track, and where it rubs the track (its
+     bottom edge) hot bits are flung off tangentially, backwards from the way it's going and a little up. Faster
+     drags throw more, faster sparks; they also carry some of the knob's own motion. They're cut out where the
+     knob is, so they come from behind the star, not in front of it. */
+  function sparks(el, K, pxPerSec, dir) {
     if (typeof SPARKS === "undefined") return;
     const kr = K.k.getBoundingClientRect(), tr = el.getBoundingClientRect();
-    const cx = kr.left + kr.width / 2, cy = kr.top + kr.height / 2 - 6;
-    SPARKS.burst(cx, cy, -dir * 0.9, -0.6, Math.min(18, 4 + Math.round(speed * 3)), 1.1 + Math.min(1.6, speed * 0.4), { spread: 0.5, floor: tr.top + tr.height / 2 + 2, flash: speed > 1.2 });
+    const cx = kr.left + kr.width / 2, ty = tr.top + tr.height / 2, rimY = ty - 3;
+    const n = Math.min(18, Math.max(2, Math.round(pxPerSec / 80)));
+    const sp = 0.9 + Math.min(2.2, pxPerSec / 700);          // in the spark system's "m/s"
+    SPARKS.burst(cx - dir * 6, rimY, -dir, -0.62, n, sp, { spread: 0.5, floor: ty + 3, flash: pxPerSec > 500,
+      carry: [dir * Math.min(pxPerSec, 900) * 0.25, 0],
+      occlude: () => { const r = K.k.getBoundingClientRect(); return r.width ? { x: r.left + r.width / 2, y: r.top + r.height / 2, r: r.width * 0.34 } : null; } });
   }
   function moved(el) {
     fill(el);
@@ -59,8 +66,8 @@ const UINORDIC = (() => {
       const dt = Math.max(8, now - K.last.t), dfx = (f - K.last.f) * (el.getBoundingClientRect().width || 200);
       K.vel = (dfx / 16) * 22;   // the star rolls along the track like a wheel
       spin(K);
-      const speed = Math.abs(dfx) / dt * 16;
-      if (speed > 1.2) sparks(el, K, speed / 4, Math.sign(dfx));
+      const pxs = Math.abs(dfx) / dt * 1000;   // how fast the knob is travelling, px per second
+      if (pxs > 40) sparks(el, K, pxs, Math.sign(dfx));
     }
     K.last = { f, t: now };
     el.classList.add("uiglow"); clearTimeout(K.glowT); K.glowT = setTimeout(() => el.classList.remove("uiglow"), 380);

@@ -1,6 +1,8 @@
 /* sparks.js: showers of hot-metal sparks, drawn on one screen-wide 2D canvas. [OURS]
      SPARKS.burst(x, y, dx, dy, count, speed, opts)   screen px; (dx, dy) = the way they're thrown (needn't be unit length)
-       opts: { spread 0..1 (tight jet → wide fan), floor: y in px to skip on (or null), flash: true, hue: "metal"|"shock"|"fire" }
+       opts: { spread 0..1 (tight jet → wide fan), floor: y in px to skip on (or null), flash: true, hue: "metal"|"shock"|"fire",
+               carry: [vx, vy] px/s the source itself is moving (sparks inherit it), occlude: () => ({ x, y, r }) a round
+               thing in front of the sparks (a spinning wheel): nothing is drawn inside it, so they come out from behind it }
      SPARKS.live()                                    how many are in the air (for tests)
    The recipe (ported from a WebGL spark system to plain canvas):
    - a spark is a tapered streak, its head on the particle and its tail laid back along its own velocity, so fast
@@ -13,7 +15,7 @@
    Lite motion setting, none when motion is off or the phone asks for reduced motion. Units: px and seconds. */
 const SPARKS = (() => {
   const MAX = 240, PX = 260;   // px per "metre": 9.8 m/s² gravity → ~2550 px/s²
-  let cv = null, g = null, P = [], flashes = [], running = false, last = 0, slow = 1;   // slow: tests and demos can play it in slow motion
+  let cv = null, g = null, P = [], flashes = [], occ = new Set(), running = false, last = 0, slow = 1;   // slow: tests and demos can play it in slow motion
   const calm = () => { try { return typeof MOTION !== "undefined" ? !MOTION.on() : matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
   const lite = () => { try { return typeof MOTION !== "undefined" && MOTION.lite(); } catch (e) { return false; } };
   function size() { if (!cv) return; const d = Math.min(2, devicePixelRatio || 1); cv.width = Math.round(innerWidth * d); cv.height = Math.round(innerHeight * d); g.setTransform(d, 0, 0, d, 0, 0); }
@@ -33,7 +35,9 @@ const SPARKS = (() => {
     for (let i = 0; i < n; i++) {
       const roll = Math.random(), heavy = roll > 0.72 && roll <= 0.92, ember = roll > 0.92;
       const sp = speed * PX * (ember ? 0.25 + Math.random() * 0.3 : heavy ? 0.5 + Math.random() * 0.5 : 0.7 + Math.random() * 0.9);
-      const vx = ux * sp + (Math.random() - 0.5) * sp * spread, vy = uy * sp + (Math.random() - 0.75) * sp * spread;
+      const cvx = opts.carry ? opts.carry[0] : 0, cvy = opts.carry ? opts.carry[1] : 0;
+      // thrown along (ux, uy), fanned sideways by spread, plus whatever the source was doing
+      const side = (Math.random() - 0.5) * spread, vx = (ux - uy * side) * sp + cvx, vy = (uy + ux * side) * sp + cvy;
       const tint = Math.random(), life = ember ? 0.9 + Math.random() * 0.9 : heavy ? 0.45 + Math.random() * 0.5 : 0.12 + Math.random() * 0.28;
       P.push({ x, y, vx, vy, life, span: life, seed: Math.random(), floor: opts.floor ?? null,
         size: (ember ? 1.6 + Math.random() : heavy ? 1.8 + Math.random() * 1.5 : 0.8 + Math.random() * 1) * (opts.scale || 1),
@@ -41,6 +45,7 @@ const SPARKS = (() => {
         bounce: heavy ? 0.35 + Math.random() * 0.25 : 0, col: [base[0], base[1] * (0.88 + tint * 0.24), base[2] * (0.7 + tint * 0.75)] });
     }
     if (P.length > MAX) P.splice(0, P.length - MAX);
+    if (opts.occlude) occ.add(opts.occlude);
     if (opts.flash !== false) flashes.push({ x, y, t: 0, r: 26 + speed * 3, c: base });
     if (!running) { running = true; last = performance.now(); requestAnimationFrame(frame); }
   }
@@ -83,8 +88,11 @@ const SPARKS = (() => {
       g.beginPath(); g.moveTo(tx, ty); g.lineTo(p.x, p.y); g.stroke();
       return true;
     });
+    // whatever stands in front (the star): cut it out, so sparks appear from behind its edge
+    g.globalCompositeOperation = "destination-out";
+    for (const f of occ) { try { const o = f(); if (o) { g.beginPath(); g.arc(o.x, o.y, o.r, 0, 7); g.fill(); } } catch (e) { occ.delete(f); } }
     g.globalCompositeOperation = "source-over";
-    if (P.length || flashes.length) requestAnimationFrame(frame); else { running = false; g.clearRect(0, 0, innerWidth, innerHeight); }
+    if (P.length || flashes.length) requestAnimationFrame(frame); else { running = false; occ.clear(); g.clearRect(0, 0, innerWidth, innerHeight); }
   }
   return { burst, live: () => P.length, slowMo: (k) => { slow = Math.max(0.02, Math.min(1, +k || 1)); } };
 })();
