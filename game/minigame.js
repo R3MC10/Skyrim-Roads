@@ -68,7 +68,7 @@ const MINIGAME = (() => {
     const s = f.s, sk = (n) => { try { const v = typeof G !== "undefined" && G.skill && s ? G.skill(s, n) : 15; return Number.isFinite(v) ? v : 15; } catch (e) { return 15; } };   // an unknown skill name must never break the game (hotfix: "Block" used to throw, so guards and shield bashes never got one)
     const skill = g.kind === "rune" ? sk(g.school) : a === "block" || a === "bash" ? sk("Blocking") : a === "rx:oil" ? sk("Archery") : sk(f.weapon?.skill || (isBow(f) ? "Archery" : "One-Handed"));
     const perk = typeof PFX !== "undefined" && s ? PFX.num(s, "timing") : 0;
-    return Math.min(1.9, (1 + Math.max(0, skill - 15) / 100) * (1 + (perk || 0)));
+    return Math.min(1.9, (1 + Math.max(0, skill - 15) / 100) * (1 + (perk || 0))) * (typeof DIFF !== "undefined" ? DIFF.window(f) : 1);   // Story wider, Hard tighter (difficulty.js)
   }
   /* turn a score (0..1, 1 = dead centre) into a grade */
   function grade(score, g) {

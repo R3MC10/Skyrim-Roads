@@ -69,7 +69,7 @@ const MENUS = (() => {
   /* the first screen of the tab a screen belongs to (where the back button goes from a sub-tab) */
   const home = (tab) => (BY[groupOf(tab)] || BY.world)[2];
   /* the Hero screens for the compass's Skills page (tabmenu.js): not Items/Magic, those are their own menus */
-  const charTabs = () => BY.hero[3].filter(([id]) => id[0] !== "@").map(([id, l]) => [id, l]);
+  const charTabs = () => BY.hero[3].filter(([id]) => id[0] !== "@" && (typeof UNLOCKS === "undefined" || UNLOCKS.tabNow(id))).map(([id, l]) => [id, l]);   // unlocks.js: Perks/Follower wait for their level
   /* every screen id reachable from the tabs */
   const screens = () => GROUPS.flatMap(([, , , subs]) => subs.map(([s]) => s)).filter((s) => s[0] !== "@");
 

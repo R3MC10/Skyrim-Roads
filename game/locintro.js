@@ -77,7 +77,7 @@ const LOCINTRO = (() => {
     const jobs = town ? safe(() => TOWNS.jobsAt(S, l).map((j) => j.id), []) : [];
     const sp = safe(() => SPELLBOOK.period(), null);
     const tomes = safe(() => G.shopTypes(l).some((shop) => SPELLBOOK.rotation(l, shop).length > 0), false);
-    const cv = safe(() => CARAVANS.at(l).some((x) => x.here), false);
+    const cv = (typeof UNLOCKS === "undefined" || UNLOCKS.open(S, "worldevents")) && safe(() => CARAVANS.at(l).some((x) => x.here), false);   // unlocks.js: caravans are a world event (level 11)
     return { jobs, sp, tomes, cv };
   }
   function record(S, l, snap) {
