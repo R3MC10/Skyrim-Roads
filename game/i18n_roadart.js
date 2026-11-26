@@ -37,5 +37,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "The knotwork corners on panels and buttons are smaller, and framed panels have more room at the bottom and between them, so screens feel less cramped.": "Plecione narożniki paneli i przycisków są mniejsze, a panele w ramkach mają więcej miejsca u dołu i między sobą, więc ekrany są mniej ściśnięte.",
     "Settings stay put": "Ustawienia zostają na miejscu",
     "Changing a setting no longer throws you back to the top of the Settings page: you stay where you were.": "Zmiana ustawienia nie przerzuca już na górę strony Ustawień: zostajesz tam, gdzie byłeś.",
+    "Nordic tabs": "Nordyckie zakładki",
+    "Tabs (Travel and Places, the Journal's Quests, Discoveries and the rest, Active, Misc and Completed) now sit on a thin bronze line, and the one you're on gets a small knotwork ornament under its name.": "Zakładki (Podróż i Miejsca, w Dzienniku Zadania, Odkrycia i pozostałe, Aktywne, Różne i Ukończone) leżą teraz na cienkiej brązowej linii, a wybrana ma pod nazwą mały pleciony ornament.",
   });
 })();
