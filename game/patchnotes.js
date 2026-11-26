@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b355-paintclean", build: 355, date: "26 Nov 2026", title: "Cleaner fights over the painted art", items: [
+      "Fights look cleaner: no more drawn-on helmets and cartoon wagon over the painted art. Your hero and followers show their painted heads until real painted helmets arrive.",
+      "Bows, swords and shields made of elven, glass, ebony and other coloured stuff keep a light tint of their colour instead of turning into a bright gold or green cut-out.",
+      "Enchanted weapons glow more softly along the blade and no longer shed sparks into the air; a spell in your hand is a gentle light, not a big glowing ball.",
+      "No more orange leaves and petals floating over the painted scenes (snow and rain still fall).",
+    ] },
     { id: "b353-forgenames", build: 353, date: "26 Nov 2026", title: "Forge upgrades read +1 to +6", items: [
       "Gear you improve at the forge now shows its level as a number after the name: Iron Sword +1, +2 ... up to +6. The old words (Fine, Superior, Exquisite, Flawless, Epic, Legendary) are gone, so they no longer get mixed up with item rarity.",
       "Nothing about your gear changes: same bonuses, same upgrades, and everything you already improved keeps its level.",
