@@ -13,7 +13,9 @@
      PAINTRIG.draw(g, look, { clip, u, t }) → one clip frame on its own (the viewer, tests, the map: mapride.js);
                           stirrup: [x, y] figure units, where a rider's boot goes (default STIRRUP)
      PAINTRIG.last(who)   → [dollrig2] the figure last drawn for who: each hand's fist and the grip of what it holds
-                          (canvas px) and the order the layers went down in (the screen tests check them)
+                          (canvas px) and the order the layers went down in (the screen tests check them); [wrists] .wrists: each
+                          hand drawn (far one first) with its wrist and elbow (canvas px), the forearm's angle fa, the hand's a,
+                          the angle it was asked to turn to (want) and its picture (tests/test_wrists.js checks the bend)
    Hands and layers [dollrig2]: the main weapon is always in the RIGHT (near) hand, the off-hand item (shield, a second
    blade, a bow's string hand) in the LEFT (far) hand, each placed by its grip on the fist. Back to front: the off-hand
    group (left arm, a dual-wield blade, the left fist over its grip), legs, torso and head, then the main group (right
@@ -290,20 +292,43 @@ const PAINTRIG = (() => {
   /* [riglayers] where a closed hand holds its grip, along the hand from wrist to knuckles: in the curled fingers (it was
      0.55, the back of the hand, so a staff or a haft showed beside the fist instead of through it) */
   const GRIP_AT = 0.68;
+  /* [wrists] how far a wrist bends from the forearm: the hand turns toward what it holds, eased into a natural range
+     (flexing toward the palm up to WRIST_FLEX, back up to WRIST_EXT) instead of stopping dead at a hard limit; when the
+     grip wants the hand turned right round (near half a turn) it settles back along the forearm, so the hand never flips
+     from one limit to the other between frames */
+  const WRIST_FLEX = 1.05, WRIST_EXT = 0.8;
+  function wristBend(d) {
+    d = Math.atan2(Math.sin(d), Math.cos(d));
+    const lim = d >= 0 ? WRIST_FLEX : WRIST_EXT, x = Math.abs(d), k = lim * 0.7;
+    const b = x <= k ? x : k + (lim - k) * Math.tanh((x - k) / (lim - k));
+    return Math.sign(d) * b * clamp((Math.PI - x) / 1.2, 0, 1);
+  }
+  const bendTo = (fa, want) => (want == null ? fa : fa + wristBend(want - fa));
+  /* [wrists] a hand on its wrist. Bent, the hand's own cuff or wrist (behind its pivot) stays lined up with the forearm, the
+     hand turns from the pivot on, and the cuff's middle is swept through the bend between them, so the wrist reads as one
+     piece: no corner of the cuff sticking out past the sleeve, no notch on the outside of the bend */
+  function putHand(g, img, q, u, wr, fa, a) {
+    const axis = Math.atan2(q.e[1] - q.p[1], q.e[0] - q.p[0]); let d = a - fa; d = Math.atan2(Math.sin(d), Math.cos(d));
+    if (Math.abs(d) < 0.04) { put(g, img, q, u, wr[0], wr[1], a - axis); return; }
+    const R = Math.hypot(q.w, q.h) * u * 1.2, bw = 5 * u, ov = 1.5 * u;
+    const piece = (ang, x0, x1) => { g.save(); g.translate(wr[0], wr[1]); g.rotate(ang); g.beginPath(); g.rect(x0, -R, x1 - x0, 2 * R); g.clip(); g.rotate(-ang); put(g, img, q, u, 0, 0, ang - axis); g.restore(); };
+    piece(fa, -R, ov);   // the cuff, along the forearm
+    const n = Math.ceil(Math.abs(d) / 0.14);
+    for (let i = 1; i < n; i++) piece(fa + d * i / n, -bw, bw);   // swept through the bend
+    piece(a, 0, R);   // the hand itself
+  }
   /* the hand: along the forearm, or (holding something) turned toward the grip, but never bent past what a wrist can do */
   function handAt(g, ctx, arm, part, v, want) {
-    const q = ctx.Q[part], fa = angOf(arm.el, arm.wr);
-    let a = fa;
-    if (want != null) { let d = want - fa; d = Math.atan2(Math.sin(d), Math.cos(d)); a = fa + clamp(d, -1, 1); }
-    const axis = Math.atan2(q.e[1] - q.p[1], q.e[0] - q.p[0]), img = pic(ctx.r, part, v, q.w * ctx.G.u * ctx.dev);
-    put(g, img, q, ctx.G.u, arm.wr[0], arm.wr[1], a - axis);
+    const q = ctx.Q[part], fa = angOf(arm.el, arm.wr), a = bendTo(fa, want);
+    const img = pic(ctx.r, part, v, q.w * ctx.G.u * ctx.dev);
+    putHand(g, img, q, ctx.G.u, arm.wr, fa, a);
+    if (ctx.wrists) ctx.wrists.push({ at: ctx.cpx(arm.wr), el: ctx.cpx(arm.el), fa, a, want, part });
     const len = Math.hypot(q.e[0] - q.p[0], q.e[1] - q.p[1]) * ctx.G.u * GRIP_AT;
     return [arm.wr[0] + Math.cos(a) * len, arm.wr[1] + Math.sin(a) * len];   // the middle of the hand: where a grip sits
   }
   /* [dollrig2] where a hand will close (its angle a and grip point), worked out before the hand is drawn */
   function fistAt(ctx, arm, part, want) {
-    const q = ctx.Q[part], fa = angOf(arm.el, arm.wr);
-    let a = fa; if (want != null) { let d = want - fa; d = Math.atan2(Math.sin(d), Math.cos(d)); a = fa + clamp(d, -1, 1); }
+    const q = ctx.Q[part], a = bendTo(angOf(arm.el, arm.wr), want);
     const len = Math.hypot(q.e[0] - q.p[0], q.e[1] - q.p[1]) * ctx.G.u * GRIP_AT;
     return { a, grip: [arm.wr[0] + Math.cos(a) * len, arm.wr[1] + Math.sin(a) * len] };
   }
@@ -346,9 +371,10 @@ const PAINTRIG = (() => {
     const ranged = RANGED.has(wk), two = TWO_MELEE.has(wk) || wk === "staff" || wk === "spear";
     const tipA = wk && kit && kit.TIP[wk] ? Math.atan2(kit.TIP[wk][1], kit.TIP[wk][0]) : -Math.PI / 4;
     let wa = B.sa + P.aim, guard = 0;   // the weapon's frame, as on the ink figures; guard: how far the shield is up in front (riglayers)
-    if (!(P.down > 0) && !(P.hk > 0.05)) {   // [riglayers] at rest a bow leans forward and a staff or spear stands near upright: never across the face
-      if (wk === "bow") wa = B.sa + Math.max(P.aim, 0.3);
-      else if (wk === "staff" || wk === "spear") wa = B.sa + Math.max(P.aim, -0.2);
+    if (!(P.down > 0)) {   // [riglayers] at rest a bow leans forward and a staff or spear stands near upright: never across the face
+      const rest = clamp(1 - (P.hk || 0) * 5, 0, 1);   // [wrists] eased out as the arm takes its own path (it switched off at once: the weapon and the hand jumped)
+      if (wk === "bow") wa += (Math.max(P.aim, 0.3) - P.aim) * rest;
+      else if (wk === "staff" || wk === "spear") wa += (Math.max(P.aim, -0.2) - P.aim) * rest;
     }
     if (o.shield && o.shieldOut && !two && !ranged && !P.farHand && !P.ride && !(P.down > 0) && P.hand !== "open") {
       /* [dollrig] in a fight the shield arm comes up into a guard in front of the chest (it hung back behind the hip,
@@ -391,7 +417,7 @@ const PAINTRIG = (() => {
     /* [dollrig2] the off hand: the shield or a second blade (never both), always in the left (far) hand */
     const shieldOn = !!o.shield && !two && !ranged, offW = !shieldOn && !two && !ranged && o.off && kit ? o.off : null;
     const kS = m * 1.35, T0 = g.getTransform(), cpx = (p) => [T0.a * p[0] + T0.c * p[1] + T0.e, T0.b * p[0] + T0.d * p[1] + T0.f];
-    const rec = { hands: {}, order: [] }; LAST.set(o.who || "me", rec);
+    const rec = { hands: {}, order: [], wrists: [] }; LAST.set(o.who || "me", rec); ctx.wrists = rec.wrists; ctx.cpx = cpx;
     const lay = (n) => rec.order.push(n);
     const offA = B.sa + 0.55 + (o.lunge || 0) * 0.7, offTip = offW && kit.TIP[offW] ? Math.atan2(kit.TIP[offW][1], kit.TIP[offW][0]) : -Math.PI / 4;
     const farPart = shieldOn || offW || farOn ? "hand-fist" : "hand-open", farWant = offW ? offA + offTip + Math.PI / 2 : farOn && wk === "bow" ? wa : null;
@@ -438,10 +464,9 @@ const PAINTRIG = (() => {
     limbAt(g, ctx, "uparm", "n", B.armN.sh, B.armN.el);
     limbAt(g, ctx, "forearm", "n", B.armN.el, B.armN.wr, B.armN.sh); lay("mainArm");
     const handPart = openAll || (!armedN && !P.flask && P.cast > 0.05) ? "hand-open" : armedN || P.flask ? "hand-fist" : "hand-open";
-    const want = armedN ? (ranged ? wa : wa + tipA + Math.PI / 2) : null;
+    const want = armedN && handPart === "hand-fist" ? (ranged ? wa : wa + tipA + Math.PI / 2) : null;   // [wrists] an open hand (casting, knocked down) holds nothing: it lies along the forearm
     // the grip point comes from the hand's angle, so work it out first, draw the weapon, then the hand on top
-    const q = ctx.Q[handPart], fa = angOf(B.armN.el, B.armN.wr);
-    let ha = fa; if (want != null) { let d = want - fa; d = Math.atan2(Math.sin(d), Math.cos(d)); ha = fa + clamp(d, -1, 1); }
+    const q = ctx.Q[handPart], ha = bendTo(angOf(B.armN.el, B.armN.wr), want);
     const glen = Math.hypot(q.e[0] - q.p[0], q.e[1] - q.p[1]) * G.u * GRIP_AT, grip = [B.armN.wr[0] + Math.cos(ha) * glen, B.armN.wr[1] + Math.sin(ha) * glen];
     if (armedN && kit && !openAll) { g.save(); g.translate(grip[0], grip[1]); g.rotate(wa); g.scale(m * WSC, m * WSC); (gear || kit).weapon(g, sp, wk, st, { draw: P.draw, pull: bowPull, arrow: bowArrow, glow: glowC, plain: wk !== sp.wk }); g.restore(); lay("mainWeapon"); rec.hands.main = { item: wk, grip: cpx(grip) }; }
     if (armedN && !openAll && !ranged && kit && kit.TIP[wk]) {   // where the blade really is (the fight scene's swing trail follows it), in canvas pixels
@@ -536,6 +561,6 @@ const PAINTRIG = (() => {
      canvas's pixels at draw time; n counts draws, so a caller can tell a fresh one (null: no blade) */
   const tip = (who) => TIPS.get(who || "me") || null;
   const last = (who) => LAST.get(who || "me") || null;
-  return { setOf, geo, raceHead, tip, last, can, fight, draw, sample, warp, controls, solve, ready, get broken() { return broken; }, reset: () => { broken = false; REC.clear(); HREC.clear(); } };
+  return { setOf, geo, raceHead, tip, last, can, fight, draw, sample, warp, controls, solve, ready, wristBend, WRIST: { flex: WRIST_FLEX, ext: WRIST_EXT }, get broken() { return broken; }, reset: () => { broken = false; REC.clear(); HREC.clear(); } };
 })();
 if (typeof module !== "undefined") module.exports = PAINTRIG;
