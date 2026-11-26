@@ -64,8 +64,9 @@ const UINORDIC = (() => {
     const K = knobFor(el); if (!K) return;
     place(el, K);
     const f = frac(el), now = performance.now();
-    // ratchet tick every 5%
-    if (Math.abs(f - K.tickAt) >= 0.05) { K.tickAt = f; try { if (typeof SOUND !== "undefined") SOUND.fx("click"); } catch (e) { /* never break the game */ } }
+    // ratchet tick every 5% on a slow drag; a fast drag grinds instead (sfx-ui-tick / sfx-ui-grind, uisfx.js names)
+    const fast = K.last && Math.abs(f - K.last.f) * (el.getBoundingClientRect().width || 200) / Math.max(8, now - K.last.t) * 1000 > 450;
+    if (Math.abs(f - K.tickAt) >= 0.05) { K.tickAt = f; try { if (typeof SOUND !== "undefined") SOUND.fx(fast ? "ui-grind" : "ui-tick"); } catch (e) { /* never break the game */ } }
     if (calm()) { K.last = { f, t: now }; return; }
     if (K.last) {
       const dt = Math.max(8, now - K.last.t), dfx = (f - K.last.f) * (el.getBoundingClientRect().width || 200);
@@ -108,7 +109,7 @@ const UINORDIC = (() => {
     for (const b of boxes) if (b.closest(".title, .modal")) frameGlint(b);
   }
   function start() {
-    if (typeof document === "undefined") return;
+    if (typeof document === "undefined" || typeof document.addEventListener !== "function" || !document.body) return;   // node tests stub document
     document.addEventListener("pointerdown", (e) => { const b = e.target.closest?.(".btn"); if (b && !b.disabled) glint(b); }, true);
     document.addEventListener("click", (e) => { const b = e.target.closest?.(".seg button"); if (b) chosen(b); }, true);
     const on = (e) => { if (e.target?.type === "range") moved(e.target); };

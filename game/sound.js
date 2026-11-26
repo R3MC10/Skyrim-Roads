@@ -295,6 +295,7 @@ const SOUND = (() => {
   const S = () => sends;
   const FX = {
     click(t) { noise(t, { type: "bandpass", freq: 3200, q: 2.5, vol: 0.16, a: 0.001, r: 0.008, dest: S().dry }); osc(1500, t, { vol: 0.05, a: 0.001, r: 0.012, dest: S().dry }); },
+    ui(t) { FX.click(t); },   /* menu sounds (uisfx.js): ui-tap, ui-confirm, ui-close … play sfx-ui-*.mp3, or this click without them */
     page(t) { noise(t, { type: "bandpass", freq: 3800, q: 0.8, vol: 0.12, a: 0.02, h: 0.04, r: 0.03, sweep: 0.6, dest: S().dry }); },
     hit(t) {
       noise(t, { type: "bandpass", freq: rnd(1100, 1700), q: 1.3, vol: 0.45, a: 0.002, r: 0.03, dest: S().lo });
@@ -390,9 +391,9 @@ const SOUND = (() => {
     },
   };
   // the shortest gap between two of the same effect (seconds); closer calls are dropped
-  const GAP = { click: 0.045, page: 0.08, hit: 0.06, clang: 0.08, swing: 0.06, spell: 0.12, coin: 0.12, levelup: 1, quest: 0.6, arrive: 0.8, victory: 0.8, death: 1.5, chat: 0.25, potion: 0.3, shout: 1, dragon: 1.5 };
+  const GAP = { click: 0.045, ui: 0.045, "ui-tick": 0.035, "ui-grind": 0.3, "ui-hover": 0.06, page: 0.08, hit: 0.06, clang: 0.08, swing: 0.06, spell: 0.12, coin: 0.12, levelup: 1, quest: 0.6, arrive: 0.8, victory: 0.8, death: 1.5, chat: 0.25, potion: 0.3, shout: 1, dragon: 1.5 };
   // loudness trims, measured offline so effects sit together: interface ticks quiet, blows medium, big moments louder
-  const TRIM = { click: 1.7, page: 0.7, chat: 1.7, hit: 0.55, clang: 2.2, swing: 3.9, spell: 1.45, coin: 1.95, potion: 1.5, levelup: 1, quest: 1.25, arrive: 2.05, victory: 1.9, death: 0.87, shout: 0.72, dragon: 1 };
+  const TRIM = { click: 1.7, ui: 1.7, page: 0.7, chat: 1.7, hit: 0.55, clang: 2.2, swing: 3.9, spell: 1.45, coin: 1.95, potion: 1.5, levelup: 1, quest: 1.25, arrive: 2.05, victory: 1.9, death: 0.87, shout: 0.72, dragon: 1 };
   const lastAt = {};
   /* "spell-fire" → ["spell-fire", "spell"]: a specific name falls back to its general one */
   function chain(name) { const out = []; let n = name; while (n) { out.push(n); const i = n.lastIndexOf("-"); n = i > 0 ? n.slice(0, i) : ""; } return out; }
@@ -423,7 +424,8 @@ const SOUND = (() => {
      is fetched unless the URL has ?audio (keeps screen tests quiet). */
   const FILE_VOL = { click: 0.3, page: 0.35, chat: 0.35, coin: 0.4, potion: 0.45, swing: 0.45, hit: 0.55, clang: 0.5, equip: 0.45,
     spell: 0.5, levelup: 0.5, quest: 0.5, arrive: 0.5, victory: 0.55, death: 0.55, shout: 0.65, dragon: 0.65,
-    "turn-me": 0.45, "turn-foe": 0.5, round: 0.4, windup: 0.5, dot: 0.4, heal: 0.4, heartbeat: 0.55 };
+    "turn-me": 0.45, "turn-foe": 0.5, round: 0.4, windup: 0.5, dot: 0.4, heal: 0.4, heartbeat: 0.55,
+    ui: 0.45, "ui-confirm": 0.5, "ui-tick": 0.3, "ui-grind": 0.32, "ui-hover": 0.4, "ui-deny": 0.45 };   // menu sounds: per-file loudness (a name beats its family)
   const FILE_SEND = { hit: "lo", clang: "lo", swing: "lo", spell: "lo", shout: "lo", dragon: "lo" };   // recordings carry their own room; UI stays dry
   const MUS_FILE_VOL = 0.6;
   const REGION = { Whiterun: "tundra", Falkreath: "pineforest", "The Pale": "snowfield", Winterhold: "snowfield", Hjaalmarch: "marsh",
@@ -458,7 +460,7 @@ const SOUND = (() => {
     const s = ctx.createBufferSource(), g = ctx.createGain();
     s.buffer = b;
     if (/^(hit|clang|swing|click|coin|amb-step)/.test(name)) s.playbackRate.value = rnd(0.95, 1.05);   // a little life in repeated sounds
-    g.gain.value = dest ? 0.5 : FILE_VOL[base] ?? 0.5;
+    g.gain.value = dest ? 0.5 : FILE_VOL[name] ?? FILE_VOL[base] ?? 0.5;
     s.connect(g); g.connect(dest || sends[FILE_SEND[base] || "dry"]);
     s.onended = () => { try { g.disconnect(); } catch (e) { /* ignore */ } };
     s.start(t);
