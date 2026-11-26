@@ -5858,12 +5858,14 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 .uiglint{position:absolute;top:0;bottom:0;left:-60%;width:45%;pointer-events:none;background:linear-gradient(100deg,transparent 0%,rgba(255,236,190,0) 20%,rgba(255,236,190,.55) 50%,rgba(255,236,190,0) 80%,transparent 100%);mix-blend-mode:screen;animation:uiglint .6s cubic-bezier(.3,.6,.3,1) forwards}
 @keyframes uiglint{to{left:120%}}
 /* 6: a newly chosen option flashes gold and its frame twinkles once */
-:root.has-ui-frame-btn .seg button.on.uiflash{animation:uiflash .65s ease-out}
-@keyframes uiflash{0%{filter:brightness(1.9) saturate(1.2);box-shadow:0 0 18px rgba(255,210,120,.75)}35%{filter:brightness(1.35)}100%{filter:none;box-shadow:none}}
+:root.has-ui-frame-btn .seg button{position:relative}
+:root.has-ui-frame-btn .seg button.on.uiflash::after{content:"";position:absolute;inset:-3px;pointer-events:none;background:radial-gradient(closest-side,rgba(255,226,160,.65),rgba(255,190,90,.25) 60%,transparent);mix-blend-mode:screen;animation:uiflash .65s ease-out forwards}   /* a light over the plate and its frame: no filter, so nothing dark shows round it */
+@keyframes uiflash{0%{opacity:1}100%{opacity:0}}
 /* 7: pressing sinks a button by a pixel and darkens the bronze, like pressing real metal */
-:root.has-ui-frame-btn :is(.btn,.seg button):active{transform:translateY(1px);filter:brightness(.82)}
-:root.has-ui-frame-btn :is(.btn,.seg button){transition:transform .06s,filter .12s}
-@media (prefers-reduced-motion:reduce){.uiglint{display:none}:root.has-ui-frame-btn .seg button.on.uiflash{animation:none}}
+:root.has-ui-frame-btn :is(.btn,.seg button):active{transform:translateY(1px)}
+:root.has-ui-frame-btn :is(.btn,.seg button):active::before{content:"";position:absolute;inset:0;pointer-events:none;background:rgba(0,0,0,.22)}   /* darker while held, inside the frame only */
+:root.has-ui-frame-btn :is(.btn,.seg button){transition:transform .06s}
+@media (prefers-reduced-motion:reduce){.uiglint,:root.has-ui-frame-btn .seg button.on.uiflash::after{display:none}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
