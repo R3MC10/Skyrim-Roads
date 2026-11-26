@@ -40,56 +40,12 @@ const UINORDIC = (() => {
     };
     K.raf = requestAnimationFrame(step);
   }
-  /* sparks: a small particle system on one screen-wide canvas. Each spark is a hot streak drawn from where it was to
-     where it is (so it looks motion-blurred), white-hot at first, cooling through yellow and orange to dull red;
-     it's thrown off the spinning star, slows in the air, falls, and a few bounce once off the track. */
-  let cv = null, g = null, P = [], loopOn = false, lastT = 0;
-  function canvas() {
-    if (cv && cv.isConnected) return g;
-    cv = document.createElement("canvas"); cv.className = "uisparks"; cv.setAttribute("aria-hidden", "true");
-    document.body.appendChild(cv); g = cv.getContext("2d"); size(); addEventListener("resize", size);
-    return g;
-  }
-  function size() { if (!cv) return; const d = Math.min(2, devicePixelRatio || 1); cv.width = innerWidth * d; cv.height = innerHeight * d; g.setTransform(d, 0, 0, d, 0, 0); }
-  const heat = (t) => {   // 0 = just born (white-hot) … 1 = cold
-    const c = [[255, 252, 235], [255, 228, 140], [255, 160, 60], [210, 70, 20], [120, 30, 10]], x = Math.min(0.999, Math.max(0, t)) * (c.length - 1), i = Math.floor(x), f = x - i;
-    return c[i].map((v, k) => Math.round(v + (c[i + 1][k] - v) * f));
-  };
-  function frame(ts) {
-    const dt = Math.min(0.033, Math.max(0.004, (ts - lastT) / 1000 || 0.016)); lastT = ts;   // a frame's time can come in before the spark's own
-    g.clearRect(0, 0, innerWidth, innerHeight);
-    g.globalCompositeOperation = "lighter"; g.lineCap = "round";
-    P = P.filter((p) => {
-      p.age += dt; if (p.age > p.life) return false;
-      p.px = p.x; p.py = p.y;
-      p.vx *= 1 - 2.2 * dt; p.vy = p.vy * (1 - 2.2 * dt) + 900 * dt;   // air drag, gravity
-      p.x += p.vx * dt; p.y += p.vy * dt;
-      if (p.floor != null && p.y > p.floor && p.vy > 0 && !p.bounced) { p.y = p.floor; p.vy *= -0.35; p.vx *= 0.6; p.bounced = true; }
-      const t = p.age / p.life, [r, gg, b] = heat(t), a = t < 0.75 ? 1 : 1 - (t - 0.75) / 0.25;
-      // the streak: longer when fast; a soft glow under a thin bright core
-      const sx = p.x - (p.x - p.px) * 2.2, sy = p.y - (p.y - p.py) * 2.2;
-      g.strokeStyle = `rgba(${r},${Math.round(gg * 0.8)},${Math.round(b * 0.5)},${(0.35 * a).toFixed(3)})`; g.lineWidth = p.w * 3;
-      g.beginPath(); g.moveTo(sx, sy); g.lineTo(p.x, p.y); g.stroke();
-      g.strokeStyle = `rgba(${r},${gg},${b},${a.toFixed(3)})`; g.lineWidth = p.w;
-      g.beginPath(); g.moveTo(sx, sy); g.lineTo(p.x, p.y); g.stroke();
-      return true;
-    });
-    g.globalCompositeOperation = "source-over";
-    if (P.length) requestAnimationFrame(frame); else { loopOn = false; g.clearRect(0, 0, innerWidth, innerHeight); }
-  }
+  /* sparks: the shared spark system (sparks.js), like a grinder: thrown backwards off the spinning star and up */
   function sparks(el, K, speed, dir) {
-    if (!canvas()) return;
-    const n = Math.min(lite() ? 5 : 14, 1 + Math.round(speed * 1.6));
+    if (typeof SPARKS === "undefined") return;
     const kr = K.k.getBoundingClientRect(), tr = el.getBoundingClientRect();
-    const cx = kr.left + kr.width / 2, cy = kr.top + kr.height / 2, floor = tr.top + tr.height / 2 + 2;
-    for (let i = 0; i < n; i++) {
-      // thrown backwards off the star's edge (a grindstone), mostly up and out
-      const ang = (dir > 0 ? Math.PI : 0) + (dir > 0 ? 1 : -1) * (0.15 + Math.random() * 0.9), v = 160 + Math.random() * 260 + speed * 40;
-      P.push({ x: cx + (Math.random() - 0.5) * 8, y: cy - 4 + (Math.random() - 0.5) * 8, vx: Math.cos(ang) * v, vy: -Math.abs(Math.sin(ang)) * v * 0.9 - 40,
-        age: 0, life: 0.35 + Math.random() * 0.45, w: 0.8 + Math.random() * 1.1, floor: Math.random() < 0.4 ? floor : null });
-    }
-    if (P.length > 160) P.splice(0, P.length - 160);
-    if (!loopOn) { loopOn = true; lastT = performance.now(); requestAnimationFrame(frame); }
+    const cx = kr.left + kr.width / 2, cy = kr.top + kr.height / 2 - 6;
+    SPARKS.burst(cx, cy, -dir * 0.9, -0.6, Math.min(18, 4 + Math.round(speed * 3)), 1.1 + Math.min(1.6, speed * 0.4), { spread: 0.5, floor: tr.top + tr.height / 2 + 2, flash: speed > 1.2 });
   }
   function moved(el) {
     fill(el);
