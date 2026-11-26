@@ -10,6 +10,7 @@ const PATCHNOTES = (() => {
       "With a blade in each hand, one attack is a blow plus a quick left-hand follow-up. Poisons, bleeding and enchantments still land only once.",
       "If your target falls before your move lands, that move costs nothing. Followers get 2 AP a turn.",
       "Six new perks: Heavy Momentum, Flowing Strikes and Quick Draw (once a fight, a power attack or an aimed shot for 1 AP), Spell Weaving and Swift Mending (once a fight, a big spell for 1 AP) and Steady Guard (more guard from AP you keep).",
+      "Fights are shorter now: a normal fight takes about 4-5 rounds, a boss about 10. A fully drawn aimed shot takes a bit more stamina than before.",
     ] },
     { id: "b349-rarity", build: 349, date: "26 Nov 2026", title: "Item rarity", items: [
       "Every item now has a rarity: Common, Fine, Rare, Epic or Legendary. You see it as a colour and as a word, in your Items, on the paper doll, in tooltips, shops, loot, dungeon loot votes and trades.",

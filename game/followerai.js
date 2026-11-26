@@ -7,7 +7,7 @@
    - their magicka, stamina, pace and speed in a fight (initiative.js), from their level and fighting style,
    - their tactics: Let them decide / Aggressive / Defensive / Healer / Ranged, and "save potions",
    - a turn: the same moves you have (attack, power attack, guard, cover you, every kind of spell they can cast,
-     potions from their own pack), picked by the Smart AI below, with 2 AP a turn (yours are 3: build 349),
+     potions from their own pack), picked by the Smart AI below, with 2 AP a turn (yours are 3: build 350),
    - rows: Ranged and Healer followers stand in the back row and draw fewer blows; Defensive ones draw more.
    Balance: a full turn of plain attacks deals what one follower blow dealt before (their damage is shared out over their pace: an inner budget of effort per turn, never shown),
    so the extra depth comes from choices (spells, potions, heals, guarding), not from bigger numbers. */

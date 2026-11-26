@@ -22,7 +22,7 @@ const s = c.make("mage", 20); s.health = G.maxHealth(s); s.healthTs = G.now();
 for (const id of ["flames", "healing", "greater_ward", "fear"]) if (D.SPELLS[id] && !s.spells.includes(id)) s.spells.push(id);
 const e = G.scaleEnemy({ name: "Bandit", health: 260, damage: 14, tags: ["humanoid"], level: 20, danger: "medium", gold: [0, 0], text: "" }, 20);
 const f = new G.Fight(s, e); f.allies = [];
-const sess = Object.assign(Object.create(TB.Session.prototype), { f, myActs: 0, pots: 0, used: {}, st: { acts: 3, pots: 1, spCut: 0, mpCut: 0, speed: 6 }, ehpMax: Math.round(f.ehp) });   // build 349: 3 AP a turn, and moves cost stamina / magicka
+const sess = Object.assign(Object.create(TB.Session.prototype), { f, myActs: 0, pots: 0, used: {}, st: { acts: 3, pots: 1, spCut: 0, mpCut: 0, speed: 6 }, ehpMax: Math.round(f.ehp) });   // build 350: 3 AP a turn, and moves cost stamina / magicka
 
 // spells: what it does, numbers with perks, single and dual, magicka, cost, how long
 { const h = FT.html(sess, "spell:flames"); ok(clean(h), "Flames tooltip " + text(h));

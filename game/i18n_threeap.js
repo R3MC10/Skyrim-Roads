@@ -44,6 +44,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Jeśli twój cel padnie, zanim twój ruch trafi, ten ruch nic nie kosztuje. Towarzysze mają 2 AP na turę.",
     "Six new perks: Heavy Momentum, Flowing Strikes and Quick Draw (once a fight, a power attack or an aimed shot for 1 AP), Spell Weaving and Swift Mending (once a fight, a big spell for 1 AP) and Steady Guard (more guard from AP you keep).":
       "Sześć nowych atutów: Ciężki rozpęd, Płynne ciosy i Szybkie naciągnięcie (raz na walkę silny atak albo celny strzał za 1 AP), Tkanie czarów i Szybkie leczenie (raz na walkę duży czar za 1 AP) oraz Pewna garda (więcej gardy z zachowanych AP).",
+    "Fights are shorter now: a normal fight takes about 4-5 rounds, a boss about 10. A fully drawn aimed shot takes a bit more stamina than before.":
+      "Walki są teraz krótsze: zwykła trwa około 4-5 rund, z bossem około 10. W pełni naciągnięty celny strzał zabiera trochę więcej wytrzymałości niż wcześniej.",
   });
   // perk texts end in " [OURS]" in perkfx.js: same Polish
   for (const k of Object.keys(I18N_EXTRA.words)) if (/^(Once a fight|Every AP you don't)/.test(k)) I18N_EXTRA.words[k + " [OURS]"] = I18N_EXTRA.words[k];

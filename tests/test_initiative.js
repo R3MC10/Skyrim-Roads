@@ -131,7 +131,7 @@ const foesIn = (ord) => ord.filter((o) => o.side === "foe");
   ok(posOf() - p0 <= CFG.pushMax, "a slot moves back at most 2 places a round");
 }
 { // knocked down: a move goes into standing up; knocked out: its slots are taken out
-  ok(INIT.standUp({ kitApLoss: 1 }) === CFG.standUp && INIT.standUp({}) === 0, "knocked down: one move to get up");
+  ok(INIT.standUp({ kitApLoss: 1 }) === CFG.standUp && INIT.standUp({}) === 0, "knocked down: 1 AP goes into getting up");
   const { f } = fight(); const ly = follower("Lydia"); f.allies.push(ly);
   const ss = new TB.Session(f, { trySneak: false }); ss.begin();
   const e = ss.order.find((o) => o.al === ly && !o.done);
@@ -221,7 +221,7 @@ const foesIn = (ord) => ord.filter((o) => o.side === "foe");
 }
 // ---------------------------------------------------------------- 7. Polish
 { const strs = ["Beta is skipped and keeps their guard up.", "Beta lost the connection and keeps their guard up.", "Whole turn order", "Shared turn", "Next round, if nothing changes", "Turn order", "Skip Beta", "Beta, Ceta are choosing…",
-    "Bandit is stunned and loses this turn", "Bandit is frozen solid and loses this turn, then thaws", "You get back on your feet (one move)", "Staggered: moved back 2 places", "A smarter turn order"];
+    "Bandit is stunned and loses this turn", "Bandit is frozen solid and loses this turn, then thaws", "You get back on your feet (1 AP)", "Staggered: moved back 2 places", "A smarter turn order"];
   const pl = (t) => { c.__lang = "pl"; try { return c.I18N && c.I18N.tr ? c.I18N.tr(t) : null; } finally { c.__lang = "en"; } };
   const miss = strs.filter((t) => !pl(t) || pl(t) === t);
   ok(miss.length === 0, "Polish for the new words: missing " + miss.join(" | "));

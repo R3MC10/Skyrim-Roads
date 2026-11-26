@@ -1,5 +1,5 @@
 /* Turn-based fights with initiative; every hero turn has 3 action points (AP). [OURS module]
-   [Combat step 3, build 349] On your turn you have 3 AP. Each move costs AP and also stamina, magicka or health:
+   [Combat step 3, build 350] On your turn you have 3 AP. Each move costs AP and also stamina, magicka or health:
      1 AP  attack (a dual-wield attack is one blow plus the left hand's lighter follow-up), a bow shot, guard, shield
            bash, a minor spell (Novice / Apprentice: Flames, Frostbite, Healing...), a 1-2 word shout, a potion (one a
            turn), a scroll of a minor spell, a poison, Breathe (it ends your turn), Oil flask / Mark / Cover.
@@ -13,7 +13,7 @@
    Perks (perkfx.js): Heavy Momentum (a power attack for 1 AP once a fight), Spell Weaving (a major spell for 1 AP once
    a fight), Steady Guard (more guard per AP kept). The same move again in one turn still costs 50% more.
    History: build 145 removed the old action points ("everything costs stamina or mana or health"), then a turn held 4
-   moves; build 349 brought back 3 AP a turn. The notes below are the original design, kept for history.
+   moves; build 350 brought back 3 AP a turn. The notes below are the original design, kept for history.
    Remigiusz: "Let's make fights really turn based; turn order should be initiative based. Followers and summons do their
    turns automatically." You play your own turns (with an Auto button); Athletics and Alteration make your moves cheaper,
    initiative is 1d4 + speed, rolled once a fight (initiative.js; heavy armour slows you); balanced so fights don't end quickly; party fights
@@ -35,7 +35,8 @@
    when another module provides it, otherwise the fight's own choice (Smart AI or your custom tactics). */
 const TB = (() => {
   // ------------------------------------------------------------------ numbers (tuned with tests/sim_tbfight.js)
-  const ATK_SP = { dagger: 12, fist: 10, claw: 16, sword: 18, axe: 20, mace: 20, spear: 18, staff: 16, greatsword: 26, battleaxe: 28, warhammer: 28, bow: 36, crossbow: 42 };   // stamina a plain blow takes (a full four-blow turn leaves you winded; about two a round keeps going)
+  const ATK_SP = { dagger: 12, fist: 10, claw: 16, sword: 18, axe: 20, mace: 20, spear: 18, staff: 16, greatsword: 26, battleaxe: 28, warhammer: 28, bow: 36, crossbow: 42 };   // stamina a plain blow takes (a full three-blow turn leaves you winded; about two a round keeps going)
+  const AIM_SP = 2.5;   // [threeap] a fully drawn aimed shot costs at least this many plain shots' stamina (one big arrow beats armour better than two small ones)
   const SWINGS = { dagger: 3, fist: 3, claw: 2, sword: 2, axe: 2, mace: 2, spear: 2, staff: 2, greatsword: 1.5, battleaxe: 1.5, warhammer: 1.5, bow: 1.5, crossbow: 1.2 };   // a typical turn of plain blows (foe health is sized from it)
   const AP = 3, MAX_ACTS = AP, MAX_POTS = 1, REPEAT = 0.5, SHOUT_SP = 10, DARK_HP = 0.03;   // MAX_ACTS: AP's old name (other modules and tests read it)
   const GUARD_AP = 0.1, GUARD_MAX = 0.3;   // each AP you don't spend: 10% less damage until your next turn, at most 30%
@@ -43,9 +44,9 @@ const TB = (() => {
   const HIT_CAP = 0.4;          // max share of a strong target's health one blow can take
   /* foe toughness and actions per round, by kind of foe (tuned with the sim in tests/test_tbfight.js) */
   const T = { hp: { normal: 2.0, tough: 2.6, boss: 3.0 }, acts: { normal: 2.4, tough: 2.5, boss: 2.5 },
-    rounds: { normal: 8, tough: 12, boss: 16 },                          // how long a fight should roughly last
+    rounds: { normal: 4, tough: 6, boss: 7 },   // how long a fight should roughly last (build 350, 3 AP: sims give medians of about 4-5 / 6 / 10-11 rounds)
     est: { k: 0.7, pool: 1, mk: 0.85, mix: 0.25, sum: 0.8 },   // [post-combat2] share of the damage your stamina / magicka pays for in a round that foe health is sized for
-    min: { normal: 1.2, tough: 1.5, boss: 1.8 }, max: { normal: 7, tough: 9, boss: 10 } };   // bounds on the health boost
+    min: { normal: 1, tough: 1.2, boss: 1.3 }, max: { normal: 7, tough: 9, boss: 10 } };   // bounds on the health boost
   const FOE_HP = T.hp.normal;
   const PARTY_HP = 0.45;        // +45% foe health per extra real player in the fight (shared out over the extra foes below)
   const MAX_FOES = 6;           // [OURS] a party meets one foe per hero, one after another (like dungeon rooms), at most 6; bosses stay alone
@@ -79,7 +80,10 @@ const TB = (() => {
     if (typeof MOUNTFIGHT !== "undefined" && MOUNTFIGHT.owns(a)) return MOUNTFIGHT.cost(f, a);   // getting on / off your horse (mountfight.js)
     const s = f.s, [k, arg] = a.split(":");
     if (a === "attack") return { sp: ATK_SP[f.wt] || 9 };
-    if (a === "power_attack") return { sp: f.paCost || 0, eng: { sp: f.paCost || 0 } };
+    if (a === "power_attack") {   // [threeap] a fully drawn aimed shot takes at least two shots' stamina (light bows made it cheaper than two arrows)
+      const pa = f.wt === "bow" || f.wt === "crossbow" ? Math.max(f.paCost || 0, AIM_SP * (ATK_SP[f.wt] || 9)) : f.paCost || 0;
+      return { sp: pa, eng: { sp: f.paCost || 0 } };
+    }
     if (a === "block") { const c = F.BLOCK_STAMINA * Math.max(0, 1 - (typeof PFX !== "undefined" ? Math.min(1, PFX.sum(s, "blockcost", f, {})) : 0)); return { sp: c, eng: { sp: c } }; }
     if (a === "bash") { const c = typeof SHIELDFX !== "undefined" ? SHIELDFX.cost(f) : 35; return { sp: c, eng: { sp: c } }; }
     if (k === "spell" || k === "dual") {
@@ -247,15 +251,15 @@ const TB = (() => {
           /* [post-combat2 balance] a turn holds up to 3 AP of moves paid in stamina, so what you deal a round follows your
              stamina: what comes back each round plus your pool spread over the fight, a power attack first when you can
              afford it. (A flat "two swings a turn" guess let strong heroes end fights in 3-5 rounds.) */
-          const cut = 1 - (st.spCut || 0), atk = Math.max(1, (ATK_SP[f.wt] || 9) * cut), pa = (f.paCost || 0) * cut;
+          const cut = 1 - (st.spCut || 0), atk = Math.max(1, (ATK_SP[f.wt] || 9) * cut), pa = (f.wt === "bow" || f.wt === "crossbow" ? Math.max(f.paCost || 0, AIM_SP * (ATK_SP[f.wt] || 9)) : f.paCost || 0) * cut;   // the same aimed-shot price cost() charges
           let B = f.regenSp * SP_REGEN + T.est.pool * G.maxStamina(s) / R, n = 0;
           if (ai && pa > 0 && B >= pa) { w = COMBATAI.swing(f, true); B -= pa; n = 1; }
-          w = (w + sw * clamp(B / atk, n ? 0 : 1, MAX_ACTS - n)) * T.est.k;
+          w = (w + sw * clamp(B / atk, n ? 0 : 1, MAX_ACTS - 2 * n)) * T.est.k;   // [threeap] a power attack takes 2 of the 3 AP
         } else w = sw * (SWINGS[f.wt] || 2) * 0.8;
       } catch (e) { w = 0; }
       for (const id of s.spells || []) {
         const sp = D.SPELLS[id]; if (!sp || sp.kind !== "damage") continue;
-        try { const d = G.spellDamage(s, sp), c = Math.max(1, G.spellCost(s, sp)), casts = clamp((f.regenMp * MP_REGEN + T.est.pool * f.mp / R) / c, 1, MAX_ACTS - 1); m = Math.max(m, d * casts * T.est.mk); } catch (e) { /* skip */ }   // casts a round your magicka pays for (like stamina above)
+        try { const d = G.spellDamage(s, sp), c = Math.max(1, G.spellCost(s, sp)), casts = clamp((f.regenMp * MP_REGEN + T.est.pool * f.mp / R) / c, 1, BIG.has(tierOf(id, sp)) ? 1 : MAX_ACTS - 1); m = Math.max(m, d * casts * T.est.mk); } catch (e) { /* skip */ }   // casts a round your magicka pays for (like stamina above)
       }
       let sm = 0;   // a summon you can afford fights beside you
       for (const id of s.spells || []) { const sp = D.SPELLS[id]; if (!sp || sp.kind !== "summon" || !G.spellSummon) continue; try { if (G.spellCost(s, sp) <= f.mp) sm = Math.max(sm, G.spellSummon(s, sp, f).dmg || 0); } catch (e) { /* skip */ } }
@@ -514,6 +518,18 @@ const TB = (() => {
       if (this.myActs >= this.st.acts || !this.anyAffordable()) return this.endTurn(true);
       return { turn: "me" };
     }
+    /* the AI's pick can't be paid (a 2 AP move with 1 AP left, no magicka): the hardest-hitting move you can still pay
+       for, a plain blow or a damage spell (a mage's fists aren't worth a turn's last AP when a firebolt is there) */
+    fallback() {
+      const f = this.f; let best = null, bd = -1;
+      try { if (this.canAfford("attack")) { best = "attack"; bd = typeof COMBATAI !== "undefined" && COMBATAI.swing ? COMBATAI.swing(f, false) : f.weaponDamage(); } } catch (e) { /* a plain blow it is */ }
+      for (const id of f.s.spells || []) {
+        const sp = D.SPELLS[id]; if (!sp || sp.kind !== "damage" || !this.canAfford("spell:" + id)) continue;
+        let d = 0; try { d = G.spellDamage(f.s, sp); } catch (e) { d = sp.amount || 0; }
+        if (d > bd) { bd = d; best = "spell:" + id; }
+      }
+      return best;
+    }
     anyAffordable() { return ["attack", "block", "potion:health"].some((a) => this.canAfford(a)) || (this.f.s.spells || []).some((id) => this.canAfford("spell:" + id)); }
     /* AP you didn't spend become guard until your next turn: 10% less damage per AP (30% with all 3 kept);
        Steady Guard adds 5% per AP, up to 10% more */
@@ -542,7 +558,7 @@ const TB = (() => {
         f.aiPickWhy = "";
         let a = aiPick(f, "me");
         const a0 = a;   // the AI's own pick, before the fight tricks below swap it
-        if (!this.canAfford(a)) a = this.canAfford("attack") ? "attack" : null;
+        if (!this.canAfford(a)) a = this.fallback();   // [threeap] a 2 AP move with 1 AP left: the best 1 AP hit instead
         if (typeof STRAT !== "undefined") a = STRAT.ai(this, a);   // cash in openings, catch your breath
         if (typeof REACT !== "undefined") a = REACT.ai(this, a);   // set up and cash in combos
         if (f.bf && typeof BOSSFIGHT !== "undefined") a = BOSSFIGHT.ai(this, a);   // answer a big attack that's coming
@@ -620,7 +636,8 @@ const TB = (() => {
       }
       // [threeap] the host has the last word on AP: a turn that says it spent more than 3 only lands its share of 3,
       // and the guard it keeps can't be more than its unspent AP give
-      const spent = Math.max(0, +r.ap || 0), apK = spent > AP ? AP / spent : 1, kept = AP - Math.min(AP, spent);
+      const moves = (r.ev || []).filter((e) => e && e.a && e.a !== "end" && e.a !== "flee").length;   // every move they report took 1 AP at least
+      const spent = Math.max(0, +r.ap || 0, moves), apK = spent > AP ? AP / spent : 1, kept = AP - Math.min(AP, spent);
       if (sameFoe && typeof r.e0 === "number" && typeof r.ehp === "number") f.ehp = b - clamp((r.e0 - r.ehp) * apK, 0, Math.max(0, b));
       if (typeof r.hp === "number" && typeof r.hp0 === "number") { if (r.hpMax > 0) al.maxHp = r.hpMax; al.hp = clamp((al.hp || 0) + (r.hp - r.hp0), 1, al.maxHp || Math.max(al.hp || 1, r.hp)); }
       al.tbGuard = clamp(+r.guard || 0, 0, al.s ? guardFor(al.s, kept) : Math.min(GUARD_MAX + 0.1, GUARD_AP * kept + Math.min(0.1, 0.05 * kept)));
@@ -1397,5 +1414,5 @@ const TB = (() => {
 
   /* sharedfight.js: open a teammate's view of a fight, and redraw it when the leader's phone sends news */
   function redraw(sess, state) { if (ui && ui.sess === sess && open) render(state || sess.advance()); }
-  return { T, sceneLines, stats, cost, preview, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, play, redraw, fightState, voice, FOE_KEYS, BUFF_KEYS, costTxt, costHTML, base, close: () => { if (open) close(); }, abort, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, ATK_SP, MAX_ACTS, MAX_POTS, REPEAT, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
+  return { T, sceneLines, stats, cost, preview, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, play, redraw, fightState, voice, FOE_KEYS, BUFF_KEYS, costTxt, costHTML, base, close: () => { if (open) close(); }, abort, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, ATK_SP, AP, GUARD_AP, GUARD_MAX, apOf, guardFor, MAX_ACTS, MAX_POTS, REPEAT, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
 })();
