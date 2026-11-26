@@ -277,7 +277,7 @@ const IMM = (() => {
     "Donate to the Hall of the North to help it grow.",
     "Clans can capture whole holds in the war.",
     "Arena bouts in Windhelm can win you a stake.",
-    "When you die, your bag stays where you fell for a while.",
+    "Lose a fight and you lose nothing: retry, change your gear or retreat.",
     "Bounties are per hold. Pay them at a guard or lie low elsewhere.",
     "A fence buys stolen goods. Ask in the Ragged Flagon.",
     "Arrows are used up in fights. Some can be picked up again.",

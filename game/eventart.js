@@ -423,7 +423,7 @@ const EVENTART = (() => {
   /* which vignette (if any) fits a popup: by its title, then by words in its text */
   function storyKind(title = "", text = "") {
     const t = String(title), x = String(text);
-    if (/^You died/i.test(t)) return null;
+    if (/^(You died|Knocked down)/i.test(t)) return null;
     const ak = typeof AFFL !== "undefined" && AFFL.storyKind ? AFFL.storyKind(t, x) : null; if (ak) return ak;   // afflictions: their exact catch and cure lines (afflictions.js)
     const sk = typeof SOLART !== "undefined" ? SOLART.storyKind(t, x) : null; if (sk) return sk;   // Solstheim's scenes (solart.js)                              // UIART.death already draws this
     const wk = typeof DWART !== "undefined" ? DWART.storyKind(t, x) : null; if (wk) return wk;   // the Dwemer line and Blackreach (dwart.js)

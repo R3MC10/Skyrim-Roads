@@ -5623,6 +5623,28 @@ html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),
 .prs-sheet .scene{margin:4px 0 8px}
 .prs-sheet .grid2 .btn{min-height:44px}
 .prs-hint .sub{margin:0}
+/* defeat screen: Retry / Adjust gear / Retreat, nothing lost (defeat.js) */
+.dft{position:fixed;inset:0;z-index:75;display:flex;align-items:center;justify-content:center;padding:16px 16px calc(16px + env(safe-area-inset-bottom));background:rgba(6,7,9,.86) radial-gradient(80% 60% at 50% 35%,rgba(90,24,20,.35),transparent);overflow:auto;color:var(--ink)}
+.dft-card{width:100%;max-width:560px;background:linear-gradient(180deg,rgba(27,30,34,.97),rgba(14,15,18,.97));border:1px solid var(--line);border-top:2px solid var(--ember);border-radius:4px;padding:18px 18px 14px;box-shadow:0 12px 40px rgba(0,0,0,.6)}
+.dft-card h2{margin:0 0 4px;text-align:center;letter-spacing:.18em;text-transform:uppercase;color:var(--ember);font-size:1.5rem}
+.dft-foe{margin:0 0 8px;text-align:center;color:var(--mute)}.dft-foe b{color:var(--ink)}
+.dft-why{margin:0 0 6px;padding:8px 10px;border-left:3px solid var(--ember);background:rgba(214,90,74,.08);font-size:.95rem}
+.dft-tip{margin:0 0 6px}
+.dft-safe{margin:6px 0 10px;color:var(--gold);font-size:.9rem;text-align:center}
+.dft-diff{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 12px;justify-content:center}.dft-diff>span{font-size:.82rem;color:var(--mute);width:100%;text-align:center}
+.dft-chip{min-height:36px;padding:4px 14px;border-radius:18px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font:inherit;font-size:.85rem;cursor:pointer}
+.dft-chip.on{border-color:var(--gold);background:rgba(226,187,100,.16);color:var(--gold)}
+.dft-diffnote{text-align:center;margin:0 0 10px}
+.dft-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.dft-b{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:72px;padding:8px;text-align:center;white-space:normal}
+.dft-b b{font-size:1rem}.dft-b small{font-size:.74rem;color:var(--mute);line-height:1.25;font-weight:normal}.dft-b.pri small{color:inherit;opacity:.85}
+.dft-b.on{outline:2px solid var(--gold)}.dft-tl{font-size:.72rem;color:var(--gold)}
+.dft-vote{margin:0 0 8px;text-align:center;font-size:.88rem;color:var(--mute)}.dft-vote .num{color:var(--gold);margin-left:4px}
+.dft-now{width:100%;margin-top:8px}.dft-res{text-align:center;color:var(--gold);margin:8px 0 0}
+.dfbar{position:fixed;left:0;right:0;bottom:0;z-index:76;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;padding:8px 16px calc(8px + env(safe-area-inset-bottom));background:rgba(10,11,13,.95);border-top:1px solid var(--ember)}
+.dfbar span{color:var(--mute);font-size:.85rem}.dfbar .btn{min-height:44px;min-width:110px}
+@media (max-width:520px){.dft-btns{grid-template-columns:1fr}.dft-b{min-height:56px}.dft-card{padding:14px 12px 12px}}
+@media (min-width:1200px){.dft-card{max-width:640px;padding:24px 26px 18px}.dft-card h2{font-size:1.8rem}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -5709,6 +5731,7 @@ html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),
 <script src="tbfight.js"></script>
 <script src="sharedfight.js"></script>
 <script src="noautoplay.js"></script>
+<script src="defeat.js"></script>
 <script src="foegroups.js"></script>
 <script src="dragons.js"></script>
 <script src="foekit.js"></script>
@@ -6066,6 +6089,7 @@ html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),
 <script src="i18n_dollrig2.js"></script>
 <script src="i18n_difficulty.js"></script>
 <script src="i18n_perkreset.js"></script>
+<script src="i18n_defeat.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

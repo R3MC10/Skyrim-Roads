@@ -1464,7 +1464,6 @@ const I18N_STORY = {
 "Donate to the Hall of the North to help it grow.": "Wspieraj Salę Północy datkami, żeby rosła.",
 "Clans can capture whole holds in the war.": "Klany mogą w wojnie zdobywać całe włości.",
 "Arena bouts in Windhelm can win you a stake.": "Walki na arenie w Windhelm mogą przynieść ci wygraną.",
-"When you die, your bag stays where you fell for a while.": "Gdy zginiesz, twoja torba przez jakiś czas zostaje tam, gdzie padłeś.",
 "Bounties are per hold.": "Nagrody za głowę są osobne w każdej włości.",
 "Pay them at a guard or lie low elsewhere.": "Zapłać strażnikowi albo przyczaj się gdzie indziej.",
 "A fence buys stolen goods.": "Paser kupuje kradzione rzeczy.",

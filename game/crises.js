@@ -418,7 +418,7 @@ const CRISES = (() => {
       out.gold = Math.round(10 + 2 * (s.level || 1)); s.gold += out.gold; out.relief = rl;
       out.text = T("{what}: done. The steward pays {g} gold. (+{r} relief)", { what: name, g: out.gold, r: rl });
     } else if (f.hp <= 0) {
-      const d = G.die(s, ch.foe.name, t); out.died = d.msg; out.bag = d.bag;
+      const d = G.die(s, ch.foe.name, t); out.died = d.msg;
       out.text = T("You're beaten. Someone else will have to finish the job.");
     } else out.text = T("They got away this time. Try again in a moment.");
     dirty();
@@ -456,7 +456,7 @@ const CRISES = (() => {
       out.text = T("{boss} falls! The crisis in {hold} is over and the Jarl's people cheer.", { boss: ch.boss.name, hold: cr.hold });
       out.title = T("Victory");
     } else if (f.hp <= 0) {
-      const d = G.die(s, ch.boss.name, t); out.died = d.msg; out.bag = d.bag;
+      const d = G.die(s, ch.boss.name, t); out.died = d.msg;
       out.text = T("{boss} is too strong this time. Heal up and try again.", { boss: ch.boss.name });
     } else out.text = T("{boss} slips away into the crowd. Try again in a moment.", { boss: ch.boss.name });
     dirty();

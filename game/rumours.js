@@ -172,7 +172,7 @@ const RUMOURS = (() => {
     }
     const e = foeFor(s, lead);
     const f = new G.Fight(s, e, null, t); f.run({ t }); const skills = f.apply(t);
-    if (!f.won) { const d = G.die(s, e.name, t); return done({ text: `${e.name} was too much for you.`, fight: f, died: d.msg, bag: d.bag, skills }); }
+    if (!f.won) { const d = G.die(s, e.name, t); return done({ text: `${e.name} was too much for you.`, fight: f, died: d.msg, skills: d.rolledBack ? [] : skills }); }
     const g = (lead.kind === "rescue" ? 80 : 50) + 8 * s.level + rint(0, 40); s.gold += g;
     const loot = G.rollLoot ? G.rollLoot(s, e) : [];
     if (lead.kind === "lights") loot.push(...giveLoot(s, LOOT.lights, 1));

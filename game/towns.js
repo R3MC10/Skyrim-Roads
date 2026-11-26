@@ -356,7 +356,7 @@ const TOWNS = (() => {
     // resist
     const guard = typeof GUARDS !== "undefined" ? GUARDS.foe(s, g.hold) : G.scaleEnemy({ name: "City guard", health: 140, damage: 19, tags: ["humanoid", "elite", "guard"], level: s.level, danger: "high", gold: [0, 0], text: "", guard: true }, s.level);   // always your level; no XP, gold or loot
     const f = new G.Fight(s, guard, null, t); f.run({ t, enemyFirst: true }); const skills = f.apply(t);
-    if (!f.won) { const d = G.die(s, "city guard", t); return { text: "\"Then pay with your blood.\"", fight: f, died: d.msg, bag: d.bag, skills }; }
+    if (!f.won) { const d = G.die(s, "city guard", t); return { text: "\"Then pay with your blood.\"", fight: f, died: d.msg, skills: d.rolledBack ? [] : skills }; }
     addBounty(s, g.hold, "assault"); s.resisted[g.hold] = true;
     return { text: `You beat the guard. The whole ${g.hold} will hear about this: shops, inns and trainers here won't deal with you until your bounty is cleared.`, fight: f, skills };
   }

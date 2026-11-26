@@ -194,7 +194,9 @@ const SHAREDFIGHT = (() => {
     if (!S || f.s !== S) return;
     f.allies = []; f._downed = []; f.followerDown = null; f.thrallFought = false;
     let msgs = [];
-    try { msgs = f.apply() || []; } catch (e) { console.warn("shared fight result", e); }
+    // a lost party fight costs nothing (defeat.js): your save never takes its results, so you just get back up as you were
+    if (sess.how !== "lost") { try { msgs = f.apply() || []; } catch (e) { console.warn("shared fight result", e); } }
+    else msgs = ["You lose nothing: the party votes on what to do next."];
     if (hooks.persist) hooks.persist(true);
     const head = sess.how === "won" ? "Victory! " : sess.how === "lost" ? "The party was beaten. " : "";
     if (hooks.toast) hooks.toast(head + (msgs.slice(0, 2).join(" ") || (sess.how === "broke" ? "The fight broke off." : "")));

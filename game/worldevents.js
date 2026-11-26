@@ -189,7 +189,7 @@ const WORLDEV = (() => {
     if (f.won) { out.gold = rint(...e.gold); s.gold += out.gold; out.loot = G.rollLoot(s, e); }
     const after = gates(ev, s).list[i];
     if (!before.closed && after.closed) { m.c[i] = 1; out.closedNow = true; }
-    if (f.hp <= 0) { const d = G.die(s, "daedra", t); out.died = d.msg; out.bag = d.bag; }
+    if (f.hp <= 0) { const d = G.die(s, "daedra", t); out.died = d.msg; }
     out.text = f.won
       ? `The ${e.name} falls back into the fire. The gate at ${ev.sites[i]} weakens (+${pts}).` + (out.closedNow ? ` With a roar of flame the gate collapses: ${ev.sites[i]} is safe!` : "")
       : out.died ? `The ${e.name} drags you down. The gate still burns.` : `You hold the ${e.name} off but it slips back through the gate (+${pts}).`;
@@ -248,7 +248,7 @@ const WORLDEV = (() => {
       const bones = 1 + Math.round(pfx(s, "wevbone"));
       G.give(s, "dragon_bone", bones); out.loot = [`Dragon Bone${bones > 1 ? ` ×${bones}` : ""}`, "an extra dragon soul"];
     }
-    if (f.hp <= 0) { const d = G.die(s, "dragon", t); out.died = d.msg; out.bag = d.bag; }
+    if (f.hp <= 0) { const d = G.die(s, "dragon", t); out.died = d.msg; }
     out.text = f.won ? `The ${e.name.toLowerCase()} crashes into the hills of ${ev.hold}. Its soul rushes into you, and with the flight so close, a second one follows.`
       : out.died ? `The ${e.name.toLowerCase()}'s breath takes you.` : `The ${e.name.toLowerCase()} climbs out of reach and rejoins the flight.`;
     return out;

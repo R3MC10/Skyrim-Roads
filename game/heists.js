@@ -253,7 +253,7 @@ const HEISTS = (() => {
     f.run({ t, trySneak: false });
     const skills = f.apply(t);
     const won = !!(f.won && f.hp > 0);
-    if (!won) { try { G.setHealth(s, Math.max(1, Math.round(G.maxHealth(s) * 0.2)), t); } catch { /* fine */ } }   // knocked down and dragged out, never killed
+    if (!won) { const d = G.die(s, e.name, t, true); return { f, won, skills: d.rolledBack ? [] : skills, died: d.msg }; }   // knocked down, never caught for it: no penalty (defeat.js)
     return { f, won, skills };
   }
   const goStage = (r, n) => { r.stage = n; };
@@ -306,7 +306,7 @@ const HEISTS = (() => {
           const fo = fight(s, r, false, t); fightOut = fo;
           ok = fo.won;
           if (ok) { raise(s, r, 30); text = "The guard goes down. The way is open, but the house will know someone was here."; }
-          else { r.last = "The guard beats you down and calls for the watch."; const res = finish(s, "caught", t); return { text: r.last, ok: false, fight: fo.f, skills: fo.skills, end: true, res }; }
+          else { r.last = "The guard knocks you down, but you slip back into the dark before anyone comes. Nothing is lost: try again or pick another way."; return { text: r.last, ok: false, fight: fo.f, skills: fo.skills, died: fo.died }; }
         } else {
           ok = Math.random() < info.chance;
           xp(r, "Two-Handed", 4);
@@ -334,7 +334,8 @@ const HEISTS = (() => {
       r.route = key;
       if (key === "fight") {
         const fo = fight(s, r, true, t); fightOut = fo; ok = fo.won;
-        text = ok ? "You fight your way to the gate and lose them in the streets." : "There are too many of them. They drag you down.";
+        if (!ok) { r.last = "There are too many of them and they knock you down, but you crawl back into hiding. Nothing is lost: try again or pick another way out."; return { text: r.last, ok: false, fight: fo.f, skills: fo.skills, died: fo.died }; }
+        text = "You fight your way to the gate and lose them in the streets.";
       } else {
         const info = escInfo(s, r, key);
         xp(r, key === "calm" ? "Speechcraft" : key === "roofs" ? (sk(s, "Acrobatics") >= sk(s, "Athletics") ? "Acrobatics" : "Athletics") : "Sneak", 10);

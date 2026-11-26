@@ -1,5 +1,5 @@
-// Deep expeditions and difficulty tiers (deepdelve.js): descend / rest / extract, knocked out loses only the expedition's
-// unsecured finds (never gear or what you brought in), Pathfinder, tier picker (level 30+), weekly modifiers, their effects
+// Deep expeditions and difficulty tiers (deepdelve.js): descend / rest / extract, knocked down loses nothing (defeat.js,
+// 25 Nov 2026: no defeat penalty; you stay in front of the room with your finds), Pathfinder, tier picker (level 30+), weekly modifiers, their effects
 // in fights, tier and depth scaling, no one-shots, the perks, the Polish. W=/path/to/game/ node test_deepdelve.js
 const fs = require("fs"), path = require("path"), vm = require("vm");
 const W = process.env.W || path.join(__dirname, "../game/");
@@ -88,7 +88,7 @@ ok(d.deep.rations === rat - 1 || /found your camp/.test(r.text) || r.died, "rest
 ok(r.died || G.curHealth(s) > h0, "resting heals: " + r.text);
 if (!s.dungeon) { s = null; }
 
-// ---- knocked out on level II: the expedition's finds are lost, gear and what you brought in are safe
+// ---- knocked down on level II: nothing is lost (no defeat penalty), you stay down there with your finds
 if (s) {
   r = DUNGEONS.act(s, "descend");
   ok(d.deep.level === 2, "descend to level II");
@@ -98,10 +98,11 @@ if (s) {
     s.dungeon.room.enemy.damage = 9999; G.setHealth(s, 1);
     // no potions in reach so the fight is lost
     const pots = s.inv.filter((x) => /potion/.test(D.ITEMS[x.item]?.id || x.item)).map((x) => [x.id, x.qty]); for (const [id, q] of pots) G.take(s, id, q);
+    const goldPre = s.gold, found = s.dungeon.deep.snap ? s.gold - goldBefore : 0;
     r = DUNGEONS.act(s, "fight");
-    ok(r.knockedOut && !s.dungeon, "knocked out: carried out of the dungeon: " + (r.died || r.text));
-    ok(/lost in the dark|found nothing/.test(r.died || ""), "the message says the finds are lost");
-    ok(s.gold === goldBefore, "gold back to what you brought in: " + s.gold + " vs " + goldBefore);
+    ok(r.knockedOut && s.dungeon?.deep?.level === 2, "knocked down: still on level II: " + (r.died || r.text));
+    ok(/You lose nothing/.test(r.died || ""), "the message says nothing is lost: " + r.died);
+    ok(s.gold === goldPre && found >= 0, "the expedition's finds are kept: " + s.gold + " vs " + goldPre);
     ok(s.inv.some((x) => x.id === swordId) && G.equipment(s).weapon, "your sword is still yours and still in hand");
     ok(G.curHealth(s) > 0 && !s.dead, "knocked out, not dead");
     ok(!s.graves?.length && !s.bag, "no grave, no dropped bag");
@@ -240,7 +241,8 @@ ok(PERKS.BY_ID.long_strider && PERKS.BY_ID.stealth && PERKS.BY_ID.apprentice_loc
     "You climb all the way back up and out. Everything you found down there is yours now (340 gold, 3 things).",
     "You go down to level IV: the cursed sanctuary.  Sanctuary's mark: Healing is 30% weaker.",
     "You eat a ration and rest a while (120 → 260 health, 1 injury left). Curses stay until you climb out.",
-    "Knocked out by the draugr deathlord on level II. You come to at the door of Bleak Falls Barrow, dragged out by luck or by friends. The expedition's finds (340 gold and 3 things) are lost in the dark. Your gear and everything you brought in are safe.",
+    "The draugr deathlord knocked you down. You lose nothing: everything is as it was before the fight, so try again or go another way.",
+    "Knocked down below, you lose nothing: try the fight again. Leave without extracting and the finds stay down here.",
     " the cold bites −12", " it rises again!", "Dungeon Veteran", "Pathfinder", "Deep Delver", "Deep expeditions and harder dungeons",
     "Health, potions and injuries carry down with you. Down there, loot is unsecured until you extract.",
   ];
