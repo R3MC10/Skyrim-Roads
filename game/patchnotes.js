@@ -3,19 +3,19 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b359-wrists", build: 359, date: "26 Nov 2026", title: "Wrists that bend like wrists", items: [
-      "Painted fighters' wrists look right: the glove or sleeve cuff now follows the forearm and bends smoothly into the hand, instead of a corner of the cuff sticking out past the sleeve.",
-      "Hands no longer bend further than a real wrist can, and a hand never snaps from one side to the other between frames.",
-      "An open hand (casting a spell, lying knocked down) now lies straight along the arm instead of twisting toward a weapon it isn't holding.",
-      "A bow or staff at rest eases into its swing instead of jumping when the attack starts.",
-    ] },
-    { id: "b358-trading", build: 358, date: "26 Nov 2026", title: "Trade face to face, and one market board for every town", items: [
+    { id: "b360-trading", build: 360, date: "26 Nov 2026", title: "Trade face to face, and one market board for every town", items: [
       "Standing in the same place as another player? Tap Trade (in Travellers, your party list or a friend's row) and, once they say yes, a trade window opens for you both.",
       "You both put in things and gold, press Ready, check what the other side offers, then both press Confirm and the swap happens at once. Any change un-readies you both, and you'll see a clear warning if they change their offer.",
       "Every thing shows its real icon, rarity colour, forge level, stats and how many, and the window warns you when you'd get nothing back or a lot less than you give.",
       "What you offer is held safely until the trade ends: you can't wear, sell or craft it meanwhile. Worn gear has to come off first, and bound things can't be traded. If someone drops out before confirming, everything goes back after 30 seconds.",
       "The Market stalls have a new Market board: every player stall in every town in one list, with search, type and rarity filters and sort by price or newest. Buy from any town; what you buy waits in your Market parcels, which you open in any town with a market.",
       "Sellers still get their gold the same way, less the market's 5%. Courier offers to friends far away work as before.",
+    ] },
+    { id: "b359-wrists", build: 359, date: "26 Nov 2026", title: "Wrists that bend like wrists", items: [
+      "Painted fighters' wrists look right: the glove or sleeve cuff now follows the forearm and bends smoothly into the hand, instead of a corner of the cuff sticking out past the sleeve.",
+      "Hands no longer bend further than a real wrist can, and a hand never snaps from one side to the other between frames.",
+      "An open hand (casting a spell, lying knocked down) now lies straight along the arm instead of twisting toward a weapon it isn't holding.",
+      "A bow or staff at rest eases into its swing instead of jumping when the attack starts.",
     ] },
     { id: "b357-riglayers", build: 357, date: "26 Nov 2026", title: "Shields and weapons sit right in your hands", items: [
       "Painted fighters hold together better: a raised shield now sits in front of your hero, with the weapon arm behind it, instead of a hand and sword floating over the shield's face.",

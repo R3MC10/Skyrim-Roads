@@ -1,5 +1,5 @@
 /* i18n_trading.js: Polish for the live trade window (tradewin.js), the market board and parcels (mktboard.js, market.js),
-   the texts around them that changed, and patch note b358. Loaded before i18n.js; exact lines go in I18N_EXTRA.words,
+   the texts around them that changed, and patch note b360. Loaded before i18n.js; exact lines go in I18N_EXTRA.words,
    lines with names or numbers in I18N_EXTRA.pat. */
 var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 (() => {
@@ -54,7 +54,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     // ---- texts that now mention face-to-face trades
     "Add players as friends, send them messages, and trade face to face or by courier from anywhere.":
       "Dodawaj graczy do przyjaciół, wysyłaj im wiadomości i wymieniaj się twarzą w twarz albo przez kuriera z dowolnego miejsca.",
-    // ---- patch note b358
+    // ---- patch note b360
     "Trade face to face, and one market board for every town": "Wymiana twarzą w twarz i jedna tablica targowa dla każdego miasta",
     "Standing in the same place as another player? Tap Trade (in Travellers, your party list or a friend's row) and, once they say yes, a trade window opens for you both.":
       "Stoisz w tym samym miejscu co inny gracz? Stuknij Wymiana (w Podróżnych, na liście drużyny albo przy przyjacielu), a gdy się zgodzi, otworzy się okno wymiany dla was obojga.",
