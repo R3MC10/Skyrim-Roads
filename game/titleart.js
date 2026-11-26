@@ -192,7 +192,7 @@ const TITLEART = (() => {
       if (!reduce && (document.hidden || ts - last < 29)) { raf = requestAnimationFrame(frame); return; }
       if (!reduce) later();
       last = ts;
-      try { draw(ts); } finally { try { opts.onFrame?.(ts); } catch (e) { /* the fog is optional */ } }
+      try { if (!cv.dataset.rest) draw(ts); } finally { try { opts.onFrame?.(ts); } catch (e) { /* the fog is optional */ } }
     }
     function draw(ts) {
       const a = performance.now(), t = (ts - t0) / 1000;

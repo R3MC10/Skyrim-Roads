@@ -234,6 +234,7 @@
       el.addEventListener("change", onSettingsInput);
       const fog = startFog();   // the fog and snow are painted in step with the panorama behind them (one wake-up per frame)
       try { titleStop = TITLEART.start($("#tanim"), { reduce: reduceMotion, onFrame: fog }); } catch (e) { console.warn("title art", e); fog.loop(); }
+      try { if (typeof TITLEVIDEO !== "undefined") TITLEVIDEO.attach(el); } catch (e) { /* the panorama stays */ }
       setTimeout(shineRest, 300);
       /* [smallpolish] the version and world line lives in Settings now, not under the title */
       const foot = async () => { if (!$("#title")) return; const t = `${await versionText()} · ${worldText()}`, v = $("#tver"); if (v) v.textContent = t; setTimeout(foot, 3000); };

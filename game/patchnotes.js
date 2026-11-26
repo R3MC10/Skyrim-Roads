@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b362-titlevideo", build: 362, date: "26 Nov 2026", title: "A living main menu", items: [
+      "On phones, the main menu is now a moving painting: northern lights ripple over the valley, snow drifts down and the hero's cloak stirs in the wind.",
+      "It comes with its own quiet music and the sound of the wind.",
+    ] },
     { id: "b361-rows", build: 361, date: "26 Nov 2026", title: "Front and back rows", items: [
       "Groups of foes now stand on the field together, in a front row and a back row. A strip over the fight shows both rows: tap a foe (or press [ and ] on PC) to aim at it.",
       "Blades, shield bashes and power attacks reach only the front row while anyone stands there. Bows, thrown things and spells you aim reach both rows. A foe you can't reach yet is greyed out and says why.",
