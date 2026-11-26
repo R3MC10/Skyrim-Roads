@@ -1,18 +1,88 @@
-/* uinordic.js: the Nordic UI look's little helper. [OURS]
-   The bronze slider track (index.html, [uinordic]) is gold up to the knob: each range input carries how full it is
-   in --fill. Set on every input and whenever new sliders appear on screen. */
+/* uinordic.js: the Nordic UI look's moving parts. [OURS]
+   Sliders: the track is gold up to the knob (--fill). The knob is two layers like the menu compass: a still bronze ring
+   and a star that rolls as you drag it (faster drag, faster spin) and coasts to a stop when you let go. A quick drag
+   throws gold sparks, the gold part of the track warms for a moment, and a soft metal tick plays every few steps.
+   The real <input type=range> stays underneath (keys, screen readers, the game's own handlers); its own thumb is hidden
+   only while the knob pictures are loaded. No spin, sparks or glow when the game's Motion setting is off or the phone
+   asks for reduced motion. */
 const UINORDIC = (() => {
-  const fill = (el) => {
-    const min = +el.min || 0, max = el.max === "" ? 100 : +el.max, v = +el.value;
-    el.style.setProperty("--fill", (max > min ? ((v - min) / (max - min)) * 100 : 0).toFixed(1) + "%");
-  };
-  const scan = (root) => { try { root.querySelectorAll?.("input[type=range]").forEach(fill); } catch (e) { /* never break the game */ } };
+  const calm = () => { try { return typeof MOTION !== "undefined" ? !MOTION.on() : matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
+  const lite = () => { try { return typeof MOTION !== "undefined" && MOTION.lite(); } catch (e) { return false; } };
+  const frac = (el) => { const min = +el.min || 0, max = el.max === "" ? 100 : +el.max; return max > min ? Math.min(1, Math.max(0, (+el.value - min) / (max - min))) : 0; };
+  const fill = (el) => el.style.setProperty("--fill", (frac(el) * 100).toFixed(1) + "%");
+  const knobs = new Map();   // input → { k, star, ang, vel, last, raf, tickAt, glowT }
+
+  /* put the knob over the slider's thumb */
+  function place(el, K) {
+    const p = el.offsetParent; if (!p) return;
+    const r = el.getBoundingClientRect(), pr = p.getBoundingClientRect(), S = 32;
+    const x = r.left - pr.left + p.scrollLeft + S / 2 + frac(el) * (r.width - S), y = r.top - pr.top + p.scrollTop + r.height / 2;
+    K.k.style.transform = `translate(${(x - S / 2).toFixed(1)}px,${(y - S / 2).toFixed(1)}px)`;
+  }
+  function knobFor(el) {
+    let K = knobs.get(el);
+    if (K && K.k.isConnected) return K;
+    const p = el.parentElement; if (!p) return null;
+    if (getComputedStyle(p).position === "static") p.style.position = "relative";
+    const k = document.createElement("span"); k.className = "uiknob"; k.setAttribute("aria-hidden", "true");
+    k.innerHTML = '<i class="uik-ring"></i><i class="uik-star"></i>';
+    p.appendChild(k);
+    K = { k, star: k.lastChild, ang: 0, vel: 0, last: null, raf: 0, tickAt: frac(el), glowT: 0 };
+    knobs.set(el, K); place(el, K);
+    return K;
+  }
+  function spin(K) {
+    if (K.raf) return;
+    const step = () => {
+      K.ang += K.vel; K.vel *= 0.9;   // coasts to a stop
+      K.star.style.transform = `rotate(${K.ang.toFixed(1)}deg)`;
+      K.raf = Math.abs(K.vel) > 0.05 ? requestAnimationFrame(step) : 0;
+    };
+    K.raf = requestAnimationFrame(step);
+  }
+  function sparks(el, K, speed) {
+    const n = Math.min(lite() ? 2 : 5, Math.floor(speed / 1.2)); if (n < 1) return;
+    const box = K.k.parentElement;
+    const kx = K.k.offsetLeft, ky = K.k.offsetTop;   // translate() doesn't move these, so read the knob's matrix
+    const m = new DOMMatrixReadOnly(getComputedStyle(K.k).transform);
+    for (let i = 0; i < n; i++) {
+      const s = document.createElement("i"); s.className = "uispark";
+      const a = Math.random() * Math.PI * 2, d = 14 + Math.random() * 22;
+      s.style.left = (kx + m.m41 + 16) + "px"; s.style.top = (ky + m.m42 + 16) + "px";
+      s.style.setProperty("--dx", (Math.cos(a) * d).toFixed(1) + "px"); s.style.setProperty("--dy", (Math.sin(a) * d - 6).toFixed(1) + "px");
+      box.appendChild(s); setTimeout(() => s.remove(), 520);
+    }
+  }
+  function moved(el) {
+    fill(el);
+    const K = knobFor(el); if (!K) return;
+    place(el, K);
+    const f = frac(el), now = performance.now();
+    // ratchet tick every 5%
+    if (Math.abs(f - K.tickAt) >= 0.05) { K.tickAt = f; try { if (typeof SOUND !== "undefined") SOUND.fx("click"); } catch (e) { /* never break the game */ } }
+    if (calm()) { K.last = { f, t: now }; return; }
+    if (K.last) {
+      const dt = Math.max(8, now - K.last.t), dfx = (f - K.last.f) * (el.getBoundingClientRect().width || 200);
+      K.vel = (dfx / 16) * 22;   // the star rolls along the track like a wheel
+      spin(K);
+      const speed = Math.abs(dfx) / dt * 16;
+      if (speed > 6) sparks(el, K, speed / 6);
+    }
+    K.last = { f, t: now };
+    el.classList.add("uiglow"); clearTimeout(K.glowT); K.glowT = setTimeout(() => el.classList.remove("uiglow"), 380);
+  }
+  const scan = (root) => { try { root.querySelectorAll?.("input[type=range]").forEach((el) => { fill(el); if (document.documentElement.classList.contains("has-ui-knob-star")) { const K = knobFor(el); if (K) place(el, K); } }); } catch (e) { /* never break the game */ } };
   function start() {
     if (typeof document === "undefined") return;
-    document.addEventListener("input", (e) => { if (e.target?.type === "range") fill(e.target); }, true);
+    const on = (e) => { if (e.target?.type === "range") moved(e.target); };
+    document.addEventListener("input", on, true);
     document.addEventListener("change", (e) => { if (e.target?.type === "range") fill(e.target); }, true);
+    document.addEventListener("pointerup", () => { for (const K of knobs.values()) K.last = null; }, true);
     let t = 0;
-    new MutationObserver(() => { if (!t) t = setTimeout(() => { t = 0; scan(document); }, 60); }).observe(document.body, { childList: true, subtree: true });
+    const later = () => { if (!t) t = setTimeout(() => { t = 0; scan(document); }, 60); };
+    new MutationObserver(later).observe(document.body, { childList: true, subtree: true });
+    addEventListener("resize", later);
+    document.addEventListener("scroll", later, true);
     scan(document);
   }
   if (typeof document !== "undefined") { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start(); }
