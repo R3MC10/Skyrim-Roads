@@ -96,6 +96,17 @@ const UINORDIC = (() => {
       setTimeout(() => b.classList.remove("uiflash"), 700);
     }));
   }
+  /* a window opening: a warm glint runs once round its bronze frame, starting at the top-left corner */
+  function frameGlint(box) {
+    if (calm() || !box || box.querySelector(":scope > .uiframeglint") || !document.documentElement.classList.contains("has-ui-frame-panel")) return;
+    const i = document.createElement("i"); i.className = "uiframeglint"; i.setAttribute("aria-hidden", "true");
+    box.appendChild(i); setTimeout(() => i.remove(), 1200);
+  }
+  function opened(n) {
+    if (n.nodeType !== 1) return;
+    const boxes = n.matches?.(".title .page:not(.still), .modal .sheet:not(.hz-fs)") ? [n] : [...(n.querySelectorAll?.(".page:not(.still), .modal .sheet:not(.hz-fs)") || [])];
+    for (const b of boxes) if (b.closest(".title, .modal")) frameGlint(b);
+  }
   function start() {
     if (typeof document === "undefined") return;
     document.addEventListener("pointerdown", (e) => { const b = e.target.closest?.(".btn"); if (b && !b.disabled) glint(b); }, true);
@@ -106,7 +117,7 @@ const UINORDIC = (() => {
     document.addEventListener("pointerup", () => { for (const K of knobs.values()) K.last = null; }, true);
     let t = 0;
     const later = () => { if (!t) t = setTimeout(() => { t = 0; scan(document); }, 60); };
-    new MutationObserver(later).observe(document.body, { childList: true, subtree: true });
+    new MutationObserver((ms) => { later(); for (const m of ms) m.addedNodes.forEach(opened); }).observe(document.body, { childList: true, subtree: true });
     addEventListener("resize", later);
     document.addEventListener("scroll", later, true);
     scan(document);

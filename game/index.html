@@ -5868,6 +5868,16 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 @media (prefers-reduced-motion:reduce){.uiglint,:root.has-ui-frame-btn .seg button.on.uiflash::after{display:none}}
 
 .title .page.still{animation:none}
+
+/* [uinordic] 8: a window opening: a warm glint sweeps once along its bronze frame from the top-left corner. A brighter
+   copy of the frame shows through a diagonal band of light that travels down and across the top of the window (a
+   fixed-size band, so tall pages like Settings get the same sweep over the part you can see). */
+:root.has-ui-frame-panel .title .page{position:relative}
+.uiframeglint{position:absolute;inset:-4px;pointer-events:none;z-index:3;border:4px solid transparent;border-image:var(--asset-frame-panel) 160 / 46px / 0 stretch;filter:brightness(2.8) saturate(1.4) drop-shadow(0 0 6px rgba(255,200,110,.9));
+  -webkit-mask:linear-gradient(125deg,transparent 42%,#000 49%,#000 51%,transparent 58%) no-repeat;mask:linear-gradient(125deg,transparent 42%,#000 49%,#000 51%,transparent 58%) no-repeat;
+  -webkit-mask-size:1100px 1100px;mask-size:1100px 1100px;animation:uiframeglint 1s cubic-bezier(.35,.1,.35,1) forwards}
+@keyframes uiframeglint{0%{-webkit-mask-position:-1100px -1100px;mask-position:-1100px -1100px;opacity:0}10%{opacity:1}85%{opacity:1}100%{-webkit-mask-position:350px 250px;mask-position:350px 250px;opacity:0}}
+@media (prefers-reduced-motion:reduce){.uiframeglint{display:none}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
