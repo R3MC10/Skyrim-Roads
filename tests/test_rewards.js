@@ -8,6 +8,7 @@ vm.createContext(c);
 const load = (f) => vm.runInContext(fs.readFileSync(__GAME + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 load("notices.js");
 load("rewards.js");
+load("rarity.js");
 vm.runInContext(`
 var n = 0; const ok = (cnd, m) => { n++; if (!cnd) throw new Error("FAIL " + m); };
 const R = REWARDS, N = NOTICES;
@@ -32,17 +33,16 @@ const R = REWARDS, N = NOTICES;
   ok(R.line([P.xp("Archery", 0.4)]) === "", "a crumb of XP alone shows nothing");
   ok(R.line([P.gold(1), P.item("A"), P.item("B"), P.item("C"), P.item("D"), P.item("E")]) === "+1 gold · A · B · C · +2 more", "a long haul is cut short");
   ok(R.line([P.gold(12345)]) === "+12,345 gold", "big numbers read easily");
-  // rarity colours: a rarity field wins, else colorcode.js's tier, else none
+  // rarity colours come from rarity.js (a rarity field on the item wins there), else none
   ok(R.rarity("Iron Dagger") === "", "no item table: no colour, no crash");
-  globalThis.D = { ITEMS: { iron_dagger: { name: "Iron Dagger" }, moon_blade: { name: "Moon Blade", rarity: "Epic" } } };
-  globalThis.CC = { tier: (id) => (id === "iron_dagger" ? "common" : "fine") };
+  globalThis.D = { ITEMS: { iron_dagger: { name: "Iron Dagger", slot: "weapon", value: 10 }, moon_blade: { name: "Moon Blade", slot: "weapon", rarity: "Epic" } } };
   ok(R.rarity("Moon Blade") === "epic" && P.item("Moon Blade").q === "epic", "a rarity field on the item is used");
-  ok(R.rarity("iron_dagger") === "common" && R.rarity("Iron Dagger") === "common", "else the colour-code tier, by id or by name");
+  ok(R.rarity("iron_dagger") === "common" && R.rarity("Iron Dagger") === "common", "else rarity.js reads it, by id or by name");
   ok(R.merge([P.item("Moon Blade")], [P.item("Moon Blade")])[0].q === "epic", "merged items keep their rarity");
   const el = { textContent: "+5 gold · Moon Blade · Iron Dagger", innerHTML: "" };
   R.paint(el, [P.gold(5), P.item("Moon Blade"), P.item("Iron Dagger")]);
-  ok(el.innerHTML === '<span class="rw-line">+5 gold · <b class="q-epic rw-qn">Moon Blade</b> · Iron Dagger</span>', "the line colours the rare name, common stays plain");
-  delete globalThis.D; delete globalThis.CC;
+  ok(el.innerHTML === '<span class="rw-line">+5 gold · <b class="q-epic rw-qn">Moon Blade</b><i class="rar q-epic">Epic</i> · Iron Dagger</span>', "the line colours the rare name and says its rarity, common stays plain");
+  delete globalThis.D;
 }
 // 3. the tiny line waits for a fight, then comes out as one line
 {

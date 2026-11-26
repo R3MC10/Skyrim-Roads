@@ -75,7 +75,7 @@ async def run(p, name, vp, mobile):
         ok(not await pg.evaluate("!!document.querySelector('#modal.rw-scene')"), f"{name}: the scene closes")
     await pg.wait_for_timeout(2500); await pg.evaluate(CLEAR)
     # 2) a stream of loot, gold and skill practice
-    item = await pg.evaluate("Object.entries(D.ITEMS).find(([k,v])=>v.slot==='weapon' && typeof CC!=='undefined' && CC.tier(k)==='superior')?.[1].name || 'Elven Sword'")
+    item = await pg.evaluate("Object.entries(D.ITEMS).find(([k,v])=>v.slot==='weapon' && typeof RARITY!=='undefined' && RARITY.of(k)==='rare')?.[1].name || 'Elven Sword'")
     await pg.evaluate(f"""async ()=>{{ const w=(ms)=>new Promise(r=>setTimeout(r,ms));
       __dbg.toast('You find 10 gold.'); await w(150); __dbg.toast('Looted: Iron Dagger'); await w(150);
       LEVELUP.emit && LEVELUP.emit('xp', {{ s: __dbg.save(), skill: 'One-Handed', xp: 6 }}); await w(150);
@@ -85,7 +85,7 @@ async def run(p, name, vp, mobile):
     if not BEFORE:
         t = await pg.evaluate("document.querySelector('#toast')?.textContent||''")
         ok(t.startswith("+24 gold · +15 One-Handed") and "Iron Dagger ×2" in t and item in t, f"{name}: one quiet line: {t!r}")
-        ok(await pg.evaluate("!!document.querySelector('#toast .rw-qn.q-superior')"), f"{name}: the better item's name is in its rarity colour")
+        ok(await pg.evaluate("!!document.querySelector('#toast .rw-qn.q-rare')"), f"{name}: the better item's name is in its rarity colour")
     await pg.screenshot(path=f"{OUT}{PRE}{name}_2_tinyline.png")
     await pg.wait_for_timeout(3500)
     if BEFORE:

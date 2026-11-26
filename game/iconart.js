@@ -1,5 +1,5 @@
 /* Icons for every item and enemy, drawn in code with the shared ART toolkit (ink on parchment).
-   ICONART.item(id, size, row?)  → <img> HTML (row gives quality pips; enchanted items glow)
+   ICONART.item(id, size, row?)  → <img> HTML (row gives quality pips; enchanted items glow; a frame in the rarity colour)
    ICONART.enemy(name, tags, size) → <img> HTML portrait
    Every drawer works in a 40×40 box; ART scales and caches it per style. [OURS] */
 const ICONART = (() => {
@@ -335,9 +335,10 @@ const ICONART = (() => {
   function item(id, size = 34, row = null) {
     if (!id || !(D.ITEMS[id] || D.ITEMS[base(id)])) return "";
     const q = row?.tq || 0;
+    const rar = typeof RARITY !== "undefined" ? RARITY.of(id, row) : "common", cls = rar === "common" ? "ico" : "ico rar-" + rar;   // a thin frame in the rarity colour (rarity.js)
     const pic = typeof ASSETS !== "undefined" && typeof Image !== "undefined" ? ASSETS.img("icon-" + base(id).replace(/_/g, "-")) : null;   // [gear] a painted icon dropped in the game folder wins
-    if (pic) return ART.html(size, size, (g, H, w) => { g.drawImage(pic, 0, 0, w, w); const ench = D.ITEMS[id]?.enchant || D.ITEMS[id]?.aenchant; if (ench) { g.strokeStyle = "rgba(169,140,255,.9)"; g.lineWidth = Math.max(1, w / 24); g.strokeRect(1, 1, w - 2, w - 2); } }, { key: `ip:${id}|${q}`, cls: "ico", alt: "", painted: true });
-    return ART.html(size, size, (g, H, w) => { g.scale(w / 40, w / 40); drawItem(id, row)(g); }, { key: `i:${id}|${q}`, cls: "ico", alt: "" });
+    if (pic) return ART.html(size, size, (g, H, w) => { g.drawImage(pic, 0, 0, w, w); const ench = D.ITEMS[id]?.enchant || D.ITEMS[id]?.aenchant; if (ench) { g.strokeStyle = "rgba(169,140,255,.9)"; g.lineWidth = Math.max(1, w / 24); g.strokeRect(1, 1, w - 2, w - 2); } }, { key: `ip:${id}|${q}`, cls, alt: "", painted: true });
+    return ART.html(size, size, (g, H, w) => { g.scale(w / 40, w / 40); drawItem(id, row)(g); }, { key: `i:${id}|${q}`, cls, alt: "" });
   }
 
   // ---- enemy portraits

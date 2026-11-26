@@ -30,8 +30,8 @@ const ACCESS = (() => {
   const MODES = ["none", "protan", "deutan", "tritan"];
   const DEF = { a11yText: 0, a11yColour: "none", a11yContrast: false, a11yMotion: "auto", a11yHand: "off", a11yTiming: false };
 
-  // ---- colours. One rarity set works for all three types (checked with colour-blind simulation in the tests).
-  const RARITY = { "q-common": "#ece8de", "q-fine": "#20c0a0", "q-superior": "#5b8cff", "q-exquisite": "#f0a8ff", "q-legendary": "#ffd84a", "q-unique": "#ff5a3a" };
+  // ---- colours. One rarity set (rarity.js: common, fine, rare, epic, legendary, plus the Unique word) works for all three types (checked with colour-blind simulation in the tests).
+  const RARITY = { "q-common": "#ece8de", "q-fine": "#20c0a0", "q-rare": "#5b8cff", "q-epic": "#f0a8ff", "q-legendary": "#ffd84a", "q-unique": "#ff5a3a" };
   const RG = {   // red-green (protanopia and deuteranopia): health turns orange, stamina yellow, safe things blue
     hp: "#e0601a", mp: "#3f7fd6", sp: "#fff27a", ember: "#ff6a2a", low: "#6fb6ff", med: "#f2d27a", high: "#e0501a",
     buff: "#6fb6ff", debuff: "#ff8a2a", foe: "#9a5cd0", raid: "#ff8a2a", ripe: "#6fb6ff",
