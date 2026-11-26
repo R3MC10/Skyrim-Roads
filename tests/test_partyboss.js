@@ -31,7 +31,7 @@ const foeOf = (kind, L, i) => (kind === "boss" ? boss(FOES.boss[i % 6], L) : enc
 const mateOf = (m) => COOP.allyFromCard({ id: m.id, name: m.id, cur: G.maxHealth(m), coop: { prof: COOP.profile(m) } });
 
 // 1. every phone says what it deals a round; the leader's phone sizes the foe for it
-{ const s = fresh("mage", 20, "m1", "normal"), p = COOP.profile(s);
+if (!process.env.SIMONLY) { const s = fresh("mage", 20, "m1", "normal"), p = COOP.profile(s);   // SIMONLY=1: only the sims (e.g. on an older build, for a before/after table)
   ok(Array.isArray(p.dpr) && p.dpr.length === 3 && p.dpr.every((x) => x > 0), "COOP.profile publishes what you deal a round [normal, tough, boss]: " + JSON.stringify(p.dpr));
   ok(p.dpr[0] > p.dmg * 1.2, `a mage's round (${p.dpr[0]}) is far more than one plain blow with their fists (${p.dmg})`);
   ok(TB.dprOf(s) === TB.dprOf(s), "worked out once per kit (memo)");
@@ -56,20 +56,20 @@ function fight(np, L, kind, diff, i) {
   const f = new G.Fight(hero, foeOf(kind, L, i)); f.allies = mates.map(mateOf);
   const byId = Object.fromEntries(mates.map((m) => [m.id, m]));
   const ss = new TB.Session(f, { trySneak: false, t: T0 }); ss.remote = { ask() {}, end() {} };
-  let r = ss.begin() || {}, g = 0, e0 = f.ehp;
-  const look = () => { if (kind === "boss" && ss.wave === 1) worstHit = Math.max(worstHit, (e0 - f.ehp) / ss.ehpMax); e0 = f.ehp; };
+  let r = ss.begin() || {}, g = 0;
+  const look = (dealt) => { if (kind === "boss") worstHit = Math.max(worstHit, dealt / ss.ehpMax); };   // one hero's whole turn (3 AP)
   while (!ss.done && g++ < 4000) {
-    if (r.turn === "me") { ss.autoTurn(); look(); r = ss.advance() || {}; look(); continue; }
+    if (r.turn === "me") { const e0 = f.ehp; ss.autoTurn(); look(e0 - f.ehp); r = ss.advance() || {}; continue; }
     if (r.turn === "wait") {
       for (const w of ss.gr.waits) {
         if (w.fin || w.reply || w.move) continue;
         let sent = null; const m = SHAREDFIGHT.build(byId[w.pid], { id: "fid", owner: "p0", ...TB.fightState(ss) }, (x) => { sent = x; });
         const mr = m.advance(); if (mr && mr.turn === "me") m.autoTurn();
-        if (sent) w.reply = sent; else w.move = "guard";
+        if (sent) { w.reply = sent; look(sent.e0 - sent.ehp); } else w.move = "guard";
       }
-      look(); r = ss.advance() || {}; look(); continue;
+      r = ss.advance() || {}; continue;
     }
-    e0 = f.ehp; r = ss.advance() || {};
+    r = ss.advance() || {};
   }
   return { won: !!(f.won && !f.escaped), rounds: ss.round };
 }
@@ -86,25 +86,28 @@ const SIZES = FULL ? [1, 2, 3, 4, 5, 6, 7, 8] : [1, 2, 4, 8], LS = [10, 20, 35];
 const DIFFS = FULL ? ["story", "normal", "hard"] : ["normal", "hard"];
 const WANT = { boss: [8, 12], tough: [5, 8], normal: [3, 5] }, SLACK = FULL ? 0 : 0.5;   // the quick set has fewer fights: half a round of slack
 const table = [];
+const ONLY = (k, v) => !process.env[k] || process.env[k].split(",").includes(v);   // KINDS=boss DIFFS=hard: one part of the table (to run parts side by side)
 for (const kind of ["boss", "tough", "normal"]) for (const diff of DIFFS) {
+  if (!ONLY("KINDS", kind) || !ONLY("DIFFS", diff)) continue;
   if (!FULL && kind !== "boss" && diff !== "normal") continue;
   const row = SIZES.map((np) => [np, cell(np, kind, diff, LS)]);
   table.push([kind, diff, row]);
   console.log(kind.padEnd(6), diff.padEnd(6), row.map(([np, r]) => `${np}p ${String(r.win).padStart(3)}%/${r.med}`).join("  "));
   const [lo, hi] = WANT[kind];
   for (const [np, r] of row) {
-    if (diff === "story" && kind === "boss") { ok(r.med >= 6 - SLACK && r.med <= hi + SLACK, `Story boss, ${np} players: ${r.med} median rounds (6-${hi}: Story foes fall sooner)`); continue; }
+    if (diff === "story") { const lo2 = lo - { boss: 2, tough: 1, normal: 0 }[kind]; ok(r.med >= lo2 - SLACK && r.med <= hi + SLACK, `Story ${kind}, ${np} players: ${r.med} median rounds (${lo2}-${hi}: Story foes fall sooner)`); continue; }
     ok(r.med >= lo - SLACK && r.med <= hi + SLACK, `${diff} ${kind}, ${np} players: ${r.med} median rounds (want ${lo}-${hi})`);
   }
   const solo = row.find(([np]) => np === 1)[1].win, big = row.find(([np]) => np === 8)[1].win;
   ok(Math.abs(solo - big) <= (FULL ? 15 : 20), `${diff} ${kind}: solo wins ${solo}%, 8 players ${big}% (within ${FULL ? 15 : 20} points)`);
 }
 ok(errs === 0, "no errors in the sims (" + errs + ")");
+console.log("biggest single turn on a boss: " + Math.round(worstHit * 100) + "% of its health");
 ok(worstHit <= 0.45, `no one-shots: the biggest single turn on a boss took ${Math.round(worstHit * 100)}% of its health`);
 
 // 3. the numbers and their Polish
-ok(TB.T.party && TB.T.party.hp && TB.T.party.acts > 0, "the party tuning lives in TB.T.party");
-{ const pn = fs.readFileSync(W + "patchnotes.js", "utf8"); ok(/b353-partyboss|partyboss/.test(pn), "patch note for party boss fights");
+if (!process.env.SIMONLY) { ok(TB.T.party && TB.T.party.hp && TB.T.party.acts > 0, "the party tuning lives in TB.T.party");
+  const pn = fs.readFileSync(W + "patchnotes.js", "utf8"); ok(/b353-partyboss|partyboss/.test(pn), "patch note for party boss fights");
   const pl = fs.readFileSync(W + "i18n_partyboss.js", "utf8"), html = fs.readFileSync(W + "index.html", "utf8");
   ok(pl.includes("Party fights last as long as solo ones"), "Polish for the patch note");
   ok(html.indexOf("i18n_partyboss.js") > 0 && html.indexOf("i18n_partyboss.js") < html.indexOf('src="i18n.js"'), "i18n_partyboss.js loads before i18n.js"); }
