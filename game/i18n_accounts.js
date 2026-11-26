@@ -27,7 +27,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Keep playing here, offline": "Graj tu dalej, bez sieci",
     "Offline, this device's character stops saving to your account.": "Bez sieci postać na tym urządzeniu przestaje zapisywać się na koncie.",
     // two copies
-    "On your account": "Na koncie", "On this device": "Na tym urządzeniu",
+    "On your account": "Na koncie", "On this device": "Na tym urządzeniu", "Newest": "Najnowsza",
     "Use the account copy": "Użyj kopii z konta", "Keep this device's copy": "Zachowaj kopię z tego urządzenia",
     "Nothing is lost: the copy you don't keep goes into this device's automatic backups (Settings → Restore).":
       "Nic nie przepada: kopia, której nie zachowasz, trafia do automatycznych kopii zapasowych tego urządzenia (Ustawienia → Przywróć).",

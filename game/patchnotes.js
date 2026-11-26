@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b374-savecopies", build: 374, date: "26 Nov 2026", title: "Fewer save questions", items: [
+      "The \"Two copies\" screen no longer pops up by itself. If a save reached your account but the game never heard back (the app went to the background, or the signal dropped), it now recognises its own save and just carries on.",
+      "When it does ask, because you really played on another device, each copy shows its level, gold and when it was last played, and the newest one is marked and comes first.",
+    ] },
     { id: "b373-uisfx", build: 373, date: "26 Nov 2026", title: "New menu sounds", items: [
       "Menus have new sounds: a soft wooden tap for lists and small buttons, a fuller one for big buttons like Begin and Okay, and their own sounds for going back, opening a window, switching tabs and flipping a switch.",
       "Volume sliders tick as you drag them slowly and grind when you whip them across, along with the sparks.",
