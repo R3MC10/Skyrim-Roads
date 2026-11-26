@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b365-uiframes", build: 365, date: "26 Nov 2026", title: "Nordic frames", items: [
+      "Settings, the other main menu pages and pop-up windows now sit in a painted bronze frame with Nordic knotwork corners, to match the compass.",
+    ] },
     { id: "b364-titlewind", build: 364, date: "26 Nov 2026", title: "Wind on the main menu", items: [
       "On phones, a soft winter wind now blows quietly under the main menu music, to go with the moving painting.",
     ] },
