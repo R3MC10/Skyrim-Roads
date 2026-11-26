@@ -41,7 +41,7 @@ async def main():
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Hrolfdir"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
             await pg.evaluate(CLEAR)
             # a few items so the pack has rows with colours (rarity) and the journal has something
-            await pg.evaluate("()=>{const S=window.__dbg.save(); const seen={}; for (const id of Object.keys(D.ITEMS)) { const t=CC.tier(id); if (!seen[t] && !S.inv.some(r=>r.item===id)) { seen[t]=1; G.give(S,id); } } }")
+            await pg.evaluate("()=>{const S=window.__dbg.save(); const seen={}; for (const id of Object.keys(D.ITEMS)) { const t=RARITY.of(id); if (!seen[t] && !S.inv.some(r=>r.item===id)) { seen[t]=1; G.give(S,id); } } }")
 
             async def shot(name):
                 nonlocal shots

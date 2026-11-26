@@ -25,7 +25,8 @@ ok(M.sortItems(rows, "arm", 1)[1].name === "Hide Boots", "armour sort");
 ok(rows[0].name === "Iron Sword" && rows[1].name === "Amethyst", "sorting does not touch the original list");
 // which sorts each category offers
 const ks = (cat) => M.itemSorts(cat).map((x) => x[0]).join();
-ok(ks("all") === "name,value,weight,dmg,arm,ratio,new", "all sorts " + ks("all"));
+ok(ks("all") === "name,value,weight,dmg,arm,ratio,rar,new", "all sorts " + ks("all"));
+ok(names(M.sortItems([{ name: "B", rar: 1, eq: 0 }, { name: "A", rar: 4, eq: 0 }, { name: "C", rar: 0, eq: 0 }], "rar", 1)) === "A,B,C", "rarity: best first");
 ok(!ks("weapons").includes("arm") && ks("weapons").includes("dmg"), "weapons: damage, no armour");
 ok(!ks("apparel").includes("dmg") && ks("apparel").includes("arm"), "apparel: armour, no damage");
 ok(!ks("potions").includes("dmg") && !ks("potions").includes("arm"), "potions: neither");
@@ -38,7 +39,7 @@ ok(M.dirLabel("name", 1) === "A–Z" && M.dirLabel("name", -1) === "Z–A" && M.
 // the sort row
 const bar = M.itemSortBar({ cat: "weapons", sort: "arm", dir: 1 });
 ok(/data-act="skysort" data-id="name" aria-pressed="true"/.test(bar), "unknown sort for this category falls back to Name");
-ok(bar.includes('data-act="m2dir"') && (bar.match(/data-act="skysort"/g) || []).length === 6, "weapons row has 6 sorts + direction");
+ok(bar.includes('data-act="m2dir"') && (bar.match(/data-act="skysort"/g) || []).length === 7, "weapons row has 7 sorts + direction");
 ok(M.magicSortBar({ msort: "cost", mdir: 1 }).includes('data-act="m2mdir"'), "magic row direction");
 // counts
 const ITEMS = { a: { t: "weapon" }, b: { t: "weapon" }, p: { t: "potion" } };

@@ -226,9 +226,9 @@ const LOOTVOTE = (() => {
       const s = S(), mine = v.votes?.[s.id], left = Math.max(0, Math.ceil(v.ends - now()));
       const p = picks[key] || (picks[key] = new Set(mine || []));
       const rows = v.items.map((it) => {
-        const nm = D.ITEMS[it.item]?.name || it.item, tier = typeof CC !== "undefined" ? CC.tier(it.item, it) : "common";
+        const nm = D.ITEMS[it.item]?.name || it.item, tier = typeof RARITY !== "undefined" ? RARITY.of(it.item, it) : "common";
         const want = p.has(it.i), others = v.members.filter((m) => m !== s.id && (v.votes?.[m] || []).includes(it.i)).length;
-        return `<div class="lv-row q-${tier}">${typeof ICONART !== "undefined" ? `<span class="lv-ico"${typeof RTIP !== "undefined" ? RTIP.attr(it.item, it.qty || 1) : ""}>${ICONART.item(it.item, 28, it)}</span>` : ""}<span class="nm">${it.qty > 1 ? `${it.qty}× ` : ""}${esc(nm)}${typeof TOMEINFO !== "undefined" && TOMEINFO.isTome(it.item) ? `<small class="ti-line">${esc(TOMEINFO.line(s, it.item))}</small>` : ""}${others ? `<small>${others} other${others > 1 ? "s" : ""} want it</small>` : ""}</span>
+        return `<div class="lv-row q-${tier}">${typeof ICONART !== "undefined" ? `<span class="lv-ico"${typeof RTIP !== "undefined" ? RTIP.attr(it.item, it.qty || 1) : ""}>${ICONART.item(it.item, 28, it)}</span>` : ""}<span class="nm">${it.qty > 1 ? `${it.qty}× ` : ""}${esc(nm)}${typeof RARITY !== "undefined" ? RARITY.tag(it.item, it) : ""}${typeof TOMEINFO !== "undefined" && TOMEINFO.isTome(it.item) ? `<small class="ti-line">${esc(TOMEINFO.line(s, it.item))}</small>` : ""}${others ? `<small>${others} other${others > 1 ? "s" : ""} want it</small>` : ""}</span>
           ${mine ? `<b class="lv-tag">${want ? "Want" : "Pass"}</b>` : `<button class="btn sm ${want ? "pri" : ""}" data-act="lvpick" data-k="${esc(key)}" data-i="${it.i}">${want ? " Want" : "Want"}</button>`}</div>`;
       }).join("") || '<p class="sub">No items this time.</p>';
       const n = v.members.length, each = Math.floor((v.gold || 0) / n);
@@ -244,7 +244,7 @@ const LOOTVOTE = (() => {
         const roll = res.rolls.find((r) => r.i === it.i), winner = Object.keys(res.items).find((m) => res.items[m].some((x) => x.i === it.i));
         const nm = D.ITEMS[it.item]?.name || it.item;
         const dice = roll ? `<span class="lv-dice">${roll.rounds.map((rs) => rs.map((r) => `<i class="die" style="--n:${r.roll}">${r.roll}</i>${r.plus ? `<b class="plus">+${r.plus}</b>` : ""}<small>${esc(name(r.m))}</small>`).join(" ")).join(' <em>tie, again:</em> ')}</span>` : "";
-        return `<div class="lv-row ${winner === s.id ? "won" : ""}">${typeof RTIP !== "undefined" ? `<span class="lv-ico"${RTIP.attr(it.item, it.qty || 1)}>${RTIP.icon(it.item, 24, it)}</span>` : ""}<span class="nm">${it.qty > 1 ? `${it.qty}× ` : ""}${esc(nm)} → <b>${esc(name(winner))}</b></span>${dice}</div>`;
+        return `<div class="lv-row ${winner === s.id ? "won" : ""}">${typeof RTIP !== "undefined" ? `<span class="lv-ico"${RTIP.attr(it.item, it.qty || 1)}>${RTIP.icon(it.item, 24, it)}</span>` : ""}<span class="nm">${it.qty > 1 ? `${it.qty}× ` : ""}${esc(nm)}${typeof RARITY !== "undefined" ? RARITY.tag(it.item, it) : ""} → <b>${esc(name(winner))}</b></span>${dice}</div>`;
       }).join("");
       return `<h2> Loot shared out</h2>${v.gold ? `<p class="lv-gold"> Your gold: ${res.gold[s.id] || 0}</p>` : ""}<div class="lv-list">${lines || '<p class="sub">No items.</p>'}</div><button class="btn pri" data-act="close" style="width:100%">Continue</button>`;
     }

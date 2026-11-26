@@ -11,7 +11,7 @@ const MENUS2 = (() => {
 
   // ------------------------------------------------------------ sorting (pure, tested in node)
   /* [key, label]. Damage only where weapons can show, Armour only where apparel can show. */
-  const ITEM_SORTS = [["name", "Name"], ["value", "Value"], ["weight", "Weight"], ["dmg", "Damage"], ["arm", "Armour"], ["ratio", "Value/wt"], ["new", "Newest"]];
+  const ITEM_SORTS = [["name", "Name"], ["value", "Value"], ["weight", "Weight"], ["dmg", "Damage"], ["arm", "Armour"], ["ratio", "Value/wt"], ["rar", "Rarity"], ["new", "Newest"]];
   const MAGIC_SORTS = [["name", "Name"], ["cost", "Cost"], ["school", "School"]];
   const TEXT_KEYS = new Set(["name", "school"]), LOW_FIRST = new Set(["cost"]);   // cheapest spells first, like before
   function itemSorts(cat) { return ITEM_SORTS.filter(([k]) => k === "dmg" ? ["all", "weapons"].includes(cat) : k === "arm" ? ["all", "apparel"].includes(cat) : true); }
@@ -25,7 +25,7 @@ const MENUS2 = (() => {
       return (y - x) * dir * (LOW_FIRST.has(k) ? -1 : 1) || String(a.name).localeCompare(String(b.name));
     };
   }
-  /* sort item rows ({name, value, weight, dmg, arm, ratio, new, eq}); what you wear stays on top */
+  /* sort item rows ({name, value, weight, dmg, arm, ratio, rar, new, eq}); rar = rarity rank (rarity.js), best first; what you wear stays on top */
   function sortItems(rows, k, dir) { const c = compare(k, dir); return [...rows].sort((a, b) => (b.eq - a.eq) || c(a, b)); }
   function sortMagic(rows, k, dir) { return [...rows].sort(compare(k || "name", dir || 1)); }
   const dirLabel = (k, dir) => TEXT_KEYS.has(k) ? (dir > 0 ? "A–Z" : "Z–A") : (dir * (LOW_FIRST.has(k) ? -1 : 1) > 0 ? "High first" : "Low first");

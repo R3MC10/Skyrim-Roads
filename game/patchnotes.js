@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b349-defeat", build: 349, date: "26 Nov 2026", title: "Losing a fight costs nothing", items: [
+    { id: "b350-defeat", build: 350, date: "26 Nov 2026", title: "Losing a fight costs nothing", items: [
       "Lose a fight and you lose nothing: no gold, no items, no XP, no progress. You're put back just before the fight.",
       "A new screen shows what beat you and why, then gives you three choices: Retry (the same foes again), Adjust gear (change weapons, armour or spells, then come back) or Retreat.",
       "Retreat on the road takes you past the fight and back on your way. In a dungeon you step back out of the room; rooms you already cleared stay cleared.",
@@ -12,6 +12,14 @@ const PATCHNOTES = (() => {
       "In a party, one beaten player can't reset everyone's fight: the party votes on Retry or Retreat (most votes wins, a tie goes the leader's way). Anyone knocked down just gets back up.",
       "World events and world bosses keep going: you get back up where you are and what you did still counts.",
       "Guild jobs, heists, quests and deep dungeon levels work the same way: getting knocked down no longer loses the job, gets you caught or takes the finds you made below.",
+    ] },
+    { id: "b349-rarity", build: 349, date: "26 Nov 2026", title: "Item rarity", items: [
+      "Every item now has a rarity: Common, Fine, Rare, Epic or Legendary. You see it as a colour and as a word, in your Items, on the paper doll, in tooltips, shops, loot, dungeon loot votes and trades.",
+      "Rarity tells you how special an item is. It never changes its numbers: a Rare sword hits just as hard as it did yesterday.",
+      "Plain gear is Common or Fine (better metals and tempered gear are Fine). Enchanted gear is Fine, Rare or Epic, by how strong its enchantment is. Legendary is kept for true artifacts, like Daedric artifacts and dragon priest masks.",
+      "One-of-a-kind items also say Unique, apart from their rarity.",
+      "Tougher foes and bosses drop rarer things. Items can be sorted by Rarity.",
+      "Item icons get a thin frame in their rarity colour.",
     ] },
     { id: "b348-initiative", build: 348, date: "26 Nov 2026", title: "A smarter turn order", items: [
       "Who goes first is rolled once when a fight starts: a roll of 1 to 4 plus your speed. Light armour makes you a bit quicker, heavy armour a bit slower, and some perks help.",
