@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b352-updfix", build: 352, date: "26 Nov 2026", title: "Phone updates work again", items: [
+      "On phones, tapping Update now could do nothing and say \"Not an update address\". The app misread the build number, so it turned down every small update.",
+      "Fixed in the app itself. If your phone is stuck, install the newest app once (Update now gets it for you); after that, updates download by themselves again.",
+    ] },
     { id: "b351-threeap", build: 351, date: "26 Nov 2026", title: "3 AP a turn", items: [
       "Your turn now runs on 3 AP (action points), shown as gold diamonds. Most moves take 1 AP: a blow, a bow shot, guarding, a shield bash, a small spell, a short shout, a potion, catching your breath, a poison or a small scroll.",
       "Big moves take 2 AP: power attacks, spells of Adept level and up, dual casts, full three-word shouts, big scrolls and a beast's heavy moves. Every button shows its AP and goes grey when you can't pay for it.",
