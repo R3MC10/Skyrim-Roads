@@ -1,7 +1,11 @@
 /* Market stalls: sell your things from a stall in a town where you own a house, even while you're away.
    Each listing is its own record ("stalls", id sellerId-…). What you list leaves your pack at once (held by
    the stall, like a trade offer). A buyer marks it sold with Store.change, so two buyers can't get the same
-   thing; your game collects the gold (minus the market fee) the next time it's open. [OURS] */
+   thing; your game collects the gold (minus the market fee) the next time it's open. [OURS]
+   The market board (b358): one list of every open listing in every town (search, filter, sort), and you can buy from
+   any town. What you buy there goes to your "Market parcels" box (s.parcels, in your save), which you open in any town
+   with a market, so a full pack never loses a thing. A small "last sold for about X" line per kind of thing comes from
+   sold listings this phone has seen (s.mkHist, capped). No buy orders, auctions or price advice. */
 const MARKET = (() => {
   const MAX_LISTINGS = 8, FEE = 0.05, MAX_PRICE = 100000;
   const itemName = (r) => (typeof NAMES !== "undefined" ? NAMES.improved : String)((D.ITEMS[r.item]?.name || r.item), r) + (r.nm ? ` “${r.nm}”` : "");
@@ -9,6 +13,7 @@ const MARKET = (() => {
   const hallShop = (s, town) => typeof HALLS !== "undefined" && HALLS.shopOpen(s, town);
   const capFor = (s) => (typeof HALLS !== "undefined" ? HALLS.shopCap(s) : MAX_LISTINGS);
   const mine = (docs, uid) => docs.filter((d) => d.seller === uid && d.status === "open");
+  const valid = (d) => d && d.status === "open" && d.row && D.ITEMS[d.row.item] && d.row.qty >= 1 && !d.row.worn && !d.row.eq;
   const inTown = (docs, town, uid) => docs.filter((d) => d.town === town && d.status === "open" && d.seller !== uid && d.row && D.ITEMS[d.row.item]);
 
   /* -> { id, doc, text } or { err } */
@@ -52,5 +57,63 @@ const MARKET = (() => {
     if (d.status === "withdrawn") { const id = G.give(s, d.row.item, d.row.qty, d.row.charge); const r = G.invRow(s, id); if (r && d.row.temper) Object.assign(r, { temper: d.row.temper, tq: d.row.tq }); if (typeof CRAFTFAIR !== "undefined") CRAFTFAIR.carry(s, id, d.row, d.row.qty); return `${itemName(d.row)} is back in your pack.`; }
     return null;
   }
-  return { MAX_LISTINGS, FEE, capFor, hallShop, suggest, mine, inTown, list, buy, settle, itemName };
+  /* ---- the market board: every open listing, every town */
+  const KINDS = [["all", "Everything"], ["weapon", "Weapons"], ["armor", "Armour"], ["gem", "Jewellery"], ["magic", "Magic"], ["potion", "Potions"], ["mats", "Materials"], ["other", "Other"]];
+  function kindOf(item) {
+    const c = typeof ECON !== "undefined" ? ECON.catOf(item) : "other";
+    if (["ore", "metal", "leather", "ingredient", "food"].includes(c)) return "mats";
+    return KINDS.some(([k]) => k === c) ? c : "other";
+  }
+  const rarOf = (r) => (typeof RARITY !== "undefined" ? RARITY.of(r.item, r) : "common");
+  /* q: { text, kind, rarity, sort: "new"|"cheap"|"dear" } -> open listings from every town but your own */
+  function board(docs, q = {}, uid = null) {
+    const text = String(q.text || "").trim().toLowerCase();
+    let out = (docs || []).filter((d) => valid(d) && d.seller !== uid);
+    if (text) out = out.filter((d) => itemName(d.row).toLowerCase().includes(text) || String(d.town).toLowerCase().includes(text));
+    if (q.kind && q.kind !== "all") out = out.filter((d) => kindOf(d.row.item) === q.kind);
+    if (q.rarity && q.rarity !== "all") out = out.filter((d) => rarOf(d.row) === q.rarity);
+    const by = q.sort === "cheap" ? (a, b) => a.price - b.price || b.t - a.t : q.sort === "dear" ? (a, b) => b.price - a.price || b.t - a.t : (a, b) => (b.t || 0) - (a.t || 0);
+    return out.sort(by);
+  }
+  const hasMarket = (town) => !!town && (typeof TOWNS === "undefined" || !!(TOWNS.HOMES || {})[town]);
+  const rowOf = (r) => ({ item: r.item, qty: r.qty, charge: r.charge ?? null, temper: r.temper || 0, tq: r.tq || 0, ...(r.cv != null || r.nm ? { cv: r.cv, nm: r.nm } : {}) });
+  function giveRow(s, row) {
+    const id = G.give(s, row.item, row.qty, row.charge); const r = G.invRow(s, id);
+    if (r && row.temper) Object.assign(r, { temper: row.temper, tq: row.tq });
+    if (typeof CRAFTFAIR !== "undefined") CRAFTFAIR.carry(s, id, row, row.qty);
+    return id;
+  }
+  /* buy from the board, from any town, inside Store.change. The goods go to your parcels box, not your pack. */
+  function buyAny(s, d, out = {}) {
+    if (!valid(d)) { out.err = "Someone bought it first."; return null; }
+    if (d.seller === s.id) { out.err = "That's your own stall."; return null; }
+    if (s.gold < d.price) { out.err = `It costs ${d.price} gold. You have ${s.gold}.`; return null; }
+    s.gold -= d.price;
+    s.parcels = [...(s.parcels || []), { row: rowOf(d.row), from: d.sellerName, town: d.town, price: d.price, t: G.now(), lid: d.id }];
+    out.text = `You buy ${itemName(d.row)}${d.row.qty > 1 ? ` ×${d.row.qty}` : ""} from ${d.sellerName} in ${d.town} for ${d.price} gold. It waits in your Market parcels, in any town with a market.`;
+    return { ...d, status: "sold", buyer: s.id, buyerName: s.name, soldAt: G.now(), remote: true };
+  }
+  /* open your parcels box: everything comes into your pack (nothing is ever dropped) */
+  function openParcels(s) {
+    const box = s.parcels || [];
+    if (!box.length) return { err: "Your parcels box is empty." };
+    if (!hasMarket(s.location)) return { err: "Parcels wait at the market. Open them in a town with a market." };
+    if (s.trip) return { err: "Stop walking first." };
+    s.parcels = [];
+    for (const p of box) if (p && p.row && D.ITEMS[p.row.item]) giveRow(s, p.row);
+    return { n: box.length, text: `You open ${box.length} parcel${box.length > 1 ? "s" : ""}: ${box.map((p) => itemName(p.row) + (p.row.qty > 1 ? ` ×${p.row.qty}` : "")).join(", ")}.` };
+  }
+  /* "last sold for about X": the price per piece of sold listings this phone has seen, one line per kind of thing */
+  const HIST_MAX = 80;
+  function noteSold(s, d) {
+    if (!d || d.status !== "sold" || !d.row || !D.ITEMS[d.row.item] || d.buyer === "npc") return false;
+    const h = (s.mkHist = s.mkHist || {}), at = d.soldAt || d.t || 0, cur = h[d.row.item];
+    if (cur && cur[1] >= at) return false;
+    h[d.row.item] = [Math.max(1, Math.round(d.price / Math.max(1, d.row.qty))), at];
+    const keys = Object.keys(h); if (keys.length > HIST_MAX) keys.sort((a, b) => h[a][1] - h[b][1]).slice(0, keys.length - HIST_MAX).forEach((k) => delete h[k]);
+    return true;
+  }
+  const lastSold = (s, item) => { const e = (s.mkHist || {})[item]; return e ? e[0] : null; };
+
+  return { MAX_LISTINGS, KINDS, kindOf, board, hasMarket, buyAny, openParcels, noteSold, lastSold, giveRow, FEE, capFor, hallShop, suggest, mine, inTown, list, buy, settle, itemName };
 })();

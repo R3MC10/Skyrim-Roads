@@ -1,4 +1,4 @@
-/* Invite cards [OURS]: every invite a player gets (party, co-op dungeon run, clan, Arena challenge, trade offer) pops up as
+/* Invite cards [OURS]: every invite a player gets (party, co-op dungeon run, clan, Arena challenge, trade offer, face-to-face trade) pops up as
    a small SkyUI card at the top of the screen with Accept and Decline right there, so nobody has to dig through menus.
    - Pure part (node-tested): list() turns what ui.js knows into cards; nos()/notes() carry "Kacper declined your invite"
      back to whoever sent it; remember()/forgot() keep a declined clan invite from popping up again.
@@ -11,11 +11,11 @@ const INVITES = (() => {
   const NOS_KEEP = 8;            // a party/run keeps the last few "declined" notes for its leader
   const NO_MEMORY = 86400;       // a declined clan invite stays hidden for a day (seconds)
   const SHOW = 3;                // cards on screen at once; the rest wait behind a "+N more" line
-  const ICON = { party: "\uE106", coop: "\uE101", clan: "\uE13E", duel: "\uE101", trade: "\uE198", join: "\uE106" };
+  const ICON = { party: "\uE106", coop: "\uE101", clan: "\uE13E", duel: "\uE101", trade: "\uE198", tradewin: "\uE198", join: "\uE106" };
   const nowS = () => (typeof G !== "undefined" && G.now ? G.now() : Date.now() / 1000);
 
   /* ---------------------------------------------------------------- pure part
-     src: { parties, runs, clans, duels, trades, gold, inClan, joins, face(uid) }, each already "for me" (ui.js filters them);
+     src: { parties, runs, clans, duels, trades, gold, inClan, joins, tradewins, face(uid) }, each already "for me" (ui.js filters them);
      face(uid) gives a player's round portrait (avatar.js) for party invites; join cards bring their own (pic).
      -> [{ key, kind, id, from, text, sub, can, why, pic }] newest first */
   function list(s, src = {}) {
@@ -46,6 +46,7 @@ const INVITES = (() => {
         sub: `Offer: ${d.what || "something"} · ${d.ask ? `for ${d.ask} gold` : "as a gift"}`, can, why: can ? "" : `You need ${d.ask} gold` });
     }
     for (const c of src.joins || []) add(c);   // "Kacper asks to join your party" (friendjoin.js)
+    for (const c of src.tradewins || []) add(c);   // "Kacper wants to trade with you" (tradewin.js): face to face, same place
     return out.sort((a, b) => b.t - a.t);
   }
   /* the invitee says no: leave a short note on the party/run record for its leader */
