@@ -1,9 +1,8 @@
 /* titlevideo.js: on a phone held upright, the main menu's background is a looping painted video. [OURS]
      TITLEVIDEO.attach(titleEl)  → puts the video behind the title (ui.js showTitle); the drawn panorama rests while it plays
-     TITLEVIDEO.phone()          → an upright phone-shaped screen: the title plays the video's own music and wind
-                                   (sound.js plays mus-titlevid.mp3 as the title track then)
-   title-loop.mp4 is 9.5 s, made seamless (its last half second fades into its start), silent; the sound is its own file
-   (36 s, also seamless). Anything wrong (landscape, reduced motion, no autoplay, a load error, browser automation without
+     TITLEVIDEO.phone()          → an upright phone-shaped screen with the video allowed
+   title-loop.mp4 is 9.5 s, made seamless (its last half second fades into its start) and silent: the title keeps its
+   usual music. The video has its own snow, so the title's drawn snowflakes stop while it plays (ui.js startFog). Anything wrong (landscape, reduced motion, no autoplay, a load error, browser automation without
    ?assets) and the painted panorama (titleart.js) simply carries on underneath. */
 const TITLEVIDEO = (() => {
   const SRC = "title-loop.mp4";
