@@ -65,10 +65,10 @@ async def main():
             await tap(pg, "[data-act=buy]"); await pg.wait_for_timeout(300)
             res.append((f"{style} bought at night", await pg.evaluate("window.__dbg.save().gold") < g0))
             # the map mark and the lead card at the spot (make it a real one)
-            await pg.click("[data-tab=map]"); await pg.wait_for_timeout(900); await close_modals(pg)
+            await pg.click("[data-tab=world]"); await pg.wait_for_timeout(900); await close_modals(pg)
             await pg.screenshot(path=f"{OUT}{style}_map.png")
             place = await pg.evaluate("""()=>{ const S=window.__dbg.save(); const l=RUMOURS.leads(S)[0]; l.real=true; S.location=l.place; [S.x,S.y]=WORLD.places[l.place]; return l.place; }""")
-            await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(600); await close_modals(pg)
+            await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200); await pg.click("[data-tab=world]"); await pg.wait_for_timeout(600); await close_modals(pg)
             card = await pg.query_selector(".rw-card")
             res.append((f"{style} lead card at {place}", bool(card)))
             if card:

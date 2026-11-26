@@ -81,7 +81,7 @@ async def main():
                 hp = await pg.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--hp').trim()")
                 await pg.evaluate(CLEAR); await pg.evaluate("scrollTo(0,0)"); await shot(f"cb_{mode}_map")
                 await pg.evaluate("()=>{const S=window.__dbg.save(); const seen={}; for (const id of Object.keys(D.ITEMS)) { const t=RARITY.of(id); if (!seen[t] && !S.inv.some(r=>r.item===id)) { seen[t]=1; G.give(S,id); } } }")
-                await pg.click("[data-tab=pack]"); await pg.wait_for_timeout(400)
+                await pg.evaluate("__ui.go('items')"); await pg.wait_for_timeout(400)
                 await pg.evaluate("document.querySelectorAll('.sky-cat')[1]?.click()"); await pg.wait_for_timeout(300); await shot(f"cb_{mode}_pack")
                 await pg.evaluate(CLEAR)
                 cv = await pg.evaluate("(()=>{const g=document.createElement('canvas').getContext('2d'); g.fillStyle='#d65a4a'; const a=g.fillStyle; g.strokeStyle='#c0392b'; return [a,g.strokeStyle]})()")
@@ -106,7 +106,7 @@ async def main():
             if await pg.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches"): fails.append("auto motion should follow the phone (not reduced here)")
             for hand in ["right", "left"]:
                 await pg.evaluate(f"ACCESS.pref('a11yHand','{hand}')"); await pg.evaluate(CLEAR); await pg.evaluate("scrollTo(0,0)"); await shot(f"hand_{hand}")
-                pos = await pg.evaluate("['#sndBtn','#socBtn','#zoomBtn','#favBtn','#twBtn'].map(s=>{const r=document.querySelector(s)?.getBoundingClientRect(); return r && r.width ? [s, Math.round(r.left+r.width/2), Math.round(r.top+r.height/2)] : [s]})")
+                pos = await pg.evaluate("['#sndBtn','#socBtn','#zoomBtn','#favBtn'].map(s=>{const r=document.querySelector(s)?.getBoundingClientRect(); return r && r.width ? [s, Math.round(r.left+r.width/2), Math.round(r.top+r.height/2)] : [s]})")
                 for s, *xy in pos:
                     if not xy: continue
                     x, y = xy

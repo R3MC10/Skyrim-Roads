@@ -17,7 +17,7 @@ async def main():
         A = await phone("ha", "Alfa"); B = await phone("hb", "Beta")
         async def hall(pg):
             while await pg.query_selector("#modal [data-act=close]"): await pg.click("#modal [data-act=close]"); await pg.wait_for_timeout(200)
-            await pg.click("[data-tab=map]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(300)
+            await pg.click("[data-tab=world]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(300)
             await pg.click("[data-act=shop][data-id=hall], [data-id=hall]"); await pg.wait_for_timeout(300)
         await hall(A)
         for n in ["5000","5000","5000"]:
@@ -35,7 +35,7 @@ async def main():
         await A.wait_for_timeout(500); print("A chest after:", await A.evaluate("HALL.chest.length"))
         print("news on A:", await A.evaluate("Object.values(JSON.parse(localStorage.getItem('hask.w.'+Store.worldCode))?.news||{}).map(n=>n.text).filter(t=>t.includes('Hall'))"))
         await hall(B); await B.screenshot(path="hall_B.png", full_page=True)
-        await hall(B); await B.click("[data-tab=map]"); await B.wait_for_timeout(800)
+        await hall(B); await B.click("[data-tab=world]"); await B.wait_for_timeout(800)
         await B.screenshot(path="hall_map.png")
         print("errors:", errs)
         await b.close()

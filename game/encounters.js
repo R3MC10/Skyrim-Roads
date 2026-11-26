@@ -325,7 +325,7 @@ const ENC = (() => {
   function seen(s) { return (s.encSeen = s.encSeen || []); }
   function eligible(s) {
     const c = ctx(s), recent = new Set(seen(s)), f = flags(s);
-    return { c, ok: L.filter((e) => !recent.has(e.id) && lv(s) >= (e.minLv || 1) && !(e.once && f["once_" + e.id]) && (!e.when || e.when(s, c))) };
+    return { c, ok: L.filter((e) => !recent.has(e.id) && lv(s) >= (e.minLv || 1) && (typeof UNLOCKS === "undefined" || UNLOCKS.encounter(s, e.id)) && !(e.once && f["once_" + e.id]) && (!e.when || e.when(s, c))) };
   }
   function roll(s) {
     const { c, ok } = eligible(s);

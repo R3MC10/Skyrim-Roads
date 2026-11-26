@@ -34,10 +34,10 @@ async def main():
             await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&p=li{tag}&notut&locintro"); await pg.wait_for_timeout(1500)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Remi"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
             await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
-            await pg.evaluate("document.querySelector('[data-tab=map]').click()"); await pg.wait_for_timeout(400)
+            await pg.evaluate("document.querySelector('[data-tab=world]').click()"); await pg.wait_for_timeout(400)
 
             async def travel(dest, map_first=True):
-                if map_first: await pg.evaluate("document.querySelector('[data-tab=map]')?.click()"); await pg.wait_for_timeout(300)
+                if map_first: await pg.evaluate("document.querySelector('[data-tab=world]')?.click()"); await pg.wait_for_timeout(300)
                 err = await pg.evaluate(TRIP, dest)
                 for _ in range(60):
                     await pg.wait_for_timeout(250)
@@ -96,7 +96,7 @@ async def main():
             check(await pg.evaluate("()=>!document.querySelector('#locintro')"), f"{tag}: Esc skips it")
 
             # 3. a window open on arrival: the picture waits for it
-            await pg.evaluate("document.querySelector('[data-tab=map]').click()"); await pg.wait_for_timeout(300)
+            await pg.evaluate("document.querySelector('[data-tab=world]').click()"); await pg.wait_for_timeout(300)
             await pg.evaluate(TRIP, "Riverwood")
             await pg.evaluate("()=>window.__dbg.message('Test', 'A window that is open while you arrive.')")
             for _ in range(60):

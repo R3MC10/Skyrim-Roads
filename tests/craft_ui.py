@@ -61,7 +61,7 @@ async def main():
                     except Exception: await pg.wait_for_timeout(300)
                 await pg.click(sel, timeout=3000)
             async def go_town(section):
-                await tap("[data-tab=map]"); await tap("[data-tab=town]"); await pg.wait_for_timeout(250)
+                await tap("[data-tab=world]"); await tap("[data-tab=town]"); await pg.wait_for_timeout(250)
                 await pg.evaluate("document.querySelector('#side [data-act=areahub]')?.click()"); await pg.wait_for_timeout(200)   # back to the town's board (areaui.js)
                 await tap(f"[data-id={section}]"); await pg.wait_for_timeout(250)
             async def batch(sel, label):

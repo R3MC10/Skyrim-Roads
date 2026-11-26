@@ -14,7 +14,7 @@ async def main():
         if await pg.query_selector("#modal [data-act=close]"): await pg.click("#modal [data-act=close]")
         await pg.click("[data-tab=log]"); await pg.wait_for_timeout(300)
         await pg.click("[data-act=qjoin]"); await pg.wait_for_timeout(300); await pg.click("[data-act=close]")
-        await pg.click("[data-tab=map]"); await pg.click("[data-tab=log]"); await pg.wait_for_timeout(300)
+        await pg.click("[data-tab=world]"); await pg.click("[data-tab=log]"); await pg.wait_for_timeout(300)
         await pg.screenshot(path="/home/claude/tests/q_journal.png", full_page=True)
         await pg.click("[data-act=qtalk]"); await pg.wait_for_timeout(500)
         print((await pg.inner_text("#modal"))[:200].replace("\n"," | "))

@@ -662,7 +662,7 @@ const I18N_STORY = {
 "There's nobody here to gossip with.": "Nie ma tu nikogo do plotkowania.",
 "There's no inn here.": "Nie ma tu karczmy.",
 "Nobody wants to be seen talking to you.": "Nikt nie chce, żeby widziano go z tobą.",
-"Check one out first (Map → World news).": "Najpierw sprawdź któryś (Mapa → Wieści ze świata).",
+"Check one out first (the World tab).": "Najpierw sprawdź któryś (karta Świat).",
 "Nothing's going on around here.": "Nic się tu nie dzieje.",
 "Peaceful, for once.": "Dla odmiany spokój.",
 "That lead has gone cold.": "Ten trop wystygł.",
@@ -1024,7 +1024,7 @@ const I18N_STORY = {
 "(Sanguinare Vampiris: cure it within 3 in-game days with a Cure Disease potion or at a shrine, or you'll turn.)": "(Sanguinare Vampiris: wylecz to w ciągu 3 dni w grze miksturą leczenia chorób albo w kapliczce, inaczej się przemienisz.)",
 " You wake up hungry for something that isn't food.": " Budzisz się głodny czegoś, co nie jest jedzeniem.",
 "You are a vampire now.": "Jesteś teraz wampirem.",
-"See the Character tab.": "Zobacz zakładkę Postać.",
+"See the Hero tab.": "Zobacz zakładkę Bohater.",
 "The chill fades.": "Chłód mija.",
 "The disease is gone.": "Choroby już nie ma.",
 "Find an inn where travellers sleep.": "Znajdź karczmę, w której śpią podróżni.",
@@ -1481,7 +1481,7 @@ const I18N_STORY = {
 "Turn Undead sends the dead running, but they leave no loot.": "Odpędzenie Nieumarłych przegania umarłych, ale nie zostawiają łupów.",
 "Frost barely hurts draugr.": "Mróz ledwo rani draugry.",
 "Fire works better on undead and trolls.": "Ogień działa lepiej na nieumarłych i trolle.",
-"The Guide (Character → Settings, or Journal → Misc) walks you through your first hour.": "Przewodnik (Postać → Ustawienia albo Dziennik → Różne) przeprowadzi cię przez pierwszą godzinę.",
+"The Guide (Hero → Settings, or Journal → Misc) walks you through your first hour.": "Przewodnik (Bohater → Ustawienia albo Dziennik → Różne) przeprowadzi cię przez pierwszą godzinę.",
 "Questlines completed": "Ukończone wątki zadań"
 },
   pats: [

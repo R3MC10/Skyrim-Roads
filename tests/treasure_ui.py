@@ -52,7 +52,7 @@ async def main():
                 if sel: await pg.evaluate(f"() => document.querySelector(\"{sel}\")?.scrollIntoView({{block:'center'}})"); await pg.wait_for_timeout(300)
                 await pg.screenshot(path=OUT + fn)
             # 1. the Travel tab: the Treasure hunt card
-            await tab("map")
+            await tab("world")
             await pg.evaluate("() => window.__ui.refresh()"); await pg.wait_for_timeout(400)
             card = await pg.query_selector(".tmcard")
             ok(card is not None, f"{name}: Treasure hunt card on the Travel tab")
@@ -85,7 +85,7 @@ async def main():
             await pg.evaluate("() => document.querySelector('#tmpin [data-tm=unpin]').click()"); await pg.wait_for_timeout(300)
             ok(await pg.query_selector("#tmpin") is None, f"{name}: unpinned")
             # 4. dig at the wrong spot
-            await tab("map")
+            await tab("world")
             await pg.evaluate("() => { const S = window.__dbg.save(); S.location = null; S.trip = null; S.x = 0.2; S.y = 0.2; window.__dbg.publish(); window.__ui.refresh(); }"); await pg.wait_for_timeout(500)
             await pg.evaluate("() => document.querySelector('.tmcard [data-tm=dig]').click()"); await pg.wait_for_timeout(700)
             txt = await pg.evaluate("document.querySelector('#modal')?.innerText || ''")
@@ -93,7 +93,7 @@ async def main():
             await shot(f"{name}_4_wrong.png")
             # 5. dig at the right spot
             await pg.evaluate(f"""() => {{ const S = window.__dbg.save(); const t = TREASURE.target('{SEED}'); S.x = t.pos[0]; S.y = t.pos[1]; S.tre.rest = 0; window.__dbg.publish(); }}""")
-            await tab("map"); await pg.evaluate("() => window.__ui.refresh()"); await pg.wait_for_timeout(400)
+            await tab("world"); await pg.evaluate("() => window.__ui.refresh()"); await pg.wait_for_timeout(400)
             await pg.evaluate("() => document.querySelector('.tmcard [data-tm=dig]').click()"); await pg.wait_for_timeout(800)
             txt = await pg.evaluate("document.querySelector('#modal')?.innerText || ''")
             ok(WORDS[2].lower() in txt.lower(), f"{name}: right spot, the find ({txt[:80]!r})")

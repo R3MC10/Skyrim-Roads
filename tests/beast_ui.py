@@ -67,12 +67,12 @@ async def main():
         ok("Purity of the Blood" in await pg.inner_text("#side"), "the cure quest shows on the werewolf panel")
         # ---- vampire: Lord sky on the Hero tab and in the compass Skills page, both styles
         await pg.evaluate("()=>{const S=window.__dbg.save(); S.werewolf=null; S.vampire={since:0,fedAt:G.now()-7200*2.2}; S.beastPerks={wolf:{},lord:{power_grave:1,vampiric_grip:1},feeds:0,kills:9}; QUESTS.ensure(S);}")
-        await pg.click("[data-tab=map]"); await pg.wait_for_timeout(200); await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(500)
+        await pg.click("[data-tab=world]"); await pg.wait_for_timeout(200); await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(500)
         txt = await pg.inner_text("#side")
         ok("stage 3 of 4" in txt and "Rising at Dawn" in txt, "vampire panel: hunger stage and the cure quest")
         for style in ["ink"]:
             await pg.wait_for_timeout(200)
-            await pg.click("[data-tab=map]"); await pg.wait_for_timeout(200); await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(400)
+            await pg.click("[data-tab=world]"); await pg.wait_for_timeout(200); await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(400)
             panel = await pg.query_selector("#side .bstars")
             if panel: await panel.screenshot(path=OUT + f"beast_sky_lord_{style}.png")
         has_tab = await pg.evaluate("typeof TABMENU !== 'undefined'")

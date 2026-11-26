@@ -26,7 +26,7 @@ CONFIGS = [  # name, a11yText, colour mode
     ("huge", "3", "none"), ("small", "-1", "none"), ("protan", "0", "protan"), ("deutan", "0", "deutan"), ("tritan", "0", "tritan"), ("huge_deutan", "3", "deutan"),
 ]
 VIEWS = [("phone", 390, 844), ("pc", 1440, 900)]
-TABS = ["map", "hero", "pack", "town", "log"]
+TABS = ["world", "hero", "town", "log", "social"]
 
 
 async def main():
@@ -57,7 +57,7 @@ async def main():
                     await pg.evaluate(f"document.querySelector('[data-tab={t}]')?.click()"); await pg.wait_for_timeout(350)
                     await shot(f"{cname}_{t}")
                     await pg.evaluate(CLEAR)
-                await pg.evaluate("document.querySelector('[data-tab=map]')?.click()"); await pg.wait_for_timeout(250)
+                await pg.evaluate("document.querySelector('[data-tab=world]')?.click()"); await pg.wait_for_timeout(250)
                 await pg.evaluate("document.getElementById('sndBtn').click()")   # on a PC the top strip is hidden (pcmap.js menu does the same); await pg.wait_for_timeout(300)
                 await pg.evaluate("[...document.querySelectorAll('#modal h3')].find(h=>/Accessibility/.test(h.textContent))?.scrollIntoView({block:'start'})")
                 await shot(f"{cname}_settings")

@@ -202,15 +202,15 @@ SUB = "(t)=>{ document.querySelector('#side [data-act=tabgo][data-id='+t+']')?.c
 AT = "(p)=>{ const S=__dbg.save(); S.location=p; [S.x,S.y]=WORLD.places[p].slice(0,2); }"
 SCREENS = []
 def screen(name, *steps): SCREENS.append((name, steps))
-screen("map", ("tab", "map"))
-screen("map_picked", ("tab", "map"), ("js", "__ui.jump({place:'Whiterun'})"))
+screen("map", ("tab", "world"))
+screen("map_picked", ("tab", "world"), ("js", "__ui.jump({place:'Whiterun'})"))
 screen("area", ("at", "Whiterun"), ("tab", "town"))
 for s in ["inn", "general", "forge", "alchemy"]:
     screen("shop_" + s, ("at", "Whiterun"), ("js", f"__ui.jump({{tab:'town',shop:'{s}'}})"))
 screen("char_stars", ("tab", "hero"), ("sub", "stars"))
 screen("skills_page", ("js", "TABMENU.go('char')"))
 screen("compass", ("js", "TABMENU.openHub()"))
-screen("items", ("tab", "pack"))
+screen("items", ("js", "__ui.go('items')"))
 screen("event", ("js", """(()=>{ const S=__dbg.save(); G.startTrip(S,'Windhelm',WORLD.places.Windhelm.slice(0,2));
       S.trip.status='event'; S.trip.event={id:'shrine', god:'Talos', text:'A weathered roadside shrine to Talos stands among the stones.'}; __dbg.openEvent(); })()"""))
 screen("dungeon", ("js", """(()=>{ const S=__dbg.save(); const n='Bleak Falls Barrow'; S.location=n; [S.x,S.y]=WORLD.places[n].slice(0,2); S.cleared={}; __ui.go('map'); })()"""),

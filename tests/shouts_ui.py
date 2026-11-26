@@ -25,7 +25,7 @@ async def main():
             await pg.click("#wwall [data-ww]"); await pg.wait_for_timeout(600)
             ok(await pg.query_selector("#wwall") is None, f"{style}: wall scene closes")
             # Magic → Shouts
-            await pg.evaluate(clr); await pg.click("[data-tab=pack]"); await pg.wait_for_timeout(400)
+            await pg.evaluate(clr); await pg.evaluate("__ui.go('items')"); await pg.wait_for_timeout(400)
             await pg.click("[data-act=skytab][data-id=magic]"); await pg.wait_for_timeout(300)
             await pg.evaluate(clr); await pg.click("#sky .sky-cat[data-id=shouts]"); await pg.wait_for_timeout(300)
             rows = await pg.evaluate("[...document.querySelectorAll('#sky .sky-row')].map(b=>b.textContent.trim())")

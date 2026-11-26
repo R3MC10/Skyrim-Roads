@@ -16,7 +16,7 @@ async def main():
         await pg.evaluate("()=>{const S=window.__dbg.save(); FEST.count(S,'arrive',7);}")
         await pg.click("[data-tab=log]"); await pg.click("[data-act=jtab][data-id=misc]"); await pg.wait_for_timeout(300)   # events sit under Journal → Misc
         el = await pg.query_selector("#side .panel"); await el.screenshot(path="fest_panel.png")
-        await pg.evaluate("()=>{const S=window.__dbg.save(); FEST.count(S,'arrive',1);}"); await pg.click("[data-tab=map]"); await pg.click("[data-tab=log]"); await pg.click("[data-act=jtab][data-id=misc]"); await pg.wait_for_timeout(200)
+        await pg.evaluate("()=>{const S=window.__dbg.save(); FEST.count(S,'arrive',1);}"); await pg.click("[data-tab=world]"); await pg.click("[data-tab=log]"); await pg.click("[data-act=jtab][data-id=misc]"); await pg.wait_for_timeout(200)
         await pg.click("[data-act=festclaim]"); await pg.wait_for_timeout(300)
         print("claim:", await pg.evaluate("document.querySelector('#toast')?.textContent"))
         print("errors:", errs)

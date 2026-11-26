@@ -20,7 +20,7 @@ async def main():
             await pg.evaluate("(t)=>{const S=window.__dbg.save(); S.location=t; [S.x,S.y]=WORLD.places[t]; S.gold=60000; S.dragons=2; S.bounty=null; S.thaneWhiterun=true; S.discovered.push(t);}", town)
             await pg.wait_for_timeout(800); await clear(pg); return pg
         async def town(pg, sec):
-            await click(pg, "[data-tab=map]"); await click(pg, "[data-tab=town]"); await pg.wait_for_timeout(200); await click(pg, f"[data-act=shop][data-id={sec}]"); await pg.wait_for_timeout(300)
+            await click(pg, "[data-tab=world]"); await click(pg, "[data-tab=town]"); await pg.wait_for_timeout(200); await click(pg, f"[data-act=shop][data-id={sec}]"); await pg.wait_for_timeout(300)
         async def shot(pg, sel, path):
             el = await pg.query_selector(sel)
             if el: await el.screenshot(path=path)

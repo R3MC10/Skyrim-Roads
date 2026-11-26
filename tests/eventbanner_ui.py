@@ -46,13 +46,13 @@ async def run(p, kw, assets):
     # ---- World Events: cards under the map, then each popup
     kinds = await pg.evaluate(WEV_JUMP); fest = next((k.split(":")[1] for k in kinds or [] if k.startswith("fest:")), None)
     ok(kinds and fest, f"{tag}: caravan, invasion and festival running together ({kinds})")
-    await clear(); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(1500); await clear(); await pg.evaluate("scrollTo(0,0)")
+    await clear(); await pg.click("[data-tab=world]"); await pg.wait_for_timeout(1500); await clear(); await pg.evaluate("scrollTo(0,0)")
     for k in ["kc", "inv", "fest"]:
         out["card-" + k] = await pg.evaluate(IMG, f"#wev .wev-strip.wev-{k} img.wev-pic")
         out["cardtext-" + k] = await pg.evaluate(f"document.querySelector('#wev .wev-strip.wev-{k}')?.innerText || ''")
     await pg.locator("#wev").screenshot(path=OUT + f"{tag}_wev_cards.png")   # the strips under the map, wherever they sit on the page
     for k in ["kc", "inv", "fest"]:
-        await clear(); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(900); await clear()
+        await clear(); await pg.click("[data-tab=world]"); await pg.wait_for_timeout(900); await clear()
         await pg.click(f"#wev .wev-strip.wev-{k}"); await pg.wait_for_timeout(600)
         out["pop-" + k] = await pg.evaluate(IMG, ".wevsheet img.wev-pic, #modal .wev-sheet img.wev-pic")
         out["poptext-" + k] = await pg.evaluate("document.querySelector('#modal')?.innerText || ''")
@@ -61,7 +61,7 @@ async def run(p, kw, assets):
     out["fest"] = fest
     # ---- Great Event: the siege
     await clear(); ev = await pg.evaluate(GEV_JUMP, ["siege"]); ok(ev, f"{tag}: a siege is running ({ev})")
-    await pg.click("[data-tab=map]"); await pg.wait_for_timeout(1600); await clear(); await pg.evaluate("scrollTo(0,0)")
+    await pg.click("[data-tab=world]"); await pg.wait_for_timeout(1600); await clear(); await pg.evaluate("scrollTo(0,0)")
     out["card-siege"] = await pg.evaluate(IMG, "#gev img.gev-pic")
     out["cardtext-siege"] = await pg.evaluate("document.querySelector('#gev')?.innerText || ''")
     out["phases-siege"] = await pg.evaluate("document.querySelectorAll('#gev .gev-ph').length")

@@ -14,7 +14,7 @@ async def main():
         open_ = await pg.evaluate("G.shopsOpen(G.now())"); print("shops open now:", open_)
         await pg.wait_for_timeout(400)
         await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
-        await pg.click("[data-tab=map]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(300)
+        await pg.click("[data-tab=world]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(300)
         await pg.click("[data-act=shop][data-id=general]"); await pg.wait_for_timeout(300)
         await pg.click("[data-act=smode][data-id=sell]"); await pg.wait_for_timeout(300)
         el = await pg.query_selector("#side"); await el.screenshot(path="trade_sell.png")

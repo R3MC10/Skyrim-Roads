@@ -80,15 +80,15 @@ SUB = "(t)=>{ document.querySelector('#side [data-act=tabgo][data-id='+t+']')?.c
 
 SCREENS = []
 def screen(name, *steps): SCREENS.append((name, steps))
-screen("map", ("tab", "map"))
-screen("map_picked", ("tab", "map"), ("js", "__ui.jump({place:'Windhelm'})"))
-screen("map_places", ("tab", "map"), ("sub", "places"))
-screen("map_world", ("tab", "map"), ("sub", "world"))
+screen("map", ("tab", "world"))
+screen("map_picked", ("tab", "world"), ("js", "__ui.jump({place:'Windhelm'})"))
+screen("map_places", ("tab", "world"), ("sub", "places"))
+screen("map_world", ("tab", "world"), ("sub", "world"))
 for s in ["hero", "stars", "perks", "stats", "ach", "library", "diary", "settings"]:
     screen("char_" + s, ("tab", "hero"), ("sub", s))
 screen("skills_page", ("js", "TABMENU.go('char')"))
-screen("items", ("tab", "pack"))
-screen("magic", ("tab", "magic"))
+screen("items", ("js", "__ui.go('items')"))
+screen("magic", ("js", "__ui.go('magic')"))
 screen("journal", ("tab", "log"))
 screen("social", ("tab", "social"))
 screen("area", ("tab", "town"))
@@ -98,8 +98,8 @@ screen("event", ("js", """(()=>{ const S=__dbg.save(); G.startTrip(S,'Windhelm',
       S.trip.status='event'; S.trip.event={id:'shrine', god:'Talos', text:'A weathered roadside shrine to Talos stands among the stones.'}; __dbg.openEvent(); })()"""))
 screen("dungeon", ("js", """(()=>{ const S=__dbg.save(); const n='Bleak Falls Barrow'; S.location=n; [S.x,S.y]=WORLD.places[n].slice(0,2); S.cleared={}; __ui.go('map'); })()"""),
        ("js", "document.querySelector('[data-act=enter]')?.click()"), ("wait", 1200), ("js", "document.querySelectorAll('#loadcard').forEach(e=>e.remove())"))
-screen("modal_settings", ("tab", "map"), ("js", "document.querySelector('.top .snd')?.click()"))
-screen("modal_message", ("tab", "map"), ("js", "__dbg.message('A letter', 'The Jarl of Whiterun asks for you. '.repeat(40))"))
+screen("modal_settings", ("tab", "world"), ("js", "document.querySelector('.top .snd')?.click()"))
+screen("modal_message", ("tab", "world"), ("js", "__dbg.message('A letter', 'The Jarl of Whiterun asks for you. '.repeat(40))"))
 screen("fight", ("js", """(()=>{ const S=__dbg.save(); S.dungeon=null; S.trip=null;
       const e=G.scaleEnemy({name:'Bandit',health:120,damage:9,tags:['humanoid'],level:12,danger:'medium',gold:[0,0],text:''},12);
       TB.call(S, ()=>{ const f=new G.Fight(S,e); f.allies=[]; return f.run({trySneak:false}); }, ()=>{}); })()"""), ("wait", 1500),

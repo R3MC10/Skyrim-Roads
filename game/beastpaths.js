@@ -273,7 +273,7 @@ const BEASTPATH = (() => {
       if (s.moonblood && (s.vampire || s.werewolf)) { s.moonblood = null; return null; }
       if (s.moonblood && t - s.moonblood.at >= C.TURN_AFTER) {
         s.moonblood = null; s.werewolf = { since: t, wild: true }; s.wolfDeclined = false;
-        return " The moon pulls at your bones. You wake in the woods with blood on your hands: you are a werewolf now. Beast Form is in your fights, once a day. See the Character tab.";
+        return " The moon pulls at your bones. You wake in the woods with blood on your hands: you are a werewolf now. Beast Form is in your fights, once a day. See the Hero tab.";
       }
       return null;
     };
@@ -439,7 +439,7 @@ const BEASTPATH = (() => {
           if (s.werewolf || s.vampire) return { text: "\"Your blood is already spoken for.\" The carriage rolls on." };
           s.vampire = { since: nowS(), fedAt: nowS(), court: true }; s.sanguinare = null; s.moonblood = null;
           const b = (s.beastPerks = s.beastPerks || { wolf: {}, lord: {}, feeds: 0, kills: 0 }); b.kills = Math.max(b.kills, 2);
-          return { text: "You climb in. Cold lips at your throat, a sting, then nothing. You wake by the roadside at dusk, starving and strong. You are a vampire now, and the Court gave you a taste of being a Vampire Lord (a perk point). See the Character tab." };
+          return { text: "You climb in. Cold lips at your throat, a sting, then nothing. You wake by the roadside at dusk, starving and strong. You are a vampire now, and the Court gave you a taste of being a Vampire Lord (a perk point). See the Hero tab." };
         },
         refuse: () => ({ text: "\"A pity.\" The curtain falls. \"The Court is patient. We'll ask again.\"" }),
         fight: (s) => ({ text: "The noble steps down, smiling, and the coachman draws a curved blade.", foe: courtFoe(s), after: "courtLoot" }),

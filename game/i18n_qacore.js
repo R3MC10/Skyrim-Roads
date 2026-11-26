@@ -6,8 +6,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
 const I18N_QACORE = (() => {
   const TPL = {
     // first-time tips (onboard.js)
-    "Open <b>Character</b>: pick Health, Magicka or Stamina, then spend your perk point on a skill you use. Skills rise by using them.":
-      "Otwórz <b>Postać</b>: wybierz Zdrowie, Magię albo Wytrzymałość, potem wydaj punkt atutu na umiejętność, której używasz. Umiejętności rosną, gdy ich używasz.",
+    "Open <b>Hero</b>: pick Health, Magicka or Stamina, then spend your perk point on a skill you use. Skills rise by using them.":
+      "Otwórz <b>Bohatera</b>: wybierz Zdrowie, Magię albo Wytrzymałość, potem wydaj punkt atutu na umiejętność, której używasz. Umiejętności rosną, gdy ich używasz.",
     "You're carrying more than you can, so you walk slowly. Sell loot in a town, keep things in a house chest, or let a horse or follower carry them.":
       "Niesiesz więcej, niż dasz radę, więc idziesz wolno. Sprzedaj łupy w mieście, zostaw rzeczy w skrzyni w domu albo daj je nieść koniowi lub towarzyszowi.",
     "Go room by room. Each room may hold foes, a trap or loot; you can leave between rooms and come back later. The boss and the best chest wait at the end.":
@@ -31,7 +31,7 @@ const I18N_QACORE = (() => {
       "Naprawione: samouczek pierwszej podróży kazał otworzyć zakładkę Miasto; teraz nazywa się Okolica.",
     "Fixed: in Polish, the first-trip guide, the first-time tips and the \"you set off\" and \"you arrived\" messages were still in English.":
       "Naprawione: po polsku samouczek pierwszej podróży, wskazówki na start i komunikaty o wyruszeniu i dotarciu były jeszcze po angielsku.",
-    "You've got a lead": "Masz trop", "Open Character": "Otwórz Postać", "Got it": "Rozumiem", "Don't show tips": "Nie pokazuj wskazówek", "Close tip": "Zamknij wskazówkę",
+    "You've got a lead": "Masz trop", "Open Hero": "Otwórz Bohatera", "Got it": "Rozumiem", "Don't show tips": "Nie pokazuj wskazówek", "Close tip": "Zamknij wskazówkę",
   });
   // the title screen, its pages and the in-app updater (qa-core batch 2)
   Object.assign(I18N_EXTRA.words, {
@@ -87,10 +87,7 @@ const I18N_QACORE = (() => {
     "Making and improving weapons and armor at a forge.": "Wykuwanie i ulepszanie broni oraz pancerzy w kuźni.",
     "Putting magic on your gear, and recharging enchanted weapons more cheaply.": "Nakładanie magii na ekwipunek i tańsze ładowanie zaklętej broni.",
     "Brewing potions and poisons from ingredients.": "Warzenie mikstur i trucizn ze składników.",
-    // respec (respec.js)
-    "Respec": "Nowy rozwój", "gold.": "złota.", "Yes, respec": "Tak, zacznij od nowa", "Keep my build": "Zostaw jak jest",
-    "Start your build over: every perk and every Health/Magicka/Stamina choice goes back to the pool. Skills and level stay. Costs":
-      "Zacznij rozwój postaci od nowa: każdy atut i każdy wybór Zdrowia, Magii i Wytrzymałości wraca do puli. Umiejętności i poziom zostają. Kosztuje",
+    "gold.": "złota.",
     // hirelings' one-line descriptions on the hire list (towns.js FOLLOWERS)
     "Your steward at Pinewatch Hollow. Swings an axe at trees and bandits alike.": "Twój zarządca w Pinewatch Hollow. Rąbie toporem drzewa i bandytów bez różnicy.",
     "Your steward at Fenhollow Rise. Knows a few spells and every path through the marsh.": "Twój zarządca w Fenhollow Rise. Zna kilka czarów i każdą ścieżkę przez bagno.",
@@ -353,7 +350,6 @@ const I18N_QACORE = (() => {
     [/^(\d{1,2}) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (\d{4})$/, (m) => `${m[1]} ${{ Jan: "sty", Feb: "lut", Mar: "mar", Apr: "kwi", May: "maj", Jun: "cze", Jul: "lip", Aug: "sie", Sep: "wrz", Oct: "paź", Nov: "lis", Dec: "gru" }[m[2]]} ${m[3]}`],
     [/^needs (.+?) (\d+)(?: and (.+))?$/, (m) => `wymaga: ${T(m[1])} ${m[2]}${m[3] ? ` i ${T(m[3])}` : ""}`],
     [/^You need ([\d,]+) gold\.$/, (m) => `Potrzebujesz ${m[1].replace(/,/g, " ")} złota.`],
-    [/^Respec · ([\d,]+) gold$/, (m) => `Nowy rozwój · ${m[1].replace(/,/g, " ")} złota`],
     [/^Sure\? This takes back (\d+) perk points? and (\d+) level-up choices? for ([\d,]+) gold\.$/, (m) => `Na pewno? Odbierze to punkty atutów: ${m[1]} i wybory przy awansie: ${m[2]} za ${m[3].replace(/,/g, " ")} złota.`],
     [/^build (\d+)$/, (m) => `wersja ${m[1]}`],
     [/^\. You have build (\d+)\.$/, (m) => `. Masz wersję ${m[1]}.`],

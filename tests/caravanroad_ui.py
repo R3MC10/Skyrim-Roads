@@ -44,7 +44,7 @@ async def main():
             await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
             info = await pg.evaluate(SETUP, 38)
             print(style, "caravan:", info); await pg.wait_for_timeout(7000); await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
-            await pg.click("[data-tab=map]"); await pg.wait_for_timeout(300)
+            await pg.click("[data-tab=world]"); await pg.wait_for_timeout(300)
             if await pg.evaluate("document.querySelector('#zoomBtn')?.textContent.trim() === '＋'"): await pg.click("#zoomBtn")
             await pg.evaluate("document.querySelector('#mapwrap')?.scrollIntoView({block:'start'})"); await pg.wait_for_timeout(1200)
             await pg.screenshot(path=os.path.join(OUT, f"map_near_{style}.png"))

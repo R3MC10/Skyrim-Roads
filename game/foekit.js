@@ -11,6 +11,7 @@
 const FOEKIT = (() => {
   const h01 = (str) => { let h = 2166136261; for (const c of String(str)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return ((h >>> 0) % 100000) / 100000; };
   const USE = 0.5;            // chance a turn goes to a kit move when one is ready
+  const useOf = (f) => USE * (typeof DIFF !== "undefined" ? DIFF.kitUse(f) : 1);   // Story foes use their kit less, Hard foes more (difficulty.js)
   const NEW_W = 2.2;          // moves not used yet this fight weigh this much more
   const MELEE = new Set(["attack", "power_attack", "bash"]);
   const isSpellA = (a) => /^(spell|dual|scroll|staff):/.test(a || "");
@@ -162,7 +163,7 @@ const FOEKIT = (() => {
       return pre + w.text(n, r.t);
     }
     if (pl && (pl.id === "blow" || pl.id === "land")) { const r = hit(f, enemyTurn, 1, { keepName: true }); return pre + r.t; }
-    if (!pl && (!k.ids.length || rnd() >= USE)) { const r = hit(f, enemyTurn, 1, { keepName: true }); return pre + r.t; }
+    if (!pl && (!k.ids.length || rnd() >= useOf(f))) { const r = hit(f, enemyTurn, 1, { keepName: true }); return pre + r.t; }
     const id = pl && ready(f).includes(pl.id) ? pl.id : pick(f, rnd);
     if (!id) { const r = hit(f, enemyTurn, 1, { keepName: true }); return pre + r.t; }
     const m = MOVES[id]; k.cd[id] = m.cd; k.used[id] = (k.used[id] || 0) + 1; f.kitLast = id;
@@ -183,7 +184,7 @@ const FOEKIT = (() => {
         for (const id in sim.cd) if (sim.cd[id] > 0) sim.cd[id]--;
         if (wind) { out.push({ id: "land", wind }); wind = null; continue; }
         if (teach && i === n - 1 && !(sim.cd.wind_up > 0)) { sim.cd.wind_up = MOVES.wind_up.cd; sim.used.wind_up = 1; wind = "smash"; out.push({ id: "wind_up" }); continue; }
-        if (!sim.ids.length || rnd() >= USE) { out.push({ id: "blow" }); continue; }
+        if (!sim.ids.length || rnd() >= useOf(f)) { out.push({ id: "blow" }); continue; }
         const id = pick(f, rnd);
         if (!id) { out.push({ id: "blow" }); continue; }
         sim.cd[id] = MOVES[id].cd; sim.used[id] = (sim.used[id] || 0) + 1;

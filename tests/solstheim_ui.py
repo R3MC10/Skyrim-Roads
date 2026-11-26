@@ -43,7 +43,7 @@ async def main():
         print("intro popup:", (await pg.inner_text("#modal"))[:160].replace("\n", " ") if modal else None)
         await pg.screenshot(path=OUT + "sol_intro.png")
         await close_modals(pg)
-        await pg.click("[data-tab=map]"); await pg.evaluate("scrollTo(0,0)"); await pg.wait_for_timeout(1200)
+        await pg.click("[data-tab=world]"); await pg.evaluate("scrollTo(0,0)"); await pg.wait_for_timeout(1200)
         print("map region:", await pg.evaluate("window.__dbg.view().region"), "| transform", await pg.evaluate("JSON.stringify(window.__dbg.view().transform)"))
         await pg.screenshot(path=OUT + "sol_map.png")
         # zoomed out: the whole island
@@ -83,7 +83,7 @@ async def main():
         await pg.evaluate("""()=>{const S=window.__dbg.save(); const base=D.ENCOUNTERS.find(e=>e.name==='Riekling hunters'); const f=new G.Fight(S,G.scaleEnemy(base,S.level),null,G.now()); f.run({t:G.now()}); window.__solfight=f;}""")
         # ash storm over the map
         await pg.evaluate("()=>{ WEVENTS.__w0=WEVENTS.weather; WEVENTS.weather=(p,t)=>WORLD.isSol(p)?{id:'ashstorm',name:'Ash storm',icon:'\ue193',speed:0.65,sneak:0.15,encounters:0.8}:WEVENTS.__w0(p,t); }")
-        await pg.click("[data-tab=map]"); await pg.evaluate("scrollTo(0,0)"); await pg.wait_for_timeout(1500)
+        await pg.click("[data-tab=world]"); await pg.evaluate("scrollTo(0,0)"); await pg.wait_for_timeout(1500)
         print("weather:", await pg.evaluate("window.__dbg.view().weather"), "| clock:", await pg.inner_text("#clock") if await pg.query_selector("#clock") else "")
         await pg.screenshot(path=OUT + "sol_ashstorm.png")
         # walk somewhere on the island (and see the route on the map)
@@ -100,7 +100,7 @@ async def main():
         await pg.click("#side [data-act=shop][data-id=docks]"); await pg.wait_for_timeout(300)
         await pg.click("#side [data-act=sail]"); await pg.wait_for_timeout(600); await close_modals(pg)
         await pg.evaluate("()=>{window.__dbg.save().trip.lastTick-=3100;}"); await pg.wait_for_timeout(2600); await close_modals(pg)
-        await pg.click("[data-tab=map]"); await pg.evaluate("scrollTo(0,0)"); await pg.wait_for_timeout(1000)
+        await pg.click("[data-tab=world]"); await pg.evaluate("scrollTo(0,0)"); await pg.wait_for_timeout(1000)
         print("home:", await pg.evaluate("()=>({loc:window.__dbg.save().location, region:window.__dbg.view().region})"))
         await pg.screenshot(path=OUT + "sol_home.png")
         # reload: still fine
