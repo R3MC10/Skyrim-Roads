@@ -330,33 +330,6 @@ const PAINTRIG = (() => {
     const [kn, an] = ik(hip[0], hip[1], want[0], want[1], G.thigh, G.shin, -1);
     legAt(g, ctx, { hip, knee: kn, ankle: an, toe: 0.05 }, far ? "d" : "n");
   }
-  /* [dollrig] where the skull is in a head picture (measured pixels, neck at q.p): the top of the head, the forehead at
-     brow height, and the skull's length; read off the picture's alpha once (cached on the picture), or guessed from the
-     neck's width when it can't be read (node, a tainted canvas) */
-  const SKULL = new WeakMap();
-  function skullGuess(q) { const nw = q.nw || q.w * 0.35; return { ty: Math.max(0, q.p[1] - 2.2 * nw), fx: Math.min(q.w, q.p[0] + 1.0 * nw), w: 1.45 * nw }; }
-  function skullOf(q, img) {
-    if (img && typeof img === "object" && SKULL.has(img)) return SKULL.get(img);
-    let sk = skullGuess(q);
-    try {
-      if (img && typeof document !== "undefined") {
-        const iw = img.width || img.naturalWidth, ih = img.height || img.naturalHeight, k = Math.min(1, 240 / Math.max(iw, ih));
-        const c = mk(iw * k, ih * k), x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(img, 0, 0, c.width, c.height);
-        const d = x.getImageData(0, 0, c.width, c.height).data, fx = c.width / q.w, fy = c.height / q.h, nw = q.nw || q.w * 0.35;
-        const x0 = Math.max(0, Math.round((q.p[0] - 1.0 * nw) * fx)), x1 = Math.min(c.width - 1, Math.round((q.p[0] + 1.6 * nw) * fx));
-        const a = (X, Y) => d[(Y * c.width + X) * 4 + 3] > 128;
-        let top = -1;
-        for (let Y = 0; Y < c.height && top < 0; Y++) { let n = 0; for (let X = x0; X <= x1; X++) if (a(X, Y) && ++n >= 2) { top = Y; break; } }
-        if (top >= 0) {
-          const ty = top / fy, yb = Math.round((ty + 0.3 * (q.p[1] - ty)) * fy);
-          let front = -1; for (let X = x1; X >= x0; X--) if (a(X, yb)) { front = X; break; }
-          if (front > 0) sk = { ty, fx: front / fx, w: 1.45 * nw };
-        }
-      }
-    } catch { /* the guess */ }
-    if (img && typeof img === "object") SKULL.set(img, sk);
-    return sk;
-  }
   function figure(g, ctx, P, sp, o, wk) {
     const G = ctx.G, m = G.m, B = solve(G, P), kit = ctx.kit, st = ctx.st;
     if (o.rideLayer === "far") {   // [riding] the first of two passes in the saddle: only the far leg, drawn before the horse so its body covers it
@@ -418,7 +391,7 @@ const PAINTRIG = (() => {
     armAt(g, ctx, B.armF, "d", null); lay("offArm");
     if (offW) { g.save(); g.translate(fist.grip[0], fist.grip[1]); g.rotate(offA); g.scale(m * WSC, m * WSC); (gear || kit).weapon(g, sp, offW, st, { plain: true, glow: glowC }); g.restore(); lay("offWeapon"); rec.hands.off = { item: offW, grip: cpx(fist.grip) }; }
     const fg = handAt(g, ctx, B.armF, farPart, sv(true), farWant); lay("offFist"); rec.hands.offFist = cpx(fg);
-    if (P.cast > 0.05 && kit) kit.glowAt(g, fg[0], fg[1], (5 + P.cast * 3) * m, castC, 0.75, st);
+    if (P.cast > 0.05 && kit) kit.glowAt(g, fg[0], fg[1], (3.6 + P.cast * 2.2) * m, castC, 0.45, st);   // [paintclean] a soft light in the hand, not a big orb over the painting
     // legs: the far one in shade (in the saddle only the near leg here, bent over the horse's flank: the far one went first, behind the horse)
     if (P.ride) rideLeg(g, ctx, B, false, P.stir);   // [riding] thigh, shin and boot folded over the flank into the stirrup (every set: the old one-piece bent-leg picture stopped short of it)
     else { legAt(g, ctx, B.legF, "d"); legAt(g, ctx, B.legN, "n"); }
@@ -432,12 +405,6 @@ const PAINTRIG = (() => {
     uprightAt(g, ctx, "torso", "n", B.W, B.sa, ctx.Q.torso.cut);
     { const q = ctx.Q.pelvis, ky = q.hip[1] - 10; putR(g, pic(ctx.r, "pelvis", "n", q.w * G.u * ctx.dev), q, G.u, B.W[0], B.W[1], B.pa, [[0, 0, q.w, ky + 1], [0, ky, q.w, q.h, clamp(sw * 0.55 - B.pa * 0.3, -0.25, 0.25), ky]]); }   // belt flaps, pouches and fur swing a little
     putR(g, himg, hq, hu, B.N[0], B.N[1], hk, headR(hq, hairK, "front"));
-    if (sp.helm && gear && gear.helmet) {   // [dollrig] the worn helmet over the painted head (no painted helmets yet: shaded drawing)
-      const sk = skullOf(hq, rh ? rh.imgs.head : ctx.r.imgs.head);
-      g.save(); g.translate(B.N[0], B.N[1]); g.rotate(hk);
-      gear.helmet(g, sp, { fx: (sk.fx - hq.p[0]) * hu, ty: (sk.ty - hq.p[1]) * hu, w: sk.w * hu }, st);
-      g.restore();
-    }
     lay("body");
     if (shieldOn) { shieldHere(); lay("shield"); rec.hands.shield = { grip: cpx(fist.grip) }; }   // over the body, under the weapon arm
     // the near arm: upper arm, forearm, then whatever is in the hand, then the hand over its grip
@@ -458,7 +425,7 @@ const PAINTRIG = (() => {
     }
     rec.hands.mainFist = cpx(handAt(g, ctx, B.armN, handPart, sv(false), want)); lay("mainFist");
     if (P.flask) flaskAt(g, grip[0], grip[1] - 0.5 * m, P.flask, m * 1.2);
-    if (P.cast > 0.05 && kit) kit.glowAt(g, grip[0] + 1.6 * m, grip[1] - 0.6 * m, (5 + P.cast * 3.4) * m, castC, 0.85, st);
+    if (P.cast > 0.05 && kit) kit.glowAt(g, grip[0] + 1.6 * m, grip[1] - 0.6 * m, (3.8 + P.cast * 2.4) * m, castC, 0.5, st);
     return B;
   }
   /* [rigcohesion] secondary motion: one damped spring per fighter, driven by how fast the neck moves (the step in, the
@@ -541,6 +508,6 @@ const PAINTRIG = (() => {
      canvas's pixels at draw time; n counts draws, so a caller can tell a fresh one (null: no blade) */
   const tip = (who) => TIPS.get(who || "me") || null;
   const last = (who) => LAST.get(who || "me") || null;
-  return { setOf, geo, raceHead, tip, last, can, fight, draw, sample, warp, controls, solve, ready, skullOf, skullGuess, get broken() { return broken; }, reset: () => { broken = false; REC.clear(); HREC.clear(); } };
+  return { setOf, geo, raceHead, tip, last, can, fight, draw, sample, warp, controls, solve, ready, get broken() { return broken; }, reset: () => { broken = false; REC.clear(); HREC.clear(); } };
 })();
 if (typeof module !== "undefined") module.exports = PAINTRIG;

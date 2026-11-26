@@ -780,7 +780,7 @@ const FIGHTART = (() => {
     }
     const work = cv, wg = g;   // one canvas: the stage is drawn straight to the screen
 
-    const bg = bgFor(rec.scene, W, Hh, rec.wagon, rec.sky);
+    let bg = null;   // [paintclean] the drawn background (with its drawn wagon) is only made when the painted scene isn't on
     const CHAN = typeof CHANNEL !== "undefined" ? CHANNEL : null;   // [channel] moves being prepared (channel.js)
     const wxp = rec.sky && (!FS || FS.weather()) ? SKY.particles(rec.sky, W, Hh, { reduce: rm, scale: () => vs * (CHAN ? CHAN.ambient() : 1) }) : null;   // [channel] thinner when many prepare at once   // snow, rain, leaves or fireflies during the replay
     const f = rec.f, beats = beatsOf(f, rec.hero);
@@ -1323,8 +1323,8 @@ const FIGHTART = (() => {
       wg.setTransform(1, 0, 0, 1, 0, 0); wg.imageSmoothingEnabled = true;
       if (!LY.flat) { wg.fillStyle = "#1c2128"; wg.fillRect(0, 0, work.width, work.height); }
       const art = rec.art && typeof BSCENE !== "undefined" ? BSCENE.ready(rec.art) : null;   // [OURS] the painted scene once its pictures are in, else the drawn one
-      const artO = art ? { W, Hh, t: rm ? 0 : tt, sky: rec.sky, wagon: rec.wagon, lay: LY } : null;
-      if (art) BSCENE.back(wg, art, artO); else LY.paint(bg, 0, 0, bg.width, bg.height, 0, 0, W, Hh, { top: true, bottom: true });
+      const artO = art ? { W, Hh, t: rm ? 0 : tt, sky: rec.sky, lay: LY } : null;   // [paintclean] no drawn wagon over the painted plate
+      if (art) BSCENE.back(wg, art, artO); else { bg = bg || bgFor(rec.scene, W, Hh, rec.wagon, rec.sky); LY.paint(bg, 0, 0, bg.width, bg.height, 0, 0, W, Hh, { top: true, bottom: true }); }
       LY.set(1);   // the fighters and the ground they stand on
       cv.__cam = LY.flat ? null : LY.toScreen;   // fightpos.js screenOf: where a fighter shows now
       camFollow(LY);
@@ -1444,11 +1444,11 @@ const FIGHTART = (() => {
             wg.globalAlpha = 0.3 * pulse; wg.lineWidth = 0.6 * s; wg.beginPath(); wg.moveTo(...at(0.15, 0)); wg.lineTo(...at(1, 0)); wg.stroke();
           } else {   // a blade: both edges from the guard to the point, meeting at the tip
             const q0 = heroRig ? 0.42 : 0.3, half = (/greatsword/.test(wt) ? 1.3 : /dagger/.test(wt) ? 0.7 : 1) * s;
-            wg.globalAlpha = 0.36 * pulse; wg.lineWidth = 0.55 * s;
+            wg.globalAlpha = (heroRig ? 0.24 : 0.36) * pulse; wg.lineWidth = 0.55 * s;
             wg.beginPath(); wg.moveTo(...at(q0, half)); wg.lineTo(...at(0.9, half * 0.55)); wg.lineTo(...at(1, 0)); wg.lineTo(...at(0.9, -half * 0.55)); wg.lineTo(...at(q0, -half)); wg.stroke();
           }
           wg.restore();
-          if (Math.random() < 0.16 * pmul) { const q = 0.5 + Math.random() * 0.5, [x, y] = at(q, 0); spawn(c === GL.shock ? 1 : 4, col, x, y, (Math.random() - 0.5) * 12 * s, (c === GL.frost ? 10 : -16) * s, 0.55, 1.1, 0); }
+          if (!heroRig && Math.random() < 0.16 * pmul) { const q = 0.5 + Math.random() * 0.5, [x, y] = at(q, 0); spawn(c === GL.shock ? 1 : 4, col, x, y, (Math.random() - 0.5) * 12 * s, (c === GL.frost ? 10 : -16) * s, 0.55, 1.1, 0); }
         }
       }
       if (b && b.drain && b.who === "me" && typeof BEASTART !== "undefined") BEASTART.drain(wg, hx0 + 24 * s, heroChest - 8 * s, fx0, foeChest, u, tt);   // a Vampire Lord's drain
@@ -1545,7 +1545,7 @@ const FIGHTART = (() => {
       if (RL) RL.scene(null);   // figures drawn anywhere else (character screens) stay ungraded
       if (art) { BSCENE.front(wg, art, artO); LY.set(1); }   // the near-edge strip goes over the fighters' feet, under the weather and the HUD
       // weather in front of the fighters
-      if (wxp) { const dt = Math.min(0.05, Math.max(0, (now - lastNow) / 1000)); lastNow = now; wxp.step(wg, done ? 0 : dt); }
+      if (wxp && !(art && /leaf|petal/.test(wxp.kind || ""))) { const dt = Math.min(0.05, Math.max(0, (now - lastNow) / 1000)); lastNow = now; wxp.step(wg, done ? 0 : dt); }
       // weapon trail
       if (b && m && m.trail && phase === "play" && !(b.who !== "me" && foePicOn)) {   // [weaponfx] only during this hit's own swing, fading out just after contact
         const w = swingOn(m, u, true), hitU = w >= 0 ? m.hits[w] : 0, sh0 = WFX ? WFX.SHOW : 0.22;
