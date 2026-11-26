@@ -5,7 +5,7 @@
    usual music. The video has its own snow, so the title's drawn snowflakes stop while it plays (ui.js startFog). Anything wrong (landscape, reduced motion, no autoplay, a load error, browser automation without
    ?assets) and the painted panorama (titleart.js) simply carries on underneath. */
 const TITLEVIDEO = (() => {
-  const SRC = "title-loop.mp4";
+  const SRC = "title-loop.mp4", POSTER = "title-poster.webp";
   const upright = () => { try { return innerHeight > innerWidth * 1.15; } catch { return false; } };
   const allowed = () => {
     try { if (navigator.webdriver && !/[?&]assets\b/.test(location.search)) return false; } catch { /* ignore */ }
@@ -15,26 +15,28 @@ const TITLEVIDEO = (() => {
   const reduced = () => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; } };
   const phone = () => upright() && allowed();
 
+  /* the video's own first frame (title-poster.webp) shows at once, before anything loads or plays, so a cold start
+     never shows the drawn stand-in picture; the video takes over from it seamlessly. With reduced motion the still
+     frame simply stays. */
   function attach(title) {
-    if (!title || title.querySelector(".tvid") || !allowed() || reduced()) return;
+    if (!title || title.querySelector(".tvid") || !allowed()) return;
     const cv = title.querySelector("#tanim");
     const v = document.createElement("video");
-    v.className = "tvid"; v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = true; v.preload = "auto";
+    v.className = "tvid"; v.muted = true; v.loop = true; v.playsInline = true; v.preload = "auto"; v.poster = POSTER;
     v.setAttribute("muted", ""); v.setAttribute("playsinline", ""); v.setAttribute("aria-hidden", "true");
-    v.src = SRC;
+    const still = reduced();
+    v.autoplay = !still; if (!still) v.src = SRC;
     (cv ? cv.after(v) : title.prepend(v));
     const on = (yes) => { v.classList.toggle("on", yes); if (cv) { if (yes) cv.dataset.rest = "1"; else delete cv.dataset.rest; } };
     const fit = () => {
       if (!v.isConnected) { removeEventListener("resize", fit); return; }
-      if (upright()) { if (v.paused) v.play()?.catch?.(() => {}); if (v.readyState >= 3 && !v.paused) on(true); }
+      if (upright()) { on(true); if (!still && v.paused) v.play()?.catch?.(() => {}); }
       else { on(false); v.pause(); }
     };
-    v.addEventListener("playing", () => { if (upright()) on(true); });
-    v.addEventListener("error", () => { on(false); v.remove(); });
+    v.addEventListener("error", () => { if (v.getAttribute("src")) { v.removeAttribute("src"); v.load(); } });   // a broken video: the still frame stays
     addEventListener("resize", fit);
-    if (!upright()) v.pause();
-    else v.play()?.catch?.(() => { /* autoplay refused: the painted panorama stays */ });
+    fit();
   }
-  return { attach, phone, SRC };
+  return { attach, phone, SRC, POSTER };
 })();
 if (typeof module !== "undefined") module.exports = TITLEVIDEO;
