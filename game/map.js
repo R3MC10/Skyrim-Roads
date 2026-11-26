@@ -967,11 +967,16 @@ const WorldMap = (() => {
         g.stroke();
         if (v.weather === "storm" && !v.reduceMotion && Math.sin(tt * 0.9) > 0.995) { g.fillStyle = "rgba(255,255,255,.25)"; g.fillRect(0, 0, cw2, ch2); }
       }
-      if (["snow", "blizzard"].includes(v.weather)) {
+      if (["snow", "blizzard"].includes(v.weather) && typeof SNOWFX === "undefined") {   // old flat snow, only if snowfx.js is missing
         g.fillStyle = "rgba(255,255,255,.75)"; const n = v.weather === "blizzard" ? 160 : 70, drift = v.weather === "blizzard" ? 140 : 40;
         for (let i = 0; i < n; i++) { const x = ((i * 97.1 + tt * drift + Math.sin(i + tt) * 10) % cw2 + cw2) % cw2, y = ((i * 53.7 + tt * 45) % ch2); g.beginPath(); g.arc(x, y, (1 + (i % 3) * 0.6) * dpr, 0, 7); g.fill(); }
       }
       g.restore();
+    }
+    // [snowfx] realistic snow seen from above (snowfx.js); eases in and out with the weather, so call it every frame
+    if (typeof SNOWFX !== "undefined" && !(FX && FX.regional())) {
+      const lite = typeof MOTION !== "undefined" && MOTION.lite && MOTION.lite();
+      try { SNOWFX.draw(g, canvas.width / dpr, canvas.height / dpr, dpr, { weather: v.weather, reduce: v.reduceMotion, lite }); } catch (e) { /* the map never breaks for snow */ }
     }
     if (typeof MOTION !== "undefined") { MOTION.trackDiscoveries(v.discovered); MOTION.fogLift(g, s, W, H); }   // fog wipes off new places
     if (MA) { MA.trackDiscoveries(v.discovered); MA.drawBursts(g, s, W, H, v.reduceMotion); }
