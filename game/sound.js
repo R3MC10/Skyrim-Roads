@@ -528,6 +528,36 @@ const SOUND = (() => {
     // the recorded soundtrack is the music now; the old made-on-the-fly tunes only play if no music files load at all
     const anyFiles = Object.keys(musFile).some((k) => !badTrack[k]);
     if (curTrack || !on || anyFiles || !filesReady) { if (playing) stopMusic(); } else if (!playing) startMusic();
+    titleWind(on && wantMood === "title" && typeof TITLEVIDEO !== "undefined" && TITLEVIDEO.phone());
+  }
+  /* phones: the title video's own wind, recorded quietly under the title music (title-wind.mp3, a 35 s seamless loop;
+     its level is baked into the file, so it rides the music bus at the same gain as the music) */
+  let windT = null;
+  function titleWind(want) {
+    let auto = true;
+    try { auto = !(navigator.webdriver && !/[?&]audio\b/.test(location.search)); } catch (e) { /* no navigator */ }
+    if (want && !auto) want = false;
+    if (!want && !windT) return;
+    if (!windT) {
+      const el = new Audio("title-wind.mp3"); el.loop = true; el.preload = "auto";
+      windT = { el, g: ctx.createGain(), routed: false };
+      windT.g.gain.value = 0; windT.g.connect(musicBus);
+      try { ctx.createMediaElementSource(el).connect(windT.g); windT.routed = true; } catch (e) { /* old WebView: plain element volume */ }
+      el.addEventListener("error", () => { windT.bad = true; });
+    }
+    const W = windT, t = ctx.currentTime;
+    if (W.bad) return;
+    W.g.gain.cancelScheduledValues(t); W.g.gain.setValueAtTime(W.g.gain.value, t);
+    if (want) {
+      W.g.gain.setTargetAtTime(W.routed ? MUS_FILE_VOL : 1, t, 0.8);
+      if (!W.routed) W.el.volume = elVol();
+      clearTimeout(W.stopT);
+      if (!hidden && W.el.paused) W.el.play()?.catch?.(() => { /* next tap */ });
+    } else {
+      W.g.gain.setTargetAtTime(0, t, 0.7);
+      if (!W.routed) W.el.volume = 0;
+      clearTimeout(W.stopT); W.stopT = setTimeout(() => { if (W.g.gain.value < 0.01 || !W.routed) W.el.pause(); }, 4500);
+    }
   }
 
 
@@ -716,6 +746,7 @@ const SOUND = (() => {
       hidden = true; if (!ctx) return;
       applyVolume();
       if (curTrack) { const T = curTrack; setTimeout(() => { if (hidden) T.el.pause(); }, 250); }
+      if (windT) setTimeout(() => { if (hidden) windT.el.pause(); }, 250);
       clearTimeout(sleepT); sleepT = setTimeout(() => { if (hidden) ctx.suspend?.().catch(() => {}); }, 250);   // fade out, then sleep
     };
     const back = () => {
@@ -726,6 +757,7 @@ const SOUND = (() => {
         nextStep = 0; for (const k of Object.keys(nextAt)) nextAt[k] = 0;
         applyVolume();
         if (curTrack && curTrack.el.paused) curTrack.el.play()?.catch?.(() => {});
+        syncMusic();   // the title wind comes back if it should
       });
     };
     document.addEventListener("visibilitychange", () => (document.hidden ? away() : back()));
