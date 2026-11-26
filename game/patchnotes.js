@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b356-partyboss", build: 356, date: "26 Nov 2026", title: "Party fights last as long as solo ones", items: [
+      "In a party, the foe is now sized for what each teammate really deals on their turn (their own phone works it out from their gear, perks and spells), not for one plain blow each. Big parties no longer get bosses that drag on for 30-40 rounds, and a party of mages isn't counted as fist fighters any more.",
+      "A boss takes about 8-12 rounds whether you're on your own or eight strong; tough fights about 5-8 rounds, normal ones 3-5.",
+      "A party's foe gets a little more health, and acts a bit more often for every extra player, so a big party still has to watch its health: a party wins about as often as a lone hero does.",
+    ] },
     { id: "b355-paintclean", build: 355, date: "26 Nov 2026", title: "Cleaner fights over the painted art", items: [
       "Fights look cleaner: no more drawn-on helmets and cartoon wagon over the painted art. Your hero and followers show their painted heads until real painted helmets arrive.",
       "Bows, swords and shields made of elven, glass, ebony and other coloured stuff keep a light tint of their colour instead of turning into a bright gold or green cut-out.",

@@ -46,9 +46,15 @@ const TB = (() => {
   const T = { hp: { normal: 2.0, tough: 2.6, boss: 3.0 }, acts: { normal: 2.4, tough: 2.5, boss: 2.5 },
     rounds: { normal: 4, tough: 6, boss: 7 },   // how long a fight should roughly last (build 350, 3 AP: sims give medians of about 4-5 / 6 / 10-11 rounds)
     est: { k: 0.7, pool: 1, mk: 0.85, mix: 0.25, sum: 0.8 },   // [post-combat2] share of the damage your stamina / magicka pays for in a round that foe health is sized for
-    min: { normal: 1, tough: 1.2, boss: 1.3 }, max: { normal: 7, tough: 9, boss: 10 } };   // bounds on the health boost
+    min: { normal: 1, tough: 1.2, boss: 1.3 }, max: { normal: 7, tough: 9, boss: 10 },   // bounds on the health boost
+    /* [partyboss] party fights (build 354): every teammate plays a full 3 AP turn on their own phone, so the foe is sized
+       for what each of them really deals a round (COOP.profile publishes it: dprOf), not one plain blow each. On top of
+       that a party foe gets a little more health (a party also heals, shields and covers each other: hp) and 0.6 more
+       moves a round per extra player (acts); tuned with tests/test_partyboss.js: bosses take about 8-12 rounds and
+       tough fights 5-8 at every party size 1-8, and the solo and 8-player win rates stay within 15 points */
+    party: { hp: { normal: 0, tough: 0.25, boss: 0.2 }, acts: 0.6 } };
   const FOE_HP = T.hp.normal;
-  const PARTY_HP = 0.45;        // +45% foe health per extra real player in the fight (shared out over the extra foes below)
+  const PARTY_HP = T.party.hp;  // extra foe health in a fight with real players, by kind of fight (shared out over the extra foes below)
   const MAX_FOES = 6;           // [OURS] a party meets one foe per hero, one after another (like dungeon rooms), at most 6; bosses stay alone
   const MAX_ROUNDS = 40;
   const MP_REGEN = 3.2, SP_REGEN = 4.4;   // per round about 22% of your stamina and 10% of your magicka come back (moves cost them now)
@@ -69,6 +75,25 @@ const TB = (() => {
     const sp = typeof INIT !== "undefined" ? INIT.heroSpeed(s, f) : { speed: 5, parts: [] };
     return { acts: MAX_ACTS, pots: MAX_POTS, spCut, mpCut, speed: sp.speed, speedParts: sp.parts, heavy };
   }
+  /* [partyboss] what a hero deals in a round of a turn-based fight, worked out on their own phone from their own kit
+     (the same guess a fight sizes its foe with, without followers: those come as their own cards). [normal, tough, boss].
+     COOP.profile publishes it, so the leader's phone sizes a party's foe for what every teammate really deals. */
+  const dprMemo = typeof WeakMap !== "undefined" ? new WeakMap() : null;
+  function dprOf(s) {
+    if (!s) return null;
+    const key = [s.level, JSON.stringify(G.loadout(s)?.equipment || {}), (s.spells || []).length, Object.keys(s.perks || {}).length, Object.values(s.skills || {}).reduce((a, x) => a + (x.lvl || 0), 0)].join("|");
+    const old = dprMemo && dprMemo.get(s); if (old && old.key === key) return old.v;
+    let v = null;
+    try {
+      const f = new G.Fight(s, { name: "-", health: 100, hp: 100, damage: 0, tags: [], level: s.level }); f.allies = [];
+      const st = stats(s, f);
+      v = ["normal", "tough", "boss"].map((kind) => Math.max(0, Math.round(Session.prototype.estimate.call({ st, kind }, f) * 10) / 10));
+    } catch (e) { v = null; }
+    if (dprMemo) dprMemo.set(s, { key, v });
+    return v;
+  }
+  const isMate = (a) => !!(a && a.player && !a.follower && a.kind !== "follower" && !a.summon);
+  const mateDpr = (a, kind) => { const v = Array.isArray(a.dpr) ? a.dpr[{ normal: 0, tough: 1, boss: 2 }[kind] ?? 2] : +a.dpr; return v > 0 && Number.isFinite(v) ? Math.min(v, 5000) : 0; };
   const spellOf = (a) => { const [k, arg] = a.split(":"); return k === "spell" || k === "dual" ? D.SPELLS[arg] : k === "scroll" ? D.SPELLS[D.ITEMS[arg]?.spell] : null; };
   const tierOf = (id, sp) => sp?.level || (typeof TOMES !== "undefined" && TOMES.level ? TOMES.level(id) : "Novice");
   /* what a move takes before repeats: { sp, mp, hp, eng } (stamina, magicka, health; eng = the part the engine itself
@@ -220,12 +245,12 @@ const TB = (() => {
       const tg = f.tags; this.kind = f.e.boss ? "boss" : tg.has("elite") || f.e.danger === "high" ? "tough" : "normal";
       // the foe gets enough health for a fight of about T.rounds rounds against what you (and friends) deal a round,
       // within bounds, so fights don't end in two rounds at one level and drag on at another
-      const dpr = this.estimate(f);
-      const base = Math.max(1, f.ehp), kk = dpr > 0 ? clamp(dpr * T.rounds[this.kind] / base, T.min[this.kind], T.max[this.kind]) : T.hp[this.kind];
+      const dpr = this.estimate(f);   // you, your followers and summons, and every teammate's own turn
+      const base = Math.max(1, f.ehp), kk = dpr > 0 ? clamp(dpr * T.rounds[this.kind] / base, T.min[this.kind], T.max[this.kind] * (1 + this.players)) : T.hp[this.kind];
       // a party faces more foes, not one sponge: the same total toughness, split over one foe per hero
       this.waves = this.players > 0 && !f.e.boss && !f.e.pool ? Math.min(MAX_FOES, 1 + this.players) : grp.n; this.wave = 1;
       // another player fights with their real health; a raid dragon's health is shared by everyone fighting it (wevents.js)
-      const k = f.e.player || f.e.pool ? 1 : this.players > 0 ? kk * (1 + PARTY_HP * this.players) / this.waves : kk;   // another player fights with their real health, no monster boost
+      const k = f.e.player || f.e.pool ? 1 : this.players > 0 ? kk * (1 + PARTY_HP[this.kind]) / this.waves : kk;   // another player fights with their real health, no monster boost
       this.ehpBase = f.ehp * k * (f.diffHp = typeof DIFF !== "undefined" ? DIFF.hp(f) : 1);   // Story / Normal / Hard foe health, from the fight's snapshot (difficulty.js)
       f.ehp = Math.round(this.ehpBase * (grp.hpMul[0] || 1)); f.ehp0 = f.ehp; this.ehpMax = f.ehp;
       f.e.tbHp = this.ehpMax;
@@ -263,8 +288,11 @@ const TB = (() => {
       }
       let sm = 0;   // a summon you can afford fights beside you
       for (const id of s.spells || []) { const sp = D.SPELLS[id]; if (!sp || sp.kind !== "summon" || !G.spellSummon) continue; try { if (G.spellCost(s, sp) <= f.mp) sm = Math.max(sm, G.spellSummon(s, sp, f).dmg || 0); } catch (e) { /* skip */ } }
-      const al = f.allies.reduce((a, x) => a + (x.dmg || 0), 0);
-      return Math.max(w, m) + T.est.mix * Math.min(w, m) + T.est.sum * sm + al;   // spellswords mix blades and spells
+      const me = Math.max(w, m) + T.est.mix * Math.min(w, m) + T.est.sum * sm;   // spellswords mix blades and spells
+      // [partyboss] a real teammate plays a whole turn on their own phone: what their phone says they deal a round
+      // (COOP.profile → dpr), or as much as you if it didn't say; followers, pets and summons deal their blow
+      const al = f.allies.reduce((a, x) => a + (isMate(x) ? (mateDpr(x, this.kind) || me) : (x.dmg || 0)), 0);
+      return me + al;
     }
     emit(who, text, kind, extra = {}) {
       const e = { who, text, kind, round: this.round, hp: Math.max(0, Math.round(this.f.hp)), ehp: Math.max(0, Math.round(this.f.ehp)), ...extra };
@@ -291,8 +319,8 @@ const TB = (() => {
     /* the turn order for a new round (initiative.js): the rolls from the start of the fight, everyone's speed now */
     rollOrder() {
       const f = this.f;
-      // the foe acts 1–3 times a round (whole actions, the fraction is a chance), more with a big party
-      let n = T.acts[this.kind] + Math.floor(this.players / 2); const whole = Math.floor(n); n = whole + (Math.random() < n - whole ? 1 : 0);
+      // the foe acts 1–3 times a round (whole actions, the fraction is a chance), more with a big party (T.party.acts per extra player)
+      let n = T.acts[this.kind] + T.party.acts * this.players; const whole = Math.floor(n); n = whole + (Math.random() < n - whole ? 1 : 0);
       const nb = typeof ENCH2 !== "undefined" ? ENCH2.numb(f) : { acts: 0 }; n -= nb.acts;   // Numbing Cold: a move lost (it also slows it: initiative.js)
       return INIT.build(this, Math.max(1, n));
     }
@@ -1445,5 +1473,5 @@ const TB = (() => {
 
   /* sharedfight.js: open a teammate's view of a fight, and redraw it when the leader's phone sends news */
   function redraw(sess, state) { if (ui && ui.sess === sess && open) render(state || sess.advance()); }
-  return { T, sceneLines, stats, cost, preview, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, play, redraw, fightState, voice, FOE_KEYS, BUFF_KEYS, costTxt, costHTML, base, close: () => { if (open) close(); }, abort, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, ATK_SP, AP, GUARD_AP, GUARD_MAX, apOf, guardFor, MAX_ACTS, MAX_POTS, REPEAT, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
+  return { T, sceneLines, stats, dprOf, cost, preview, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, play, redraw, fightState, voice, FOE_KEYS, BUFF_KEYS, costTxt, costHTML, base, close: () => { if (open) close(); }, abort, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, ATK_SP, AP, GUARD_AP, GUARD_MAX, apOf, guardFor, MAX_ACTS, MAX_POTS, REPEAT, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
 })();
