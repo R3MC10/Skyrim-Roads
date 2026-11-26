@@ -46,5 +46,6 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Calmer start-up": "Spokojniejsze uruchamianie",
     "On phones the main menu shows the painting straight away, the first frame of its moving picture, instead of a rough drawn stand-in that swapped out a moment later.": "Na telefonach menu główne od razu pokazuje obraz, pierwszą klatkę ruchomego tła, zamiast prowizorycznego rysunku, który chwilę później się podmieniał.",
     "Checking for updates no longer darkens the whole screen. If an update is really downloading, a small note shows at the bottom; if there's nothing new, you see nothing at all.": "Sprawdzanie aktualizacji nie przyciemnia już całego ekranu. Gdy aktualizacja naprawdę się pobiera, na dole pojawia się mała informacja; gdy nic nowego nie ma, nie widać nic.",
+    "The title, its tagline and the buttons now appear together in one smooth fade once everything is ready, instead of popping in one by one.": "Tytuł, hasło i przyciski pojawiają się teraz razem, jednym płynnym rozjaśnieniem, gdy wszystko jest gotowe, zamiast wskakiwać po kolei.",
   });
 })();

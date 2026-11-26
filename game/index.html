@@ -5900,6 +5900,15 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 :root.has-ui-divider #side[data-tab=log] .seg.jseg button{color:#6b5536;background:none;box-shadow:none}
 :root.has-ui-divider #side[data-tab=log] .seg.jseg button.on{color:#2e1f0d;text-shadow:none;background:none;box-shadow:none}
 html.pcmap.pc-full #side>.mn-sub button.on::after{display:none}   /* on a wide PC the tabs are a side column with their own marker */
+
+/* [onemoment] the title's words and buttons arrive together: hidden while fonts and the painting load, then one fade.
+   Their own staggered fades are off, and the logo's trail and compass animations wait for the reveal. */
+.title .inner{transition:opacity .7s ease}
+.title.tloading .inner{opacity:0}
+.title.tloading .tlogo,.title.tloading .tlogo *{animation-play-state:paused!important}
+.title :is(.tlogo,.tag,.menu,.emb,h1){animation-name:none}
+.title .press{animation:tpulse 2.6s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.title .inner{transition:none}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>

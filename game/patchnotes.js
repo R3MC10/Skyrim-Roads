@@ -6,6 +6,7 @@ const PATCHNOTES = (() => {
     { id: "b372-coldstart", build: 372, date: "26 Nov 2026", title: "Calmer start-up", items: [
       "On phones the main menu shows the painting straight away, the first frame of its moving picture, instead of a rough drawn stand-in that swapped out a moment later.",
       "Checking for updates no longer darkens the whole screen. If an update is really downloading, a small note shows at the bottom; if there's nothing new, you see nothing at all.",
+      "The title, its tagline and the buttons now appear together in one smooth fade once everything is ready, instead of popping in one by one.",
     ] },
     { id: "b371-mapsnow", build: 371, date: "26 Nov 2026", title: "Real snow on the map", items: [
       "Snow on the world map is new: you watch it fall from above, so flakes drift on the wind and shrink away toward the ground instead of sliding down the screen.",
