@@ -109,7 +109,7 @@ const UINORDIC = (() => {
     for (const b of boxes) if (b.closest(".title, .modal")) frameGlint(b);
   }
   function start() {
-    if (typeof document === "undefined") return;
+    if (typeof document === "undefined" || typeof document.addEventListener !== "function" || !document.body) return;   // node tests stub document
     document.addEventListener("pointerdown", (e) => { const b = e.target.closest?.(".btn"); if (b && !b.disabled) glint(b); }, true);
     document.addEventListener("click", (e) => { const b = e.target.closest?.(".seg button"); if (b) chosen(b); }, true);
     const on = (e) => { if (e.target?.type === "range") moved(e.target); };

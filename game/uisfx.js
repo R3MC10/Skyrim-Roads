@@ -8,7 +8,7 @@
    Without the files the "ui" family falls back to the old click (sound.js). Clicks with no recent press behind them
    (mini-games, timers, the lockpick) are left alone. Close buttons that used to be silent get their sound too. */
 const UISFX = (() => {
-  if (typeof SOUND === "undefined" || typeof document === "undefined") return { kind: () => null };
+  if (typeof SOUND === "undefined" || typeof document === "undefined" || typeof document.addEventListener !== "function") return { kind: () => null };
   const BTN = "button,[role=button],[role=tab],[role=switch],a[href],.btn,[data-act],[data-tab],summary,input[type=checkbox]";
   const CLOSE_TXT = /^(?:✕|×|✖|x|back|close|cancel|leave|not now|[‹←«].*)$/i;
   const CLOSE_LBL = /\b(?:close|back|cancel)\b/i;
