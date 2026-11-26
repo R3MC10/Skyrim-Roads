@@ -15,11 +15,11 @@ const QUESTS = (() => {
   });
   const L = {
     main: { name: "The Dragonborn", giver: "Main quest", stages: [
-      { title: "Before the Storm", text: "Riverwood's smith says Whiterun must be warned about the dragon. Go to Whiterun.", obj: { go: "Whiterun" }, reward: { gold: 50 } },
+      { title: "Before the Storm", text: "{town:Riverwood}'s smith says {town:Whiterun} must be warned about the dragon. Go to {town:Whiterun}.", obj: { go: "Whiterun" }, reward: { gold: 50 } },
       // Bleak Falls Barrow is two stages: clearing the barrow moves the quest on by itself (a clear from before counts too),
       // and Farengar's hand-in never needs the Dragonstone in your pack (it can be lost, stashed, left in a party pile...)
-      { title: "Bleak Falls Barrow", text: "The court wizard Farengar wants a Dragonstone that lies at the end of Bleak Falls Barrow. Clear the barrow.", obj: { clear: "Bleak Falls Barrow", ever: true, or: "thaneWhiterun", orItem: "dragonstone" }, reward: { gold: 50 } },
-      { title: "The Dragonstone", text: "You found the Dragonstone in Bleak Falls Barrow. Tell Farengar in Whiterun (Area tab, Court wizard).", obj: { flag: "thaneWhiterun", talk: "Whiterun", label: "Give Farengar the Dragonstone", deliver: true }, reward: { gold: 50 } },
+      { title: "Bleak Falls Barrow", text: "The court wizard Farengar wants a Dragonstone that lies at the end of {place:Bleak Falls Barrow}. Clear the barrow.", obj: { clear: "Bleak Falls Barrow", ever: true, or: "thaneWhiterun", orItem: "dragonstone" }, reward: { gold: 50 } },
+      { title: "The Dragonstone", text: "You found the Dragonstone in {place:Bleak Falls Barrow}. Tell Farengar in {town:Whiterun} (Area tab, Court wizard).", obj: { flag: "thaneWhiterun", talk: "Whiterun", label: "Give Farengar the Dragonstone", deliver: true }, reward: { gold: 50 } },
       { title: "Dragon Rising", text: "A dragon is attacking the Western Watchtower. Go there and kill it.", obj: { talk: "Western Watchtower", label: "Fight the dragon", fight: E("Mirmulnir", 180, 17, ["big", "dragon", "elite"]), allies: [["Irileth", 9], ["Whiterun guard", 6], ["Whiterun guard", 6]] }, reward: { gold: 200 } },
       { title: "The Way of the Voice", text: "The Greybeards have summoned you. Climb to High Hrothgar and speak with them.", obj: { flag: "greybeards" }, reward: { gold: 100 } },
       { title: "The Horn of Jurgen Windcaller", text: "The Greybeards want the Horn of Jurgen Windcaller from Ustengrav. Clear Ustengrav.", obj: { clear: "Ustengrav" }, reward: { gold: 300, items: ["horn_jurgen"] } },
@@ -60,6 +60,10 @@ const QUESTS = (() => {
       { title: "The Eye of Magnus", text: "Return to the College and stand against what you woke.", obj: { talk: "Winterhold", label: "Face Ancano", fight: E("Ancano", 210, 19, ["humanoid", "mage", "elite"]) }, reward: { gold: 500, items: ["archmage_robes"], title: "Arch-Mage of the College" } },
     ] },
   };
+  /* names in quest text are {type:id} templates (names.js), filled once here, so every screen shows the shown name.
+     Without names.js (some node tests) a template falls back to its id, which is the old English name. */
+  const fillName = typeof NAMES !== "undefined" ? NAMES.fill : (t) => (typeof t === "string" ? t.replace(/\{(?:town|place|hold|region|faction|race|god|foe|item|npc):([^{}]+)\}/g, "$1") : t);
+  for (const d of Object.values(L)) for (const st of d.stages || []) { st.title = fillName(st.title); st.text = fillName(st.text); }
   /* [OURS] recommended level per stage (shown in the Journal); a stage's fight scales from it (G.scaleQuestFoe) */
   const REC = { main: [1, 3, 3, 6, 10, 14, 18], companions: [3, 6, 10, 14], thieves: [2, 3, 6, 8, 10, 14, 16, 18, 22, 24],
     brotherhood: [3, 5, 10, 12, 14, 18, 22, 24], college: [2, 6, 10, 16], masks: [20, 21, 23, 24, 26, 27, 29, 30, 30] };

@@ -8,7 +8,7 @@ const c = { process: { env: process.env }, console, Math, Date, JSON, Float64Arr
 vm.createContext(c);
 const tbsrc = fs.readFileSync(path.join(__dirname, "test_tbfight.js"), "utf8");
 const list = JSON.parse(tbsrc.match(/for \(const f of (\[[^\]]*"tbfight\.js"[^\]]*\])/)[1]);
-const EXTRA = ["guilds.js", "priests.js", "horsetravel.js", "market.js", "craftfair.js", "followers2.js", "followerai.js", "combo.js", "dragons.js", "foekit.js", "fightread.js", "foeintent.js", "tbfight.js", "sharedfight.js"];
+const EXTRA = ["guilds.js", "priests.js", "horsetravel.js", "market.js", "craftfair.js", "followers2.js", "followerai.js", "combo.js", "dragons.js", "foekit.js", "fightread.js", "foeintent.js", "initiative.js", "tbfight.js", "sharedfight.js"];
 for (const f of [...new Set(list.filter((x) => x !== "foeintent.js" && x !== "tbfight.js").concat(EXTRA))]) if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 const helpers = tbsrc.slice(tbsrc.indexOf("const LEVELS"), tbsrc.indexOf("if (!process.env.SIMONLY)"));
 vm.runInContext(helpers + `
@@ -30,7 +30,7 @@ function play(ss, opts = {}) {
     while (!ss.done && g++ < 600) {
       if (opts.onRound && r.turn === "me" && ss._seenRound !== ss.round) { ss._seenRound = ss.round; opts.onRound(ss); }
       if (r.turn === "me") { const mv = opts.move || "attack"; r = ss.why(mv) ? ss.act("end") : ss.act(mv); if (r.err) r = ss.act("end"); if (r.turn === "next") r = ss.advance(); continue; }   // out of breath: end the turn
-      if (r.turn === "wait") { ss.waiting.until = 0; r = ss.advance(); continue; }
+      if (r.turn === "wait") { ss.waiting.skip = true; r = ss.advance(); continue; }
       r = ss.advance();
     }
   } finally { FI.next = nx; FI.done = dn; }

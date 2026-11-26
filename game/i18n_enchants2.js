@@ -59,7 +59,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     ["Once a fight, when a blow drops you below a third of your health, a ward rises that soaks the next {m} damage.", "Raz na walkę, gdy cios zbije ci zdrowie poniżej jednej trzeciej, wznosi się osłona, która pochłania następne {m} obrażeń."],
     ["Foes you beat drop {m}% more gold.", "Pokonani wrogowie zostawiają o {m}% więcej złota."],
     ["{m}% of the damage you take comes out of your magicka instead, while you have magicka left.", "{m}% otrzymywanych obrażeń zabiera twoja magia zamiast zdrowia, dopóki ją masz."],
-    ["+{m} initiative in turn-by-turn fights: you act sooner.", "+{m} do inicjatywy w walkach turowych: działasz wcześniej."],
+    ["+{m} initiative points in turn-by-turn fights (every 3 is +1 speed): you act sooner.", "+{m} pkt inicjatywy w walkach turowych (co 3 to +1 szybkości): działasz wcześniej."],
     ["Dragons hurt you {m}% less, breath and bite alike.", "Smoki ranią cię o {m}% słabiej, zarówno oddechem, jak i kłami."],
     ["Draugr, skeletons, vampires and other undead hurt you {m}% less.", "Draugry, szkielety, wampiry i inni nieumarli ranią cię o {m}% słabiej."],
     ["Your weapon blows do {m}% more damage to a foe below a quarter of its health.", "Twoje ciosy bronią zadają o {m}% więcej obrażeń wrogowi poniżej ćwierci zdrowia."],

@@ -78,7 +78,7 @@ const has = (f, s) => { const ok2 = src(f).includes(s); ok(ok2, f + " has " + s)
 has("fightart.js", 'L("You")'); has("fightart.js", 'L(won ? (turned ? "They flee" : "Victory") : "Defeated")'); has("fightart.js", 'L("CRITICAL")');
 has("fightart.js", "L(b.sneak)"); has("fightart.js", "ftx[i] = L(txt)"); has("fightart.js", "L(rec.foeName)");
 has("dunart.js", 'LX("CLEARED")'); has("dungeongames.js", 'LX("Noticed")'); has("dungeongames.js", "LX(`Hits ${st.hits}`)"); has("craftgames.js", 'LX("Aim")');
-has("map.js", 'LX("Sea of Ghosts")'); has("solart.js", 'LX("TO WINDHELM \uE12F")'); has("worldevents.js", 'LX("Khajiit market")'); has("raidart.js", "LX(`Season of ${name}`)");
+has("map.js", 'RN("Sea of Ghosts", true)'); has("solart.js", 'LX("TO WINDHELM \uE12F")'); has("worldevents.js", 'LX("Khajiit market")'); has("raidart.js", "LX(`Season of ${name}`)"); // map: names.js region label (falls back to LX)
 // second sweep (i18n_sweep2.js): the trip line, the Journal, the inn, the market, road events, the fight log, icon-led lines
 ok(order.includes("i18n_sweep2.js") && order.indexOf("i18n_sweep2.js") < order.indexOf("i18n.js"), "i18n_sweep2.js loads before i18n.js");
 const want2 = {

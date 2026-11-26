@@ -9,6 +9,11 @@
    On a teammate's phone this module opens the normal fight screen with a Mirror session: the same foe, the same health
    bars and log, the leader and the others shown as teammates. When the leader's phone says it's your turn, you play it
    with your own moves, spells, potions, shouts, magicka, stamina and health, exactly like your own fights.
+   [initiative] Heroes side by side in the turn order share a turn: the record lists every player it waits for
+   (turns: [...]), so everyone in the group plays at the same time. No timer: the leader's phone waits for everyone
+   (it can skip someone who's gone quiet for 30 s). Your phone tells it you're there (tbf/<id>~<pid>~b) when your turn
+   starts and after each move. Until you make your first move
+   your screen keeps taking the leader's news (what the others just did to the foe).
    When your turn ends, the foe's new state, your health, guard, buffs you cast on others, your summon and your lines
    go back in one reply record (tbf/<id>~<you>); the leader's phone takes it over (Session.applyRemote) and carries on.
    Followers and summons are played by the AI on the leader's phone; they're only ever knocked down.
@@ -59,8 +64,10 @@ const SHAREDFIGHT = (() => {
         if (e.by === me || e.kind === "end") continue;   // your own moves are already on your screen
         this.ev.push(this.view(e, myName));
       }
-      if (this.myTurn && d.turn?.tid !== this.myTurn.tid) { this.myTurn = null; this.until = 0; }   // the leader's phone moved on without you (too late)
-      if (!this.myTurn) {
+      const ts = d.turns || (d.turn ? [d.turn] : []), mineT = ts.find((t) => t.pid === me) || null, other = ts.find((t) => t.pid !== me) || null;   // a shared turn waits for several players at once
+      if (this.myTurn && mineT?.tid !== this.myTurn.tid) { this.myTurn = null; this.until = 0; }   // the leader's phone moved on without you (too late)
+      const fresh = this.myTurn && !this.moved();   // your turn, no move made yet: the others' moves still show
+      if (!this.myTurn || fresh) {
         if (d.round > this.lastRound) {   // a new round: your stamina and magicka come back, like in your own fights
           if (this.lastRound) { f.sp = Math.min(G.maxStamina(f.s), f.sp + f.regenSp); f.mp = Math.min(G.maxMagicka(f.s), f.mp + f.regenMp); f.slowed = Math.max(0, (f.slowed || 0) - 1); }
           this.lastRound = d.round;
@@ -74,15 +81,21 @@ const SHAREDFIGHT = (() => {
         this.hitters = d.hitters || 0;
         this.roster(d.roster || []);
         if (typeof MOUNTFIGHT !== "undefined") MOUNTFIGHT.mirror(this, d);   // your horse and everyone else's, as the leader's phone has them
-        this.order = (d.order || []).map((o) => ({ id: o.pid === me ? "me" : o.id === "me" ? "host" : o.id, name: o.pid === me ? myName : o.name, init: o.init }));
-        this.idx = d.idx || 0;
+        const was = new Map((this.order || []).filter((o) => o.uid).map((o) => [o.uid, o]));   // when a lost turn first showed here (the cross fades in, then folds away)
+        this.order = (d.order || []).map((o) => { const p = was.get(o.uid) || {}, now = Date.now();
+          return { ...o, id: o.pid === me ? "me" : o.id === "me" ? "host" : o.id, name: o.pid === me ? myName : o.name, skipAt: o.skip && o.done ? p.skipAt || now : undefined, outAt: o.out ? p.outAt || now : undefined }; });   // the shared turns, skips and slots come along (initiative.js)
+        this.idx = d.idx || 0; this.gnow = d.gnow || 0; this.next = d.next || [];
+        if (fresh && this.t0) { this.t0.ehp = f.ehp; this.t0.hitters = this.hitters; this.t0.snap = this.snap(); this.t0.fs = this.foeSnap(); return d.done ? this.end(d.won ? (d.escaped ? "escaped" : "won") : "lost") : undefined; }
         const c = d.cur;
         this.cur = c ? { id: c.pid === me ? "me-wait" : c.id === "me" ? "host" : c.id, name: c.pid === me ? myName : c.name } : null;
         // the leader's clock may differ from yours: count from when the record was written
-        const until = d.turn ? Date.now() + Math.min(TB.TURN_SECONDS * 1000, d.turn.until - (d.t ? d.t * 1000 : Date.now())) : 0;
-        this.waitOn = d.turn && d.turn.pid !== me && until > Date.now() ? { ...d.turn, until } : null;
-        if (d.turn && d.turn.pid === me && d.turn.tid && d.turn.tid !== this.doneTid && until > Date.now() + 1000 && !this.meDown) this.startTurn({ ...d.turn, until });
+        // until 0: no timer (it waits for everyone). An older leader's phone still sends a deadline: count from when the record was written
+        const left = (t) => (!t ? 0 : !t.until ? Infinity : Date.now() + Math.min(90000, t.until - (d.t ? d.t * 1000 : Date.now())));
+        const uo = left(other), um = left(mineT);
+        this.waitOn = other && uo > Date.now() && !mineT ? { ...other, until: uo === Infinity ? 0 : uo, name: ts.filter((t) => t.pid !== me).map((t) => t.name).join(", ") } : null;
+        if (mineT && mineT.tid && mineT.tid !== this.doneTid && um > Date.now() + 1000 && !this.meDown) this.startTurn({ ...mineT, until: um === Infinity ? 0 : um });
       }
+      else if (d.done) f.ehp = d.ehp;   // it ended while you were mid-turn: the leader's phone has the last word
       if (d.done) this.end(d.won ? (d.escaped ? "escaped" : "won") : "lost");
     }
     /* one of the leader's events, as you see it: "You hit" becomes "Alfa hits", blows on you are yours */
@@ -111,25 +124,34 @@ const SHAREDFIGHT = (() => {
     }
     startTurn(t) {
       const f = this.f;
-      this.myTurn = { tid: t.tid, until: t.until }; this.until = t.until - EARLY; this.waitOn = null;
+      this.myTurn = { tid: t.tid, until: t.until }; this.until = t.until ? t.until - EARLY : 0; this.waitOn = null;
       this.cur = { id: "me", name: f.s.name || "You" };
       this.beginTurn();   // no action points any more: moves cost stamina, magicka or health (tbfight.js)
       f.summonTurns = 0; f.tbGuard = 0;
-      const snap = new Map(); for (const [k, a] of this.byKey) snap.set(k, { hp: a.hp, down: !!a.down || !f.allies.includes(a), b: TB.BUFF_KEYS.map((x) => a[x] ?? null) });
-      this.t0 = { ehp: f.ehp, hp: f.hp, ev: this.ev.length, hitters: this.hitters, ward: f.ward || 0, armor: f.armorSpell || 0, snap };
+      this.t0 = { ehp: f.ehp, hp: f.hp, ev: this.ev.length, hitters: this.hitters, ward: f.ward || 0, armor: f.armorSpell || 0, snap: this.snap(), fs: this.foeSnap() };
+      this.beatN = 0; this.beat();   // tell the leader's phone you're here (after t0: a store that answers at once runs apply again)
     }
+    /* everyone's health and buffs, and what's on the foe, when your turn started (the reply sends only what you changed) */
+    snap() { const f = this.f, m = new Map(); for (const [k, a] of this.byKey) m.set(k, { hp: a.hp, down: !!a.down || !f.allies.includes(a), b: TB.BUFF_KEYS.map((x) => a[x] ?? null) }); return m; }
+    foeSnap() { const f = this.f, o = {}; for (const k of TB.FOE_KEYS) if (f[k] !== undefined) o[k] = clone(f[k]); return o; }
+    /* made a move this turn yet? */
+    moved() { return !!this.t0 && (Object.keys(this.used || {}).length > 0 || this.ev.slice(this.t0.ev).some((e) => e.who === "me" && e.kind !== "tick")); }
     /* your moves: the normal ones; when your turn ends, it goes back to the leader's phone */
     act(a, tgt, mult, grade) {   // grade: how your minigame went (a Perfect adds its stack in party fights too)
-      const i0 = this.idx, r = super.act(a, tgt, mult, grade);
-      if (this.myTurn && this.idx !== i0) this.sendTurn();
+      const k0 = this.meTok, r = super.act(a, tgt, mult, grade);
+      if (this.myTurn && this.meTok !== k0) this.sendTurn();
+      else if (this.myTurn) this.beat();   // a move made: the leader's phone knows you're still there
       return r;
     }
     autoTurn() {
-      const i0 = this.idx, r = super.autoTurn();
-      if (this.myTurn && this.idx !== i0) this.sendTurn();
+      const k0 = this.meTok, r = super.autoTurn();
+      if (this.myTurn && this.meTok !== k0) this.sendTurn();
       return r;
     }
-    timeUp() { if (!this.myTurn) return; this.endTurn(true); this.emit("me", "You hold back and keep your guard up (out of time)", "guard"); this.sendTurn(); }   // a timeout only guards, and says so (noautoplay.js)
+    timeUp() { if (!this.myTurn) return; this.endTurn(true); this.emit("me", "You hold back and keep your guard up (out of time)", "guard"); this.sendTurn(); }
+    passMe() { this.apSet = false; this.meTok++; }   // the leader's phone moves the order on
+    /* "I'm here": no timer on a shared turn, so the leader's phone counts 30 s from your last move before it offers to skip you */
+    beat() { if (!this.myTurn || !this.beatTo) return; this.beatN = (this.beatN || 0) + 1; try { this.beatTo({ pid: this.me, bt: this.myTurn.tid, n: this.beatN, t: Date.now() / 1000 }); } catch (e) { /* offline: the reply still goes */ } }   // a timeout only guards, and says so (noautoplay.js)
     /* everything your turn did, for the leader's phone */
     reply() {
       const f = this.f, t0 = this.t0 || { ehp: f.ehp, hp: f.hp, ev: 0, hitters: 0, ward: 0, armor: 0, snap: new Map() };
@@ -146,7 +168,7 @@ const SHAREDFIGHT = (() => {
       const armorUp = (f.armorSpell || 0) > t0.armor;
       const mine = this.ev.slice(t0.ev).filter((e) => e.who === "me");
       const spells = typeof PARTYSPELLS !== "undefined" ? PARTYSPELLS.used(f.s, mine) : {};   // your crafted spells, so every phone knows them (partyspells.js)
-      return { ...(Object.keys(spells).length ? { spells } : {}), pid: this.me, tid: this.myTurn?.tid || null, round: this.round, wave: this.wave, e0: t0.ehp, ehp: f.ehp, fs,
+      return { ...(Object.keys(spells).length ? { spells } : {}), pid: this.me, tid: this.myTurn?.tid || null, round: this.round, wave: this.wave, e0: t0.ehp, ehp: f.ehp, fs, fs0: t0.fs || null,
         hp0: t0.hp, hp: f.hp, hpMax: G.maxHealth(f.s), guard: f.tbGuard || 0,
         self: { ward: (f.ward || 0) > t0.ward ? f.ward : 0, armorRed: armorUp ? Math.min(0.5, f.armorSpell * 0.0012) : 0, armorT: armorUp ? 6 : 0 },   // [Skyrim] 0.12% less damage per armour point
         allies, summon: f.summonTurns > 0 ? { turns: f.summonTurns, dmg: f.summonDmg, name: f.summonName || "summon" } : null,
@@ -205,6 +227,7 @@ const SHAREDFIGHT = (() => {
   function open(d) {
     const S = hooks.S();
     const sess = build(S, d, (r) => store.put("tbf", `${d.id}~${S.id}`, r));
+    sess.beatTo = (b) => store.put("tbf", `${d.id}~${S.id}~b`, b);
     mir = { fid: d.id, sess };
     document.getElementById("tbwatch")?.remove();
     TB.play(sess, {}, () => finish(sess));

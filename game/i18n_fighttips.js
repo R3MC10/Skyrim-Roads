@@ -30,7 +30,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "You can't use this right now": "Teraz nie możesz tego użyć",
     "Spell AP ✦": "AP na czary ✦", "Left": "Zostało", "You have": "Masz", "Cheapest spell": "Najtańszy czar",
     "Power attack": "Silny atak", "Guard": "Garda", "Blows weaker": "Ciosy słabsze", "Shield block": "Blok tarczą", "AP a turn": "AP na turę",
-    "Spell AP": "AP na czary", "Initiative": "Inicjatywa", "Hits for": "Bije za", "AP left": "Zostało AP", "Magic": "Magia", "Items": "Przedmioty",
+    "Spell AP": "AP na czary", "Speed": "Szybkość", "Hits for": "Bije za", "AP left": "Zostało AP", "Magic": "Magia", "Items": "Przedmioty",
     "Back": "Wróć", "Key: M": "Klawisz: M", "Key: I": "Klawisz: I", "Key: Esc": "Klawisz: Esc", "Tough foe": "Twardy wróg", "Boss": "Boss", "Foe": "Wróg",
     "In a fight": "W walce", "1 move, free": "1 ruch, za darmo",
     "No more AP": "Koniec z AP",

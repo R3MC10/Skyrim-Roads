@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b348-defeat", build: 348, date: "26 Nov 2026", title: "Losing a fight costs nothing", items: [
+    { id: "b349-defeat", build: 349, date: "26 Nov 2026", title: "Losing a fight costs nothing", items: [
       "Lose a fight and you lose nothing: no gold, no items, no XP, no progress. You're put back just before the fight.",
       "A new screen shows what beat you and why, then gives you three choices: Retry (the same foes again), Adjust gear (change weapons, armour or spells, then come back) or Retreat.",
       "Retreat on the road takes you past the fight and back on your way. In a dungeon you step back out of the room; rooms you already cleared stay cleared.",
@@ -12,6 +12,18 @@ const PATCHNOTES = (() => {
       "In a party, one beaten player can't reset everyone's fight: the party votes on Retry or Retreat (most votes wins, a tie goes the leader's way). Anyone knocked down just gets back up.",
       "World events and world bosses keep going: you get back up where you are and what you did still counts.",
       "Guild jobs, heists, quests and deep dungeon levels work the same way: getting knocked down no longer loses the job, gets you caught or takes the finds you made below.",
+    ] },
+    { id: "b348-initiative", build: 348, date: "26 Nov 2026", title: "A smarter turn order", items: [
+      "Who goes first is rolled once when a fight starts: a roll of 1 to 4 plus your speed. Light armour makes you a bit quicker, heavy armour a bit slower, and some perks help.",
+      "The turn order now changes during the fight. A stunned or frozen foe loses its next turn, a staggered one is pushed back two places, haste moves you up and slow moves you down. Every change slides into place so you can see it happen, with the reason flashing on the portrait.",
+      "No stun-locking: after losing a turn to a stun or a freeze, a foe shrugs off the next ones until the next round ends. Bosses act twice a round, so they only ever lose one of the two.",
+      "Fast foes have two turns a round, marked ① and ②, each with its own next move. Speed decides when you act, never how many moves you get.",
+      "Heroes next to each other in the order share one turn: in a party everyone in it plays at the same time, and followers act on their orders. There's no timer: the fight waits until everyone is done. If someone goes quiet for 30 seconds, the party leader can skip them, and a player who loses the connection just guards.",
+      "The turn strip at the top shows portraits in order, brackets round shared turns and the next round dimmed after a marker. Tap a portrait for its initiative, statuses and next move, or the + button for the whole order.",
+    ] },
+    { id: "b347-names", build: 347, date: "26 Nov 2026", title: "One list of names", items: [
+      "Behind the scenes: the names of towns, holds, items and foes now come from one list. Nothing looks different today.",
+      "This lets us give places and things their own names later in one go, without breaking your saves, quests or bags.",
     ] },
     { id: "b346-unlocks", build: 346, date: "26 Nov 2026", title: "New things open as you level up", items: [
       "A new hero no longer gets every system at once. The big ones open one by one as you level up: perks at level 2, gathering and cooking at 3, the forge at 4, followers and alchemy at 5, horses at 6, hard dungeons at 7, clans and houses at 8, and so on up to legendary hunts at 20.",

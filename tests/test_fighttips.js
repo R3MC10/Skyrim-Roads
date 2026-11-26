@@ -5,7 +5,7 @@ const W = process.env.W || path.join(__dirname, "../game/");
 const c = vm.createContext({ process: { env: process.env }, console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String, RUNS: 1 });
 const TBT = fs.readFileSync(path.join(__dirname, "test_tbfight.js"), "utf8");
 const FILES = JSON.parse(TBT.match(/for \(const f of (\[[^\]]+\])\)/)[1]).filter((f) => f !== "tbfight.js")
-  .concat(["foekit.js", "tbfight.js", "tbtips.js", "fightctl.js", "skillinfo.js", "tooltip.js", "fighttips.js"]);
+  .concat(["foekit.js", "initiative.js", "tbfight.js", "tbtips.js", "fightctl.js", "skillinfo.js", "tooltip.js", "fighttips.js"]);
 for (const f of [...new Set(FILES)]) if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 vm.runInContext(TBT.slice(TBT.indexOf("const LEVELS"), TBT.indexOf("{ const TUNE")) + "; this.make = make;", c);
 let fails = 0, n = 0;
@@ -22,7 +22,7 @@ const s = c.make("mage", 20); s.health = G.maxHealth(s); s.healthTs = G.now();
 for (const id of ["flames", "healing", "greater_ward", "fear"]) if (D.SPELLS[id] && !s.spells.includes(id)) s.spells.push(id);
 const e = G.scaleEnemy({ name: "Bandit", health: 260, damage: 14, tags: ["humanoid"], level: 20, danger: "medium", gold: [0, 0], text: "" }, 20);
 const f = new G.Fight(s, e); f.allies = [];
-const sess = Object.assign(Object.create(TB.Session.prototype), { f, myActs: 0, pots: 0, used: {}, st: { acts: 4, pots: 2, spCut: 0, mpCut: 0, init: 12 }, ehpMax: Math.round(f.ehp) });   // build 146: no AP, moves cost stamina / magicka
+const sess = Object.assign(Object.create(TB.Session.prototype), { f, myActs: 0, pots: 0, used: {}, st: { acts: 4, pots: 2, spCut: 0, mpCut: 0, speed: 6 }, ehpMax: Math.round(f.ehp) });   // build 146: no AP, moves cost stamina / magicka
 
 // spells: what it does, numbers with perks, single and dual, magicka, cost, how long
 { const h = FT.html(sess, "spell:flames"); ok(clean(h), "Flames tooltip " + text(h));
@@ -65,7 +65,7 @@ const sess = Object.assign(Object.create(TB.Session.prototype), { f, myActs: 0, 
 { ok(/Moves/.test(FT.html(sess, "ap")) && /0\/4/.test(FT.html(sess, "ap")) && /stamina/i.test(FT.html(sess, "ap")), "moves row " + text(FT.html(sess, "ap")));
   for (const k of ["hp", "mp", "sp"]) ok(clean(FT.html(sess, k)) && /Now/.test(FT.html(sess, k)), "bar " + k);
   ok(/Cheapest spell/.test(FT.html(sess, "mp")), "magicka bar names the cheapest spell " + text(FT.html(sess, "mp")));
-  ok(/Armour/.test(FT.html(sess, "me")) && /Initiative/.test(FT.html(sess, "me")), "you: armour and initiative");
+  ok(/Armour/.test(FT.html(sess, "me")) && /Speed/.test(FT.html(sess, "me")), "you: armour and speed " + text(FT.html(sess, "me")));
   const fo = FT.html(sess, "foe"); ok(clean(fo) && /Bandit/.test(fo) && /Health/.test(fo) && /Hits for/.test(fo), "the foe " + text(fo));
   for (const k of ["menu:magic", "menu:items", "back", "filter:all", "filter:fav", "filter:Destruction"]) ok(clean(FT.html(sess, k)), "menu bit " + k);
   ok(FT.html(null, "attack") === null && FT.html(sess, "") === null, "no fight, no tooltip");

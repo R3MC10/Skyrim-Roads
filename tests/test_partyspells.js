@@ -88,7 +88,7 @@ if (r.turn === "wait") {
   const mt = COOP.allyFromCard({ id: "p6", name: "Eir", cur: 300, coop: { prof: { dmg: 20, hp: 300, red: 0.2, role: "fighter" } } }); mt.pid = "p6"; f5.allies.push(mt);
   const s5 = new TB.Session(f5, { trySneak: false }); s5.remote = { ask() {}, end() {} };
   let r5 = s5.begin(), g5 = 0;
-  while (r5.turn !== "me" && !s5.done && g5++ < 40) { r5 = s5.advance(); if (r5.turn === "wait") { s5.waiting.until = 0; r5 = s5.advance(); } }
+  while (r5.turn !== "me" && !s5.done && g5++ < 40) { r5 = s5.advance(); if (r5.turn === "wait") { s5.waiting.skip = true; r5 = s5.advance(); } }
   if (r5.turn === "me") s5.act("spell:" + mine.id);
   ok(s5.ev.some((e) => e.a === "spell:" + mine.id), "Dag casts it in the party fight");
   const d5 = { id: "fid5", owner: "p5", ...TB.fightState(s5) };
