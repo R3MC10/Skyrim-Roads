@@ -5811,7 +5811,6 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 /* buttons: a squarer knotwork 9-slice frame */
 :root.has-ui-frame-btn .btn:not(#side[data-tab=log] .btn){border:3px solid transparent;border-image:var(--asset-frame-btn) 150 / 18px / 0 stretch;border-radius:0;background:linear-gradient(180deg,rgba(40,36,30,.72),rgba(14,13,12,.82));background-clip:padding-box;box-shadow:none}
 :root.has-ui-frame-btn .btn:hover,:root.has-ui-frame-btn .btn:focus-visible{background:linear-gradient(180deg,rgba(70,58,36,.78),rgba(24,20,14,.85));background-clip:padding-box;color:#fff3cf}
-:root.has-ui-frame-btn .btn:active{filter:brightness(1.15)}
 /* section headings: a knotwork divider underneath */
 :root.has-ui-divider :is(.title .page,.modal .sheet) h3{position:relative;padding-bottom:12px}
 :root.has-ui-divider :is(.title .page,.modal .sheet) h3::after{content:"";position:absolute;left:0;bottom:0;width:min(220px,70%);height:14px;background:var(--asset-divider) left center/contain no-repeat;opacity:.9;pointer-events:none}
@@ -5853,6 +5852,18 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 /* step 8: the in-game Hero and Journal panels get the same bronze frame (the parchment Journal keeps its paper) */
 :root.has-ui-frame-panel #side .panel{border:4px solid transparent;border-image:var(--asset-frame-panel) 160 / 40px / 0 stretch;border-radius:0;box-shadow:none;background-clip:padding-box;padding-top:20px}
 :root.has-ui-frame-panel #side .panel::after{display:none}   /* the old drawn corner marks */
+
+/* [uinordic] 5: a glint sweeps across a framed button when pressed */
+:root.has-ui-frame-btn .btn{position:relative;overflow:hidden}
+.uiglint{position:absolute;top:0;bottom:0;left:-60%;width:45%;pointer-events:none;background:linear-gradient(100deg,transparent 0%,rgba(255,236,190,0) 20%,rgba(255,236,190,.55) 50%,rgba(255,236,190,0) 80%,transparent 100%);mix-blend-mode:screen;animation:uiglint .6s cubic-bezier(.3,.6,.3,1) forwards}
+@keyframes uiglint{to{left:120%}}
+/* 6: a newly chosen option flashes gold and its frame twinkles once */
+:root.has-ui-frame-btn .seg button.on.uiflash{animation:uiflash .65s ease-out}
+@keyframes uiflash{0%{filter:brightness(1.9) saturate(1.2);box-shadow:0 0 18px rgba(255,210,120,.75)}35%{filter:brightness(1.35)}100%{filter:none;box-shadow:none}}
+/* 7: pressing sinks a button by a pixel and darkens the bronze, like pressing real metal */
+:root.has-ui-frame-btn :is(.btn,.seg button):active{transform:translateY(1px);filter:brightness(.82)}
+:root.has-ui-frame-btn :is(.btn,.seg button){transition:transform .06s,filter .12s}
+@media (prefers-reduced-motion:reduce){.uiglint{display:none}:root.has-ui-frame-btn .seg button.on.uiflash{animation:none}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>

@@ -78,8 +78,28 @@ const UINORDIC = (() => {
     el.classList.add("uiglow"); clearTimeout(K.glowT); K.glowT = setTimeout(() => el.classList.remove("uiglow"), 380);
   }
   const scan = (root) => { try { root.querySelectorAll?.("input[type=range]").forEach((el) => { fill(el); if (document.documentElement.classList.contains("has-ui-knob-star")) { const K = knobFor(el); if (K) place(el, K); } }); } catch (e) { /* never break the game */ } };
+  /* buttons and switches: a glint of light sweeps across a framed button when it's pressed; a newly chosen option
+     flashes gold and its frame twinkles once. (The press itself, sinking 1px and darkening, is plain CSS.) */
+  function glint(btn) {
+    if (calm() || !document.documentElement.classList.contains("has-ui-frame-btn")) return;
+    const i = document.createElement("i"); i.className = "uiglint"; i.setAttribute("aria-hidden", "true");
+    btn.appendChild(i); setTimeout(() => i.remove(), 650);
+  }
+  function chosen(btn) {
+    if (calm()) return;
+    // the game may redraw the whole page on a choice: find the same switch again by its place on the page
+    const segs = [...document.querySelectorAll(".seg")], si = segs.indexOf(btn.closest(".seg")), bi = [...btn.parentElement.children].indexOf(btn);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const seg = btn.isConnected ? btn.closest(".seg") : document.querySelectorAll(".seg")[si];
+      const b = seg && (seg.querySelector("button.on") || seg.children[bi]); if (!b) return;
+      b.classList.remove("uiflash"); void b.offsetWidth; b.classList.add("uiflash");
+      setTimeout(() => b.classList.remove("uiflash"), 700);
+    }));
+  }
   function start() {
     if (typeof document === "undefined") return;
+    document.addEventListener("pointerdown", (e) => { const b = e.target.closest?.(".btn"); if (b && !b.disabled) glint(b); }, true);
+    document.addEventListener("click", (e) => { const b = e.target.closest?.(".seg button"); if (b) chosen(b); }, true);
     const on = (e) => { if (e.target?.type === "range") moved(e.target); };
     document.addEventListener("input", on, true);
     document.addEventListener("change", (e) => { if (e.target?.type === "range") fill(e.target); }, true);
