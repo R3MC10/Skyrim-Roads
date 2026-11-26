@@ -22,7 +22,7 @@ const HSTASH = (() => {
   const SORTS = [["name", "Name"], ["stat", "Stat"], ["weight", "Weight"], ["value", "Value"]];
   const statOf = (r, it) => !it ? null : it.slot === "weapon" ? (it.damage || 0) + (r.temper || 0) : ARMOR().includes(it.slot) ? (it.armor || 0) + (r.temper || 0)
     : it.restore ? it.restore[1] : it.effects ? it.effects[0][1] : it.slot === "soulgem" ? it.charge ?? null : null;
-  const nameOf = (r, it) => NAMES.improved(it.name, r) + (r.nm ? ` “${r.nm}”` : "");
+  const nameOf = (r, it) => (typeof NAMES !== "undefined" ? NAMES.improved : String)(it.name, r) + (r.nm ? ` “${r.nm}”` : "");
   /* worn in any loadout: these stay on you */
   function worn(s) { const out = new Set(); for (const lo of Object.values(s.loadouts || {})) for (const id of Object.values(lo.equipment || {})) out.add(id); return out; }
   const chestOf = (s) => (typeof TOWNS !== "undefined" ? TOWNS.home(s) : null)?.chest || [];

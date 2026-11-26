@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b353-forgenames", build: 353, date: "26 Nov 2026", title: "Forge upgrades read +1 to +6", items: [
+      "Gear you improve at the forge now shows its level as a number after the name: Iron Sword +1, +2 ... up to +6. The old words (Fine, Superior, Exquisite, Flawless, Epic, Legendary) are gone, so they no longer get mixed up with item rarity.",
+      "Nothing about your gear changes: same bonuses, same upgrades, and everything you already improved keeps its level.",
+    ] },
     { id: "b352-updfix", build: 352, date: "26 Nov 2026", title: "Phone updates work again", items: [
       "On phones, tapping Update now could do nothing and say \"Not an update address\". The app misread the build number, so it turned down every small update.",
       "Fixed in the app itself. If your phone is stuck, install the newest app once (Update now gets it for you); after that, updates download by themselves again.",

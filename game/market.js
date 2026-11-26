@@ -4,7 +4,7 @@
    thing; your game collects the gold (minus the market fee) the next time it's open. [OURS] */
 const MARKET = (() => {
   const MAX_LISTINGS = 8, FEE = 0.05, MAX_PRICE = 100000;
-  const itemName = (r) => NAMES.improved((D.ITEMS[r.item]?.name || r.item), r) + (r.nm ? ` “${r.nm}”` : "");
+  const itemName = (r) => (typeof NAMES !== "undefined" ? NAMES.improved : String)((D.ITEMS[r.item]?.name || r.item), r) + (r.nm ? ` “${r.nm}”` : "");
   const suggest = (r) => Math.max(1, Math.round((D.ITEMS[r.item]?.value || 1) * r.qty * 1.2));
   const hallShop = (s, town) => typeof HALLS !== "undefined" && HALLS.shopOpen(s, town);
   const capFor = (s) => (typeof HALLS !== "undefined" ? HALLS.shopCap(s) : MAX_LISTINGS);
