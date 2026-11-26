@@ -1,4 +1,4 @@
-/* i18n_partyboss.js: Polish for build 354's party fight length (tbfight.js dprOf, coop.js profile) and its patch note.
+/* i18n_partyboss.js: Polish for build 356's party fight length (tbfight.js dprOf, coop.js profile) and its patch note.
    Loaded before i18n.js; exact lines go in I18N_EXTRA.words. */
 var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 Object.assign(I18N_EXTRA.words, {

@@ -13,7 +13,8 @@
      reduced motion. Lights are drawn with screen blending.
    - The plate keeps the stage's ground line: it is drawn to the full stage height (floor at 80%, where fighters
      stand) and cropped evenly at the sides for the taller turn-by-turn stage. Time of day and weather tint the
-     plate outdoors (skyart.js); caravans and your cart stand in front of it. */
+     plate outdoors (skyart.js). A caravan or your cart is not drawn over the plate (a flat drawn wagon clashed with the
+     painted town; it waits for a painted wagon prop) — the drawn background (fightart.js) still has it. */
 const BSCENE = (() => {
   const DATA = typeof BSCENE_DATA !== "undefined" ? BSCENE_DATA : null;
   const SRC = DATA ? DATA.frames.source : { width: 1850, height: 850 }, RATIO = SRC.width / SRC.height;
@@ -147,25 +148,22 @@ const BSCENE = (() => {
     } catch (e) { groundTex = null; }
     return groundTex;
   }
-  /* time of day and weather over an outdoor plate, and a caravan or cart in front of it (cached per stage size) */
+  /* time of day and weather over an outdoor plate (cached per stage size) */
   const ovCache = new Map();
   function overlayFor(W, Hh, o) {
-    if (!o.sky && !o.wagon) return null;
-    const k = `${W}|${Hh}|${o.sky ? o.sky.key : ""}|${o.wagon || ""}`;
+    if (!o.sky) return null;
+    const k = `${W}|${Hh}|${o.sky.key}`;
     if (ovCache.has(k)) return ovCache.get(k);
     let cv = null;
     try {
-      const draw = (g, H) => {
-        if (o.sky && typeof SKY !== "undefined") SKY.overlay(g, H, W, Hh, o.sky, { seed: "bscene", ground: Hh * 0.8, cover: false, weather: false, season: false });
-        if (o.wagon && typeof CARAVANS !== "undefined") { g.save(); g.translate(W * 0.36, Hh * 0.38); g.globalAlpha = 0.9; CARAVANS.drawWagon(g, H, W * 0.3, Hh * 0.42, { khajiit: o.wagon === "khajiit", cover: o.wagon !== "cart", animal: true }); g.restore(); }
-      };
+      const draw = (g, H) => { if (typeof SKY !== "undefined") SKY.overlay(g, H, W, Hh, o.sky, { seed: "bscene", ground: Hh * 0.8, cover: false, weather: false, season: false }); };
       cv = typeof ART !== "undefined" && ART.canvas ? ART.canvas(W, Hh, draw) : null;
     } catch (e) { cv = null; }
     if (ovCache.size > 8) ovCache.delete(ovCache.keys().next().value);
     ovCache.set(k, cv);
     return cv;
   }
-  /* behind the fighters: plate, light and weather, then every prop in manifest order. o: { W, Hh, t, sky, wagon, lay }
+  /* behind the fighters: plate, light and weather, then every prop in manifest order. o: { W, Hh, t, sky, lay }
      [fightcam] o.lay: the fight camera's painter (fightcam.js layers): the plate is cut into rows that move at their own
      depth (sky least, the ground with the fighters), each prop moves with the row it stands on, the edges are mirrored */
   function back(g, sc, o) {

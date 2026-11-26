@@ -1,4 +1,4 @@
-// Party fight length (build 354, [partyboss]). A party foe is sized for what every teammate really deals: each real
+// Party fight length (build 356, [partyboss]). A party foe is sized for what every teammate really deals: each real
 // player plays a full 3 AP turn on their own phone, and their phone publishes that number (COOP.profile → dpr, from
 // TB.dprOf). Seeded party fights with 1-8 real players (each teammate's turn played by Auto on their own simulated
 // phone, sharedfight.js, the way a real party plays) must give:
