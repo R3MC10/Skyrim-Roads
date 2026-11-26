@@ -52,7 +52,12 @@ const UINORDIC = (() => {
     const sp = 0.9 + Math.min(2.2, pxPerSec / 700);          // in the spark system's "m/s"
     SPARKS.burst(cx - dir * 6, rimY, -dir, -0.62, n, sp, { spread: 0.5, floor: ty + 3, flash: pxPerSec > 500,
       carry: [dir * Math.min(pxPerSec, 900) * 0.25, 0],
-      occlude: () => { const r = K.k.getBoundingClientRect(); return r.width ? { x: r.left + r.width / 2, y: r.top + r.height / 2, r: r.width * 0.34 } : null; } });
+      occlude: () => {   // the knob's own outline (ring, and the star at its current turn), so sparks pass behind it
+        const r = K.k.getBoundingClientRect(); if (!r.width) return null;
+        const A = typeof ASSETS !== "undefined" ? ASSETS : null;
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2, size: r.width, r: r.width * 0.45,
+          imgs: A ? [{ img: A.img("ui-knob-ring") }, { img: A.img("ui-knob-star"), rot: K.ang * Math.PI / 180 }] : null };
+      } });
   }
   function moved(el) {
     fill(el);

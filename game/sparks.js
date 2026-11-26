@@ -1,8 +1,9 @@
 /* sparks.js: showers of hot-metal sparks, drawn on one screen-wide 2D canvas. [OURS]
      SPARKS.burst(x, y, dx, dy, count, speed, opts)   screen px; (dx, dy) = the way they're thrown (needn't be unit length)
        opts: { spread 0..1 (tight jet → wide fan), floor: y in px to skip on (or null), flash: true, hue: "metal"|"shock"|"fire",
-               carry: [vx, vy] px/s the source itself is moving (sparks inherit it), occlude: () => ({ x, y, r }) a round
-               thing in front of the sparks (a spinning wheel): nothing is drawn inside it, so they come out from behind it }
+               carry: [vx, vy] px/s the source itself is moving (sparks inherit it), occlude: () => ({ x, y, r }) or
+               ({ x, y, size, imgs: [{ img, rot }] }) something standing in front of the sparks: nothing is drawn where
+               it is (by its real outline when pictures are given), so they come out from behind it }
      SPARKS.live()                                    how many are in the air (for tests)
    The recipe (ported from a WebGL spark system to plain canvas):
    - a spark is a tapered streak, its head on the particle and its tail laid back along its own velocity, so fast
@@ -78,11 +79,11 @@ const SPARKS = (() => {
       const a = Math.min(1, (1 - age) * 3);
       // the streak: head on the particle, tail back along its motion; thins as it cools
       const sp = Math.hypot(p.vx, p.vy) || 1e-6, len = Math.max(p.size * 2.2, sp * p.trail);
-      const tx = p.x - (p.vx / sp) * len, ty = p.y - (p.vy / sp) * len, w = p.size * (0.55 + 0.45 * (1 - age));
+      const tx = p.x - (p.vx / sp) * len, ty = p.y - (p.vy / sp) * len, w = p.size * 0.55 * (0.55 + 0.45 * (1 - age));   // thin: a sliver, not a blob
       const grd = g.createLinearGradient(tx, ty, p.x, p.y);   // a thin tail that fades in, a hot head
       const col = (k) => `rgba(${r | 0},${gg | 0},${b | 0},${(a * k).toFixed(3)})`;
       grd.addColorStop(0, col(0)); grd.addColorStop(0.3, col(0.35)); grd.addColorStop(1, col(1));
-      g.strokeStyle = `rgba(${r | 0},${(gg * 0.75) | 0},${(b * 0.5) | 0},${(0.16 * a).toFixed(3)})`; g.lineWidth = w * 3.4;   // halo
+      g.strokeStyle = `rgba(${r | 0},${(gg * 0.75) | 0},${(b * 0.5) | 0},${(0.16 * a).toFixed(3)})`; g.lineWidth = w * 2.6;   // halo
       g.beginPath(); g.moveTo(tx + (p.x - tx) * 0.3, ty + (p.y - ty) * 0.3); g.lineTo(p.x, p.y); g.stroke();
       g.strokeStyle = grd; g.lineWidth = w;   // core
       g.beginPath(); g.moveTo(tx, ty); g.lineTo(p.x, p.y); g.stroke();
@@ -90,7 +91,14 @@ const SPARKS = (() => {
     });
     // whatever stands in front (the star): cut it out, so sparks appear from behind its edge
     g.globalCompositeOperation = "destination-out";
-    for (const f of occ) { try { const o = f(); if (o) { g.beginPath(); g.arc(o.x, o.y, o.r, 0, 7); g.fill(); } } catch (e) { occ.delete(f); } }
+    for (const f of occ) {
+      try {
+        const o = f(); if (!o) continue;
+        if (o.imgs) {   // the exact shape: each picture (say a ring, and a star turned to its angle) punches its own hole
+          for (const L of o.imgs) { if (!L.img) continue; g.save(); g.translate(o.x, o.y); g.rotate(L.rot || 0); g.drawImage(L.img, -o.size / 2, -o.size / 2, o.size, o.size); g.restore(); }
+        } else { g.beginPath(); g.arc(o.x, o.y, o.r, 0, 7); g.fill(); }
+      } catch (e) { occ.delete(f); }
+    }
     g.globalCompositeOperation = "source-over";
     if (P.length || flashes.length) requestAnimationFrame(frame); else { running = false; occ.clear(); g.clearRect(0, 0, innerWidth, innerHeight); }
   }
