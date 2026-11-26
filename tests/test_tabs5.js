@@ -80,8 +80,8 @@ ok(html.indexOf('<script src="i18n_tabs5.js">') > 0 && html.indexOf('<script src
 const ctx = { I18N_EXTRA: { words: {}, pat: [] } }; vm.createContext(ctx); vm.runInContext(src("i18n_tabs5.js"), ctx);
 const w = ctx.I18N_EXTRA.words;
 for (const s of ["World", "Hero", "Places", "Your goal and how to get there", "Every place you know · search and filters", "Open Hero to choose what grows.", "Five tabs instead of seven"]) ok(w[s], "Polish: " + s);
-const pn = src("patchnotes.js"), at = pn.indexOf('id: "b'), first = pn.slice(at, pn.indexOf("] },", at));
-ok(/-tabs5"/.test(first), "newest patch note is tabs5");
+const pn = src("patchnotes.js"), at = pn.search(/id: "b\d+-tabs5"/), first = at < 0 ? "" : pn.slice(at, pn.indexOf("] },", at));
+ok(at >= 0, "tabs5 has a patch note");   // later builds go on top of it
 for (const line of [...first.matchAll(/^\s+"(.+)",$/gm)].map((m) => m[1].replace(/\\"/g, '"'))) ok(w[line], "Polish patch note line: " + line.slice(0, 50));
 const pt = ctx.I18N_EXTRA.pat.find(([re]) => re.test("Hero (C · 3)"));
 ok(pt && pt[1]("Hero (C · 3)".match(pt[0])) === "Bohater (C · 3)", "Polish tooltips with keys");
