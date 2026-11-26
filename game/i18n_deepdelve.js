@@ -43,10 +43,6 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "You stand at the very bottom. Nothing lies deeper.": "Stoisz na samym dnie. Głębiej nic nie ma.",
     "Head back up with your loot": "Wracaj na górę z łupem", "Extract: climb out with everything": "Wyjdź: wspinaczka na górę ze wszystkim",
     "Rest (eat something from your pack)": "Odpocznij (zjedz coś z plecaka)", "Rest (no rations left)": "Odpocznij (brak racji)",
-    "Knocked out below, you lose what you found down here, never your gear or what you brought in.":
-      "Powalony na dole tracisz to, co tu znalazłeś, ale nigdy swojego ekwipunku ani tego, co przyniosłeś.",
-    "Knocked out below, you lose what you found down here, never your gear or what you brought in. Pathfinder: you can also walk out from any room and keep it all.":
-      "Powalony na dole tracisz to, co tu znalazłeś, ale nigdy swojego ekwipunku ani tego, co przyniosłeś. Tropiciel: możesz też wyjść z każdej komnaty i zatrzymać wszystko.",
     "Health, potions and injuries carry down with you. Down there, loot is unsecured until you extract.":
       "Zdrowie, mikstury i rany schodzą z tobą. Na dole łup jest niezabezpieczony, dopóki nie wyjdziesz.",
     "You leave the stairs for another day.": "Zostawiasz schody na inny dzień.",
@@ -127,8 +123,6 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       (m) => `${m[1] ? `Znaleźli twój obóz: z ciemności wyszedł ${NM(m[1])}. Już nie żyje. ` : ""}Zjadasz ${m[2] === "a ration" ? "rację" : NM(m[2])} i odpoczywasz (${m[3]} → ${m[4]} zdrowia, zostało ran: ${m[5]}).${m[6] ? " Klątwy zostają, dopóki nie wyjdziesz." : ""}`],
     [/^The (.+) falls\. In its hoard: (.+)\. Unsecured until you climb out\.(?: You took an injury in that fight \((\d) of (\d)\): you hit a little softer and take a little more, until you rest or climb out\.)?$/,
       (m) => `${cap(NM(m[1]))} pada. W jego skarbie: ${list(m[2]).replace(/^(\d+) gold/, "$1 złota")}. Niezabezpieczone, dopóki nie wyjdziesz.${m[3] ? ` W tej walce odniosłeś ranę (${m[3]} z ${m[4]}): bijesz trochę słabiej i obrywasz trochę mocniej, dopóki nie odpoczniesz albo nie wyjdziesz.` : ""}`],
-    [new RegExp(`^( )?Knocked out by the (.+) on level ${R}\\. You come to at the door of (.+?), dragged out by luck or by friends\\. (?:The expedition's finds \\((.+)\\) are lost in the dark\\.|You had found nothing down there yet\\.) Your gear and everything you brought in are safe\\.$`),
-      (m) => `${m[1] || ""}Powalił cię ${NM(m[2])} na poziomie ${m[3]}. Budzisz się przy wejściu do ${NM(m[4])}, wyciągnięty przez szczęście albo przyjaciół. ${m[5] ? `Znaleziska wyprawy (${m[5].replace(/(\d+) gold/, "$1 złota").replace(/(\d+) things?/, (x, n) => `${n} ${things(n)}`).replace(" and ", " i ")}) przepadły w ciemności.` : "Nie znalazłeś tam jeszcze niczego."} Twój ekwipunek i wszystko, co przyniosłeś, są bezpieczne.`],
     [/^You climb back into daylight with (.+?)\.( Pathfinder: you know the way out and bring everything with you\.| You ran for it and dropped the expedition's finds \((.+)\) on the way up\.)$/,
       (m) => `${T(`You climb back into daylight with ${m[1]}.`)}${m[3] ? ` Uciekłeś i po drodze na górę zgubiłeś znaleziska wyprawy (${m[3].replace(/(\d+) gold/, "$1 złota").replace(/(\d+) things/, (x, n) => `${n} ${things(n)}`)}).` : " Tropiciel: znasz drogę na zewnątrz i wynosisz wszystko."}`],
     [/^A (.+) found you before you could sit down\. Once it's dead, you bind your wounds \((\d+) → (\d+) health\)\.$/,

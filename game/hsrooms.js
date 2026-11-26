@@ -25,7 +25,7 @@ const HSROOMS = (() => {
   const ROOMS = {
     garden: ["Garden", "Six fenced beds. Plant herbs or vegetables from your pack: every in-game day each bed gives 2 of what grows in it (Green Thumb doubles it).",
       { log: 8, stone: 4, clay: 6, nails: 20, fittings: 2 }, "small"],
-    cellar: ["Cellar", "Dug under the main hall. Keeps 40 things safe even if you die, raiders never find it, and the wings and garden keep goods a day longer.",
+    cellar: ["Cellar", "Dug under the main hall. Holds 40 things, raiders never find it, and the wings and garden keep goods a day longer.",
       { log: 12, stone: 24, clay: 8, nails: 20, hinge: 2, lock: 1, fittings: 4 }, "hall"],
   };
   // what each wing does as a station (shown on the build list and the Home tab)

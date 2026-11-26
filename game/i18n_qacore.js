@@ -43,7 +43,7 @@ const I18N_QACORE = (() => {
     "Checking for a new version…": "Sprawdzam, czy jest nowa wersja…", "Check again": "Sprawdź jeszcze raz",
     "A new version is ready:": "Nowa wersja jest gotowa:", "What's new": "Co nowego", "Update now": "Zaktualizuj teraz", "Updating…": "Aktualizuję…",
     // How to Play
-    "Fights": "Walki", "Playing together": "Gra z innymi", "Dying": "Śmierć",
+    "Fights": "Walki", "Playing together": "Gra z innymi", "Losing a fight": "Przegrana walka",
     "Tap a place on the map and press Go. You walk in real time, even with the app closed: about ten minutes from Whiterun to Windhelm. Roads are fast; snow, marsh and mountains are slow. Carriages are safe and quick.":
       "Dotknij miejsca na mapie i naciśnij Idź. Idziesz na żywo, nawet gdy aplikacja jest zamknięta: z Whiterun do Windhelm to około dziesięć minut. Drogami idzie się szybko; śnieg, bagna i góry spowalniają. Powozy są bezpieczne i szybkie.",
     "Bandits, wolves and worse block the road. Fight, flee, sneak past or drink a potion. You play every fight yourself, turn by turn.":
@@ -56,8 +56,6 @@ const I18N_QACORE = (() => {
       "Zakładka Dziennik pokazuje twoje zadania. Złoty romb na mapie wskazuje, dokąd iść dalej.",
     "Everyone with the app shares one world. Form a party, trade, fight dragons that attack towns, or rob each other. Watch your back.":
       "Wszyscy z aplikacją dzielą jeden świat. Załóż drużynę, handluj, walcz ze smokami atakującymi miasta albo okradajcie się nawzajem. Uważaj na plecy.",
-    "You wake at the nearest town and drop a bag with your gold. Get back to it within ten minutes before someone else does.":
-      "Budzisz się w najbliższym mieście, a twoje złoto zostaje w sakwie na miejscu. Wróć po nią w ciągu dziesięciu minut, zanim zrobi to ktoś inny.",
     // Credits
     "Created by": "Autor", "Built with": "Zbudowane z pomocą", "Music and sound": "Muzyka i dźwięk", "composed live on your device": "komponowane na żywo na twoim urządzeniu",
     "Fonts": "Czcionki", "Networking": "Sieć", "Trystero, phone to phone": "Trystero, z telefonu do telefonu",

@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b350-threeap", build: 350, date: "26 Nov 2026", title: "3 AP a turn", items: [
+    { id: "b351-threeap", build: 351, date: "26 Nov 2026", title: "3 AP a turn", items: [
       "Your turn now runs on 3 AP (action points), shown as gold diamonds. Most moves take 1 AP: a blow, a bow shot, guarding, a shield bash, a small spell, a short shout, a potion, catching your breath, a poison or a small scroll.",
       "Big moves take 2 AP: power attacks, spells of Adept level and up, dual casts, full three-word shouts, big scrolls and a beast's heavy moves. Every button shows its AP and goes grey when you can't pay for it.",
       "AP you don't spend become guard: 10% less damage for each one, up to 30%, and it lasts until your next turn. One potion a turn.",
@@ -11,6 +11,16 @@ const PATCHNOTES = (() => {
       "If your target falls before your move lands, that move costs nothing. Followers get 2 AP a turn.",
       "Six new perks: Heavy Momentum, Flowing Strikes and Quick Draw (once a fight, a power attack or an aimed shot for 1 AP), Spell Weaving and Swift Mending (once a fight, a big spell for 1 AP) and Steady Guard (more guard from AP you keep).",
       "Fights are shorter now: a normal fight takes about 4-5 rounds, a boss about 10. A fully drawn aimed shot takes a bit more stamina than before.",
+    ] },
+    { id: "b350-defeat", build: 350, date: "26 Nov 2026", title: "Losing a fight costs nothing", items: [
+      "Lose a fight and you lose nothing: no gold, no items, no XP, no progress. You're put back just before the fight.",
+      "A new screen shows what beat you and why, then gives you three choices: Retry (the same foes again), Adjust gear (change weapons, armour or spells, then come back) or Retreat.",
+      "Retreat on the road takes you past the fight and back on your way. In a dungeon you step back out of the room; rooms you already cleared stay cleared.",
+      "You can switch the difficulty on that screen before you try again.",
+      "Whatever you picked up or learned during the lost fight goes back too, so a retry is a clean new try.",
+      "In a party, one beaten player can't reset everyone's fight: the party votes on Retry or Retreat (most votes wins, a tie goes the leader's way). Anyone knocked down just gets back up.",
+      "World events and world bosses keep going: you get back up where you are and what you did still counts.",
+      "Guild jobs, heists, quests and deep dungeon levels work the same way: getting knocked down no longer loses the job, gets you caught or takes the finds you made below.",
     ] },
     { id: "b349-rarity", build: 349, date: "26 Nov 2026", title: "Item rarity", items: [
       "Every item now has a rarity: Common, Fine, Rare, Epic or Legendary. You see it as a colour and as a word, in your Items, on the paper doll, in tooltips, shops, loot, dungeon loot votes and trades.",

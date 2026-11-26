@@ -206,7 +206,7 @@ s.location = "Raven Rock"; [s.x, s.y] = P("Raven Rock"); s.trip = null;
 const loaded = G.migrate(JSON.parse(JSON.stringify(s)));
 ok(loaded.location === "Raven Rock" && WORLD.isSol([loaded.x, loaded.y]) && loaded.quests.dragonborn.done && loaded.discovered.includes("Kolbjorn Barrow"), "save/load on Solstheim");
 const dd = hero("DD"); dd.location = null; [dd.x, dd.y] = P("Sun Stone"); dd.discovered.push("Raven Rock", "Tel Mithryn");
-G.die(dd, "Lurker", t); ok(dd.location === "Tel Mithryn" || dd.location === "Raven Rock", "you wake on the island: " + dd.location);
+{ const at = [dd.x, dd.y]; G.die(dd, "Lurker", t); ok(dd.x === at[0] && dd.y === at[1] && WORLD.isSol([dd.x, dd.y]), "knocked down on the island: you get up where you were (no defeat penalty)"); }
 s.gold = 300; ok(SOL.sail(s, t) === null && s.trip.destName === "Windhelm", "sail home");
 out = G.advance(s, t + 3001);
 ok(out.arrived === "Windhelm" && s.location === "Windhelm" && !WORLD.isSol([s.x, s.y]), "back in Windhelm");

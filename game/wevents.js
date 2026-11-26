@@ -100,7 +100,7 @@ const WEVENTS = (() => {
     s.raid = { ...s.raid, dmg: s.raid.dmg + dealt };
     const out = { dealt, fight: f, skills, slain, fled: !!f.ranAway && f.hp > 0 };
     if (slain) s.raid.claimed = true;   // the killing blow already took the soul (Fight.apply)
-    if (f.hp <= 0) { const d = G.die(s, "dragon", t); out.died = d.msg; out.bag = d.bag; }
+    if (f.hp <= 0) { const d = G.die(s, "dragon", t); out.died = d.msg; }
     out.text = slain ? `You land the killing blow! The ${dn} crashes into ${raid.town}.` : out.died ? `The ${dn}'s ${k.el === "frost" ? "frost" : "fire"} takes you.`
       : out.fled ? `You break away and hide in the streets${dealt ? ` after hitting it for ${dealt}` : ""}. It's still up there...` : `You hit it for ${dealt} before it climbs out of reach. It circles back...`;
     return out;

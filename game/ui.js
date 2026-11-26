@@ -314,7 +314,7 @@
       <h3>Dungeons</h3><p>At a barrow or cave, press Go inside. Pick your way room by room down to the boss. Health doesn't come back on its own in there, so bring potions.</p>
       <h3>Quests</h3><p>The Journal tab shows your quests. The gold diamond on the map marks where to go next.</p>
       <h3>Playing together</h3><p>Everyone with the app shares one world. Form a party, trade, fight dragons that attack towns, or rob each other. Watch your back.</p>
-      <h3>Dying</h3><p>You wake at the nearest town and drop a bag with your gold. Get back to it within ten minutes before someone else does.</p>
+      <h3>Losing a fight</h3><p>You lose nothing. Retry the same fight, change your gear first, or retreat and go another way. Only a fight with another player can make you drop your gear in a bag.</p>
       ${S && typeof FIRST30 !== "undefined" && FIRST30.canStart(S) ? `<button class="btn pri" data-t="tutorial">Play the opening quest with ${esc(S.name)}</button>` : ""}${backBtn}`;
     if (titlePage === "credits") return `<h2>Credits</h2>
       <p><b>Created by</b> Remigiusz (R3MC10)</p><p><b>Built with</b> Claude</p>
@@ -760,6 +760,9 @@
       if (typeof CHANNEL !== "undefined") CHANNEL.mount({ store: Store });   // [channel] teammates' moves being prepared (channel.js)
       if (typeof SHAREDFIGHT !== "undefined") SHAREDFIGHT.mount({ store: Store, S: () => S, persist, toast: (t) => t && toast(t), after: () => renderPanel(true) });   // the leader's fight on your own full fight screen (sharedfight.js)
       TB.watchTurns(Store, () => S?.id);
+      if (typeof DEFEAT !== "undefined") DEFEAT.mount({ S: () => S, Store, persist, toast: (t) => t && toast(t), openItems: () => openMenu("items"), closeItems: closeMenu,
+        refresh: () => { bump(); renderPanel(true); if (S.dungeon && document.getElementById("dun")) renderDungeon(); },
+        online: (id) => { const c = cardOf(id); return !!c && (typeof SOCIAL === "undefined" || SOCIAL.status(c).online); } });   // a lost fight: Retry / Adjust gear / Retreat, nothing lost (defeat.js)
     }
     Store.watch("halls", (docs) => onHalls(docs));
     Store.watch("pshare", (docs) => onShares(docs));
@@ -948,7 +951,7 @@
         out.taken.forEach((id) => Store.takeBag(id));
         if (out.bag) Store.addBag(out.bag);
         persist(true);
-        if (out.died) { SOUND.fx("death"); showMessage("You died", out.died, true); }
+        if (out.died) { SOUND.fx("death"); showMessage("Knocked down", out.died, true); }
         else if (out.encounter) { openEncounter(); ppUI?.leaderHalt("encounter", out.encounter.name, out.encounter.text); }
         else if (out.arrived) {
           SOUND.fx("arrive"); tally("arrivals"); festCount("arrive"); if (typeof EXPEDITION !== "undefined") EXPEDITION.hook("arrive", { place: out.arrived });
@@ -1368,7 +1371,7 @@
   }
   function showMessageNow(title, text, bad, prestige, got) {
     if (/quest/i.test(title) || //.test(text)) SOUND.fx("quest");
-    openModal(`${/^You died/.test(title) ? UIART.death(320, 120) : typeof EVENTART !== "undefined" ? EVENTART.story(title, text) : ""}<h2>${esc(title)}</h2><p>${esc(text)}</p>${got.length ? RTIP.strip(0, got) : ""}<button class="btn ${bad ? "danger" : "pri"}" data-act="close" style="width:100%">Continue</button>`, bad ? "enc" : (prestige || title === "Quest") ? "prestige" : "");
+    openModal(`${/^(You died|Knocked down)/.test(title) ? UIART.death(320, 120) : typeof EVENTART !== "undefined" ? EVENTART.story(title, text) : ""}<h2>${esc(title)}</h2><p>${esc(text)}</p>${got.length ? RTIP.strip(0, got) : ""}<button class="btn ${bad ? "danger" : "pri"}" data-act="close" style="width:100%">Continue</button>`, bad ? "enc" : (prestige || title === "Quest") ? "prestige" : "");
   }
   function fightLog(f) {
     return `${typeof FIGHTART !== "undefined" ? FIGHTART.placeholder(f, S) : ""}<details ${f.log.length < 9 ? "open" : ""}><summary class="sub" style="cursor:pointer;min-height:36px">Fight log (${f.turn} turns)${f.wx && f.wx.lines.length ? ` · ${f.wx.icon} ${esc(f.wx.name)}` : ""} — ${f.ai ? (f.hybrid ? "[n] = your rule fired · [AI] = Smart AI" : "[AI] = Smart AI's move") : "[n] is the tactic rule that fired"}</summary><div class="flog">${f.fpLine ? `<div class="fpline"><span class="r"></span><span>${esc(f.e.name)} · ${esc(f.fpLine)}</span></div>` : ""}${f.log.map((l) =>
@@ -1753,7 +1756,7 @@
     persist(true);
     if (typeof SHOUTS2 !== "undefined") SHOUTS2.showWallWhenFree();   // a Word Wall was read: its scene after the result
     if (runId && coopUI) coopUI.afterAct(r, runId);
-    if (r.died) { dunNote = null; closeDungeon(); renderPanel(true); openModal(`<h2> Defeated</h2><p>${esc(r.text)}</p>${r.fight ? fightLog(r.fight) : ""}<p>${esc(r.died)}</p><button class="btn danger" data-act="close" style="width:100%">Continue</button>`, "enc"); return; }
+    if (r.died) { dunNote = null; if (S.dungeon) renderDungeon(); else closeDungeon(); renderPanel(true); openModal(`<h2> Defeated</h2><p>${esc(r.text)}</p>${r.fight ? fightLog(r.fight) : ""}<p>${esc(r.died)}</p><button class="btn danger" data-act="close" style="width:100%">Continue</button>`, "enc"); return; }
     if (r.partyChest && party) {
       const id = `${S.id}-${Math.floor(G.now())}`;
       Store.put("chests", id, { gold0: r.partyChest.gold, items0: r.partyChest.items, goldLeft: r.partyChest.gold, itemsLeft: r.partyChest.items, taken: [],
@@ -3526,7 +3529,7 @@
         note = `${hdesc} Skyrim price. Inside: a chest that keeps things safe even when you die, your own bed (Well Rested: skills +10%), and a garden.`;
         body = `<div class="item"><div class="t">${esc(hname)}<span>${l === "Whiterun" && !S.thaneWhiterun ? "Only for someone the Jarl trusts (bring Farengar the Dragonstone)" : "For sale"}</span></div><span class="num gold">${price}</span><button class="btn sm pri" data-act="buyhome" ${S.gold >= price && !wanted ? "" : "disabled"}>Buy</button></div>`;
       } else {
-        note = "Your home. Things in the chest are safe even if you die on the road.";
+        note = "Your home. Leave things in the chest to lighten your pack.";
         body = `${typeof HOMEART !== "undefined" ? HOMEART.mine(S, l) : ""}<div class="item"><div class="t">Your bed<span>Full health and Well Rested (+10% skills for 40 min)</span></div><button class="btn sm pri" data-act="homebed">Sleep</button></div>
           ${CHARGEN.mirrorRow(S)}
           <div class="item"><div class="t">Garden<span>${TOWNS.gardenReady(S) ? "Ripe: harvest ingredients" : `Growing. Ready in ${Math.ceil(((h.garden || 0) + 7200 - G.now()) / 60)} min`}</span></div><button class="btn sm" data-act="harvest" ${TOWNS.gardenReady(S) ? "" : "disabled"}>Harvest</button></div>${typeof GATHER !== "undefined" ? GATHER.gardenHTML(S) : ""}

@@ -446,7 +446,7 @@ const COOP = (() => {
     async function afterAct(r, runId) {
       const s = S(), id = runId || cur()?.id;
       if (!id) return;
-      if (r.died || !s.dungeon) { await ctx.Store.change("runs", id, (x) => removeMember(x, s.id)); ctx.publishCard(); return; }
+      if (!s.dungeon) { await ctx.Store.change("runs", id, (x) => removeMember(x, s.id)); ctx.publishCard(); return; }
       if (r.cleared) await ctx.Store.change("runs", id, (x) => bossDown(x, s.id));
       report();
       if (!s.dungeon.room && sync()) { ctx.persist(true); }

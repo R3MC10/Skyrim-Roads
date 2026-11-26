@@ -791,7 +791,7 @@ const TB = (() => {
 
   // ------------------------------------------------------------------ pausing a game action at its fight, and resuming it
   const PENDING = { tbPending: true };
-  let mode = null, pend = null, fin = null, finalS = null, rec = [], rp = 0;
+  let mode = null, pend = null, fin = null, finalS = null, rec = [], rp = 0, drec = [], dcut = -1;
   const realRandom = Math.random;
   const clone = (o) => (typeof structuredClone === "function" ? structuredClone(o) : JSON.parse(JSON.stringify(o)));
   function replaceInPlace(target, src) { for (const k of Object.keys(target)) delete target[k]; Object.assign(target, clone(src)); }
@@ -819,6 +819,7 @@ const TB = (() => {
       this.tbPlayed = true;
       return this.won;
     }
+    if (mode === "direct" && dcut < 0) dcut = drec.length;   // no fight screen: where the fight's own dice start (a retry replays only what came before)
     return origRun.call(this, opts);
   };
   const prefs = () => { try { return JSON.parse(localStorage.getItem("rotn_prefs") || "{}"); } catch { return {}; } };
@@ -833,21 +834,51 @@ const TB = (() => {
   /* store.js: while a fight is on screen, a save keeps the game as it was just before it (closing the app mid-fight
      puts you back in front of the fight instead of half-way through the action that started it) */
   function safeSave(st) { return open && saveSnap && st === liveS ? saveSnap : st; }
-  function call(S, fn, done, ctx = {}) {
-    if (!enabled() || open || mode) return done(fn());
+  /* dice: { pre, sess } from a lost fight (defeat.js Retry): the same rolls up to and including the fight's setup, so a
+     retry meets the same foes; the fight itself rolls fresh. */
+  const DF = () => (typeof DEFEAT !== "undefined" ? DEFEAT : null);
+  function call(S, fn, done, ctx = {}, dice = null) {
+    if (open || mode) return done(fn());
+    if (!enabled()) {   // no fight screen (tests, automation): a lost fight still goes to the defeat screen, nothing lost
+      const df = DF();
+      if (!df) return done(fn());
+      const snapI = clone(S), pre = dice?.pre || [], rnd0 = Math.random, mine = (drec = []);
+      let pp = 0, r;
+      dcut = -1; mode = "direct";
+      Math.random = () => { const v = pp < pre.length ? pre[pp++] : rnd0(); mine.push(v); return v; };
+      try { r = fn(); } finally { Math.random = rnd0; mode = null; }
+      const cut = dcut < 0 ? mine.length : dcut; dcut = -1;
+      if (r && r.fight && df.lostFight(r.fight)) {
+        df.forget(); replaceInPlace(S, snapI);
+        return df.offer({ S, f: r.fight, sess: null, retry: () => call(S, fn, done, ctx, { pre: mine.slice(0, cut) }), retreat: (text) => done({ text, title: "Fell back", retreated: true }) });
+      }
+      return done(r);
+    }
     const snap0 = clone(S);
+    const pre = dice?.pre || [], ses = dice?.sess || [];
+    let pp = 0;
     rec = []; mode = "capture";
-    Math.random = () => { const v = realRandom(); rec.push(v); return v; };
+    Math.random = () => { const v = pp < pre.length ? pre[pp++] : realRandom(); rec.push(v); return v; };
     let r;
     try { r = fn(); }
     catch (x) {
       Math.random = realRandom;
       if (x !== PENDING) { mode = null; throw x; }
       const { f, opts } = pend; pend = null; mode = null;
-      const sess = new Session(f, opts);
+      const preRec = rec.slice(), sesRec = [];
+      let sp = 0;
+      Math.random = () => { const v = sp < ses.length ? ses[sp++] : realRandom(); sesRec.push(v); return v; };
+      let sess;
+      try { sess = new Session(f, opts); } finally { Math.random = realRandom; }
       saveSnap = snap0; liveS = S;
       return play(sess, ctx, () => {
         saveSnap = null; liveS = null;
+        const df = DF();
+        if (df && df.lostFight(f)) {   // lost: nothing is lost. Back to just before the action, then Retry / Adjust gear / Retreat
+          Math.random = realRandom; mode = null; fin = null; finalS = null;
+          df.forget(); replaceInPlace(S, snap0);
+          return df.offer({ S, f, sess, retry: () => call(S, fn, done, ctx, { pre: preRec, sess: sesRec }), retreat: (text) => done({ text, title: "Fell back", retreated: true }) });
+        }
         finalS = clone(S);
         replaceInPlace(S, snap0);
         fin = f; mode = "replay"; rp = 0;

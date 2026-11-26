@@ -40,9 +40,9 @@ const f = new G.Fight(p, e); f.run(); console.log("fight:", f.log.slice(0, 3).ma
 const q = G.newSave("y", "Q", "imperial"); q.gold = 5000;
 const day = G.clock(t); const openT = t + ((14 - day.hour + 24) % 24) * 3600 / 12;
 console.log(G.buy(q, "steel_battleaxe", 1, openT), "|", G.equip(q, q.inv[q.inv.length - 1].id), "|", G.sell(q, q.inv[0].id, 1, openT));
-// death & bag
-const d = G.die(q, "Giant", t); console.log("bag:", d.bag.gold, d.bag.items.length, "items; kept:", q.inv.length, "| at", q.location);
-q.x = d.bag.x; q.y = d.bag.y;
+// knocked down: no penalty, no bag (defeat.js)
+const inv0 = q.inv.length, gold0 = q.gold, d = G.die(q, "Giant", t); console.log("knocked down:", d.msg, "| bag:", d.bag, "| kept:", q.inv.length === inv0 && q.gold === gold0);
+if (d.bag || q.inv.length !== inv0 || q.gold !== gold0) throw new Error("losing a fight must cost nothing");
 // level up
 const r = G.newSave("z", "Z", "orc"); r.pendingLevels = 1; console.log(G.levelUp(r, "stamina"), G.capacity(r));
 console.log("JSON size of save:", JSON.stringify(s).length, "bytes");

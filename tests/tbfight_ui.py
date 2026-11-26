@@ -75,17 +75,21 @@ async def main():
             for _ in range(50):
                 if await pg.evaluate("!!document.querySelector('#tbf .tbgrid, #tbf .tbdone')"): break
                 await pg.wait_for_timeout(200)
-            if await pg.evaluate("!!document.querySelector('#tbf .tbgrid')"):
+            if await pg.evaluate("!!document.querySelector('#tbf') && !document.querySelector('#tbf .tbdone')"):
                 await pg.evaluate("(()=>{const g=document.querySelector('#tbf .tbgrid')||document.querySelector('#tbf');const b=document.createElement('button');b.dataset.tbx='autoall';g.append(b);b.click()})()")
-            for _ in range(60):
+            for _ in range(200):
                 if await pg.evaluate("!!document.querySelector('#tbf .tbdone')"): break
                 await pg.wait_for_timeout(300)
             ok(await pg.evaluate("!!document.querySelector('#tbf .tbdone')"), f"{style}: Auto finishes the fight")
             await pg.wait_for_timeout(2500); await pg.screenshot(path=OUT + f"{style}_end.png")
             await pg.click("#tbf .tbdone"); await pg.wait_for_timeout(800)
             ok(await pg.evaluate("!document.querySelector('#tbf') && !TB.open"), f"{style}: the fight screen closes")
-            ok(await pg.evaluate("!!document.querySelector('#modal') && /Victory|Defeated|log|fight|bandit|Quest/i.test(document.querySelector('#modal').innerText)"), f"{style}: the usual fight result (or a quest note that popped up) shows after")
+            ok(await pg.evaluate("!!document.querySelector('#dft') || !!document.querySelector('#modal') && /Victory|Defeated|log|fight|bandit|Quest/i.test(document.querySelector('#modal').innerText)"), f"{style}: the usual fight result (or the defeat screen, or a quest note) shows after")
             await pg.screenshot(path=OUT + f"{style}_result.png")
+            if await pg.evaluate("!!document.querySelector('#dft')"):   # lost: nothing lost, the fight is still ahead; Retreat goes past it
+                ok(await pg.evaluate("window.__dbg.save().trip?.status === 'event'"), f"{style}: lost: back just before the fight")
+                await pg.click("#dft [data-dft=retreat]"); await pg.wait_for_timeout(600)
+                await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
             ok(await pg.evaluate("window.__dbg.save().trip?.status !== 'event'"), f"{style}: the encounter is resolved")
         # the old Instant (auto) setting is gone: a stored turnBased:false still gives the turn screen
         await pg.evaluate("localStorage.setItem('rotn_prefs', JSON.stringify({...JSON.parse(localStorage.getItem('rotn_prefs')||'{}'), turnBased:false}))")

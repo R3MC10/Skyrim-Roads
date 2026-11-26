@@ -132,7 +132,7 @@ ACH.check(A, 1); OK(A.ach.dw_lexicon && !A.ach.dw_dragon, "Delver of the Deep ea
   BLACKREACH.R(s).at = "mzark"; OK(/Get back to a lift/.test(BLACKREACH.leave(s)), "leave only from a lift");
   BLACKREACH.R(s).at = "lift"; OK(/Alftand/.test(BLACKREACH.leave(s)) && s.location === "Alftand" && !BLACKREACH.here(s), "up the great lift");
   const w = hero("mage", 5); w.dwq = { reach: true }; at(w, "Alftand"); BLACKREACH.enter(w); G.setHealth(w, 1); let dd = BLACKREACH.move(w, "warren"); for (let k = 0; k < 10 && !dd.died; k++) { BLACKREACH.R(w).at = "lift"; BLACKREACH.R(w).cleared = {}; G.setHealth(w, 1); dd = BLACKREACH.move(w, "warren"); }
-  OK(dd.died && !BLACKREACH.here(w), "dying in Blackreach puts you out of it"); }
+  OK(dd.died && BLACKREACH.here(w) && G.curHealth(w) > 0, "knocked down in Blackreach: nothing lost, you stay where you were (no defeat penalty)"); }
 
 // 5. the forge: scrap smelts only with Dwarven Smithing (Tinkerer adds one), the new pieces use up materials
 { const s = hero("warrior", 40); at(s, "Markarth"); s.perks.dwarven_smithing = 0; G.give(s, "dwemer_gear", 2); G.give(s, "dwemer_strut");
