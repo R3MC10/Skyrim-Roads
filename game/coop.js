@@ -181,14 +181,15 @@ const COOP = (() => {
   // ---- who stands beside you, and how they fight (from their own tactics)
   function profile(s) {
     const speed = typeof INIT !== "undefined" ? INIT.heroSpeed(s).speed : undefined;   // [initiative] your speed in a fight (armour, perks), for the turn order on the leader's phone
-    if (typeof COMBATAI !== "undefined" && COMBATAI.isSmart(G.loadout(s))) { const st = MP.stats(s); return { dmg: st.dmg, hp: st.hp, red: st.red, speed, ...COMBATAI.coopProfile(s) }; }   // Smart AI: worked out from your own kit, on your own phone
+    const dpr = typeof TB !== "undefined" && TB.dprOf ? TB.dprOf(s) : null;   // [partyboss] what you deal in a round of a turn-based fight: the leader's phone sizes the foe for it
+    if (typeof COMBATAI !== "undefined" && COMBATAI.isSmart(G.loadout(s))) { const st = MP.stats(s); return { dmg: st.dmg, hp: st.hp, red: st.red, speed, ...(dpr ? { dpr } : {}), ...COMBATAI.coopProfile(s) }; }   // Smart AI: worked out from your own kit, on your own phone
     const st = MP.stats(s), rules = (G.loadout(s)?.rules || []).filter((r) => r && !r.off);
     const healRule = rules.find((r) => r.do?.startsWith("spell:") && D.SPELLS[r.do.slice(6)]?.kind === "heal" && s.spells.includes(r.do.slice(6)));
     const healSp = healRule ? D.SPELLS[healRule.do.slice(6)] : null;
     const blocks = rules.some((r) => r.do === "block"), power = rules.some((r) => r.do === "power_attack"), sneaky = rules.some((r) => r.if === "sneak_ready");
     const potRule = rules.find((r) => r.do?.startsWith("potion:") && r.if === "hp_below");
     const role = healSp ? "healer" : blocks ? "guard" : power ? "striker" : "fighter";
-    return { dmg: st.dmg, hp: st.hp, red: st.red, speed, role, sneaky,
+    return { dmg: st.dmg, hp: st.hp, red: st.red, speed, ...(dpr ? { dpr } : {}), role, sneaky,
       healAt: healRule?.if === "hp_below" ? healRule.pct || 50 : 50, healAmt: healSp ? Math.round(healSp.amount || 30) : 0, heals: healSp ? 3 : 0,
       potAt: potRule ? potRule.pct || 40 : 0, pots: potRule ? Math.min(2, G.countRestore(s, "health")) : 0, potAmt: 50 };
   }
@@ -205,7 +206,8 @@ const COOP = (() => {
     const p = c.coop?.prof || { dmg: c.dmg || 5, hp: c.hp || 100, red: c.red || 0, role: "fighter" };
     const hp = Math.max(30, c.cur || p.hp);
     return { name: c.name, dmg: Math.max(2, (p.dmg || 5) * ALLY_DMG), hp, maxHp: p.hp || hp, red: clamp(p.red || 0, 0, 0.8), role: p.role || "fighter", sneaky: !!p.sneaky,
-      healAt: p.healAt || 50, healAmt: p.healAmt || 0, heals: p.heals || 0, potAt: p.potAt || 0, pots: p.pots || 0, potAmt: p.potAmt || 50, player: true, coop: true, pid: c.id || null, ...(p.speed ? { speed: p.speed } : {}) };   // pid: their phone picks their moves in turn-based fights
+      healAt: p.healAt || 50, healAmt: p.healAmt || 0, heals: p.heals || 0, potAt: p.potAt || 0, pots: p.pots || 0, potAmt: p.potAmt || 50, player: true, coop: true, pid: c.id || null, ...(p.speed ? { speed: p.speed } : {}),
+      ...(Array.isArray(p.dpr) && p.dpr.length === 3 && p.dpr.every((x) => Number.isFinite(+x) && +x >= 0) ? { dpr: p.dpr.map((x) => Math.min(5000, +x)) } : {}) };   // pid: their phone picks their moves in turn-based fights
   }
   /* the ally's turn (called from the fight loop) */
   function allyAct(f, al) {
