@@ -5802,14 +5802,14 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 
 /* [uiframes] painted Nordic 9-slice frame (ui-frame-panel: 3×3 grid of 160 px; corners stay, rails stretch) on title
    pages and pop-up windows. The picture is drawn wider than the border, over the padding, so the corners stay big. */
-:root.has-ui-frame-panel .title .page,:root.has-ui-frame-panel .modal .sheet:not(.hz-fs){border:4px solid transparent;border-image:var(--asset-frame-panel) 160 / 46px / 0 stretch;border-radius:0;box-shadow:none;filter:drop-shadow(0 14px 28px rgba(0,0,0,.55));background-clip:padding-box;-webkit-backdrop-filter:none;backdrop-filter:none}   /* the shadow follows the bronze, not the box: a box shadow left a pale strip outside the rail */
+:root.has-ui-frame-panel .title .page,:root.has-ui-frame-panel .modal .sheet:not(.hz-fs){border:4px solid transparent;border-image:var(--asset-frame-panel) 160 / 32px / 0 stretch;border-radius:0;box-shadow:none;filter:drop-shadow(0 14px 28px rgba(0,0,0,.55));background-clip:padding-box;-webkit-backdrop-filter:none;backdrop-filter:none}   /* the shadow follows the bronze, not the box: a box shadow left a pale strip outside the rail */
 :root.has-ui-frame-panel .title .page{padding:24px 16px 20px}
 :root.has-ui-frame-panel .modal .sheet:not(.hz-fs){padding:24px 18px}
 :root.has-ui-frame-panel .modal .sheet:not(.hz-fs)::before,:root.has-ui-frame-panel .modal .sheet:not(.hz-fs)::after{display:none}   /* the old drawn corner marks */
 
 /* [uinordic] the Nordic look, steps 3-8: everything below only applies once its picture has loaded (has-ui-*) */
 /* buttons: a squarer knotwork 9-slice frame */
-:root.has-ui-frame-btn .btn:not(#side[data-tab=log] .btn){border:3px solid transparent;border-image:var(--asset-frame-btn) 150 / 18px / 0 stretch;border-radius:0;background:linear-gradient(180deg,rgba(40,36,30,.72),rgba(14,13,12,.82));background-clip:padding-box;box-shadow:none}
+:root.has-ui-frame-btn .btn:not(#side[data-tab=log] .btn){border:3px solid transparent;border-image:var(--asset-frame-btn) 150 / 12px / 0 stretch;border-radius:0;background:linear-gradient(180deg,rgba(40,36,30,.72),rgba(14,13,12,.82));background-clip:padding-box;box-shadow:none}
 :root.has-ui-frame-btn .btn:hover,:root.has-ui-frame-btn .btn:focus-visible{background:linear-gradient(180deg,rgba(70,58,36,.78),rgba(24,20,14,.85));background-clip:padding-box;color:#fff3cf}
 /* section headings: a knotwork divider underneath */
 :root.has-ui-divider :is(.title .page,.modal .sheet) h3{position:relative;padding-bottom:12px}
@@ -5842,7 +5842,7 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 /* the chosen option is a small bronze-framed plate, like the buttons; the others are plain engraved text */
 :root.has-ui-frame-btn .seg{gap:4px;padding:3px 0;align-items:stretch}
 :root.has-ui-frame-btn .seg button{border:3px solid transparent;border-radius:0;background:none;box-shadow:none}
-:root.has-ui-frame-btn .seg button.on{border-image:var(--asset-frame-btn) 150 / 16px / 0 stretch;background:radial-gradient(120% 140% at 50% 50%,rgba(120,92,44,.42),rgba(26,20,12,.85));background-clip:padding-box;color:#fff3cf;box-shadow:none;text-shadow:0 0 8px rgba(255,214,120,.55),0 1px 2px #000}
+:root.has-ui-frame-btn .seg button.on{border-image:var(--asset-frame-btn) 150 / 12px / 0 stretch;background:radial-gradient(120% 140% at 50% 50%,rgba(120,92,44,.42),rgba(26,20,12,.85));background-clip:padding-box;color:#fff3cf;box-shadow:none;text-shadow:0 0 8px rgba(255,214,120,.55),0 1px 2px #000}
 :root.has-ui-frame-btn .seg button:not(.on):hover{color:#e8d3a0}
 :root.has-ui-frame-btn .seg button.on{padding:6px 18px;min-width:max-content;flex-shrink:0}   /* room inside the plate: the word clears the knotwork corners */
 /* text boxes: dark inset with a bronze edge */
@@ -5850,7 +5850,7 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 :root.has-ui-frame-btn :is(input[type=text],input[type=password],input[type=email],input[type=search],input:not([type]),textarea):focus{border-color:#d9b56a;outline:none;box-shadow:inset 0 2px 6px rgba(0,0,0,.6),0 0 0 2px rgba(217,181,106,.25)}
 
 /* step 8: the in-game Hero and Journal panels get the same bronze frame (the parchment Journal keeps its paper) */
-:root.has-ui-frame-panel #side .panel{border:4px solid transparent;border-image:var(--asset-frame-panel) 160 / 40px / 0 stretch;border-radius:0;box-shadow:none;background-clip:padding-box;padding-top:20px}
+:root.has-ui-frame-panel #side .panel{border:4px solid transparent;border-image:var(--asset-frame-panel) 160 / 28px / 0 stretch;border-radius:0;box-shadow:none;background-clip:padding-box;padding-top:20px}
 :root.has-ui-frame-panel #side .panel::after{display:none}   /* the old drawn corner marks */
 
 /* [uinordic] 5: a glint sweeps across a framed button when pressed */
@@ -5873,7 +5873,7 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
    copy of the frame shows through a diagonal band of light that travels down and across the top of the window (a
    fixed-size band, so tall pages like Settings get the same sweep over the part you can see). */
 :root.has-ui-frame-panel .title .page{position:relative}
-.uiframeglint{position:absolute;inset:-4px;pointer-events:none;z-index:3;border:4px solid transparent;border-image:var(--asset-frame-panel) 160 / 46px / 0 stretch;filter:brightness(2.8) saturate(1.4) drop-shadow(0 0 6px rgba(255,200,110,.9));
+.uiframeglint{position:absolute;inset:-4px;pointer-events:none;z-index:3;border:4px solid transparent;border-image:var(--asset-frame-panel) 160 / 32px / 0 stretch;filter:brightness(2.8) saturate(1.4) drop-shadow(0 0 6px rgba(255,200,110,.9));
   -webkit-mask:linear-gradient(125deg,transparent 42%,#000 49%,#000 51%,transparent 58%) no-repeat;mask:linear-gradient(125deg,transparent 42%,#000 49%,#000 51%,transparent 58%) no-repeat;
   -webkit-mask-size:1100px 1100px;mask-size:1100px 1100px;animation:uiframeglint 1s cubic-bezier(.35,.1,.35,1) forwards}
 @keyframes uiframeglint{0%{-webkit-mask-position:-1100px -1100px;mask-position:-1100px -1100px;opacity:0}10%{opacity:1}85%{opacity:1}100%{-webkit-mask-position:350px 250px;mask-position:350px 250px;opacity:0}}
@@ -5881,6 +5881,12 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 
 /* Settings, Your character: the name box on its own row, the Change name button full width under it */
 .namerow{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}.namerow input{width:100%;min-width:0;min-height:44px;padding:0 12px;font-size:16px}.namerow .btn{width:100%}
+
+/* framed boxes breathe: a little more room at the bottom and between them (the corners are smaller now too) */
+:root.has-ui-frame-panel #side .panel{padding-bottom:22px;margin-bottom:14px}
+:root.has-ui-frame-panel .title .page{padding-bottom:26px}
+:root.has-ui-frame-panel .modal .sheet:not(.hz-fs){padding-bottom:28px}
+:root.has-ui-frame-btn .btn{margin-top:4px}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
