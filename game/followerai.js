@@ -4,7 +4,7 @@
 
    What lives here (followers2.js keeps their pack, gear, levels and perks):
    - spells they know (taught from a spell tome out of your pack, if their skill in that school is high enough),
-   - their magicka, stamina, pace and initiative in a fight, from their level and fighting style,
+   - their magicka, stamina, pace and speed in a fight (initiative.js), from their level and fighting style,
    - their tactics: Let them decide / Aggressive / Defensive / Healer / Ranged, and "save potions",
    - a turn: the same moves you have (attack, power attack, guard, cover you, every kind of spell they can cast,
      potions from their own pack), picked by the Smart AI below and paced like yours (a few moves a turn),
@@ -92,7 +92,7 @@ const FAI = (() => {
       mp: Math.round(60 + 140 * mage + (u ? 1 * (L - 1) + 10 * (u.magicka || 0) : 4 * (L - 1)) + (f.spells?.length ? 20 : 0)),
       sp: Math.round(100 + (u ? 1 * (L - 1) + 10 * (u.stamina || 0) : 3 * (L - 1)) + (mage >= 1 ? -20 : 20)),
       ap: clamp(6 + Math.floor(L / 20), 6, 8),
-      init: Math.round(8 + skill(f, "Sneak") / 20 + (a.sneaky ? 2 : 0) - (heavy ? 1 : 0)),
+      speed: Math.max(1, Math.min(10, 5 + (heavy ? -1 : 1) + (a.sneaky ? 1 : 0))),   // [initiative] 5, light +1, heavy -1, a sneaky style +1
     };
   }
   const rowOf = (f) => { const t = f.tactic || "auto", a = archOf(f); if (t === "ranged" || t === "healer") return "back"; if (t === "aggressive" || t === "defensive") return "front"; return a.weapon === "Archery" || a.mage >= 1 || a.role === "healer" ? "back" : "front"; };
@@ -102,7 +102,7 @@ const FAI = (() => {
     seed(f);
     const p = pools(f), wRow = f.inv.find((r) => r.id === f.eq.weapon), w = itemOf(wRow);
     const offRow = f.inv.find((r) => r.id === f.eq.offhand), sh = itemOf(f.inv.find((r) => r.id === f.eq.shield));
-    Object.assign(rec, { fai: true, maxHp: fol().maxHp(s, rec.fid), mp: p.mp, mpMax: p.mp, sp: p.sp, spMax: p.sp, ap: p.ap, init: p.init,
+    Object.assign(rec, { fai: true, maxHp: fol().maxHp(s, rec.fid), mp: p.mp, mpMax: p.mp, sp: p.sp, spMax: p.sp, ap: p.ap, speed: p.speed,
       tactic: f.tactic, savePots: !!f.savePots, row: rowOf(f), wt: w ? (G.wtype ? G.wtype(wRow.item) : "sword") : "fist", bow: !!(w && w.skill === "Archery"),
       shield: !!sh, dual: !!offRow, sneaky: !!archOf(f).sneaky, arch: f.arch, lvl: f.lvl,
       spells: f.spells.filter((id) => D.SPELLS[id] && USABLE.has(D.SPELLS[id].kind) && !f.off.includes(id) && canLearn(f, id, s) === true),
@@ -276,7 +276,7 @@ const FAI = (() => {
         const who = String(sp.name).replace(/^(Conjure|Raise|Reanimate) /, "");
         const pow = (sp.amount || 6) * (1 + skill(f, sp.school) / 150);
         const sm = { name: `${who} (${n})`, dmg: Math.max(2, pow * 0.35) * (al.boost || 1), hp: Math.round(30 + pow * 4), maxHp: Math.round(30 + pow * 4), fsum: true, summon: true,
-          owner: al.fid + ":" + al.name, turns: 5, kind: SUMMON_KIND[id] || (sp.kind === "reanimate" ? "zombie" : "familiar"), init: 6 };
+          owner: al.fid + ":" + al.name, turns: 5, kind: SUMMON_KIND[id] || (sp.kind === "reanimate" ? "zombie" : "familiar"), speed: 5 };
         fight.allies.push(sm);
         return { text: `${n} casts ${sp.name}: ${/^[aeiou]/i.test(who) ? "an" : "a"} ${who} joins the fight` };
       }
@@ -397,7 +397,7 @@ const FAI = (() => {
     return `<p class="sub">How ${esc(nameOf(s))} fights. They take their own turns: attacks, power attacks, guarding, spells and potions from their pack, a few moves a turn like yours.</p>
       <div class="list fol2tac">${Object.entries(TACTICS).map(([k, v]) => `<button class="item tac ${f.tactic === k ? "on" : ""}" data-act="fol2" data-op="tactic" data-id="${k}"><div class="t">${esc(v.name)}${f.tactic === k ? " ✓" : ""}<span>${esc(v.desc)}</span></div></button>`).join("")}</div>
       <div class="chips"><button class="chip ${f.savePots ? "on" : ""}" data-act="fol2" data-op="savepots" data-id="${f.savePots ? 0 : 1}">${f.savePots ? "✓ " : ""}Save potions for emergencies</button></div>
-      <p class="sub">${row === "back" ? "Back row: draws fewer blows" : "Front row: takes blows meant for you"} · initiative ${p.init} · ${p.mp} magicka · ${p.sp} stamina</p>`;
+      <p class="sub">${row === "back" ? "Back row: draws fewer blows" : "Front row: takes blows meant for you"} · speed ${p.speed} · ${p.mp} magicka · ${p.sp} stamina</p>`;
   }
 
   return { TACTICS, START, USABLE, REQ, seed, canLearn, teach, toggle, setTactic, setSavePots, pools, rowOf, equipAlly, options, decide, turn, doCast, aggro, pickAlly, takes, hitSummon, frame, magicTab, tacticsTab, mpCost, healAmt };

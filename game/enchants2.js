@@ -35,7 +35,7 @@ const ENCH2 = (() => {
     last_ward: ["Last Ward", "e2:lastward", 60, ["chest", "shield", "amulet"], 100, "relic", "the Last Ward", "Once a fight, when a blow drops you below a third of your health, a ward rises that soaks the next {m} damage."],
     fortune: ["Fortune", "e2:gold", 25, ["hands", ...J], 50, "relic", "Fortune", "Foes you beat drop {m}% more gold."],
     mana_shield: ["Mana Shield", "e2:manashield", 25, ["head", "chest", "amulet"], 40, "relic", "the Mana Shield", "{m}% of the damage you take comes out of your magicka instead, while you have magicka left."],
-    swiftness: ["Swiftness", "pfx:swiftness", 4, ["feet", ...J], 6, "relic", "Swiftness", "+{m} initiative in turn-by-turn fights: you act sooner."],
+    swiftness: ["Swiftness", "pfx:swiftness", 4, ["feet", ...J], 6, "relic", "Swiftness", "+{m} initiative points in turn-by-turn fights (every 3 is +1 speed): you act sooner."],
     dragonward: ["Dragonward", "pfx:dragonward", 30, ["shield", "chest", "head", ...J], 50, "ward", "Dragonward", "Dragons hurt you {m}% less, breath and bite alike."],
     gravewarden: ["Gravewarden", "pfx:gravewarden", 25, ["shield", "chest", "head", ...J], 50, "ward", "the Gravewarden", "Draugr, skeletons, vampires and other undead hurt you {m}% less."],
     executioner: ["Executioner", "pfx:executioner", 20, ["hands", "ring"], 30, "relic", "the Executioner", "Your weapon blows do {m}% more damage to a foe below a quarter of its health."],
@@ -191,7 +191,7 @@ const ENCH2 = (() => {
     return surge ? { dmg: r.dmg, label: surge + r.label } : r;
   };
 
-  /* Numbing Cold in turn-based fights: { init: initiative lost, acts: moves lost this round } (tbfight.js rollOrder) */
+  /* Numbing Cold in turn-based fights: { init: slowed (initiative.js takes 2 speed off while it lasts), acts: moves lost this round } (tbfight.js rollOrder) */
   function numb(f) {
     if (!f || !(f._numb >= (f.turn || 0))) return { init: 0, acts: 0 };
     let acts = 0;

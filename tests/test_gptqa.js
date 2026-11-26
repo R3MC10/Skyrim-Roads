@@ -50,12 +50,12 @@ ok(/dungeons\.js/.test(src("index.html")) && src("index.html").indexOf("dunlines
   ok(/Two-handed weapon/.test(txt(two)) && !/· Two-Handed/i.test(txt(two)), "two-handed: no repeat " + txt(two).slice(0, 80));
   ok(/bow · Archery/.test(txt(bow)), "a bow still names Archery " + txt(bow).slice(0, 80)); }
 
-// 3) turn order: one chip per move, the later ones marked as the same foe's 2nd/3rd move
-{ const tb = src("tbfight.js");
-  ok(/const moveNo = /.test(tb) && /tbini[^`]*again/.test(tb) && /class="tbag"/.test(tb), "the turn order marks a foe's later moves");
-  ok(/acts again: its \$\{ORD\(mv\)\} move this round\./.test(tb), "and says so in the tip");
-  ok(/\.tbag/.test(src("combat2.js")), "the portrait ribbon keeps the mark");
-  ok(/\.tbini\.again/.test(src("index.html")), "CSS for the mark"); }
+// 3) turn order: a fast foe's two slots are marked (initroster.js since the initiative roster)
+{ const ir = src("initroster.js");
+  ok(/class="tbag inislot"/.test(ir) && /const SLOT = \[/.test(ir), "the turn order marks a fast foe's 1st and 2nd slot");
+  ok(/its 2nd turn this round/.test(ir), "and says so in the tip");
+  ok(/ini2/.test(src("combat2.js")), "the portrait ribbon leaves the roster's portraits alone");
+  ok(/\.inislot/.test(src("index.html")), "CSS for the mark"); }
 
 // 4) Polish for every new line, through the real translator
 { const ctx = vm.createContext({ console, navigator: { language: "pl-PL" }, localStorage: { getItem: () => JSON.stringify({ lang: "pl" }), setItem() {} } });

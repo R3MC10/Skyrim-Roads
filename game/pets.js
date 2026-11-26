@@ -110,7 +110,7 @@ const PETS = (() => {
   function ally(s, t = now()) {
     const p = s?.pet; if (!p || !LIST[p.id]) return null;
     const L = LIST[p.id];
-    return { name: L.name, dmg: dmg(s, p.id), hp: hp(s, t), maxHp: maxHp(s, p.id), pet: true, fid: p.id, kind: L.kind, init: 7 };
+    return { name: L.name, dmg: dmg(s, p.id), hp: hp(s, t), maxHp: maxHp(s, p.id), pet: true, fid: p.id, kind: L.kind, speed: 6 };
   }
   /* its own turn: the signature move once per fight (Pounce after his quest, Snap at Sworn rank), else a bite */
   function turn(fight, al) {

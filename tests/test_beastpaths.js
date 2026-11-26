@@ -8,7 +8,7 @@ const W = process.env.W || require("path").join(__dirname, "../game/");
 const RUNS = +(process.env.RUNS || process.argv[2] || 200);
 const c = { process: { env: process.env }, console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String, RUNS, structuredClone };
 vm.createContext(c);
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "tbfight.js", "sharedfight.js", "encounters.js", "beastpaths.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "initiative.js", "tbfight.js", "sharedfight.js", "encounters.js", "beastpaths.js"])
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 vm.runInContext(`
 let fails = 0; const ok = (c, m) => { if (!c) { fails++; console.log("FAIL", m); } };
@@ -160,7 +160,7 @@ const nightT = (() => { let t = G.now(); for (let i = 0; i < 400 && !G.isNight(t
   const f = new G.Fight(s, enc("Bandit outlaw", 20)); f.allies = [];
   const mate = COOP.allyFromCard({ id: "p2", name: "Beta", cur: 250, coop: { prof: { dmg: 20, hp: 300, red: 0.2, role: "fighter" } } }); mate.pid = "p2"; f.allies.push(mate);
   const ss = new TB.Session(f, { trySneak: false }); ss.remote = { ask() {}, end() {} };
-  let r = ss.begin(), g = 0; while (r.turn !== "me" && !ss.done && g++ < 60) { if (r.turn === "wait") ss.waiting.until = 0; r = ss.advance(); }   // if Beta rolled first, her turn times out
+  let r = ss.begin(), g = 0; while (r.turn !== "me" && !ss.done && g++ < 60) { if (r.turn === "wait") ss.waiting.skip = true; r = ss.advance(); }   // if Beta rolled first, the leader skips her (no timer)
   ok(ss.canAfford("power:beast"), "the leader can change in a shared fight"); ss.act("power:beast");
   ok(BEASTPATH.form(f) === "wolf", "the leader is a wolf");
   g = 0; while (r.turn !== "wait" && !ss.done && g++ < 80) { r = r.turn === "me" ? ss.act("end") : ss.advance(); if (r.turn === "next") r = ss.advance(); }

@@ -7,7 +7,7 @@ const RUNS = +(process.env.RUNS || process.argv[2] || 40);
 const TUNE = process.env.TUNE ? JSON.parse(process.env.TUNE) : null;
 const c = { process: { env: process.env }, console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String, RUNS, structuredClone };
 vm.createContext(c);
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "foecap.js", "stacks.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "foeintent.js", "tbfight.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "foecap.js", "stacks.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "foeintent.js", "initiative.js", "tbfight.js"])
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 if (fs.existsSync(W + "sharedfight.js")) vm.runInContext(fs.readFileSync(W + "sharedfight.js", "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);   // shared party fights (section 8b; kept out of the list other tests copy)
 vm.runInContext(`
@@ -97,9 +97,10 @@ if (!process.env.SIMONLY) {
 { const s = fresh("warrior", 5), s2 = fresh("warrior", 5); s2.skills.Athletics.lvl = 100; s2.spBonus += 300; s2.skills.Acrobatics.lvl = 100; s2.skills.Sneak.lvl = 100;
   const f = new G.Fight(s, enc("Bandit outlaw", 5)), f2 = new G.Fight(s2, enc("Bandit outlaw", 5));
   const a = TB.stats(s, f), b = TB.stats(s2, f2);
-  ok(b.spCut > a.spCut && a.acts === TB.MAX_ACTS, "Athletics makes weapon moves cheaper " + a.spCut + "→" + b.spCut); ok(b.init > a.init, "Acrobatics/Sneak add initiative " + a.init + "→" + b.init);
+  ok(b.spCut > a.spCut && a.acts === TB.MAX_ACTS, "Athletics makes weapon moves cheaper " + a.spCut + "→" + b.spCut); ok(a.speed >= 1 && a.speed <= 10 && a.speedParts, "speed is worked out (initiative.js) " + a.speed);
   const m = fresh("mage", 30), fm = new G.Fight(m, enc("Bandit outlaw", 30)); ok(TB.stats(m, fm).mpCut > 0, "mages cast a little cheaper (Alteration)");
-  ok(a.heavy >= 3 && TB.stats(fresh("archer", 5), new G.Fight(fresh("archer", 5), enc("Bandit outlaw", 5))).init > a.init - 3, "heavy armour costs initiative"); }
+  const ar = TB.stats(fresh("archer", 5), new G.Fight(fresh("archer", 5), enc("Bandit outlaw", 5)));
+  ok(a.heavy >= 3 && ar.speed > a.speed, "heavy armour is slower than light: " + a.speed + " vs " + ar.speed); }
 // 2. move costs: stamina per weapon, magicka per spell, repeats cost more, free potions
 { const s = fresh("warrior", 10), f = new G.Fight(s, enc("Bandit outlaw", 10)); ok(TB.cost(f, "attack").sp === TB.ATK_SP.sword && TB.cost(f, "power_attack").sp > TB.cost(f, "attack").sp, "a sword blow costs stamina, a power attack more");
   f.wt = "dagger"; const dg = TB.cost(f, "attack").sp; f.wt = "greatsword"; ok(TB.cost(f, "attack").sp > dg, "a greatsword blow costs more stamina than a dagger");
@@ -192,9 +193,9 @@ if (!process.env.SIMONLY) {
   const mate = COOP.allyFromCard({ id: "p2", name: "Beta", coop: { prof: { dmg: 20, hp: 300, red: 0.2, role: "fighter" } } }); mate.pid = "p2"; f.allies.push(mate);
   const asked = []; const ss = new TB.Session(f, { trySneak: false }); ss.remote = { ask: (sess, al) => asked.push(al.pid), end() {} };
   ok(ss.waves === 2 && ss.ehpMax * ss.waves > Math.round(f.e.hp * TB.FOE_HP), "party fights: two heroes meet two foes, tougher in total");
-  let r = ss.begin(), waited = false, g = 0;
-  while (!ss.done && g++ < 300) { if (r.turn === "me") { r = ss.act("attack"); if (r.turn === "next") r = ss.advance(); continue; } if (r.turn === "wait") { waited = true; if (asked.length === 1) ss.waiting.move = "power"; else ss.waiting.until = 0; r = ss.advance(); continue; } r = ss.advance(); }
-  ok(waited && asked[0] === "p2", "the fight waited for Beta's phone"); ok(ss.ev.some((e) => /Beta power attack/.test(e.text)), "Beta's chosen move was played"); ok(ss.ev.some((e) => /took too long and keeps their guard up/.test(e.text)) || asked.length === 1, "a late player just guards (no auto fighting)");
+  let r = ss.begin(), waited = false, g = 0, skipped = 0;
+  while (!ss.done && g++ < 300) { if (r.turn === "me") { r = ss.act("attack"); if (r.turn === "next") r = ss.advance(); continue; } if (r.turn === "wait") { waited = true; if (asked.length === 1) ss.waiting.move = "power"; else { ss.waiting.skip = true; skipped++; } r = ss.advance(); continue; } r = ss.advance(); }
+  ok(waited && asked[0] === "p2", "the fight waited for Beta's phone"); ok(ss.ev.some((e) => /Beta power attack/.test(e.text)), "Beta's chosen move was played"); ok(ss.ev.some((e) => /is skipped and keeps their guard up/.test(e.text)) || !skipped, "a skipped player just guards (no auto fighting)");
   ok(ss.wave === 2 || !f.won, "a won party fight went through every foe"); ok(!f.won || ss.ev.some((e) => /Another .* steps in/.test(e.text)), "the next foe steps in"); }
 // 8b. shared party fights (sharedfight.js): Beta plays a real turn on her own full fight screen, the leader's phone takes it over
 ok(typeof SHAREDFIGHT !== "undefined", "sharedfight.js loaded");
@@ -218,7 +219,7 @@ if (typeof SHAREDFIGHT !== "undefined") { console.log("8b: shared party fights")
     const dd = { id: "fid1", owner: "p1", ...TB.fightState(ss) }; f.allies.splice(f.allies.indexOf(dog), 1);
     const sd = fresh("mage", 20); sd.id = "p2"; sd.name = "Beta"; const md = SHAREDFIGHT.build(sd, dd, () => {});
     ok(dd.roster.find((x) => x.name === "Meeko")?.kind === "dog" && md.f.allies.find((a) => a.name === "Meeko")?.kind === "dog", "a teammate's dog stays a dog on every phone"); }
-  ok(TB.TURN_SECONDS === 90, "90 s for a player's turn");
+  ok(TB.TURN_SECONDS === 0 && d.turn.until === 0, "no timer on a player's turn (it waits for everyone)");
   const s2 = fresh("mage", 20); s2.id = "p2"; s2.name = "Beta";
   let sent = null; const m = SHAREDFIGHT.build(s2, d, (x) => { sent = x; });
   ok(m.advance().turn === "me", "Beta's phone: it's her turn, with her own moves");
@@ -259,8 +260,11 @@ if (typeof SHAREDFIGHT !== "undefined") { console.log("8b: shared party fights")
     s3.applyRemote(m3, { fled: true, ev: [] });
     ok(!f3.allies.includes(m3) && m3.gone, "a player who breaks away leaves the fight"); }
   // the end: the same result for everyone; a knocked-down player gets back up at 10%
-  m.meDown = true; m.sync({ ...d2, done: true, won: true, escaped: false });
-  ok(m.done && m.f.won && Math.round(m.f.hp) === Math.max(1, Math.round(G.maxHealth(s2) * 0.1)), "Beta wins with the party and, knocked down, gets back up at 10%");
+  // (a fresh phone view: the fight above may already have ended on its own, before Beta was knocked down)
+  { const m = SHAREDFIGHT.build(s2, { ...d2, done: false }, () => {});
+  const roster = (d2.roster || []).map((r) => (r.pid === "p2" || r.k === "p:p2" ? { ...r, down: true, hp: 0 } : r));   // the last news says she is down
+  m.sync({ ...d2, roster, done: true, won: true, escaped: false, t: (d2.t || 0) + 1 });
+  ok(m.done && m.f.won && Math.round(m.f.hp) === Math.max(1, Math.round(G.maxHealth(s2) * 0.1)), "Beta wins with the party and, knocked down, gets back up at 10%"); }
 }
 // 9. bigger party, more foes (at most 6); a boss stays alone
 { const s = fresh("warrior", 20), f = new G.Fight(s, enc("Bandit outlaw", 20));

@@ -33,7 +33,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Each stack: +3% damage taken.": "Każdy stos: +3% otrzymanych obrażeń.", "Each stack: +3% damage from weapons.": "Każdy stos: +3% obrażeń od broni.",
     "Each stack: its blows land 4% softer.": "Każdy stos: jego ciosy są o 4% słabsze.", "Each stack takes a turn off the next stun, calm or fear.": "Każdy stos skraca o turę następne ogłuszenie, uspokojenie albo strach.",
     "Each stack: −4% stamina at the start of your turn.": "Każdy stos: −4% wytrzymałości na początku twojej tury.", "Each stack: −4% magicka at the start of your turn.": "Każdy stos: −4% magii na początku twojej tury.",
-    "Each stack: +4% damage.": "Każdy stos: +4% obrażeń.", "Each stack: +2 initiative.": "Każdy stos: +2 inicjatywy.", "Each stack makes it stronger.": "Każdy stos go wzmacnia.",
+    "Each stack: +4% damage.": "Każdy stos: +4% obrażeń.", "Hasted: +2 speed, you act earlier in the round.": "Przyspieszony: +2 do szybkości, działasz wcześniej w rundzie.", "Each stack makes it stronger.": "Każdy stos go wzmacnia.",
     "Drops by 1 each turn.": "Spada o 1 co turę.",
     // perks
     "In turn-by-turn fights your weapon blows, power attacks and guards cost 10/20% less stamina. [OURS]": "W walkach turowych ciosy bronią, potężne ataki i garda kosztują o 10/20% mniej wytrzymałości.",

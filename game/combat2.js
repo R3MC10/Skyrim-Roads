@@ -60,6 +60,7 @@ const COMBAT2 = (() => {
   function ribbon(el, sess) {
     const chips = el.querySelectorAll(".tbtop .tbord .tbini");
     chips.forEach((c, i) => {
+      if (c.classList.contains("ini2") || c.querySelector(".c2pt")) return;   // [initiative] the roster draws its own portraits (initroster.js)
       const o = sess.order[i]; if (!o) return;
       const ini = c.querySelector("i")?.textContent || "", ag = c.querySelector(".tbag")?.textContent || "";   // the same foe's 2nd/3rd move this round (tbfight.js)
       c.innerHTML = `<span class="c2pt" aria-hidden="true">${portraitOf(o, sess.f)}</span><span class="c2nm">${esc(String(o.name || "").split(" ")[0])}</span>${ag ? `<b class="tbag">${esc(ag)}</b>` : ""}<i>${esc(ini)}</i>`;
