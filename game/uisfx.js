@@ -10,7 +10,7 @@
 const UISFX = (() => {
   if (typeof SOUND === "undefined" || typeof document === "undefined" || typeof document.addEventListener !== "function") return { kind: () => null };
   const BTN = "button,[role=button],[role=tab],[role=switch],a[href],.btn,[data-act],[data-tab],summary,input[type=checkbox]";
-  const CLOSE_TXT = /^(?:✕|×|✖|x|back|close|cancel|leave|not now|[‹←«].*)$/i;
+  const CLOSE_TXT = /^(?:\u2715|\u00d7|\u2716|x|back|close|cancel|leave|not now|[‹←«].*)$/i;
   const CLOSE_LBL = /\b(?:close|back|cancel)\b/i;
   const CLOSE_CLS = /(?:^|\s)(?:back|close|pnback|pnx|invx|obx|bpx|ptx|rfnx|ls-wx)(?:\s|$)|-x(?:\s|$)/;
   const OK_TXT = /^(?:begin|okay|ok|confirm|accept|continue|start|yes)\b/i;
