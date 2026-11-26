@@ -274,6 +274,18 @@
     if (reduceMotion) { el.remove(); return; }
     el.classList.add("tout"); setTimeout(() => el.remove(), 320);
   }
+  /* the control that had focus, as a path of child positions, so the same one can take focus back after a redraw
+     (keyboard players stay on the setting they just changed) */
+  function focusPath(root) {
+    const el = document.activeElement; if (!el || !root.contains(el)) return null;
+    const path = []; for (let n = el; n && n !== root; n = n.parentElement) path.unshift([...n.parentElement.children].indexOf(n));
+    return path;
+  }
+  function refocus(root, path) {
+    if (!path) return;
+    let n = root; for (const i of path) { n = n?.children[i]; if (!n) return; }
+    try { n.focus({ preventScroll: true }); } catch { /* not focusable */ }
+  }
   function renderTitle() {
     const inner = $("#tinner"); if (!inner) return;
     if (!$("#thead")) { inner.innerHTML = `<div id="thead" style="display:flex;flex-direction:column;align-items:center">${typeof TITLELOGO !== "undefined" ? TITLELOGO.html() : EMBLEM + "<h1>Roads of the North</h1>"}<div class="tag">A shared journey across Skyrim</div></div><div id="tbody" style="display:flex;flex-direction:column;align-items:center;width:100%;flex:1"></div>`; if (typeof TITLELOGO !== "undefined") TITLELOGO.mount(inner.querySelector(".tlogo")); }
@@ -293,10 +305,16 @@
     }
     else body = `<div class="page">${titleSubpage()}</div>`;
     const tb = $("#tbody"), samePage = tb.dataset.page === titlePage && !!tb.querySelector(".page");
+    const keepY = samePage ? inner.scrollTop : 0, focusAt = samePage ? focusPath(tb) : null;
     tb.innerHTML = body; tb.dataset.page = titlePage;
-    if (samePage) tb.querySelector(".page")?.classList.add("still");   // redrawn after a change on the same page: no fade-in, so it never goes see-through
-    if (titlePage !== "press") inner.querySelector(".mi, .page .btn")?.focus({ preventScroll: true });
-    if (titlePage !== "menu" && titlePage !== "press") inner.scrollTop = 0;
+    if (samePage) {   // redrawn after a change on the same page (a setting flipped): stay where you were, no fade-in
+      tb.querySelector(".page")?.classList.add("still");
+      inner.scrollTop = keepY;
+      refocus(tb, focusAt);
+    } else {
+      if (titlePage !== "press") inner.querySelector(".mi, .page .btn")?.focus({ preventScroll: true });
+      if (titlePage !== "menu" && titlePage !== "press") inner.scrollTop = 0;
+    }
     // the phone app's updater counts these game files as working only once the title has drawn (app.js)
     if (!window.__rotnTitleDrawn) { window.__rotnTitleDrawn = true; try { window.__app?.ready?.(); } catch { /* web version */ } }
   }
