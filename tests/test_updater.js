@@ -190,6 +190,9 @@ function boot(opts = {}) {
   ok(back.game.sha256 === sha && back.game.deltas[298], "latestjson.mjs output reads back in the app");
   fs.rmSync(dir, { recursive: true, force: true });
 
+  // Capacitor getLong() returns the default for JSON Integers (189), which refused every game update: numbers go through num()
+  ok(!/call.getLong(/.test(java) && /private static long num(PluginCall/.test(java), "the plugin reads build/size/from with num(), never call.getLong()");
+  ok(/Not an update address/.test(fs.readFileSync(path.join(ROOT, "app.js"), "utf8")), "old apps that refuse game updates fall back to the newest app");
   console.log(fails ? `failed: ${fails}` : `updater: all ok · ${n} checks`);
   process.exit(fails ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(1); });
