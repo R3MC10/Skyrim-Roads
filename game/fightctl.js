@@ -3,8 +3,9 @@
    tbfight.js still runs the fight; this module only draws the controls and makes them feel good:
    - Big thumb-sized buttons with drawn icons: Attack / Power attack / Guard (or Shield bash).
    - Every move shows what it costs in stamina (green), magicka (blue) or health (red); hovering or pressing a move
-     lights up the move pip it would use (up to 4 moves a turn, the same move again costs more).
-   - A greyed-out move says why ("Need 12 more stamina", "4 moves a turn", "None left"...).
+     lights up the AP pips it would use (3 AP a turn: most moves 1 AP, heavy ones 2; the same move again costs more
+     stamina or magicka). Each button shows its AP as 1 or 2 gold diamonds.
+   - A greyed-out move says why ("Need 12 more stamina", "Needs 2 AP", "No AP left", "None left"...).
    - Quick slots above the big buttons: your shouts and favourite spells, potions and scrolls (★ in the Magic and Items
      lists pins them; until you pin any, the bar suggests your best heal, best attack spell and a health potion).
    - Healing and support moves ask who gets them when you have teammates: tap a portrait (or the button again for
@@ -125,14 +126,16 @@ const FIGHTCTL = (() => {
   const cTxt = (c) => (typeof TB !== "undefined" && TB.costTxt ? TB.costTxt(c) : "");
   const guardOf = (sess) => Math.round((sess.guardLeft ? sess.guardLeft() : 0) * 100);
   const keyLbl = (k) => (k ? `<kbd class="fc-k" aria-hidden="true">${k === " " ? "Space" : esc(k)}</kbd>` : "");
+  const apBadge = (n) => (n > 0 ? `<span class="fc-apc" data-ap="${n}" aria-hidden="true">${"<i></i>".repeat(Math.min(3, n))}</span>` : "");   // [threeap] 1 or 2 gold diamonds: the AP a move takes
   /* one button. o: {label, extra, key, sub, icon, badge} */
   function btn(sess, api, a, o = {}) {
     const f = sess.f, c = api.cost(f, a, sess), ok = sess.canAfford(a), z = api.zoneOf(a), why = ok ? "" : reason(sess, a, c);
     const tipT = typeof TBTIPS !== "undefined" ? TBTIPS.action(f, a, c) : "";
     const tip = (why ? why + ". " : "") + tipT;
     const sp = /^(spell|dual|scroll):/.test(a) ? 1 : 0;
-    return `<button class="tbact fc-b ${o.extra || ""}${ok ? "" : " off"}" data-tba="${esc(a)}"${z ? ` data-tz="${z}"` : ""} data-c="1" data-sp="${sp}"${o.key ? ` data-fk="${esc(o.key)}"` : ""}${tip ? ` data-tip="${esc(tip)}"` : ""} aria-label="${esc(o.label)}, ${esc(cTxt(c))}${why ? `, ${esc(why)}` : ""}" ${ok ? "" : "disabled"}>
-      <span class="ic" aria-hidden="true">${o.icon || iconFor(f, a, api)}</span><b>${esc(o.label)}</b>${why ? `<small class="fc-why">${esc(why)}</small>` : o.sub ? `<small>${esc(o.sub)}</small>` : ""}<span class="cp" aria-hidden="true">${pipsHTML(c)}</span>${o.badge != null ? `<span class="fc-n">${esc(o.badge)}</span>` : ""}${keyLbl(o.key)}</button>`;
+    const ap = a === "end" || a === "flee" ? 0 : Math.max(1, c.acts || 1);   // [threeap] its AP: the pips it lights up and the gold diamonds on it
+    return `<button class="tbact fc-b ${o.extra || ""}${ok ? "" : " off"}" data-tba="${esc(a)}"${z ? ` data-tz="${z}"` : ""} data-c="${ap}" data-sp="${sp}"${o.key ? ` data-fk="${esc(o.key)}"` : ""}${tip ? ` data-tip="${esc(tip)}"` : ""} aria-label="${esc(o.label)}, ${ap ? `${ap} AP, ` : ""}${esc(cTxt(c))}${why ? `, ${esc(why)}` : ""}" ${ok ? "" : "disabled"}>
+      <span class="ic" aria-hidden="true">${o.icon || iconFor(f, a, api)}</span><b>${esc(o.label)}</b>${why ? `<small class="fc-why">${esc(why)}</small>` : o.sub ? `<small>${esc(o.sub)}</small>` : ""}<span class="cp" aria-hidden="true">${pipsHTML(c)}</span>${apBadge(ap)}${o.badge != null ? `<span class="fc-n">${esc(o.badge)}</span>` : ""}${keyLbl(o.key)}</button>`;
   }
   function shortName(f, a) {
     const [k, arg] = a.split(":");
@@ -248,14 +251,14 @@ const FIGHTCTL = (() => {
     return `<button class="tbact end fc-end${g > 0 ? "" : " ready"}" data-tba="end" data-fk=" "${endTip} aria-label="End turn${g > 0 ? `, +${g}% guard` : ""}">
       <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M5 5l8 7-8 7z M13 5l8 7-8 7z" fill="currentColor"/></svg></span><b>End turn</b><small>${g > 0 ? `+${g}% guard` : "ready"}</small>${keyLbl(" ")}</button>`;
   }
-  /* the top row of your turn: moves left (used ones burst away) and "Your turn". Stamina / magicka / health live in
+  /* the top row of your turn: AP left (used ones burst away) and "Your turn". Stamina / magicka / health live in
      the orb (fightdeclutter.js: one place for each number), so no coloured numbers here any more. */
   function apHTML(sess) {
-    const key = sess.round + ":" + sess.idx, same = key === last.key, acts = sess.st.acts || 4, left = Math.max(0, acts - (sess.myActs || 0));
+    const key = sess.round + ":" + sess.idx, same = key === last.key, acts = sess.st.acts || 3, left = Math.max(0, acts - (sess.myActs || 0));
     const lost = same ? Math.max(0, last.left - left) : 0;
     last = { key, left };
     const row = Array.from({ length: acts }, (_, i) => `<i class="${i < left ? "on " : i < left + lost ? "lost " : ""}ap"></i>`).join("");
-    return `<span class="fc-apl">Moves</span><span class="fc-pips" data-k="ap">${row}</span><b class="fc-apn num">${left}<small>/${acts}</small></b><em>Your turn${sess.until ? ` <b class="num" id="tbcd">${Math.max(0, Math.ceil((sess.until - Date.now()) / 1000))}s</b>` : ""}</em>`;
+    return `<span class="fc-apl">AP</span><span class="fc-pips" data-k="ap">${row}</span><b class="fc-apn num">${left}<small>/${acts}</small></b><em>Your turn${sess.until ? ` <b class="num" id="tbcd">${Math.max(0, Math.ceil((sess.until - Date.now()) / 1000))}s</b>` : ""}</em>`;
   }
 
   // ------------------------------------------------------------------ settings row (Settings → Fights)

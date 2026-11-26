@@ -105,7 +105,7 @@ if (!process.env.SIMONLY) {
 { const s = fresh("warrior", 10), f = new G.Fight(s, enc("Bandit outlaw", 10)); ok(TB.cost(f, "attack").sp === TB.ATK_SP.sword && TB.cost(f, "power_attack").sp > TB.cost(f, "attack").sp, "a sword blow costs stamina, a power attack more");
   f.wt = "dagger"; const dg = TB.cost(f, "attack").sp; f.wt = "greatsword"; ok(TB.cost(f, "attack").sp > dg, "a greatsword blow costs more stamina than a dagger");
   ok(TB.cost(f, "spell:flames").mp > 0 && TB.cost(f, "dual:flames").mp > TB.cost(f, "spell:flames").mp && !TB.cost(f, "spell:flames").sp, "spells cost magicka, dual casting more");
-  ok(!TB.cost(f, "potion:health").sp && !TB.cost(f, "potion:health").mp, "potions are free (2 a turn)");
+  ok(!TB.cost(f, "potion:health").sp && !TB.cost(f, "potion:health").mp, "potions cost no stamina or magicka (1 AP, one a turn)");
   const ss = { used: { attack: 1 }, st: {} }; f.wt = "sword"; ok(TB.cost(f, "attack", ss).sp > TB.cost(f, "attack").sp && TB.cost(f, "attack", ss).n === 1, "the same move again costs more");
   ok(TB.costTxt(TB.cost(f, "attack")) === TB.ATK_SP.sword + " stamina", "the cost reads plainly"); }
 // 3. a manual fight: initiative order, actions, end turn, guard, foe acts, followers & summons on their own
@@ -113,7 +113,7 @@ if (!process.env.SIMONLY) {
   const f = new G.Fight(s, enc("Bandit outlaw", 20)), ss = new TB.Session(f, { trySneak: false });
   let r = ss.begin(); ok(ss.order.length >= 3 && ss.order.some((o) => o.id === "me") && ss.order.some((o) => o.id === "foe") && ss.order.some((o) => o.al), "initiative order has you, the follower and the foe");
   const sorted = ss.order.every((o, i) => i === 0 || ss.order[i - 1].init >= o.init); ok(sorted, "order sorted by initiative");
-  if (r.turn === "me") { const sp0 = f.sp, n0 = ss.myActs; const r1 = ss.act("attack"); ok((f.sp < sp0 && ss.myActs === n0 + 1) || r1.turn !== "me", "attack spends stamina and a move"); if (ss.cur?.id === "me" && r1.turn === "me") { const r2 = ss.act("end"); ok(r2.turn === "next", "end turn"); } }
+  if (r.turn === "me") { const sp0 = f.sp, n0 = ss.myActs; const r1 = ss.act("attack"); ok((f.sp < sp0 && ss.myActs === n0 + 1) || r1.turn !== "me", "attack spends stamina and 1 AP"); if (ss.cur?.id === "me" && r1.turn === "me") { const r2 = ss.act("end"); ok(r2.turn === "next", "end turn"); } }
   let g = 0; while (!ss.done && g++ < 200) { r = ss.advance(); if (r.turn === "me") { const sp = s.spells.find((id) => D.SPELLS[id]?.kind === "summon"); const a = sp && !f.summonTurns && ss.canAfford("spell:" + sp) ? "spell:" + sp : ss.canAfford("power_attack") ? "power_attack" : "attack"; const x = ss.act(a); if (x.turn === "me") ss.act("end"); } }
   // out of breath: one plain swing a turn is always there; a power attack is once a turn
   { const fx = new G.Fight(fresh("warrior", 20), enc("Bandit outlaw", 20)); fx.allies = []; const sx = new TB.Session(fx, { trySneak: false }); sx.begin(); sx.beginTurn();

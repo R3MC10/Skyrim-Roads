@@ -152,7 +152,7 @@ for (const id of kinds.ward) {
   const w0 = x.f.ward, left = MAGIC.soak(x.f, 25, true);
   ok(left < 25 && x.f.ward < w0, id + ": soaks a spell (25 → " + Math.round(left) + ")", id);
   ok(MAGIC.soak(x.f, 25, false) === 25, id + ": a plain blow goes through", id);
-  x.ss.act("spell:" + id); ok(Math.abs(x.f.ward - x.f.wardMax) < 1e-6 && x.f.ward >= w0 - 1e-6, id + ": recast refills it", id);
+  x.ss.myActs = 0; x.ss.used = {}; x.ss.act("spell:" + id); ok(Math.abs(x.f.ward - x.f.wardMax) < 1e-6 && x.f.ward >= w0 - 1e-6, id + ": recast refills it", id);
   // over a real fight against a caster, the ward takes some of the damage
   let soaked = 0; for (let i = 0; i < 6; i++) { const y = castTB(mage(), FOES.necro(), "spell:" + id); for (let k = 0; k < 6; k++) y.ss.foeAct(""); soaked += y.ss.ev.some((e) => /ward soaks/.test(e.text)) ? 1 : 0; }
   ok(soaked > 0, id + ": soaks the necromancer's spells in a fight", id);
@@ -337,9 +337,9 @@ for (const [it, def] of Object.entries(D.ITEMS).filter(([, d]) => d.slot === "sc
   ok(sp, it + ": casts a real spell (" + def.spell + ")");
   const { f, ss } = tb(s, FOES.bandit()); const mp0 = f.mp;
   if (sp.kind === "heal") f.hp = 10;
-  const acts0 = ss.myActs; const b = { ehp: f.ehp, hp: f.hp, arm: f.armorSpell }; ss.act("scroll:" + it);
+  const acts0 = ss.myActs, ap = TB.cost(f, "scroll:" + it, ss).acts, big = ["Adept", "Expert", "Master"].includes(sp.level || (typeof TOMES !== "undefined" && TOMES.level ? TOMES.level(def.spell) : "")); const b = { ehp: f.ehp, hp: f.hp, arm: f.armorSpell }; ss.act("scroll:" + it);
   ok(f.mp === mp0, it + ": costs no magicka");
-  ok(ss.myActs === acts0 + 1, it + ": uses one move of the turn (no more action points)");
+  ok(ap === (big ? 2 : 1) && ss.myActs === acts0 + ap, it + ": takes " + ap + " AP of the turn (a minor spell's scroll 1, a big one's 2), got " + (ss.myActs - acts0));
   ok(f.ehp < b.ehp || f.hp > b.hp || f.armorSpell > b.arm || /misses/.test(ss.ev[ss.ev.length - 1].text), it + ": works: " + ss.ev[ss.ev.length - 1].text);
   ok(f.left(s.inv.find((r) => r.item === it).id) === 1, it + ": one is used");
   f.ehp = 0; f.won = true; f.apply(); ok(SMITH.count(s, it) === 1, it + ": gone from your pack after the fight");

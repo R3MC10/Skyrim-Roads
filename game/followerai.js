@@ -7,15 +7,18 @@
    - their magicka, stamina, pace and speed in a fight (initiative.js), from their level and fighting style,
    - their tactics: Let them decide / Aggressive / Defensive / Healer / Ranged, and "save potions",
    - a turn: the same moves you have (attack, power attack, guard, cover you, every kind of spell they can cast,
-     potions from their own pack), picked by the Smart AI below and paced like yours (a few moves a turn),
+     potions from their own pack), picked by the Smart AI below, with 2 AP a turn (yours are 3: build 350),
    - rows: Ranged and Healer followers stand in the back row and draw fewer blows; Defensive ones draw more.
    Balance: a full turn of plain attacks deals what one follower blow dealt before (their damage is shared out over their pace: an inner budget of effort per turn, never shown),
    so the extra depth comes from choices (spells, potions, heals, guarding), not from bigger numbers. */
 const FAI = (() => {
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const rnd = () => 0.85 + Math.random() * 0.3;
-  const TIERC = { Novice: 2, Apprentice: 3, Adept: 4, Expert: 5, Master: 6 };     // how much of their pace a spell takes
-  const WCOST = { dagger: 2, fist: 2, sword: 2, axe: 2, mace: 2, spear: 2, staff: 2, greatsword: 4, battleaxe: 4, warhammer: 4, bow: 4, crossbow: 5 };
+  /* [threeap] a follower has 2 AP a turn: a blow, a guard, cover or a potion takes 1, a power attack 2, a spell 1
+     (Novice / Apprentice) or 2 (Adept and up). Their damage is shared out so 2 blows = one old follower blow. */
+  const AP = 2;
+  const TIERC = { Novice: 1, Apprentice: 1, Adept: 2, Expert: 2, Master: 2 };     // AP a spell takes
+  const WCOST = { dagger: 1, fist: 1, sword: 1, axe: 1, mace: 1, spear: 1, staff: 1, greatsword: 1, battleaxe: 1, warhammer: 1, bow: 1, crossbow: 1 };   // AP a plain blow takes (any weapon)
   const REQ = { Novice: 0, Apprentice: 25, Adept: 50, Expert: 75, Master: 90 };   // [OURS] school skill a follower needs to learn a tome
   const TIER_EFF = { Novice: 1, Apprentice: 1.08, Adept: 1.15, Expert: 1.25, Master: 1.4 };   // bigger spells do more per point of pace
   const BACK = 0.6, FRONT = 1, TAUNT = 1.3;   // how many blows each row draws (you count as 1)
@@ -91,7 +94,7 @@ const FAI = (() => {
     return {
       mp: Math.round(60 + 140 * mage + (u ? 1 * (L - 1) + 10 * (u.magicka || 0) : 4 * (L - 1)) + (f.spells?.length ? 20 : 0)),
       sp: Math.round(100 + (u ? 1 * (L - 1) + 10 * (u.stamina || 0) : 3 * (L - 1)) + (mage >= 1 ? -20 : 20)),
-      ap: clamp(6 + Math.floor(L / 20), 6, 8),
+      ap: AP,   // [threeap] 2 AP at every level (their pace used to be 6-8 hidden points)
       speed: Math.max(1, Math.min(10, 5 + (heavy ? -1 : 1) + (a.sneaky ? 1 : 0))),   // [initiative] 5, light +1, heavy -1, a sneaky style +1
     };
   }
@@ -116,15 +119,15 @@ const FAI = (() => {
   // ------------------------------------------------------------------ numbers for one action
   /* what one point of pace is worth: their usual blow spread over their pace (so a turn of attacks = one old blow) */
   const blow = (al) => al.melee ?? al.dmg ?? 4;   // a mage's fists are weak: their damage is in their spells
-  const unit = (al) => { const wc = WCOST[al.wt] || 2; return blow(al) / (Math.max(1, Math.floor((al.ap || 6) / wc)) * wc); };
-  const powerHit = (al) => Math.min(unit(al) * (WCOST[al.wt] || 2) * 2, blow(al) * 1.15);   // a power attack: about a turn of blows, plus the stagger   // slow weapons and bows: one shot a turn still = one old blow
+  const unit = (al) => { const wc = WCOST[al.wt] || 1; return blow(al) / (Math.max(1, Math.floor((al.ap || AP) / wc)) * wc); };
+  const powerHit = (al) => Math.min(unit(al) * (WCOST[al.wt] || 1) * 2, blow(al) * 1.15);   // a power attack: about a turn of blows, plus the stagger   // slow weapons and bows: one shot a turn still = one old blow
   /* the power behind their spells: like followers2's spell estimate, from the skill of the school, per point of pace */
   function spellUnit(fight, al, sp) {
     const f = folOf(fight, al); if (!f) return unit(al);
     const aug = Math.max(rank(f, "augmented_flames"), rank(f, "augmented_frost"), rank(f, "augmented_shock"));
     const staff = itemOf(f.inv.find((r) => r.id === f.eq.weapon))?.staff ? 1.15 : 1;
     const raw = (6 + skill(f, sp.school) * 0.18) * (sp.school === "Destruction" ? (1 + 0.25 * aug) * (al.px?.spell || 1) : 1) * staff * 0.55;
-    return raw * (al.boost || 1) / Math.max(1, al.ap || 6);
+    return raw * (al.boost || 1) / Math.max(1, al.ap || AP);
   }
   const rank = (f, id) => f.perks?.[id] || 0;
   const folOf = (fight, al) => fight?.s?.folData?.[al.fid] || null;
@@ -142,13 +145,13 @@ const FAI = (() => {
 
   /* everything this follower could do now, with what it costs. kind: attack | power | guard | cover | cast | potion */
   function options(fight, al, ap) {
-    const f = folOf(fight, al), out = [], tac = al.tactic || "auto", wc = WCOST[al.wt] || 2;
+    const f = folOf(fight, al), out = [], tac = al.tactic || "auto", wc = WCOST[al.wt] || 1;
     const pp = playerPct(fight), me = selfPct(al), boss = isBoss(fight);
     const cv = al.order === "defend" ? 0.7 : 0.45;   // ordered to defend you: steps in front of you sooner (strategy.js)
     out.push({ k: "attack", c: wc, v: unit(al) * wc * opener(fight, al) * comboPhys(fight, al) });
-    if (al.sp >= 25) out.push({ k: "power", c: wc + 2, v: powerHit(al) * comboPhys(fight, al) + (al.bow ? 0 : unit(al) * 2 * (boss ? 0.15 : 0.35)) * (tac === "aggressive" ? 1.4 : 1) });
-    if (!al.guard) out.push({ k: "guard", c: 2, v: (tac === "defensive" ? 2.2 : tank(al) ? 1.2 : 0.9) * unit(al) * (al.shield ? 1.4 : 1) * (pp < 0.5 ? 1.5 : 1) * (me < 0.5 ? 1.3 : 1) });
-    if (tac !== "ranged" && !al.bow && (tac === "defensive" || (al.shield && tac === "auto")) && pp < cv && me > 0.45 && fight.coverAl !== al) out.push({ k: "cover", c: 2, v: unit(al) * 8 * (cv - pp) / cv + unit(al) * 3 });
+    if (al.sp >= 25) out.push({ k: "power", c: 2, v: powerHit(al) * comboPhys(fight, al) + (al.bow ? 0 : unit(al) * 2 * (boss ? 0.15 : 0.35)) * (tac === "aggressive" ? 1.4 : 1) });
+    if (!al.guard) out.push({ k: "guard", c: 1, v: (tac === "defensive" ? 2.2 : tank(al) ? 1.2 : 0.9) * unit(al) * (al.shield ? 1.4 : 1) * (pp < 0.5 ? 1.5 : 1) * (me < 0.5 ? 1.3 : 1) });
+    if (tac !== "ranged" && !al.bow && (tac === "defensive" || (al.shield && tac === "auto")) && pp < cv && me > 0.45 && fight.coverAl !== al) out.push({ k: "cover", c: 1, v: unit(al) * 8 * (cv - pp) / cv + unit(al) * 3 });
     // potions from their own pack
     const potAt = al.savePots ? 0.2 : tac === "aggressive" ? 0.4 : 0.5;   // potions work over a few rounds (potionfx.js): drink a bit earlier
     const potOn = (res) => typeof POTFX !== "undefined" && POTFX.busy(al, res);   // one of that kind still working: not again
@@ -158,7 +161,7 @@ const FAI = (() => {
     // spells
     for (const id of al.spells) {
       const sp = D.SPELLS[id]; if (!sp || !f) continue;
-      const c = TIERC[tierOf(id)] || 3, cost = mpCost(f, sp, al.mpCut); if (cost > al.mp) continue;
+      const c = TIERC[tierOf(id)] || 1, cost = mpCost(f, sp, al.mpCut); if (cost > al.mp) continue;
       const v = spellValue(fight, al, f, id, sp, c, { pp, me, tac, boss });
       if (v > 0) out.push({ k: "cast", id, sp, c, mp: cost, v });
     }
@@ -214,7 +217,7 @@ const FAI = (() => {
   const statusBonus = (fight, el) => { const st = { fire: "burn", frost: "chill", shock: "shock" }[el]; return st && !fight.foeSt?.[st] ? 1.08 : 1; };
 
   /* Smart AI for followers: the best option per point of pace, with the tactic's leanings. Returns one option or null. */
-  function decide(fight, al, ap = al.ap || 6) {
+  function decide(fight, al, ap = al.ap || AP) {
     let opts = options(fight, al, ap);
     if (typeof BONDS2 !== "undefined") opts = BONDS2.aiOpts(fight, al, opts);   // Trusted followers choose better (bonds.js)
     if (al.order === "hold" && typeof STRAT !== "undefined") opts = opts.filter((o) => STRAT.allowed(al, o));   // your order: Hold back (strategy.js)
@@ -293,7 +296,7 @@ const FAI = (() => {
     if (o.k === "guard") { al.guard = 1; return { text: `${n} ${al.shield ? "raises their shield" : "keeps their guard up"}` }; }
     if (o.k === "cover") { fight.coverAl = al; al.guard = 1; return { text: `${n} steps in front of you` }; }
     // attack / power attack
-    const wc = WCOST[al.wt] || 2, power = o.k === "power";
+    const wc = WCOST[al.wt] || 1, power = o.k === "power";
     if (power) al.sp -= 25;
     if (Math.random() > (typeof F !== "undefined" ? F.HIT_CHANCE + 0.05 : 0.9) + (al.px?.hit || 0)) return { text: `${n} ${power ? "swings hard and" : ""} misses`.replace("  ", " ") };
     let d = (power ? powerHit(al) * (al.px?.pow || 1) : unit(al) * wc) * (al.px?.out || 1) * rnd(), tag = "";   // their perks (folbuild.js mods)
@@ -312,13 +315,13 @@ const FAI = (() => {
     // a new turn: breath and magicka come back a little; their guard from last turn drops
     al.mp = Math.min(al.mpMax, al.mp + al.mpMax * 0.06); al.sp = Math.min(al.spMax, al.sp + al.spMax * 0.1); al.guard = 0; al.healed = false;
     tickSummon(fight, al);
-    let ap = al.ap || 6, guard = 0;
+    let ap = al.ap || AP, guard = 0;
     const parts = [], aid = actorId(fight, al), prev = fight.cActor; fight.cActor = aid;
     try {
       while (ap > 0 && fight.ehp > 0 && guard++ < 6) {
         const o = decide(fight, al, ap);
         if (!o) break;
-        if (o.k === "guard" && parts.length && (al.tactic !== "defensive")) break;   // leftover pace becomes guard below
+        if (o.k === "guard" && parts.length && (al.tactic !== "defensive")) break;   // a leftover AP becomes guard below
         const before = fight.ehp, myB = fight.hp, rxPre = typeof REACT !== "undefined" ? REACT.pre(fight) : null;
         const r = doOne(fight, al, o); ap -= o.c;
         if (typeof FBUILD !== "undefined") FBUILD.acted(fight, al, o, r);   // their skills rise with use, like yours
@@ -333,7 +336,7 @@ const FAI = (() => {
         else parts.push(t);
         if (o.k === "guard" || o.k === "cover") break;
       }
-      if (ap >= 2 && !al.guard && fight.ehp > 0) { al.guard = 1; const t = `${al.name} keeps their guard up`; if (sess) { sess.lines.me.push(t); sess.emit("ally", t, "ally", { name: al.name, dmg: 0 }); } }
+      if (ap >= 1 && !al.guard && fight.ehp > 0) { al.guard = 1; const t = `${al.name} keeps their guard up`; if (sess) { sess.lines.me.push(t); sess.emit("ally", t, "ally", { name: al.name, dmg: 0 }); } }
     } finally { fight.cActor = prev; }
     return parts.length ? " · " + parts.join(" · ") : "";
   }
@@ -394,7 +397,7 @@ const FAI = (() => {
   function tacticsTab(s, f, esc) {
     seed(f);
     const p = pools(f), row = rowOf(f);
-    return `<p class="sub">How ${esc(nameOf(s))} fights. They take their own turns: attacks, power attacks, guarding, spells and potions from their pack, a few moves a turn like yours.</p>
+    return `<p class="sub">How ${esc(nameOf(s))} fights. They take their own turns: attacks, power attacks, guarding, spells and potions from their pack, 2 AP a turn (yours are 3): attacking, guarding or covering takes 1, a power attack or a big spell 2.</p>
       <div class="list fol2tac">${Object.entries(TACTICS).map(([k, v]) => `<button class="item tac ${f.tactic === k ? "on" : ""}" data-act="fol2" data-op="tactic" data-id="${k}"><div class="t">${esc(v.name)}${f.tactic === k ? " ✓" : ""}<span>${esc(v.desc)}</span></div></button>`).join("")}</div>
       <div class="chips"><button class="chip ${f.savePots ? "on" : ""}" data-act="fol2" data-op="savepots" data-id="${f.savePots ? 0 : 1}">${f.savePots ? "✓ " : ""}Save potions for emergencies</button></div>
       <p class="sub">${row === "back" ? "Back row: draws fewer blows" : "Front row: takes blows meant for you"} · speed ${p.speed} · ${p.mp} magicka · ${p.sp} stamina</p>`;

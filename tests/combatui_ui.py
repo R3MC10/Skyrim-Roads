@@ -5,7 +5,7 @@ At 390x844 (phone, touch) and 1920x1080 (PC, mouse + keys), in both art styles:
 - a move spends AP (tap on the phone, key 1 on the PC)
 - Magic picker with filters and ★ pins; a pinned spell lands on the self-filling hotbar (hotbar.js)
 - a healing spell with a follower beside you asks who gets it; tapping the follower casts it there
-- greyed-out moves say why ("Need 2 more AP")
+- greyed-out moves say why ("No AP left", "Needs 2 AP")
 - Space ends the turn; Auto finishes the fight; Space presses Continue
 Screenshots in SHOTS/out_combatui/ (default: the system temp folder), never in tests/."""
 import asyncio, sys, os
@@ -62,7 +62,7 @@ async def run(p, w, h, touch):
         ok(mn >= 44, f"{tag}: every button is a thumb-sized target ({mn:.0f}px)")
         ok(await pg.evaluate("document.querySelectorAll('#tbf .hb-bar .ic img, #tbf .hb-bar .ic canvas').length") >= 3, f"{tag}: the hotbar's moves have drawn icons")
         ok(await pg.evaluate("[...document.querySelectorAll('#tbf .fc .tbact[data-tba]:not([data-tba=end])')].every(b=>b.querySelector('.cp em.rc'))"), f"{tag}: every move shows its cost")
-        ok(await pg.evaluate("/\\d/.test(document.querySelector('#tbf .tbap .fc-apn')?.textContent||'')"), f"{tag}: the moves counter shows")
+        ok(await pg.evaluate("/\\d/.test(document.querySelector('#tbf .tbap .fc-apn')?.textContent||'')"), f"{tag}: the AP counter shows")
         ok(await pg.evaluate("document.querySelectorAll('#tbf .hb-bar .tbact').length") >= 5, f"{tag}: the hotbar fills itself from the hero")
         ow = await pg.evaluate("Math.max(document.querySelector('#tbf .tbin').scrollWidth, document.documentElement.scrollWidth) <= innerWidth + 1")
         ok(ow, f"{tag}: nothing wider than the screen")
@@ -108,7 +108,7 @@ async def run(p, w, h, touch):
                 # greyed out with a reason
                 await pg.evaluate("TB.session.myActs=TB.session.st.acts; document.querySelector('#tbf [data-tbm=magic]').click(); document.querySelector('#tbf [data-tbm=\"\"]').click()"); await pg.wait_for_timeout(300)
                 why = await pg.evaluate("[...document.querySelectorAll('#tbf .fc .fc-why')].map(e=>e.textContent)")
-                ok(any("moves a turn" in x for x in why), f"{tag}: greyed-out moves say why: {why[:3]}")
+                ok(any("No AP left" in x for x in why), f"{tag}: greyed-out moves say why: {why[:3]}")
                 await pg.screenshot(path=OUT + f"{tag}_reason.png")
                 r0 = await pg.evaluate("TB.session.round + ':' + TB.session.idx")
                 await pg.keyboard.press("Space"); await pg.wait_for_timeout(500)

@@ -1,9 +1,9 @@
 /* strategy.js: real choices every turn in a turn-based fight. [OURS]
    Owner: "redesign turn-based combat so players can play strategically".
    What was already there and stays: foe intents with their target (foeintent.js), the turn-order ribbon (combat2.js),
-   rows (back-row followers draw fewer blows, followerai.js), guard from moves you don't make, combos between teammates (combo.js),
+   rows (back-row followers draw fewer blows, followerai.js), guard from AP you don't spend, combos between teammates (combo.js),
    foe weak spots and resists (foekit.js / combo.js chips). This module adds:
-   - Catch your breath: free, but it ends your turn: get back 35% of your stamina and 25% of your magicka. Every blow,
+   - Catch your breath: 1 AP and no stamina, but it ends your turn (the AP left become guard): get back 35% of your stamina and 25% of your magicka. Every blow,
      power attack, bash and guard
      burn stamina, so a heavy hitter has to pace themselves: hit hard now, or breathe and hit hard next turn.
    - Openings: hit a foe that is staggered, stunned or paralyzed and the blow does 30% more (a power attack 45%);
@@ -52,7 +52,7 @@ const STRAT = (() => {
   function tip(f, a) {
     if (a !== "recover") return "";
     const k = recMult(f);
-    return `Catch your breath: get back ${Math.round(maxSp(f) * REC.sp * k)} stamina and ${Math.round(maxMp(f) * REC.mp * k)} magicka. Free, but it ends your turn. Blows, power attacks, bashes and guards need stamina, spells need magicka.`;
+    return `Catch your breath: get back ${Math.round(maxSp(f) * REC.sp * k)} stamina and ${Math.round(maxMp(f) * REC.mp * k)} magicka. Takes 1 AP and ends your turn. Blows, power attacks, bashes and guards need stamina, spells need magicka.`;
   }
 
   // ------------------------------------------------------------------ Openings

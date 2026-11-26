@@ -81,7 +81,7 @@ async def attacks(pg, tag, horse):
         if not await pg.evaluate("() => !!document.querySelector('.mg')"): break
     await pg.wait_for_timeout(600)
     e1, acts = await pg.evaluate("() => [TB.session.f.ehp, TB.session.myActs]")
-    ok(acts >= 1 and e1 <= e0, f"{tag}: Attack is spent and lands (horse {horse}; foe {round(e0)} -> {round(e1)}, moves used {acts})")
+    ok(acts >= 1 and e1 <= e0, f"{tag}: Attack is spent and lands (horse {horse}; foe {round(e0)} -> {round(e1)}, AP spent {acts})")
     await finish(pg)
 
 async def main():

@@ -5718,6 +5718,12 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 .inirow.nx{opacity:.5}
 .inisep2{margin-top:6px;padding-top:6px;border-top:1px dashed rgba(226,187,100,.45);font:600 11px/1 "Barlow Semi Condensed",sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#cdb98a}
 @media (prefers-reduced-motion:reduce){#tbf.c2 .tbini.ini2,#tbf.c2 .tbini.ini2 .inicross,#tbf.c2 .tbini.ini2.iniflash .iniwhy,.inisheet,.inisheetin{animation:none!important;transition:none!important}#tbf.c2 .tbini.ini2.iniflash .iniwhy{opacity:1;transform:translate(-50%,-50%) scale(.8)}#tbf.c2 .tbini.ini2.skip.gone,#tbf.c2 .tbini.ini2.out.gone{display:none}}
+/* [threeap] each move button shows its AP as gold diamonds (1 or 2), left of its round icon */
+#tbf .fc .fc-apc{position:absolute;bottom:4px;left:4px;display:flex;gap:2px;pointer-events:none;z-index:2}
+#tbf .fc .fc-apc i{display:block;width:7px;height:7px;transform:rotate(45deg);background:linear-gradient(135deg,#fff3c4,#e0b04a 60%,#9a6a1c);border:1px solid rgba(40,25,5,.85);box-shadow:0 0 3px rgba(255,210,120,.6)}
+#tbf.c2 .fc:not(.fc-pick) .tbact .fc-apc{bottom:auto;top:calc(var(--d) / 2 - 9px);left:calc(50% - var(--d) / 2 - 7px);flex-direction:column;gap:3px}
+#tbf .fc .tbact.off .fc-apc i,#tbf .fc .tbact[disabled] .fc-apc i{filter:grayscale(1) brightness(.6)}
+#tbf .fc-hb .hb-s .fc-apc{top:calc(var(--d,40px) / 2 - 9px)}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -6170,6 +6176,7 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 <script src="i18n_defeat.js"></script>
 <script src="i18n_initiative.js"></script>
 <script src="i18n_names.js"></script>
+<script src="i18n_threeap.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

@@ -89,7 +89,7 @@ const MOVEPREVIEW = (() => {
       const g = r0(100 * (p.guard || 0));
       const chip = document.createElement("div");
       chip.className = "mpv-guard"; chip.setAttribute("aria-hidden", "true");
-      chip.textContent = g > 0 ? `${T("Guard")} +${g}%: ${T("blows hit softer until your next turn")}` : T("No guard left: you used all your moves");
+      chip.textContent = g > 0 ? `${T("Guard")} +${g}%: ${T("blows hit softer until your next turn")}` : T("No guard left: you spent all your AP");
       me.appendChild(chip);
       orb?.classList.add("mpv-guarded");
     }

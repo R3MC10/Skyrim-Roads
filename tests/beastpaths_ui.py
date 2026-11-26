@@ -93,7 +93,7 @@ async def run(p, w, h, touch, lang=None):
             ap0 = await pg.evaluate("TB.session.myActs")
             await pg.click("#tbf .fc [data-tba='beast:claw']"); await pg.wait_for_timeout(900)
             ap1 = await pg.evaluate("TB.session ? TB.session.myActs : -1")
-            ok(ap1 == ap0 + 1 or ap1 == -1 or ap1 == 0, f"{tag}: Claws takes one of your moves ({ap0}->{ap1})")
+            ok(ap1 == ap0 + 1 or ap1 == -1 or ap1 == 0, f"{tag}: Claws takes 1 AP ({ap0}->{ap1})")
             log = await pg.evaluate("[...document.querySelectorAll('#tbf .tbl, #tbf .tblog')].map(e=>e.textContent).join(' ')")
             ok(("pazury" in log.lower() and "claws" not in log.lower()) if PL else "Claws" in log, f"{tag}: the log shows the claws: {log[-160:]!r}")
             if PL:
@@ -104,7 +104,7 @@ async def run(p, w, h, touch, lang=None):
                 if touch: await pg.tap("#tbf .fc [data-tba='beast:howl']")
                 else: await pg.hover("#tbf .fc [data-tba='beast:howl']"); await pg.wait_for_timeout(200); await pg.click("#tbf .fc [data-tba='beast:howl']")
                 await pg.wait_for_timeout(1000)
-                if not touch:   # your turn goes on now (up to 4 moves), so the pointer may rightly hover the next button: move it off first
+                if not touch:   # your turn goes on now (3 AP), so the pointer may rightly hover the next button: move it off first
                     print("   tooltip while still hovering:", await pg.evaluate("document.querySelector('.tbtip.on')?.textContent?.slice(0,60) || ''"))
                     await pg.mouse.move(2, 2); await pg.wait_for_timeout(400)
                 ok(not await pg.evaluate("!!document.querySelector('.tbtip.on')"), f"{tag}: no tooltip left open after Howl")

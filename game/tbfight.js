@@ -1,10 +1,19 @@
-/* Turn-based fights with initiative; every move costs stamina, magicka or health. [OURS module]
-   [Owner, build 145: "AP points should be gone from the game. now everything costs stamina or mana or health" and
-   "now player chooses its turn really"] There are no action points any more. On your turn you pick any mix of moves
-   (attack, power attack, guard, bash, spells, shouts, potions, dark moves...) and pay for each one in stamina, magicka or
-   health, then press End turn. The same move again in one turn costs 50% more each time, a turn holds at most 4 moves
-   and 2 potions, and the fewer moves you make, the more guard you keep (up to 30%). Stamina and magicka come back
-   every round. The notes below are the original design, kept for history.
+/* Turn-based fights with initiative; every hero turn has 3 action points (AP). [OURS module]
+   [Combat step 3, build 350] On your turn you have 3 AP. Each move costs AP and also stamina, magicka or health:
+     1 AP  attack (a dual-wield attack is one blow plus the left hand's lighter follow-up), a bow shot, guard, shield
+           bash, a minor spell (Novice / Apprentice: Flames, Frostbite, Healing...), a 1-2 word shout, a potion (one a
+           turn), a scroll of a minor spell, a poison, Breathe (it ends your turn), Oil flask / Mark / Cover.
+     2 AP  power attack (a dual-wield flurry when you hold two blades; a bow's fully drawn aimed shot), a major spell
+           (Adept and up: Fireball, Close Wounds, cloaks, area spells), a dual cast, a full 3-word shout, a scroll of a
+           major spell, a beast's or Vampire Lord's heaviest moves.
+   AP you don't spend become guard when you end your turn: 10% less damage per AP, at most 30%, until your next turn.
+   A move whose target is already gone when it lands costs nothing (sess.reserve holds the AP while a minigame runs).
+   Followers have 2 AP for their orders (followerai.js); fast foes keep their two slots, with the foe's moves for the
+   round shared out over them (initiative.js foeSlots), never 3 AP twice.
+   Perks (perkfx.js): Heavy Momentum (a power attack for 1 AP once a fight), Spell Weaving (a major spell for 1 AP once
+   a fight), Steady Guard (more guard per AP kept). The same move again in one turn still costs 50% more.
+   History: build 145 removed the old action points ("everything costs stamina or mana or health"), then a turn held 4
+   moves; build 350 brought back 3 AP a turn. The notes below are the original design, kept for history.
    Remigiusz: "Let's make fights really turn based; turn order should be initiative based. Followers and summons do their
    turns automatically." You play your own turns (with an Auto button); Athletics and Alteration make your moves cheaper,
    initiative is 1d4 + speed, rolled once a fight (initiative.js; heavy armour slows you); balanced so fights don't end quickly; party fights
@@ -19,22 +28,25 @@
    Turn order (initiative.js, since build 347): everyone rolls 1d4 + speed once a fight; stuns, freezes, staggers, haste
    and slow move people in the order as the fight goes; heroes next to each other in the order act together (a shared
    turn). You pay stamina, magicka or health for moves (weapon blows, power attacks, guard, spells, shouts, potions,
-   flee); moves you don't make become guard. Followers, summons, thralls and party members act in their own slots; real
+   flee); AP you don't spend become guard. Followers, summons, thralls and party members act in their own slots; real
    players in your party play their own turn on their own phone (sharedfight.js; a shared turn has no timer: it waits for everyone, the leader can skip a player who's gone quiet).
    No one-shots: a single blow can't take more than 40% of a strong target's health, except a finishing blow.
    The AI is reached through one adapter, TB.aiPick(fight, actor), which uses COMBATAI.decide(fight, actor, settings)
    when another module provides it, otherwise the fight's own choice (Smart AI or your custom tactics). */
 const TB = (() => {
   // ------------------------------------------------------------------ numbers (tuned with tests/sim_tbfight.js)
-  const ATK_SP = { dagger: 12, fist: 10, claw: 16, sword: 18, axe: 20, mace: 20, spear: 18, staff: 16, greatsword: 26, battleaxe: 28, warhammer: 28, bow: 36, crossbow: 42 };   // stamina a plain blow takes (a full four-blow turn leaves you winded; about two a round keeps going)
+  const ATK_SP = { dagger: 12, fist: 10, claw: 16, sword: 18, axe: 20, mace: 20, spear: 18, staff: 16, greatsword: 26, battleaxe: 28, warhammer: 28, bow: 36, crossbow: 42 };   // stamina a plain blow takes (a full three-blow turn leaves you winded; about two a round keeps going)
+  const AIM_SP = 2.5;   // [threeap] a fully drawn aimed shot costs at least this many plain shots' stamina (one big arrow beats armour better than two small ones)
   const SWINGS = { dagger: 3, fist: 3, claw: 2, sword: 2, axe: 2, mace: 2, spear: 2, staff: 2, greatsword: 1.5, battleaxe: 1.5, warhammer: 1.5, bow: 1.5, crossbow: 1.2 };   // a typical turn of plain blows (foe health is sized from it)
-  const MAX_ACTS = 4, MAX_POTS = 2, REPEAT = 0.5, SHOUT_SP = 10, DARK_HP = 0.03;
+  const AP = 3, MAX_ACTS = AP, MAX_POTS = 1, REPEAT = 0.5, SHOUT_SP = 10, DARK_HP = 0.03;   // MAX_ACTS: AP's old name (other modules and tests read it)
+  const GUARD_AP = 0.1, GUARD_MAX = 0.3;   // each AP you don't spend: 10% less damage until your next turn, at most 30%
+  const BIG = new Set(["Adept", "Expert", "Master"]);   // spells of these levels are major spells: 2 AP
   const HIT_CAP = 0.4;          // max share of a strong target's health one blow can take
   /* foe toughness and actions per round, by kind of foe (tuned with the sim in tests/test_tbfight.js) */
   const T = { hp: { normal: 2.0, tough: 2.6, boss: 3.0 }, acts: { normal: 2.4, tough: 2.5, boss: 2.5 },
-    rounds: { normal: 8, tough: 12, boss: 16 },                          // how long a fight should roughly last
+    rounds: { normal: 4, tough: 6, boss: 7 },   // how long a fight should roughly last (build 350, 3 AP: sims give medians of about 4-5 / 6 / 10-11 rounds)
     est: { k: 0.7, pool: 1, mk: 0.85, mix: 0.25, sum: 0.8 },   // [post-combat2] share of the damage your stamina / magicka pays for in a round that foe health is sized for
-    min: { normal: 1.2, tough: 1.5, boss: 1.8 }, max: { normal: 7, tough: 9, boss: 10 } };   // bounds on the health boost
+    min: { normal: 1, tough: 1.2, boss: 1.3 }, max: { normal: 7, tough: 9, boss: 10 } };   // bounds on the health boost
   const FOE_HP = T.hp.normal;
   const PARTY_HP = 0.45;        // +45% foe health per extra real player in the fight (shared out over the extra foes below)
   const MAX_FOES = 6;           // [OURS] a party meets one foe per hero, one after another (like dungeon rooms), at most 6; bosses stay alone
@@ -68,7 +80,10 @@ const TB = (() => {
     if (typeof MOUNTFIGHT !== "undefined" && MOUNTFIGHT.owns(a)) return MOUNTFIGHT.cost(f, a);   // getting on / off your horse (mountfight.js)
     const s = f.s, [k, arg] = a.split(":");
     if (a === "attack") return { sp: ATK_SP[f.wt] || 9 };
-    if (a === "power_attack") return { sp: f.paCost || 0, eng: { sp: f.paCost || 0 } };
+    if (a === "power_attack") {   // [threeap] a fully drawn aimed shot takes at least two shots' stamina (light bows made it cheaper than two arrows)
+      const pa = f.wt === "bow" || f.wt === "crossbow" ? Math.max(f.paCost || 0, AIM_SP * (ATK_SP[f.wt] || 9)) : f.paCost || 0;
+      return { sp: pa, eng: { sp: f.paCost || 0 } };
+    }
     if (a === "block") { const c = F.BLOCK_STAMINA * Math.max(0, 1 - (typeof PFX !== "undefined" ? Math.min(1, PFX.sum(s, "blockcost", f, {})) : 0)); return { sp: c, eng: { sp: c } }; }
     if (a === "bash") { const c = typeof SHIELDFX !== "undefined" ? SHIELDFX.cost(f) : 35; return { sp: c, eng: { sp: c } }; }
     if (k === "spell" || k === "dual") {
@@ -80,11 +95,30 @@ const TB = (() => {
     if (k === "shout") return { sp: SHOUT_SP };
     return {};
   }
-  /* what a move costs you right now: { sp, mp, hp, n } (n: times you already did it this turn, +50% each) */
+  /* [threeap] how many of your 3 AP a move takes: { ap, perk } (perk: "pa" / "sp" when a once-a-fight perk makes it
+     1 AP; it's used up when the move is paid). Heavy moves take 2: a power attack (a two-blade flurry, a fully drawn
+     aimed shot), a major spell (Adept and up), a dual cast, a full 3-word shout, a beast's or Vampire Lord's heaviest moves. */
+  const HEAVY_BEAST = new Set(["beast:maul", "beast:feast", "lord:grip", "lord:raise"]);
+  function apOf(f, a, b) {
+    if (a === "end" || a === "flee") return { ap: 0 };
+    if (b && b.acts > 1) return { ap: b.acts };   // a module that sets its own price (getting on a horse: two)
+    const [k, arg] = String(a).split(":"), s = f && f.s, used = (f && f.apPerk) || {};
+    let ap = 1, kind = null;
+    if (a === "power_attack") { ap = 2; kind = "pa"; }
+    else if (HEAVY_BEAST.has(a)) ap = 2;
+    else if (k === "dual") { ap = 2; kind = "sp"; }
+    else if (k === "spell" || k === "scroll") { const sp = spellOf(a), sid = k === "scroll" ? D.ITEMS[arg]?.spell : arg; if (sp && BIG.has(tierOf(sid, sp))) { ap = 2; kind = k === "spell" ? "sp" : null; } }
+    else if (k === "shout") { try { if (typeof POWERS !== "undefined" && POWERS.level && POWERS.level(s, arg) >= 3) ap = 2; } catch (e) { /* unknown shout: 1 AP */ } }
+    if (ap === 2 && kind && s && !used[kind] && pfx(s, kind === "pa" ? "tbpa1" : "tbsp1") > 0) return { ap: 1, perk: kind };   // Heavy Momentum / Flowing Strikes / Quick Draw, Spell Weaving / Swift Mending
+    return { ap };
+  }
+  /* guard from AP kept at the end of a turn (also the host's check on a teammate's word in sharedfight.js) */
+  const guardFor = (s, kept) => { const k = clamp(kept || 0, 0, AP), x = s ? Math.min(0.1, 0.05 * k * pfx(s, "tbguard")) : 0; return clamp(GUARD_AP * k + x, 0, GUARD_MAX + x); };
+  /* what a move costs you right now: { sp, mp, hp, n, acts } (n: times you already did it this turn, +50% each; acts: its AP) */
   function cost(f, a, sess) {
-    if (a === "end" || a === "flee") return { sp: 0, mp: 0, hp: 0, n: 0 };
-    const b = base(f, a), n = (sess && sess.used && sess.used[a]) || 0, m = 1 + REPEAT * n, st = (sess && sess.st) || {};
-    return { sp: Math.round((b.sp || 0) * m * (1 - (st.spCut || 0))), mp: Math.round((b.mp || 0) * m * (1 - (st.mpCut || 0))), hp: Math.round((b.hp || 0) * m), n, eng: b.eng || null, acts: b.acts > 1 ? b.acts : 1 };   // acts: moves it takes (getting on a horse: two)
+    if (a === "end" || a === "flee") return { sp: 0, mp: 0, hp: 0, n: 0, acts: 0 };
+    const b = base(f, a), n = (sess && sess.used && sess.used[a]) || 0, m = 1 + REPEAT * n, st = (sess && sess.st) || {}, ap = apOf(f, a, b);
+    return { sp: Math.round((b.sp || 0) * m * (1 - (st.spCut || 0))), mp: Math.round((b.mp || 0) * m * (1 - (st.mpCut || 0))), hp: Math.round((b.hp || 0) * m), n, eng: b.eng || null, acts: ap.ap, perk: ap.perk || null };
   }
   /* [movepreview] what a move will do before you make it: { lo, hi } damage to the foe (the low and high end of the
      dice), { heal } for you, plus its cost. The fight tooltips (tbtips.js) and the striped "could lose" piece on the
@@ -214,18 +248,18 @@ const TB = (() => {
       try {
         const ai = typeof COMBATAI !== "undefined" && COMBATAI.swing, sw = ai ? COMBATAI.swing(f, false) : f.weaponDamage();
         if (f.regenSp > 0 && G.maxStamina) {
-          /* [post-combat2 balance] a turn holds up to 4 moves paid in stamina, so what you deal a round follows your
+          /* [post-combat2 balance] a turn holds up to 3 AP of moves paid in stamina, so what you deal a round follows your
              stamina: what comes back each round plus your pool spread over the fight, a power attack first when you can
              afford it. (A flat "two swings a turn" guess let strong heroes end fights in 3-5 rounds.) */
-          const cut = 1 - (st.spCut || 0), atk = Math.max(1, (ATK_SP[f.wt] || 9) * cut), pa = (f.paCost || 0) * cut;
+          const cut = 1 - (st.spCut || 0), atk = Math.max(1, (ATK_SP[f.wt] || 9) * cut), pa = (f.wt === "bow" || f.wt === "crossbow" ? Math.max(f.paCost || 0, AIM_SP * (ATK_SP[f.wt] || 9)) : f.paCost || 0) * cut;   // the same aimed-shot price cost() charges
           let B = f.regenSp * SP_REGEN + T.est.pool * G.maxStamina(s) / R, n = 0;
           if (ai && pa > 0 && B >= pa) { w = COMBATAI.swing(f, true); B -= pa; n = 1; }
-          w = (w + sw * clamp(B / atk, n ? 0 : 1, MAX_ACTS - n)) * T.est.k;
+          w = (w + sw * clamp(B / atk, n ? 0 : 1, MAX_ACTS - 2 * n)) * T.est.k;   // [threeap] a power attack takes 2 of the 3 AP
         } else w = sw * (SWINGS[f.wt] || 2) * 0.8;
       } catch (e) { w = 0; }
       for (const id of s.spells || []) {
         const sp = D.SPELLS[id]; if (!sp || sp.kind !== "damage") continue;
-        try { const d = G.spellDamage(s, sp), c = Math.max(1, G.spellCost(s, sp)), casts = clamp((f.regenMp * MP_REGEN + T.est.pool * f.mp / R) / c, 1, MAX_ACTS - 1); m = Math.max(m, d * casts * T.est.mk); } catch (e) { /* skip */ }   // casts a round your magicka pays for (like stamina above)
+        try { const d = G.spellDamage(s, sp), c = Math.max(1, G.spellCost(s, sp)), casts = clamp((f.regenMp * MP_REGEN + T.est.pool * f.mp / R) / c, 1, BIG.has(tierOf(id, sp)) ? 1 : MAX_ACTS - 1); m = Math.max(m, d * casts * T.est.mk); } catch (e) { /* skip */ }   // casts a round your magicka pays for (like stamina above)
       }
       let sm = 0;   // a summon you can afford fights beside you
       for (const id of s.spells || []) { const sp = D.SPELLS[id]; if (!sp || sp.kind !== "summon" || !G.spellSummon) continue; try { if (G.spellCost(s, sp) <= f.mp) sm = Math.max(sm, G.spellSummon(s, sp, f).dmg || 0); } catch (e) { /* skip */ } }
@@ -379,9 +413,10 @@ const TB = (() => {
     /* ---- your actions */
     /* a new turn of yours: nothing used yet (apSet keeps its old name for the modules that check it) */
     beginTurn() {
-      const up = typeof INIT !== "undefined" ? INIT.standUp(this.f) : Math.min(1, this.f.kitApLoss || 0);   // knocked down (thrown from the saddle, mountfight.js): a move goes into getting up
-      this.used = {}; this.myActs = up; this.pots = 0; this.apSet = true; this.f.kitApLoss = 0;
-      if (up) this.emit("tick", "You get back on your feet (one move)", "tick");
+      const up = typeof INIT !== "undefined" ? INIT.standUp(this.f) : Math.min(1, this.f.kitApLoss || 0);   // knocked down (thrown from the saddle, mountfight.js): 1 AP goes into getting up
+      this.used = {}; this.myActs = up; this.pots = 0; this.apSet = true; this.f.kitApLoss = 0; this.held = null;
+      this.f.tbGuard = 0;   // [threeap] the guard you kept lasted until now, your next turn
+      if (up) this.emit("tick", "You get back on your feet (1 AP)", "tick");
       const w = typeof STACKS !== "undefined" ? STACKS.beginTurn(this.f) : "";   // Winded / Drained stacks bite (stacks.js)
       if (w) this.emit("tick", w.replace(/^ · /, ""), "tick");
       if (typeof REACT !== "undefined") REACT.beginTurn(this.f);   // Cover allies drops when your turn comes back
@@ -391,11 +426,12 @@ const TB = (() => {
     why(a) {
       const f = this.f;
       if (a === "end" || a === "flee") return "";
-      if (this.myActs >= this.st.acts) return `${this.st.acts} moves a turn`;
-      if (/^potion:/.test(a) && this.pots >= this.st.pots) return `${this.st.pots} potions a turn`;
+      const spent = this.myActs + (this.held && this.held.a !== a ? this.held.ap : 0);   // AP held for a move whose minigame is running
+      if (spent >= this.st.acts) return "No AP left";
+      if (/^potion:/.test(a) && this.pots >= this.st.pots) return this.st.pots === 1 ? "1 potion a turn" : `${this.st.pots} potions a turn`;
       if (a === "power_attack" && (this.used.power_attack || 0) >= 1) return "Once a turn";   // a power attack puts everything into one blow
       const c = cost(f, a, this);
-      if (c.acts > 1 && this.myActs + c.acts > this.st.acts) return `Takes ${c.acts} moves`;   // climbing onto your horse (mountfight.js)
+      if (spent + c.acts > this.st.acts) return `Needs ${c.acts} AP`;   // a heavy move with 1 AP left
       if (c.sp > f.sp + 0.01 && !(a === "attack" && this.myActs === 0)) return `Need ${Math.ceil(c.sp - f.sp)} more stamina`;   // out of breath you can still swing once a turn (as in Skyrim)
       if (c.mp > f.mp + 0.01) return `Need ${Math.ceil(c.mp - f.mp)} more magicka`;
       if (c.hp > 0 && c.hp >= f.hp) return "Too hurt";
@@ -416,8 +452,25 @@ const TB = (() => {
       f.sp = clamp(f.sp - (c.sp - (e.sp || 0)), 0, G.maxStamina(f.s));
       f.mp = clamp(f.mp - (c.mp - (e.mp || 0)), 0, G.maxMagicka(f.s));
       if (c.hp > 0) f.hp = Math.max(1, f.hp - c.hp);
-      this.used[a] = (this.used[a] || 0) + 1; this.myActs += c.acts > 1 ? c.acts : 1;
+      this.used[a] = (this.used[a] || 0) + 1; this.myActs += c.acts > 0 ? c.acts : 1;
+      if (c.perk) (f.apPerk = f.apPerk || {})[c.perk] = 1;   // the once-a-fight 1 AP perk is used up
       if (/^potion:/.test(a)) this.pots++;
+    }
+    /* [threeap] a minigame is about to run for move a: hold its AP (other buttons see them as spent) until it lands
+       (act) or is called off (release). If its target is gone by the time it lands, it costs nothing. */
+    reserve(a, tgt) {
+      const f = this.f; if (this.cur?.id !== "me" || !a || a === "end" || a === "flee") return false;
+      this.held = { a, ap: cost(f, a, this).acts, wave: this.wave || 1, ally: tgt != null && tgt !== "" ? String(tgt) : null };
+      return true;
+    }
+    release() { this.held = null; }
+    /* the move's target went away while it was being made: the foe is beaten or another took its place, or the
+       friend you were helping is down */
+    gone(a, al) {
+      const f = this.f, h = this.held;
+      if (al && al.down) return true;
+      if (zoneOf(a) !== "foe") return false;
+      return f.ehp <= 0 || !!(h && h.a === a && h.wave !== (this.wave || 1));
     }
     act(a, tgt, mult, grade) {   // mult: how the minigame went (minigame.js), 1 = normal; grade.cls "perfect" adds a stack
       if (this.cur?.id !== "me") return null;
@@ -426,6 +479,8 @@ const TB = (() => {
       const al = tgt != null && tgt !== "" ? (+tgt >= 1000 ? (f._downed || [])[+tgt - 1000] : f.allies[+tgt]) : null;
       if (a === "end") return this.endTurn();
       if (a === "flee") return this.flee();
+      if (this.gone(a, al)) { this.held = null; return { err: "Your target is already down: that move cost nothing", free: true }; }
+      this.held = null;
       if (!this.canAfford(a)) return { err: this.why(a) || "You can't do that now" };
       const price = cost(f, a, this);
       const before = f.ehp, myBefore = f.hp;
@@ -463,9 +518,22 @@ const TB = (() => {
       if (this.myActs >= this.st.acts || !this.anyAffordable()) return this.endTurn(true);
       return { turn: "me" };
     }
+    /* the AI's pick can't be paid (a 2 AP move with 1 AP left, no magicka): the hardest-hitting move you can still pay
+       for, a plain blow or a damage spell (a mage's fists aren't worth a turn's last AP when a firebolt is there) */
+    fallback() {
+      const f = this.f; let best = null, bd = -1;
+      try { if (this.canAfford("attack")) { best = "attack"; bd = typeof COMBATAI !== "undefined" && COMBATAI.swing ? COMBATAI.swing(f, false) : f.weaponDamage(); } } catch (e) { /* a plain blow it is */ }
+      for (const id of f.s.spells || []) {
+        const sp = D.SPELLS[id]; if (!sp || sp.kind !== "damage" || !this.canAfford("spell:" + id)) continue;
+        let d = 0; try { d = G.spellDamage(f.s, sp); } catch (e) { d = sp.amount || 0; }
+        if (d > bd) { bd = d; best = "spell:" + id; }
+      }
+      return best;
+    }
     anyAffordable() { return ["attack", "block", "potion:health"].some((a) => this.canAfford(a)) || (this.f.s.spells || []).some((id) => this.canAfford("spell:" + id)); }
-    /* moves you didn't make become guard against the next blows: 30% after none, 20% after one, 10% after two */
-    guardLeft() { return clamp(0.1 * (3 - this.myActs), 0, 0.3); }
+    /* AP you didn't spend become guard until your next turn: 10% less damage per AP (30% with all 3 kept);
+       Steady Guard adds 5% per AP, up to 10% more */
+    guardLeft() { return guardFor(this.f && this.f.s, this.st.acts - this.myActs); }
     endTurn(auto) {
       this.f.tbGuard = this.guardLeft();
       if (this.f.tbGuard > 0 && !auto) this.emit("me", `You hold back and keep your guard up (−${Math.round(this.f.tbGuard * 100)}% damage)`, "guard");
@@ -490,12 +558,12 @@ const TB = (() => {
         f.aiPickWhy = "";
         let a = aiPick(f, "me");
         const a0 = a;   // the AI's own pick, before the fight tricks below swap it
-        if (!this.canAfford(a)) a = this.canAfford("attack") ? "attack" : null;
+        if (!this.canAfford(a)) a = this.fallback();   // [threeap] a 2 AP move with 1 AP left: the best 1 AP hit instead
         if (typeof STRAT !== "undefined") a = STRAT.ai(this, a);   // cash in openings, catch your breath
         if (typeof REACT !== "undefined") a = REACT.ai(this, a);   // set up and cash in combos
         if (f.bf && typeof BOSSFIGHT !== "undefined") a = BOSSFIGHT.ai(this, a);   // answer a big attack that's coming
         if (!a) break;
-        if (a === "block" && this.myActs > 0) break;   // keep the guard from moves you don't make instead of a second raise
+        if (a === "block" && this.myActs > 0) break;   // keep the guard from AP you don't spend instead of a second raise
         if (this.used[a] >= 2 && this.myActs >= 2) break;   // a third of the same move costs double: save the breath, keep some guard
         const n0 = this.ev.length, r = this.act(a);
         this.aiNote(n0, a, a === a0 ? f.aiPickWhy : "plays the opening");   // "[AI] reason" on the log line of a move the AI picked
@@ -524,6 +592,7 @@ const TB = (() => {
     allyMove(al, move, timedOut) {
       const f = this.f;
       if (al.down || f.ehp <= 0) return;
+      al.guard = 0; if (!al.pid) al.tbGuard = 0;   // [threeap] the guard kept on its last turn ends now, its next turn (a real player's comes back with their reply)
       if (al.fai && typeof FAI !== "undefined" && !(al.player && move && move !== "auto")) return FAI.turn(this, f, al);   // followers2: their own turn
       const b = f.ehp, hpB = f.hp, rxPre = typeof REACT !== "undefined" ? REACT.pre(f) : null;
       let t;
@@ -565,9 +634,13 @@ const TB = (() => {
         if (r.fs0) { if (sameJ(r.fs[k], r.fs0[k])) continue; if (!(k in r.fs)) { delete f[k]; continue; } }   // [initiative] only what their turn changed: others in the same shared turn changed the rest
         if (k in r.fs) f[k] = r.fs[k] && typeof r.fs[k] === "object" ? clone(r.fs[k]) : r.fs[k];
       }
-      if (sameFoe && typeof r.e0 === "number" && typeof r.ehp === "number") f.ehp = b - clamp(r.e0 - r.ehp, 0, Math.max(0, b));
+      // [threeap] the host has the last word on AP: a turn that says it spent more than 3 only lands its share of 3,
+      // and the guard it keeps can't be more than its unspent AP give
+      const moves = (r.ev || []).filter((e) => e && e.a && e.a !== "end" && e.a !== "flee").length;   // every move they report took 1 AP at least
+      const spent = Math.max(0, +r.ap || 0, moves), apK = spent > AP ? AP / spent : 1, kept = AP - Math.min(AP, spent);
+      if (sameFoe && typeof r.e0 === "number" && typeof r.ehp === "number") f.ehp = b - clamp((r.e0 - r.ehp) * apK, 0, Math.max(0, b));
       if (typeof r.hp === "number" && typeof r.hp0 === "number") { if (r.hpMax > 0) al.maxHp = r.hpMax; al.hp = clamp((al.hp || 0) + (r.hp - r.hp0), 1, al.maxHp || Math.max(al.hp || 1, r.hp)); }
-      al.tbGuard = clamp(+r.guard || 0, 0, 0.3);
+      al.tbGuard = clamp(+r.guard || 0, 0, al.s ? guardFor(al.s, kept) : Math.min(GUARD_MAX + 0.1, GUARD_AP * kept + Math.min(0.1, 0.05 * kept)));
       if (typeof MOUNTFIGHT !== "undefined") MOUNTFIGHT.fromMate(al, r.mt);   // they got on / off their horse on their phone
       if (r.self) {
         if (r.self.ward > 0) al.ward = Math.max(al.ward || 0, r.self.ward);
@@ -634,7 +707,7 @@ const TB = (() => {
       if (typeof DRAGONS !== "undefined") DRAGONS.check(f, this);   // allies and bleeding may have brought it down
       const go = () => (typeof DRAGONS !== "undefined" && f.dStance ? DRAGONS.turn(f, () => f.enemyTurn()) : typeof FOEKIT !== "undefined" && f.kit ? FOEKIT.turn(f, () => f.enemyTurn()) : f.enemyTurn());
       let t = f.bf && typeof BOSSFIGHT !== "undefined" ? BOSSFIGHT.turn(this, go) : go();   // bosses: phases and big attacks (bossfight.js)
-      guards.forEach((a) => { a.red = a._red; a.guard = 0; a.tbGuard = 0; });
+      guards.forEach((a) => { a.red = a._red; });   // [threeap] a guard lasts until that friend's next turn (allyMove / FAI.turn / applyRemote reset it)
       if (act && act.tgt && f.tgtHit !== undefined) act.tgt = f.tgtHit ? String(f.tgtHit.name || act.tgt) : "you";   // someone stepped in front: name who it really hit
       if (FI) { FI.done(this); t = FI.say(this, t); }   // "takes aim at Lydia"
       if (typeof STACKS !== "undefined") {   // Chill and Weak stacks soften its blows (stacks.js)
@@ -647,7 +720,7 @@ const TB = (() => {
       if (typeof REACT !== "undefined") t += REACT.foePost(this, hpB);
       const mh = G.maxHealth(f.s), cap = HIT_CAP * mh, loss2 = hpB - f.hp;
       if (loss2 > cap && hpB > cap) { f.hp = hpB - cap; t += " (you stay on your feet)"; }
-      f.tbGuard = 0;
+      // [threeap] your kept guard stays up until your next turn (beginTurn), against every foe slot in between
       // the plan said a blow but the foe healed or drank instead (its own call in the engine): name what it really did
       if (act && /casts a healing spell|heals itself/i.test(t) && !/heal/i.test(act.name)) act = { ic: "", name: tr0("Heal self"), tgt: "", stk: "", big: false };
       else if (act && /drinks a potion|drinks a/i.test(t) && !/potion/i.test(act.name)) act = { ic: "", name: tr0("Drink potion"), tgt: "", stk: "", big: false };
@@ -999,7 +1072,7 @@ const TB = (() => {
       ${wait}
       ${playing ? `<button class="tbskip tbhurry" data-tbx="skip" aria-label="Tap the fight to hurry this turn along"></button>` : ""}
       <div class="tbdock">
-        <div class="tbap">${playing ? `<em class="them">${esc(R ? R.who(vis[vis.length - 1], sess) : "")}</em>` : mine && typeof FIGHTCTL !== "undefined" && FIGHTCTL.on() ? FIGHTCTL.apHTML(sess) : mine ? `<span>Moves</span>${pips(sess.st.acts - sess.myActs, sess.st.acts, "ap")}<em>Your turn${sess.until ? ` <b class="num" id="tbcd">${Math.max(0, Math.ceil((sess.until - Date.now()) / 1000))}s</b>` : ""}</em>` : sess.done ? "" : `<em class="them">${esc(sess.cur?.name || "")}'s turn…</em>`}</div>
+        <div class="tbap">${playing ? `<em class="them">${esc(R ? R.who(vis[vis.length - 1], sess) : "")}</em>` : mine && typeof FIGHTCTL !== "undefined" && FIGHTCTL.on() ? FIGHTCTL.apHTML(sess) : mine ? `<span>AP</span>${pips(sess.st.acts - sess.myActs, sess.st.acts, "ap")}<em>Your turn${sess.until ? ` <b class="num" id="tbcd">${Math.max(0, Math.ceil((sess.until - Date.now()) / 1000))}s</b>` : ""}</em>` : sess.done ? "" : `<em class="them">${esc(sess.cur?.name || "")}'s turn…</em>`}</div>
         ${playing ? "" : sess.done ? `<button class="btn pri tbdone" data-tbx="done">${f.won ? (f.escaped ? "Continue" : "Victory — continue") : "Continue"}</button>` : mine ? actionsHTML(sess) : ""}
       </div>
       ${ui.logOpen ? fullLog(sess, fmt) : ""}
@@ -1125,7 +1198,7 @@ const TB = (() => {
       // A stuck flag used to swallow every click for the rest of the fight ("I press Attack and nothing happens").
       const live = document.querySelector("#tbf .tbtime:not(.hit)");
       if (live && Date.now() - (ui.timingAt || 0) < 12000) return;
-      ui.timing = false; ui.timingTok = (ui.timingTok || 0) + 1; live?.remove();   // the old game's result is dropped
+      ui.timing = false; ui.timingTok = (ui.timingTok || 0) + 1; live?.remove(); ui.sess?.release?.();   // the old game's result is dropped (and the AP it held come back)
       if (typeof CHANNEL !== "undefined") CHANNEL.cancelMine(ui.sess, "stuck");   // [channel] its bar on everyone's screen fades
     }
     const b = ev.target.closest("button"); if (!b || b.disabled) return;
@@ -1153,7 +1226,7 @@ const TB = (() => {
         let r;
         try { r = sess.act(a, tgt, g ? g.mult : 1, g); }
         catch (e) { console.error("fight move", a, e); if (hooks.toast) hooks.toast("That move didn't work, try another"); return step(); }   // never leave the screen dead
-        if (r?.err) { if (hooks.toast) hooks.toast(r.err); return; }
+        if (r?.err) { if (hooks.toast) hooks.toast(r.err); if (r.free) step(); return; }   // free: its target was already down, the AP come back
         const d = { sp: was.sp - f.sp, mp: was.mp - f.mp, hp: f.hp - was.hp };
         if (r?.turn === "next") r = sess.advance();
         if (typeof SOUND !== "undefined" && SOUND.fx && (/spell|dual|scroll/.test(a) || typeof COMBATFX === "undefined")) SOUND.fx(/spell|dual|scroll/.test(a) ? "spell" : "hit");   // blows sound on impact (combatfx)
@@ -1163,7 +1236,7 @@ const TB = (() => {
       // the minigames (minigame.js): every blow, guard and spell you make yourself; Auto never plays them
       if (typeof MINIGAME !== "undefined" && MINIGAME.on() && MINIGAME.kindFor(f, a) && sess.canAfford(a)) {
         const sp = spellOf(a);
-        ui.timing = true; ui.timingAt = Date.now();
+        ui.timing = true; ui.timingAt = Date.now(); sess.reserve(a, tgt);   // [threeap] its AP are held while you play it
         let game;
         const g0 = MINIGAME.kindFor(f, a);
         const CH = typeof CHANNEL !== "undefined" ? CHANNEL : null, ch = CH ? CH.begin(sess, a, tgt, iconOf(f, a)) : null;   // [channel] everyone sees you prepare it
@@ -1175,7 +1248,7 @@ const TB = (() => {
         return game.then((g) => {
           if (!ui || ui.timingTok !== tok) return;
           ui.timing = false;
-          if (ch && g === CH.TIMEOUT) { document.querySelector("#tbf .tbtime:not(.hit)")?.remove(); CH.cancel(sess, ch, "timeout"); return go(null, sess.canAfford("block") ? "block" : "end"); }
+          if (ch && g === CH.TIMEOUT) { document.querySelector("#tbf .tbtime:not(.hit)")?.remove(); CH.cancel(sess, ch, "timeout"); sess.release(); return go(null, sess.canAfford("block") ? "block" : "end"); }
           if (ch) CH.done(sess, ch, g);
           go(g);
         }, () => { if (!ui || ui.timingTok !== tok) return; ui.timing = false; if (ch) CH.done(sess, ch, null); go(null); });
@@ -1372,5 +1445,5 @@ const TB = (() => {
 
   /* sharedfight.js: open a teammate's view of a fight, and redraw it when the leader's phone sends news */
   function redraw(sess, state) { if (ui && ui.sess === sess && open) render(state || sess.advance()); }
-  return { T, sceneLines, stats, cost, preview, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, play, redraw, fightState, voice, FOE_KEYS, BUFF_KEYS, costTxt, costHTML, base, close: () => { if (open) close(); }, abort, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, ATK_SP, MAX_ACTS, MAX_POTS, REPEAT, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
+  return { T, sceneLines, stats, cost, preview, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, play, redraw, fightState, voice, FOE_KEYS, BUFF_KEYS, costTxt, costHTML, base, close: () => { if (open) close(); }, abort, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, ATK_SP, AP, GUARD_AP, GUARD_MAX, apOf, guardFor, MAX_ACTS, MAX_POTS, REPEAT, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
 })();

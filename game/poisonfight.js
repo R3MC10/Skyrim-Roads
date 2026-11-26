@@ -2,7 +2,7 @@
    Owner: "poisons can't be used in combat for some reason." Poisons used to work only from the pack, outside fights.
    - The fight move "poison:<row id>" (the pack row of that poison: brewed poisons have long ids with colons in them).
      It shows in the fight's Items menu, the hotbar picker (Items tab) and the self-filling hotbar.
-   - It costs one move and no stamina, like drinking a potion, and uses the poison up (counted like a potion: f.used).
+   - It costs 1 AP and no stamina, like drinking a potion, and uses the poison up (counted like a potion: f.used).
    - The coat is the same as from the pack (TOWNS.coat): your next hit delivers it (two with Concentrated Poison),
      bows and crossbows too (the arrows carry it). It still goes through the 40% blow cap, so no one-hit wins.
    - Not in Beast Form or as a Vampire Lord (like potions), not with a staff or bare hands, not while your weapon

@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b351-threeap", build: 351, date: "26 Nov 2026", title: "3 AP a turn", items: [
+      "Your turn now runs on 3 AP (action points), shown as gold diamonds. Most moves take 1 AP: a blow, a bow shot, guarding, a shield bash, a small spell, a short shout, a potion, catching your breath, a poison or a small scroll.",
+      "Big moves take 2 AP: power attacks, spells of Adept level and up, dual casts, full three-word shouts, big scrolls and a beast's heavy moves. Every button shows its AP and goes grey when you can't pay for it.",
+      "AP you don't spend become guard: 10% less damage for each one, up to 30%, and it lasts until your next turn. One potion a turn.",
+      "With a blade in each hand, one attack is a blow plus a quick left-hand follow-up. Poisons, bleeding and enchantments still land only once.",
+      "If your target falls before your move lands, that move costs nothing. Followers get 2 AP a turn.",
+      "Six new perks: Heavy Momentum, Flowing Strikes and Quick Draw (once a fight, a power attack or an aimed shot for 1 AP), Spell Weaving and Swift Mending (once a fight, a big spell for 1 AP) and Steady Guard (more guard from AP you keep).",
+      "Fights are shorter now: a normal fight takes about 4-5 rounds, a boss about 10. A fully drawn aimed shot takes a bit more stamina than before.",
+    ] },
     { id: "b350-defeat", build: 350, date: "26 Nov 2026", title: "Losing a fight costs nothing", items: [
       "Lose a fight and you lose nothing: no gold, no items, no XP, no progress. You're put back just before the fight.",
       "A new screen shows what beat you and why, then gives you three choices: Retry (the same foes again), Adjust gear (change weapons, armour or spells, then come back) or Retreat.",

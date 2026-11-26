@@ -94,7 +94,7 @@ const TIP = (() => {
       L.push(dmg && s ? `Hits for about ${dmg} with your ${it.skill} skill and perks` : `${it.damage} base damage, more as your ${it.skill} skill grows`);
     }
     if (it.slot === "ammo") L.push(`Shot from a ${/bolt/.test(itemId) ? "crossbow" : "bow"}: ${it.damage} damage added to each shot`);
-    if (["potion", "scroll"].includes(it.slot) && (it.restore || D_.SPELLS[it.spell])) st.push(["In a fight", "1 move, free"]);   // no action points since build 145: a potion or scroll takes one of your 4 moves, no stamina
+    if (["potion", "scroll"].includes(it.slot) && (it.restore || D_.SPELLS[it.spell])) st.push(["In a fight", it.slot === "scroll" && D_.SPELLS[it.spell] && ["Adept", "Expert", "Master"].includes(D_.SPELLS[it.spell].level || (typeof TOMES !== "undefined" && TOMES.level ? TOMES.level(it.spell) : "")) ? "2 AP, no magicka" : "1 AP, no stamina"]);   // [threeap] a potion or a minor scroll takes 1 of your 3 AP, a big scroll 2 (tbfight.js apOf)
     if (it.slot === "soulgem") L.push(`Holds ${it.charge} charge for recharging enchanted weapons`);
     if (it.slot === "ingredient" && s && g("TOWNS")?.INGREDIENT_FX?.[itemId]) { const T = g("TOWNS"); L.push("Effects: " + T.INGREDIENT_FX[itemId][1].map((e, i) => (T.known(s, itemId)[i] ? e : "?")).join(", ")); }
     if (it.slot === "material") L.push("Used at the forge to improve gear.");

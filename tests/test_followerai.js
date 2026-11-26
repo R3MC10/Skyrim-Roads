@@ -53,7 +53,7 @@ if (NEW && !process.env.SIMONLY) {
     const m = FOL2.act(s, { op: "eqoff", id: String(row.id) });
     OK(Ly.eq.offhand === row.id && !Ly.eq.shield, "a dagger in the left hand (shield comes off): " + m);
     const f = new G.Fight(s, enc("Bandit outlaw", 20)), al = f.allies.find((x) => x.follower);
-    OK(al.fai && al.dual && al.mpMax > 0 && al.spMax > 0 && al.ap >= 6, "fight record has magicka, stamina, AP, dual wield");
+    OK(al.fai && al.dual && al.mpMax > 0 && al.spMax > 0 && al.ap === 2, "fight record has magicka, stamina, 2 AP a turn (build 350), dual wield");
     FOL2.act(s, { op: "uneq", id: "offhand" }); OK(!Ly.eq.offhand, "take the left-hand weapon off"); }
 
   // 3. their AI: heals you, summons, drinks their own potions, never dies

@@ -376,6 +376,13 @@ const PFX = (() => {
     [ "Sneak", "exp_scout", "Seasoned Scout", 1, [30], ["stealth"], "You read the road: an expedition's road event shows you how each choice will turn out, and its choices go 10% better for you. [OURS]", [["exscout", 1, {}]]],
     // the company's Commissions board (commissions.js reads cmgold / cmcraft)
     [ "Speechcraft", "cm_broker", "Commission Broker", 2, [25, 50], ["persuasion"], "You talk the towns up: your share of commission gold is 15/30% bigger. [OURS]", [["cmgold", [0.15, 0.3], {}]]],
+    // 3 AP a turn (tbfight.js reads tbpa1 / tbsp1 / tbguard)
+    [ "Two-Handed", "heavy_momentum", "Heavy Momentum", 1, [30], ["barbarian"], "Once a fight, a power attack costs only 1 AP instead of 2. [OURS]", [["tbpa1", 1, {}]]],
+    [ "One-Handed", "flowing_strikes", "Flowing Strikes", 1, [30], ["armsman"], "Once a fight, a power attack (or a two-blade flurry) costs only 1 AP instead of 2. [OURS]", [["tbpa1", 1, {}]]],
+    [ "Archery", "quick_draw", "Quick Draw", 1, [30], ["overdraw"], "Once a fight, a fully drawn aimed shot costs only 1 AP instead of 2. [OURS]", [["tbpa1", 1, {}]]],
+    [ "Destruction", "spell_weaving", "Spell Weaving", 1, [40], ["apprentice_destruction"], "Once a fight, a big spell (Adept or higher, or a dual cast) costs only 1 AP instead of 2. [OURS]", [["tbsp1", 1, {}]]],
+    [ "Restoration", "swift_mending", "Swift Mending", 1, [40], ["novice_restoration"], "Once a fight, a big spell (Adept or higher, or a dual cast) costs only 1 AP instead of 2. [OURS]", [["tbsp1", 1, {}]]],
+    [ "Blocking", "steady_guard", "Steady Guard", 1, [30], ["shield_wall"], "Every AP you don't spend on your turn gives 5% more guard (up to 10% more, so 40% at most). [OURS]", [["tbguard", 1, {}]]],
     [ "Smithing", "cm_mark", "Master's Mark", 1, [35], ["steel_smithing"], "Towns trust your maker's mark: orders for crafted goods you finish give the company half again the materials, and a better chance of an extra item. [OURS]", [["cmcraft", 0.5, {}]]],
   ];
   const FX = {};

@@ -49,7 +49,7 @@ const FIGHTTIPS = (() => {
     else if (a === "power_attack" && /stamina/.test(w)) w += `: you have ${r0(f.sp)}, it needs ${r0(f.paCost || 0)}`;
     return `<p class="tt-dn">\uE123 ${esc(w)}</p>`;
   }
-  const apStat = (sess, a, c) => ["Costs", (safe(() => mod("TB").costTxt(c), "free") || "free") + (c && c.n ? ` (×${c.n + 1} this turn)` : "")];
+  const apStat = (sess, a, c) => ["Costs", (c && c.acts > 0 ? `${c.acts} AP · ` : "") + (safe(() => mod("TB").costTxt(c), "free") || "free") + (c && c.n ? ` (×${c.n + 1} this turn)` : "")];   // [threeap] its AP first
   const stripAp = (t) => String(t || "").replace(/\s*(?:\d+ AP\.|Uses all your AP\.)\s*$/, "");
 
   // ---------------------------------------------------------------- spells, items, moves
@@ -104,16 +104,16 @@ const FIGHTTIPS = (() => {
     if (a === "power_attack") st.push(["Stamina", r0(f.paCost || 0)], ["You have", r0(f.sp)]);
     if (a === "block" || a === "bash") st.push(["You have", `${r0(f.sp)} stamina`]);
     if (a !== "end") st.push(apStat(sess, a, c));
-    else st.push(["Moves made", `${sess.myActs || 0}/${sess.st?.acts ?? 4}`], ["Guard", `+${Math.round(100 * safe(() => sess.guardLeft(), 0))}%`]);
+    else st.push(["AP spent", `${sess.myActs || 0}/${sess.st?.acts ?? 3}`], ["Guard", `+${Math.round(100 * safe(() => sess.guardLeft(), 0))}%`]);
     return body + stats(st) + whyHTML(sess, a, c) + (a === "end" || a === "flee" ? "" : hint(ZONE[zoneOf(a)] || ""));
   }
 
   // ---------------------------------------------------------------- you, the foe, the bars, the AP row
   function apHTML(sess) {
     const st = sess.st || {};
-    return head("Moves") + stats([["Made", `${sess.myActs || 0}/${st.acts ?? 4}`], ["Stamina", r0(sess.f.sp)], ["Magicka", r0(sess.f.mp)]])
-      + line("Make up to 4 moves a turn. Blows and guards cost stamina, spells magicka: the coloured numbers on each button.")
-      + line("The same move again in one turn costs 50% more. Moves you don't make become guard when you end your turn (up to 30% less damage).") + hint("Stamina and magicka come back a bit every round.");
+    return head("AP") + stats([["Spent", `${sess.myActs || 0}/${st.acts ?? 3}`], ["Stamina", r0(sess.f.sp)], ["Magicka", r0(sess.f.mp)]])
+      + line("You have 3 AP a turn. Most moves take 1 AP (the gold diamonds on each button); power attacks, big spells, dual casts and full shouts take 2.")
+      + line("Moves also cost stamina or magicka (the coloured numbers), 50% more for the same move again in one turn. AP you don't spend become guard until your next turn: 10% less damage each, up to 30%.") + hint("Stamina and magicka come back a bit every round.");
   }
   const sp0 = (x) => x.cost || 0;
   function barHTML(sess, k) {
@@ -130,7 +130,7 @@ const FIGHTTIPS = (() => {
     const f = sess.f, st = sess.st || {};
     let arm = 0, red = 0; safe(() => { const { rating, pieces } = f.armorRating(); arm = r0(rating); red = r0(100 * mod("F").damageReduction(rating, pieces)); });
     const blk = safe(() => r0(100 * mod("SHIELDFX").passive(f)), 0);
-    return head(f.s.name || "You") + sub("You") + stats([["Armour", arm], ["Blows weaker", `${red}%`], blk ? ["Shield block", `${blk}%`] : null, ["Moves a turn", st.acts ?? 4], ["Speed", st.speed]])
+    return head(f.s.name || "You") + sub("You") + stats([["Armour", arm], ["Blows weaker", `${red}%`], blk ? ["Shield block", `${blk}%`] : null, ["AP a turn", st.acts ?? 3], ["Speed", st.speed]])
       + hint("Drop healing spells and potions here to use them on yourself.");
   }
   function foeHTML(sess) {

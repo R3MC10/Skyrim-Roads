@@ -191,10 +191,10 @@ const ONBOARD = (() => {
   /* id, the control (first one on screen), the side of it, the line. One at a time, in the first turn-by-turn fights,
      until each is learnt: Attack, what the foe does next, End turn, and guard when a foe first winds up a big blow. */
   const HINTS = [
-    ["attack", '#tbf [data-tba="attack"]|#tbf [data-tba="end"]', "above", "Tap Attack to hit. You get a few moves each turn."],
+    ["attack", '#tbf [data-tba="attack"]|#tbf [data-tba="end"]', "above", "Tap Attack to hit. You get 3 AP each turn."],
     ["intent", "#tbf .tbints|#tbf .tbu.foe", "below", "This is what your foe does next. Plan around it."],
-    ["guard", '#tbf [data-tba="bash"]|#tbf [data-tba="block"]|#tbf [data-tba="end"]', "above", "A huge blow is coming! Bash or guard now, or end your turn: unused moves guard."],
-    ["end", '#tbf [data-tba="end"]', "above", "Done? End turn. Moves you don't make become guard."],
+    ["guard", '#tbf [data-tba="bash"]|#tbf [data-tba="block"]|#tbf [data-tba="end"]', "above", "A huge blow is coming! Bash or guard now, or end your turn: unused AP guard."],
+    ["end", '#tbf [data-tba="end"]', "above", "Done? End turn. AP you don't spend become guard."],
   ];
   const HKEY = (id) => "tbf-" + id;
   let hmem = { turns: 0, wasMine: false, endShown: false, intShown: false, guardShown: false };

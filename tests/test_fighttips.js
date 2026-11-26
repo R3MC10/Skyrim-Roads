@@ -22,11 +22,11 @@ const s = c.make("mage", 20); s.health = G.maxHealth(s); s.healthTs = G.now();
 for (const id of ["flames", "healing", "greater_ward", "fear"]) if (D.SPELLS[id] && !s.spells.includes(id)) s.spells.push(id);
 const e = G.scaleEnemy({ name: "Bandit", health: 260, damage: 14, tags: ["humanoid"], level: 20, danger: "medium", gold: [0, 0], text: "" }, 20);
 const f = new G.Fight(s, e); f.allies = [];
-const sess = Object.assign(Object.create(TB.Session.prototype), { f, myActs: 0, pots: 0, used: {}, st: { acts: 4, pots: 2, spCut: 0, mpCut: 0, speed: 6 }, ehpMax: Math.round(f.ehp) });   // build 146: no AP, moves cost stamina / magicka
+const sess = Object.assign(Object.create(TB.Session.prototype), { f, myActs: 0, pots: 0, used: {}, st: { acts: 3, pots: 1, spCut: 0, mpCut: 0, speed: 6 }, ehpMax: Math.round(f.ehp) });   // build 350: 3 AP a turn, and moves cost stamina / magicka
 
 // spells: what it does, numbers with perks, single and dual, magicka, cost, how long
 { const h = FT.html(sess, "spell:flames"); ok(clean(h), "Flames tooltip " + text(h));
-  ok(/Flames/.test(h) && /Destruction/.test(h) && /magicka/i.test(h) && /Costs <b>\d+ magicka/.test(h), "names, school, magicka and the cost");
+  ok(/Flames/.test(h) && /Destruction/.test(h) && /magicka/i.test(h) && /Costs <b>[12] AP · \d+ magicka/.test(h), "names, school, magicka and the cost");
   ok(h.includes(String(Math.round(G.spellDamage(s, D.SPELLS.flames)))), "the damage with your perks " + Math.round(G.spellDamage(s, D.SPELLS.flames)));
   ok(/Dual cast/.test(h), "the dual cast row");
   ok(/turns?/.test(text(h)), "how long the burn lasts");
@@ -42,8 +42,10 @@ const sess = Object.assign(Object.create(TB.Session.prototype), { f, myActs: 0, 
 { f.mp = 10; const sp = D.SPELLS.flames, need = Math.ceil(G.spellCost(s, sp));
   if (need > 10) { const h = FT.html(sess, "spell:flames"); ok(/tt-dn/.test(h) && new RegExp(`Need ${need - 10} more magicka: you have 10, it needs ${need}`).test(h), "not enough magicka: " + text(h)); }
   f.mp = G.maxMagicka(s);
-  sess.myActs = 4;
-  const a = FT.html(sess, "attack"); ok(/tt-dn/.test(a) && /4 moves a turn/.test(a), "out of moves: " + text(a));
+  sess.myActs = 3;
+  const a = FT.html(sess, "attack"); ok(/tt-dn/.test(a) && /No AP left/.test(a), "out of AP: " + text(a));
+  sess.myActs = 2;
+  const pa = FT.html(sess, "power_attack"); ok(/tt-dn/.test(pa) && /Needs 2 AP/.test(pa), "a power attack with 1 AP left: " + text(pa));
   sess.myActs = 1; f.sp = 0;
   const a2 = FT.html(sess, "attack"); ok(/Need \d+ more stamina: you have 0, it needs \d+/.test(a2), "out of stamina: " + text(a2));
   sess.myActs = 0; f.sp = G.maxStamina(s);
@@ -62,7 +64,7 @@ const sess = Object.assign(Object.create(TB.Session.prototype), { f, myActs: 0, 
   if (sc) { G.give(s, sc); ok(clean(FT.html(sess, "scroll:" + sc)) && /uses the scroll up/.test(FT.html(sess, "scroll:" + sc)), "a scroll"); }
 }
 // the AP row, bars, you, the foe, menus, filters
-{ ok(/Moves/.test(FT.html(sess, "ap")) && /0\/4/.test(FT.html(sess, "ap")) && /stamina/i.test(FT.html(sess, "ap")), "moves row " + text(FT.html(sess, "ap")));
+{ ok(/AP/.test(FT.html(sess, "ap")) && /0\/3/.test(FT.html(sess, "ap")) && /stamina/i.test(FT.html(sess, "ap")), "moves row " + text(FT.html(sess, "ap")));
   for (const k of ["hp", "mp", "sp"]) ok(clean(FT.html(sess, k)) && /Now/.test(FT.html(sess, k)), "bar " + k);
   ok(/Cheapest spell/.test(FT.html(sess, "mp")), "magicka bar names the cheapest spell " + text(FT.html(sess, "mp")));
   ok(/Armour/.test(FT.html(sess, "me")) && /Speed/.test(FT.html(sess, "me")), "you: armour and speed " + text(FT.html(sess, "me")));
@@ -76,8 +78,8 @@ const sess = Object.assign(Object.create(TB.Session.prototype), { f, myActs: 0, 
   f.fearTurns = 0; f.calmTurns = 0; f.fcap = null; ok(FT.foeChips(f) === "", "no chips when nothing's on it");
 }
 // the Polish file has every new fixed line
-{ const pl = fs.readFileSync(W + "i18n_fighttips.js", "utf8");
-  for (const t of ["Moves made", "Make up to 4 moves a turn. Blows and guards cost stamina, spells magicka: the coloured numbers on each button.", "Drag attacks and spells here.", "Tooltips in fights"]) ok(pl.includes(JSON.stringify(t)), "Polish for " + t);
+{ const pl = fs.readFileSync(W + "i18n_fighttips.js", "utf8") + fs.readFileSync(W + "i18n_threeap.js", "utf8");
+  for (const t of ["AP spent", "You have 3 AP a turn. Most moves take 1 AP (the gold diamonds on each button); power attacks, big spells, dual casts and full shouts take 2.", "Drag attacks and spells here.", "Tooltips in fights"]) ok(pl.includes(JSON.stringify(t)), "Polish for " + t);
 }
 console.log(fails ? `${fails}/${n} FAILED` : `fighttips ok (${n} checks)`);
 process.exit(fails ? 1 : 0);

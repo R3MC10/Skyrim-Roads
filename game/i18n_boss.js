@@ -12,9 +12,9 @@
     "Readies Soul Rend": "Szykuje Rozdarcie duszy", "Readies Steam Blast": "Szykuje Wybuch pary", "Readies Savage Leap": "Szykuje Dziki skok",
     "lands next turn": "uderzy w następnej turze", "block": "blok", "dodge": "unik", "ward / block": "osłona / blok", "ward / dodge": "osłona / unik",
     "only a shout or bash stops it": "zatrzyma go tylko krzyk albo uderzenie tarczą",
-    "Block (or end your turn after 2 moves or fewer) to halve it": "Zablokuj (albo skończ turę po 2 ruchach lub mniej), żeby go zmniejszyć o połowę",
+    "Block (or end your turn with 1 AP or more left) to halve it": "Zablokuj (albo skończ turę z co najmniej 1 AP w zapasie), żeby go zmniejszyć o połowę",
     "A ward soaks most of it": "Osłona pochłonie większość",
-    "End your turn after 2 moves or fewer to dodge most of it": "Skończ turę po 2 ruchach lub mniej, żeby uniknąć większości",
+    "End your turn with 1 AP or more left to dodge most of it": "Skończ turę z co najmniej 1 AP w zapasie, żeby uniknąć większości",
     "A shout or a shield bash breaks it": "Krzyk albo uderzenie tarczą go przerwie",
     // phases
     "{0} climbs higher and rains fire on you": "{0} wzbija się wyżej i zasypuje cię ogniem",
