@@ -226,7 +226,17 @@
     titlePage = page;
     let el = $("#title");
     if (!el) {
-      el = document.createElement("div"); el.id = "title"; el.className = "title";
+      el = document.createElement("div"); el.id = "title"; el.className = "title tloading";
+      /* [onemoment] the title waits until its fonts and painting are ready (at most ~1.2 s), then the logo, tagline and
+         buttons appear together in one fade instead of popping in one by one */
+      (() => {
+        let done = false; const show = () => { if (done) return; done = true; el.classList.remove("tloading"); el.classList.add("tin"); };
+        const waits = [];
+        try { if (document.fonts?.ready) waits.push(document.fonts.ready); } catch { /* old WebView */ }
+        try { if (matchMedia("(orientation: portrait)").matches) { const im = new Image(); im.src = "title-poster.webp"; waits.push(im.decode ? im.decode().catch(() => {}) : new Promise((r) => { im.onload = im.onerror = r; })); } } catch { /* fine */ }
+        Promise.all(waits).then(() => requestAnimationFrame(show), show);
+        setTimeout(show, reduceMotion ? 0 : 1200);
+      })();
       el.innerHTML = `<canvas id="tanim" class="tanim" aria-hidden="true"></canvas><canvas id="tfog"></canvas><div class="vign"></div><div class="inner" id="tinner"></div>`;
       document.body.appendChild(el);
       el.addEventListener("click", onTitleClick);

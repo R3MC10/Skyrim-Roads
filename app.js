@@ -314,22 +314,21 @@
   async function launchUpdate() {
     try { noteStart(await updater.current()); } catch (e) { /* older app */ }
     if (!Updater?.downloadGame) return autoCheck();
+    // a small pill at the bottom, and only while an update is really downloading: a check that finds nothing shows nothing
     const card = document.createElement("div");
     card.id = "launchupd";
-    card.style.cssText = "position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(8,8,8,.82);color:#f3d98b;font:600 16px/1.4 sans-serif;text-align:center;padding:24px";
-    card.textContent = "Checking for updates…";
+    card.style.cssText = "position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%);z-index:9999;max-width:90vw;padding:9px 16px;border-radius:999px;background:rgba(12,12,14,.86);border:1px solid rgba(217,181,106,.5);color:#f3d98b;font:600 14px/1.3 sans-serif;text-align:center;pointer-events:none";
     let shown = false; const show = () => { if (!shown) { shown = true; document.body.appendChild(card); } };
-    const t = setTimeout(show, 600);   // a quick "no update" never flashes the card
     try {
       const r = await Promise.race([updater.check(true), new Promise((_, no) => setTimeout(() => no(new Error("slow")), 6000))]);
       if (r.newer && r.quick && !r.bad) {
-        show();
+        card.textContent = `Updating to build ${r.latest.build}…`; show();
         await updater.quickUpdate(r.latest, true, (txt) => { card.textContent = `Updating to build ${r.latest.build}… ${txt}`; });
         return;   // the game restarts on the new files
       }
       if (r.newer && !r.bad) window.__ui?.updateAvailable?.(r);
     } catch (e) { /* offline, slow or a bad download: the regular checks will catch it */ }
-    finally { clearTimeout(t); card.remove(); }
+    finally { card.remove(); }
   }
   setTimeout(launchUpdate, 300);
   // the game calls __app.ready() once its title screen has drawn (ui.js): only then do these files count as working
