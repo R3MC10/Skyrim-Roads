@@ -9,7 +9,7 @@
    - A steward (one per plot) can be hired once the small house stands. At home they keep up to 3 days of what the wings
      make and sell you building materials; or take them along as a follower (then the wings only keep 1 day).
    - Every wing makes something once an in-game day (arrows, study, ingredients, meals, visitors' gold, soul gems,
-     potions) or, for the storage room, keeps 30 things safe even if you die.
+     potions) or, for the storage room, holds 30 things.
    - Perks (perkfx.js): Carpenter (Smithing, fewer materials), Woodsman (Athletics, more from gathering),
      Landed Thane (Etiquette, cheaper deeds and stewards), Estate Income (Mercantile, gold from every wing).
    Rooms beyond the wings (garden, cellar), stations, display cases, followers living there, raids and party visits
@@ -62,7 +62,7 @@ const HOMESTEAD = (() => {
     trophy: ["Trophy room", "Mounted heads and dragon bones. Visitors pay to look: 20 gold a day, +10 for each dragon you've slain (up to 150).", { log: 14, stone: 8, nails: 30, hinge: 2, fittings: 4 }],
     enchanter: ["Enchanter's tower", "A tall tower with a soul-trap circle. Every in-game day: 1 filled Common Soul Gem.", { log: 8, stone: 20, clay: 6, glass: 2, fittings: 4, lock: 1 }],
     alchemy: ["Alchemy lab", "A tower full of retorts and drying herbs. Every in-game day: 2 potions.", { log: 8, stone: 18, clay: 6, glass: 4, fittings: 2 }],
-    storage: ["Storage room", "Chests and barrels. Keeps 30 things safe even if you die, and the other wings keep 2 more days of goods.", { log: 18, stone: 6, nails: 30, hinge: 4, lock: 2 }],
+    storage: ["Storage room", "Chests and barrels. Holds 30 things for you, and the other wings keep 2 more days of goods.", { log: 18, stone: 6, nails: 30, hinge: 4, lock: 2 }],
   };
   const GREEN = ["ing_blue_flower", "ing_lavender", "ing_wheat", "ing_garlic", "ing_red_flower", "ing_purple_flower", "ing_juniper", "ing_snowberries", "ing_tundra_cotton", "ing_thistle"];
   const MEALS = ["dish_veg_soup", "dish_venison_stew", "dish_horker_stew", "dish_salmon_steak", "dish_fish_soup"];
@@ -460,7 +460,7 @@ const HOMESTEAD = (() => {
         if (wings.includes("storage")) {
           const pack = s.inv.filter((r) => !Object.values(G.equipment(s) || {}).some((x) => x && x.id === r.id));
           b += `<h3 class="hsh" id="hsstore">Storage room · ${h.store.length}/${STORE_CAP}</h3>`
-            + (h.store.length ? h.store.map((r, i) => `<div class="item">${typeof ICONART !== "undefined" ? ICONART.item(r.item, 30, r) : ""}<div class="t">${esc(itemName(r.item))}${r.qty > 1 ? ` ×${r.qty}` : ""}</div>${btn("unstash", i, "Take")}</div>`).join("") : `<p class="sub">Empty. Anything here is safe even if you die.</p>`)
+            + (h.store.length ? h.store.map((r, i) => `<div class="item">${typeof ICONART !== "undefined" ? ICONART.item(r.item, 30, r) : ""}<div class="t">${esc(itemName(r.item))}${r.qty > 1 ? ` ×${r.qty}` : ""}</div>${btn("unstash", i, "Take")}</div>`).join("") : `<p class="sub">Empty. Leave things here to lighten your pack.</p>`)
             + `<details><summary class="sub" style="cursor:pointer;min-height:36px">Put something in</summary>${pack.slice(0, 40).map((r) => `<div class="item"><div class="t">${esc(itemName(r.item))}${r.qty > 1 ? ` ×${r.qty}` : ""}</div>${btn("stash", r.id, "Store", h.store.length < STORE_CAP)}</div>`).join("") || `<p class="sub">Your pack is empty.</p>`}</details>`;
         }
       }

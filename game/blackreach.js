@@ -75,7 +75,7 @@ const BLACKREACH = (() => {
     const f = new G.Fight(s, e, null, t);
     for (const [name, dmg] of allies) f.allies.push({ name, dmg });
     f.run({ t }); const skills = f.apply(t);
-    if (!f.won) { R(s).at = null; const d = G.die(s, e.name, t, true); return { text: `${e.name} was too much for you.`, fight: f, skills, died: d.msg, bag: d.bag }; }
+    if (!f.won) { const d = G.die(s, e.name, t, true); return { text: `${e.name} was too much for you. You're still where you were: try again when you're ready.`, fight: f, skills: d.rolledBack ? [] : skills, died: d.msg }; }   // no penalty (defeat.js)
     return { text: `${e.name} falls.`, fight: f, skills, won: true };
   }
   function spoils(s, n, res) {
@@ -219,7 +219,7 @@ const BLACKREACH = (() => {
     if (!el) { el = document.createElement("div"); el.id = "breach"; el.className = "dun breach"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Blackreach"); document.body.appendChild(el); el.addEventListener("click", (e) => { const b = e.target.closest("[data-act=breach]"); if (b) { e.stopPropagation(); onClick(b); } }); }
     render();
   }
-  const after = (r) => { ctx.persist(true); if (r.died) close(); else render(); ctx.renderPanel?.(true); ctx.showFightResult(r); };
+  const after = (r) => { ctx.persist(true); render(); ctx.renderPanel?.(true); ctx.showFightResult(r); };
   const withFight = (fn) => { if (ctx.tb) ctx.tb(fn, (r) => after(r)); else after(fn()); };
   function onClick(b) {
     if (!ctx) return;

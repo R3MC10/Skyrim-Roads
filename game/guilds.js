@@ -80,7 +80,7 @@ const GUILDS = (() => {
     if (ok) return { text: finish(Math.round(j.pay * 1.5), `Nobody saw a thing. The contract is fulfilled: ${Math.round(j.pay * 1.5)} gold, with Nazir's bonus.`), msgs };
     const e = G.scaleEnemy({ name: "The mark's bodyguards", health: 120 + (s.level || 1) * 6, damage: 10 + (s.level || 1) * 0.6, tags: ["humanoid"], level: s.level || 1, danger: "medium", gold: [10, 40], text: "" }, s.level || 1);
     const f = new G.Fight(s, e, null, t); f.run({ t }); const skills = f.apply(t);
-    if (!f.won) { st.job = null; st.next = t + COOLDOWN; const d = G.die(s, e.name, t, true); return { text: "The contract went wrong.", fight: f, skills, died: d.msg, bag: d.bag, msgs }; }
+    if (!f.won) { const d = G.die(s, e.name, t, true); return { text: "The contract went wrong. The job is still yours: try again when you're ready.", fight: f, skills: d.rolledBack ? [] : skills, died: d.msg, msgs }; }   // no penalty: the job stays (defeat.js)
     return { text: finish(j.pay, `It got loud, but the contract is fulfilled: ${j.pay} gold.`), fight: f, skills, msgs };
   }
   function drop(s, id) { const st = g(s)[id]; if (!st.job) return "No job."; st.job = null; st.next = G.now() + 60; return "You drop the job."; }

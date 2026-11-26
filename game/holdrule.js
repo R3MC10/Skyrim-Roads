@@ -231,7 +231,7 @@ const HOLDRULE = (() => {
     const out = { fight: f, skills, loot: [], gold: 0, kind: can.kind, hold, won: !!f.won };
     if (f.won) { out.gold = can.kind === "claim" ? CLAIM_GOLD : RAID_GOLD; s.gold += out.gold; out.loot = G.rollLoot ? G.rollLoot(s, e) : []; }
     out.took = !!after && after.cid === c.id && (!before || before.cid !== c.id);
-    if (f.hp <= 0 && G.die) { const d = G.die(s, "hold", ts); out.died = d.msg; out.bag = d.bag; }
+    if (f.hp <= 0 && G.die) { const d = G.die(s, "hold", ts); out.died = d.msg; }
     out.title = out.took ? `${hold} is yours` : f.won ? "Victory" : "Beaten back";
     out.text = out.took ? (before ? `The last wall falls. ${c.name} [${c.tag}] takes ${hold} from ${before.clan.name}. Your side's members can now vote for a Jarl.` : `The champion yields. ${c.name} [${c.tag}] now rules ${hold}. Your side's members can now vote for a Jarl.`)
       : f.won ? `You break through the defenders. A wall of ${hold} falls (${after ? after.walls : 0} left). Win again with no walls left to take the hold.`

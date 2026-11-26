@@ -219,7 +219,7 @@ const GREATEV = (() => {
     // and it isn't a foe killed for tallies and war points
     if (!slain && f.hp > 0) { f.won = true; f.endWon = true; f.nonlethal = true; }
     const out = { ev, fight: f, skills, pts, phase, slain, mates: mates.length, loot: [], gold: 0 };
-    if (f.hp <= 0) { const d = G.die(s, ev.kind === "dragon" ? "dragon" : ev.kind === "rift" ? "daedra" : "bandits", t); out.died = d.msg; out.bag = d.bag; }
+    if (f.hp <= 0) { const d = G.die(s, ev.kind === "dragon" ? "dragon" : ev.kind === "rift" ? "daedra" : "bandits", t); out.died = d.msg; }
     const tl1 = tally(ev, s);
     out.newPhase = !slain && tl1.phase > phase ? PHASES[ev.kind][tl1.phase] : null;
     const who = mates.length ? " " + T("({n} of your party beside you)", { n: mates.length }) : "";

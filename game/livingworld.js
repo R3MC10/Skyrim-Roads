@@ -272,7 +272,7 @@ const LIVING = (() => {
     }
     const e = foeFor(s, x), f = new G.Fight(s, e, null, t);
     f.run({ t }); const skills = f.apply(t);
-    if (!f.won) { const d = G.die(s, e.name, t); return { text: `${e.name} was too much for you. It's still out there.`, fight: f, died: d.msg, bag: d.bag, skills }; }
+    if (!f.won) { const d = G.die(s, e.name, t); return { text: `${e.name} was too much for you. It's still out there.`, fight: f, died: d.msg, skills: d.rolledBack ? [] : skills }; }
     s.gold += g;
     const loot = G.rollLoot ? G.rollLoot(s, e) : [];
     return finish({ text: fill(K.win, { ...x, g }), fight: f, gold: g, loot, skills });

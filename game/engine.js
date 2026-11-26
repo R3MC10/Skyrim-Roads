@@ -5,7 +5,7 @@ const G = (() => {
   const BASE_WALK = 17.2;          // px per real minute walking; running at Athletics 15 → Whiterun–Windhelm ≈ 10 min
   /* how close you must pass to spot a place: cities from far off, small spots only up close ([OURS]) */
   const discoverRadius = (kind) => ({ city: 90, town: 65, dungeon: 50, fort: 50, lair: 50, camp: 50 })[kind] || 40;
-  const ENCOUNTER_PER_MIN = 0.16, DISCOVER_PX = 55, BAG_PICKUP_PX = 30, BAG_MINUTES = 30, TRAIL_STEP_PX = 25;
+  const ENCOUNTER_PER_MIN = 0.16, DISCOVER_PX = 55, BAG_PICKUP_PX = 30, TRAIL_STEP_PX = 25;
   const STEP_SECONDS = 30;          // travel is simulated in 30-second steps (also while the page is closed)
   const GAME_SPEED = 12, GAME_EPOCH = 1795132800, NIGHT_START = 20, NIGHT_END = 6, SHOP_OPEN = 8, SHOP_CLOSE = 20;
   const SLOTS = ["weapon", "shield", "head", "chest", "hands", "feet", "amulet", "ring"];
@@ -349,11 +349,6 @@ const G = (() => {
     if (eq.shield != null) { delete eq.shield; extra = " Shield taken off."; }
     eq.offhand = id;
     return `Equipped ${it.name} in your left hand.${extra}`;
-  }
-  function equippedAnywhere(s) {
-    const ids = new Set();
-    for (const l of Object.values(s.loadouts)) for (const id of Object.values(l.equipment)) ids.add(id);
-    return ids;
   }
   function countRestore(s, res) {
     return s.inv.filter((r) => D.ITEMS[r.item]?.restore?.[0] === res).reduce((a, r) => a + r.qty, 0);
@@ -1179,24 +1174,16 @@ const G = (() => {
     return e;
   }
 
-  // ---------------------------------------------------------------- death (corpse run)
+  // ---------------------------------------------------------------- defeat: no penalty (owner, 25 Nov 2026 survey)
+  /* Losing a fight costs nothing: no gold, no items, no bag left behind, no trip to a temple. defeat.js rolls the lost
+     fight back (health, potions, XP and loot from that try) and the fight screen offers Retry / Adjust gear / Retreat.
+     Without defeat.js you just get back up where you are. Returns { msg, bag: null } for the callers that used to drop a bag. */
   function die(s, cause, t = now(), byPlayer = false) {
-    const keep = equippedAnywhere(s);
-    const items = [];
-    s.inv = s.inv.filter((r) => { if (keep.has(r.id) || D.ITEMS[r.item]?.noTrade) return true; items.push([r.item, r.qty, r.charge]); return false; });
-    const bag = (s.gold || items.length) ? { id: `${s.id}-${Math.floor(t)}`, ownerId: s.id, ownerName: s.name,
-      x: s.x, y: s.y, gold: s.gold, items, expires: t + BAG_MINUTES * 60 } : null;
-    const lost = `${s.gold} gold and ${items.reduce((a, i) => a + i[1], 0)} items`;
-    s.gold = 0;
-    const towns = s.discovered.filter((n) => ["city", "town"].includes(loc(n)?.[2]));
-    const town = (towns.length ? towns : [D.START_LOCATION]).reduce((a, b) => pxDist([s.x, s.y], loc(a)) <= pxDist([s.x, s.y], loc(b)) ? a : b);
-    [s.x, s.y] = loc(town);
-    s.location = town;
-    setHealth(s, maxHealth(s) * 0.5, t);
-    s.trip = null; s.dungeon = null; s.ambush = false;
-    const msg = `Killed by ${byPlayer ? "" : "the "}${cause}. You wake up in ${town}'s temple. Your bag (${lost}) lies where you fell for ${BAG_MINUTES} minutes — get it before someone else does.`;
-    note(s, " " + msg);
-    return { msg, bag };
+    if (typeof DEFEAT !== "undefined") return DEFEAT.knockout(s, cause, t, byPlayer);
+    setHealth(s, Math.max(curHealth(s, t), maxHealth(s) * 0.5), t);
+    const msg = `${byPlayer ? "" : "The "}${cause} knocked you down. You lose nothing: get your breath back and carry on.`;
+    note(s, " " + msg);
+    return { msg, bag: null };
   }
   function pickUpBags(s, bags, t = now()) {
     const taken = [], msgs = [];
@@ -1359,8 +1346,8 @@ const G = (() => {
       tripLog(s, ` Defeated ${theFoe(e)}${g ? ` (+${g} gold)` : ""}`);
       return { text: lines.join(" ") || `You defeat ${theFoe(e)}.`, fight: f, gold: g, loot, skills: skillMsgs };
     }
-    const d = die(s, e.name, t);
-    return { text: lines.join(" "), fight: f, died: d.msg, bag: d.bag, skills: skillMsgs };
+    const d = die(s, e.name, t);   // no penalty: the fight is rolled back (defeat.js) and the encounter is still in front of you
+    return { text: lines.join(" "), fight: f, died: d.msg, skills: d.rolledBack ? [] : skillMsgs };
   }
 
   // ---------------------------------------------------------------- road events (events.js; only rolled while the page is open)

@@ -3,6 +3,16 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b350-defeat", build: 350, date: "26 Nov 2026", title: "Losing a fight costs nothing", items: [
+      "Lose a fight and you lose nothing: no gold, no items, no XP, no progress. You're put back just before the fight.",
+      "A new screen shows what beat you and why, then gives you three choices: Retry (the same foes again), Adjust gear (change weapons, armour or spells, then come back) or Retreat.",
+      "Retreat on the road takes you past the fight and back on your way. In a dungeon you step back out of the room; rooms you already cleared stay cleared.",
+      "You can switch the difficulty on that screen before you try again.",
+      "Whatever you picked up or learned during the lost fight goes back too, so a retry is a clean new try.",
+      "In a party, one beaten player can't reset everyone's fight: the party votes on Retry or Retreat (most votes wins, a tie goes the leader's way). Anyone knocked down just gets back up.",
+      "World events and world bosses keep going: you get back up where you are and what you did still counts.",
+      "Guild jobs, heists, quests and deep dungeon levels work the same way: getting knocked down no longer loses the job, gets you caught or takes the finds you made below.",
+    ] },
     { id: "b349-rarity", build: 349, date: "26 Nov 2026", title: "Item rarity", items: [
       "Every item now has a rarity: Common, Fine, Rare, Epic or Legendary. You see it as a colour and as a word, in your Items, on the paper doll, in tooltips, shops, loot, dungeon loot votes and trades.",
       "Rarity tells you how special an item is. It never changes its numbers: a Rare sword hits just as hard as it did yesterday.",

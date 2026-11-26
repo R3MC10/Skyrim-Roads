@@ -282,7 +282,7 @@ const EXPLORE = (() => {
         if (choice.startsWith("set:")) {
           const x = Math.round(G.maxHealth(s) * rnd(0.08, 0.15) * [0, 0.8, 1, 1.2][d.tier || 1]);
           G.setHealth(s, G.curHealth(s) - x);
-          if (G.curHealth(s) <= 0) { const dd = G.die(s, "a claw door", t); s.dungeon = null; return { text: "The rings lock. Darts. Many darts.", died: dd.msg, bag: dd.bag }; }
+          if (G.curHealth(s) <= 0) { const dd = G.die(s, "a claw door", t); return { text: "The rings lock. Darts. Many darts.", died: dd.msg, stay: true }; }   // knocked down, never thrown out (defeat.js)
           return { text: `The rings grind and stop. Darts hiss out of the walls (−${x} health).`, stay: true };
         }
         // a party member replaying a choice the door doesn't take (the leader picked herbs, or is already past it):

@@ -1,6 +1,6 @@
 /* Dungeons: a branching map of rooms you pick your way through, ending in a boss.
    Health doesn't regenerate inside ([OURS]: the dark wears you down); heal with potions, spells, shrines and rest rooms.
-   Everything you pick up goes straight into your pack, so if you die it's in your bag at the entrance.
+   Everything you pick up goes straight into your pack. Losing a fight costs nothing (defeat.js): you stay in front of the room.
    Cleared dungeons refill after 3 in-game days (6 real hours here). */
 
 // ---- dungeon gear (Skyrim items; stats close to Skyrim's, values approximate)
@@ -299,8 +299,8 @@ const DUNGEONS = (() => {
     const pc = parseChoice(choice), q = pc.q, flags = pc.fl;
     choice = pc.c;
     const done = (o) => { d.room = null; return o; };
-    // knocked out deep down: only the expedition's finds are lost (deepdelve.js)
-    const lose = (res, cause) => { if (d.deep?.level && typeof DEEPDELVE !== "undefined") return DEEPDELVE.knockout(s, res, cause, t); const dd = G.die(s, cause, t); s.dungeon = null; return { ...res, died: dd.msg, bag: dd.bag }; };
+    // knocked down: nothing is lost and you stay in the dungeon, in front of the same room (defeat.js rolls the fight back)
+    const lose = (res, cause) => { if (d.deep?.level && typeof DEEPDELVE !== "undefined") return DEEPDELVE.knockout(s, res, cause, t); const dd = G.die(s, cause, t); return { ...res, ...(dd.rolledBack ? { skills: [] } : {}), died: dd.msg }; };
     if (choice === "potion") { const m = G.drinkPotion(s, t); return { text: m, stay: true }; }
     if (r.type === "camp" && typeof DEEPDELVE !== "undefined") { const o = DEEPDELVE.campAct(s, choice, t, { fight: (e, op) => fight(s, e, op || {}, t), foe: (k) => foe(s, k, d.tier), lose }); return o; }   // the camp of a deep expedition (deepdelve.js)
 

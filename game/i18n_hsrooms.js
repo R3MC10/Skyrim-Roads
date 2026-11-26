@@ -25,7 +25,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Six fenced beds.": "Sześć ogrodzonych grządek.",
     "Plant herbs or vegetables from your pack: every in-game day each bed gives 2 of what grows in it (Green Thumb doubles it).": "Posadź zioła lub warzywa z plecaka: każdego dnia w grze każda grządka daje 2 sztuki tego, co na niej rośnie (Zielony Palec podwaja).",
     "Dug under the main hall.": "Wykopana pod główną salą.",
-    "Keeps 40 things safe even if you die, raiders never find it, and the wings and garden keep goods a day longer.": "Przechowa bezpiecznie 40 rzeczy nawet po twojej śmierci, napastnicy nigdy jej nie znajdą, a skrzydła i ogród trzymają towary dzień dłużej.",
+    "Holds 40 things, raiders never find it, and the wings and garden keep goods a day longer.": "Mieści 40 rzeczy, napastnicy nigdy jej nie znajdą, a skrzydła i ogród trzymają towary dzień dłużej.",
     "These don't use a wing space.": "Nie zajmują miejsca na skrzydło.",
     "A forge at home: make, smelt and improve gear here.": "Kuźnia w domu: wykuwaj, przetapiaj i ulepszaj tu ekwipunek.",
     "An alchemy lab at home: potions you brew here are 10% stronger.": "Pracownia alchemiczna w domu: mikstury warzone tutaj są o 10% silniejsze.",

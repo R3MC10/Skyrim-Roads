@@ -6,9 +6,9 @@
       - Health, potions, injuries and curses carry from level to level (there is no natural healing down there).
         A major fight that leaves you under half health gives you an injury (max 3); level III may and level IV always
         lays a curse on you. They last until you climb out.
-      - What you find below the first level is "unsecured" until you extract. Knocked out down there: you come to at
-        the door with your gear and everything you brought in, but the expedition's finds are gone. In a party the
-        shared loot pile goes back to how it was at the top of the stairs once everyone in the run is down.
+      - What you find below the first level is "unsecured" until you extract. Knocked down there costs nothing (the
+        fight is rolled back, defeat.js); walking out without extracting leaves the finds behind. In a party the
+        shared loot pile goes back to how it was at the top of the stairs if the run leaves without extracting.
         Followers and horses are knocked down, never killed (the fight engine already does that).
       - Rewards climb steeply: gold from chests and the camp chest after each major fight scale with depth.
    B) Difficulty tiers for level 30+: Veteran / Legendary / Mythic for any dungeon, with 1 / 2 / 3 modifiers that you
@@ -316,17 +316,11 @@ const DEEPDELVE = (() => {
     return { text: `The ${e.name.toLowerCase()} falls. In its hoard: ${[g + " gold", ...got].join(", ")}. Unsecured until you climb out.${inj}`, fight: res.f, skills: res.skills, gold: res.gold, loot: res.loot, major: L };
   }
 
-  /* knocked out on a deep level: lose the expedition's finds, never your gear or what you brought in */
+  /* knocked down on a deep level: no penalty (owner, 25 Nov 2026). The fight is rolled back (defeat.js) and you
+     stay in front of the same room with your finds, injuries and curses as they were before it. */
   function knockout(s, res, cause, t = now()) {
-    const d = dun(s), L = depth(s), lost = strip(s), run = d.run;
-    s.dungeon = null;
-    G.setHealth(s, G.maxHealth(s) * 0.2, t);
-    if (run) markRun(run, (x) => { const ko = { ...(x.deepKO || {}), [s.id]: 1 }, up = (x.members || []).filter((m) => !m.left && !ko[m.id]);
-      return up.length || !x.deepMark ? { ...x, deepKO: ko } : { ...x, deepKO: ko, pool: x.deepMark, deepMark: null, deepLost: (x.deepLost || 0) + 1 }; });
-    const what = [lost.gold ? `${lost.gold} gold` : "", lost.n ? `${lost.n} thing${lost.n > 1 ? "s" : ""}` : ""].filter(Boolean).join(" and ");
-    const msg = `Knocked out by the ${String(cause).toLowerCase()} on level ${ROMAN[L]}. You come to at the door of ${d.place}, dragged out by luck or by friends. ${what ? `The expedition's finds (${what}) are lost in the dark.` : "You had found nothing down there yet."} Your gear and everything you brought in are safe.`;
-    G.note(s, " " + msg);
-    return { ...res, died: msg, knockedOut: true };
+    const dd = G.die(s, cause, t);
+    return { ...res, ...(dd.rolledBack ? { skills: [] } : {}), died: dd.msg, knockedOut: true };
   }
   /* walking out mid-level: with Pathfinder you keep everything, otherwise the expedition's finds stay below */
   function onLeave(s) {
@@ -444,7 +438,7 @@ const DEEPDELVE = (() => {
     return `<div class="card rest dd-camp">${art}<h3> ${L ? `Camp on level ${ROMAN[L]}` : "The stairs down"}</h3><p>${E(campText(s))}</p>
       ${L ? `<div class="dd-stats"><span>Unsecured: <b class="num">${u.gold}</b> gold, <b class="num">${u.items}</b> things</span><span>Rations: <b class="num">${dd.rations}</b></span><span>Injuries: <b class="num">${dd.inj}/${MAX_INJ}</b></span>${dd.curses.map((c) => `<span class="dd-curse">${CURSES[c].icon} ${E(CURSES[c].name)}</span>`).join("")}</div>` : ""}
       ${nxTxt}<div class="evc">${campChoices(s).map(btn).join("")}</div>
-      <p class="sub" style="margin-bottom:0">${L ? `Knocked out below, you lose what you found down here, never your gear or what you brought in.${hasPath(s) ? " Pathfinder: you can also walk out from any room and keep it all." : ""}` : "Health, potions and injuries carry down with you. Down there, loot is unsecured until you extract."}</p></div>`;
+      <p class="sub" style="margin-bottom:0">${L ? `Knocked down below, you lose nothing: try the fight again. Leave without extracting and the finds stay down here.${hasPath(s) ? " Pathfinder: you can also walk out from any room and keep it all." : ""}` : "Health, potions and injuries carry down with you. Down there, loot is unsecured until you extract."}</p></div>`;
   }
 
   // labels for the dungeon screens

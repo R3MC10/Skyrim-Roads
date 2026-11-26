@@ -153,10 +153,11 @@ const QUESTS = (() => {
       const f = new G.Fight(s, e, null, t);
       (o.allies || []).forEach(([name, dmg]) => f.allies.push({ name, dmg }));   // [Skyrim] you don't face these alone
       f.run({ t }); const skills = f.apply(t);
-      if (!f.won) {
-        if (o.nonlethal) { G.setHealth(s, G.maxHealth(s) * (o.nonlethal === "retry" ? 1 : 0.25), t);   // "retry": back on your feet for another go (first30.js)
-        return { text: o.loseText || `${e.name} puts you on your back. "Again, when you're ready."`, fight: f, skills }; }
-        const d = G.die(s, e.name, t, true); return { text: `${e.name} was too much for you.`, fight: f, skills, died: d.msg, bag: d.bag };
+      if (!f.won) {   // no penalty: the try is rolled back (defeat.js) and the quest waits for another go
+        const d = G.die(s, e.name, t, true), sk = d.rolledBack ? [] : skills;
+        if (o.nonlethal) { G.setHealth(s, Math.max(G.curHealth(s, t), G.maxHealth(s) * (o.nonlethal === "retry" ? 1 : 0.25)), t);   // "retry": back on your feet for another go (first30.js)
+        return { text: o.loseText || `${e.name} puts you on your back. "Again, when you're ready."`, fight: f, skills: sk }; }
+        return { text: `${e.name} was too much for you. Nothing is lost: try again when you're ready.`, fight: f, skills: sk, died: d.msg };
       }
       advance(s, id, msgs);
       return { text: quiet + (o.winText || (o.nonlethal ? `You win the bout. Vilkas grunts approval.` : `${e.name} falls.`)), fight: f, skills, msgs };
