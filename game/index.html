@@ -5760,6 +5760,40 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 }
 .mkb-seg{margin:0 0 10px}.mkb-n{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:9px;background:#b8913c;color:#000;font-size:11px;letter-spacing:0}
 .mkb-chips{margin:4px 0}.mkb-where{color:#c9c1ad!important}
+/* [rows] front and back rows on the fight screen (foefield.js) and the row pick in the Hero panel */
+.rowfield{grid-column:1/-1;display:flex;flex-direction:column;gap:4px;padding:6px;border:1px solid var(--line);border-radius:8px;background:linear-gradient(#1a1d21,#15171a)}
+.rowfield .rfside{display:flex;flex-direction:column;gap:3px}
+.rowfield .rfside.heroes{border-top:1px dashed #3a3f46;padding-top:4px}
+.rowfield .rfside.solo{flex-direction:row;justify-content:center}
+.rowfield .rfrow{display:flex;align-items:stretch;gap:4px;min-width:0}
+.rowfield .rfrow>em{flex:0 0 38px;font-style:normal;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--mute);align-self:center}
+.rowfield .rfp{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:2px;padding:4px 6px;min-height:44px;border:1px solid #3d434b;border-radius:6px;background:#202429;color:var(--ink);text-align:left;font:inherit;cursor:pointer}
+.rowfield .rfp.tgt{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+.rowfield .rfp.far{opacity:.55;border-style:dashed}
+.rowfield .rfp.down{opacity:.3;cursor:default;text-decoration:line-through}
+.rowfield .rfn{display:flex;align-items:center;gap:4px;min-width:0;font-size:13px}
+.rowfield .rfn b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rowfield .rficon{flex:0 0 14px;width:14px;height:14px;fill:var(--gold);color:var(--gold)}
+.rowfield .rfb{display:block;height:5px;border-radius:3px;background:#3a1715;overflow:hidden}
+.rowfield .rfb i{display:block;height:100%;background:var(--hp)}
+.rowfield .rfp small{font-size:11px;line-height:1.2;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rowfield .rfp .rfnx{color:#e7c98a}
+.rowfield .rfh{flex:0 1 auto;min-width:0;padding:2px 8px;border-radius:10px;background:#252a30;font-size:12px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rowfield .rfh.me{background:#3a3327;color:var(--gold)}
+.rowfield .rfh.none{background:none;color:var(--mute)}
+@media (max-width:400px){.rowfield .rfrow>em{flex-basis:30px;font-size:10px}.rowfield .rfp{padding:3px 4px}.rowfield .rfn{font-size:12px}}
+@media (min-width:1200px){.rowfield{padding:8px 10px}.rowfield .rfp{max-width:240px}.rowfield .rfn{font-size:14px}}
+#tbf .rowfield.c2r{position:absolute;left:8px;right:8px;z-index:6;gap:3px;padding:4px 6px;background:rgba(16,18,21,.84);border-color:rgba(255,255,255,.12)}
+.rowfield.c2r .rfside{flex-direction:row;gap:6px}
+.rowfield.c2r .rfside.heroes{padding-top:3px}
+.rowfield.c2r .rfrow{flex:1 1 0}
+.rowfield.c2r .rfrow.front{order:0}
+.rowfield.c2r .rfrow.back{order:1;border-left:1px dashed #3a3f46;padding-left:6px}
+.rowfield.c2r .rfrow>em{flex:0 0 auto}
+.rowfield.c2r .rfp{min-height:40px;padding:3px 5px}
+@media (min-width:900px){#tbf .rowfield.c2r{left:50%;right:auto;width:min(760px,calc(100% - 16px));transform:translateX(-50%)}}
+.rowpick{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:8px}
+.rowpick .seg button{min-height:36px;padding:6px 12px}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -5852,6 +5886,7 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 <script src="foegroups.js"></script>
 <script src="dragons.js"></script>
 <script src="foekit.js"></script>
+<script src="foeroles.js"></script>
 <script src="guards.js"></script>
 <script src="shopcap.js"></script>
 <script src="shieldfx.js"></script>
@@ -5872,6 +5907,7 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 <script src="fightfit.js"></script>
 <script src="fightdeclutter.js"></script>
 <script src="foepanel.js"></script>
+<script src="foefield.js"></script>
 <script src="phonefight.js"></script>
 <script src="fightzones.js"></script>
 <script src="fightpres.js"></script>
@@ -6220,6 +6256,7 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 <script src="i18n_riglayers.js"></script>
 <script src="i18n_trading.js"></script>
 <script src="i18n_wrists.js"></script>
+<script src="i18n_rows.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

@@ -141,6 +141,7 @@ const MAGIC = (() => {
 
   // ---- what each new kind does in a fight. f = the Fight, sp = the spell (already scaled for dual casting)
   const pot = (f, sp) => 1 + G.fxSum(f.s, "spell:" + sp.school) / 100;
+  const hw = (f) => (typeof DIFF !== "undefined" && DIFF.ward ? 1 - DIFF.ward(f) : 1);   // Hard: foes shrug off part of runes, cloaks and burning ground too (difficulty.js)
   const KINDS = {
     rune(f, sp) { f.rune = { dmg: sp.amount * pot(f, sp) * (1 + (typeof PFX !== "undefined" ? PFX.sum(f.s, "spell", f, { kind: "rune" }) : 0)), el: sp.element, name: sp.name }; return `${sp.name}: a glowing rune waits on the ground`; },
     cloak(f, sp) { f.cloak = { dmg: sp.amount * pot(f, sp), el: sp.element, turns: sp.turns, name: sp.name }; return `${sp.name}: ${sp.element === "fire" ? "flames" : sp.element === "frost" ? "frost" : "lightning"} wrap around you`; },
@@ -188,7 +189,7 @@ const MAGIC = (() => {
   /* before the foe acts: runes, fear, invisibility. Returns a line to show (and whether its turn is over) */
   function beforeEnemy(f) {
     let pre = "";
-    if (f.rune && f.ehp > 0) { const d = f.rune.dmg * elem(f, f.rune.el); f.ehp -= d; pre = `${f.e.name} steps on your ${f.rune.name} (${Math.round(d)})` + (typeof PFX !== "undefined" ? PFX.hitFoe(f, f.rune.el, d, "spell") : ""); f.rune = null; if (f.ehp <= 0) return { text: pre, end: true }; }
+    if (f.rune && f.ehp > 0) { const d = f.rune.dmg * elem(f, f.rune.el) * hw(f); f.ehp -= d; pre = `${f.e.name} steps on your ${f.rune.name} (${Math.round(d)})` + (typeof PFX !== "undefined" ? PFX.hitFoe(f, f.rune.el, d, "spell") : ""); f.rune = null; if (f.ehp <= 0) return { text: pre, end: true }; }
     if (f.fearTurns > 0) { f.fearTurns--; return { text: (pre ? pre + " · " : "") + `${f.e.name} cowers in fear`, end: true }; }
     if (f.unseen > 0) { f.unseen--; return { text: (pre ? pre + " · " : "") + `${f.e.name} can't find you`, end: true }; }
     return pre ? { text: pre, end: false } : null;
@@ -198,8 +199,8 @@ const MAGIC = (() => {
     if (f.ward > 0 && f.wardMax && f.ward < f.wardMax && typeof PFX !== "undefined") {   // Ward Mender: the ward knits itself back
       const r = PFX.num(f.s, "wardregen"); if (r) { const b = f.ward; f.ward = Math.min(f.wardMax, f.ward + f.wardMax * r); if (f.ward - b >= 1) line.me += ` · ward mends +${Math.round(f.ward - b)}`; }
     }
-    if (f.cloak && f.ehp > 0) { const d = f.cloak.dmg * elem(f, f.cloak.el); f.ehp -= d; line.me += ` · ${f.cloak.name} ${Math.round(d)}` + (typeof PFX !== "undefined" && f.cloak.el !== "fire" ? PFX.hitFoe(f, f.cloak.el, d, "spell") : ""); if (--f.cloak.turns <= 0) f.cloak = null; }
-    if (f.dots?.length && f.ehp > 0) { for (const x of f.dots) { const d = x.dmg * elem(f, x.el); f.ehp -= d; line.me += ` · ${x.name} ${Math.round(d)}`; x.turns--; } f.dots = f.dots.filter((x) => x.turns > 0); }
+    if (f.cloak && f.ehp > 0) { const d = f.cloak.dmg * elem(f, f.cloak.el) * hw(f); f.ehp -= d; line.me += ` · ${f.cloak.name} ${Math.round(d)}` + (typeof PFX !== "undefined" && f.cloak.el !== "fire" ? PFX.hitFoe(f, f.cloak.el, d, "spell") : ""); if (--f.cloak.turns <= 0) f.cloak = null; }
+    if (f.dots?.length && f.ehp > 0) { for (const x of f.dots) { const d = x.dmg * elem(f, x.el) * hw(f); f.ehp -= d; line.me += ` · ${x.name} ${Math.round(d)}`; x.turns--; } f.dots = f.dots.filter((x) => x.turns > 0); }
     if (f.regen) { const before = f.hp; f.hp = Math.min(G.maxHealth(f.s), f.hp + f.regen.amt); if (f.hp > before) { line.me += ` · +${Math.round(f.hp - before)} health`; f.addXp("Restoration", (f.hp - before) * 0.5); } if (--f.regen.turns <= 0) f.regen = null; }
   }
   /* a hit on you: wards soak up spells and dragon breath */
@@ -373,7 +374,11 @@ const MAGIC = (() => {
       case "soultrap": add("fills an empty soul gem if it dies", "buff"); break;
       default: { const d = (typeof MAGIC !== "undefined" ? MAGIC.describe : describe)(sp); if (d) add(d.replace(/\d+\.\d+/g, (x) => R(+x)), "dur"); }   // MAGIC.describe: spellbook.js adds its own kinds
     }
-    if (sp.area) add("reaches the whole group (half to the ones behind)", "dur");   // spellfx.js
+    if (sp.area) {   // spellfx.js + foefield.js area(): [rows] a Master one hits both rows, the rest the aimed-at row
+      const k = typeof FOEFIELD !== "undefined" ? FOEFIELD.SPLASH : { small: 0.4, major: 0.5 };
+      if (levelOf(id) === "Master") add(`hits both rows (the others take ${R(k.major * 100)}%)`, "dur");
+      else add(`hits its row (the others there take ${R(k.small * 100)}%)`, "dur");
+    }
     return out;
   }
   /* the cost and numbers of a spell, single and dual cast: { cost, dualCost, single, dual } */

@@ -147,6 +147,7 @@ const BOSSFIGHT = (() => {
         b.hazard = { name: nm, el, dmg: base * 0.12 }; bits.push(fmt("{0}: you take damage every round", T(nm)));
       }
     }
+    if (typeof FOEROLES !== "undefined") { const rt = FOEROLES.bossPhase(f, b.prof, n); if (rt) bits.push(rt); }   // [rows] a new role for the new phase: guarding, channelling, rallying...
     const text = fmt("Phase {0}: {1}", n + 1, say(f, d.say || "{0} changes"));
     sess.emit("foe", text + (bits.length ? ` (${bits.join(", ")})` : ""), "foe", { dmg: 0, bf: true, phase: n + 1, banner: text });
     if (b.phase >= b.th.length) b.teleCd = Math.min(b.teleCd, 0);   // the last phase: big attacks come more often

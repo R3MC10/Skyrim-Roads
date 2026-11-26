@@ -3,6 +3,16 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b361-rows", build: 361, date: "26 Nov 2026", title: "Front and back rows", items: [
+      "Groups of foes now stand on the field together, in a front row and a back row. A strip over the fight shows both rows: tap a foe (or press [ and ] on PC) to aim at it.",
+      "Blades, shield bashes and power attacks reach only the front row while anyone stands there. Bows, thrown things and spells you aim reach both rows. A foe you can't reach yet is greyed out and says why.",
+      "Area spells hit the whole row of the foe you aim at (Adept and Expert) or both rows (Master). The foe you aim at takes it all, the others a share.",
+      "You stand in a row too: your gear picks it (sword and shield, two-hander or dagger in front; bow, staff or a mage in the back). Change it in the Hero panel (Fight row: Auto, Front or Back); it's saved with your loadout. Foes' blades can't reach your back row while your front row stands. Rows never change how hard anyone hits.",
+      "Foes have roles you can read on their plates: Shieldwardens cover a friend once, Ravagers hit hard, Marksmen shoot from the back, Spellcasters channel a Fireball at a whole row (bash it, shock it, stun or stagger it to break it), Menders heal, Cutthroats slip round your front, Regrowers heal unless they burn, Warleaders rally the rest. Bosses change role as their fight goes on.",
+      "A party meets more foes the bigger it is (2-3 for two players, up to 5-6 for eight). Their total health stays the same, just spread over more foes.",
+      "Four new perks: Line Breaker and Sweeping Reach (once a fight, a blade reaches the back row), Spellbreaker (breaking a channelled spell also staggers the caster) and Through the Gap (your arrows and spells slip past a Shieldwarden's cover).",
+      "On Hard, foes shrug off a tenth of every damage spell: mages were winning far more Hard fights than anyone else.",
+    ] },
     { id: "b360-trading", build: 360, date: "26 Nov 2026", title: "Trade face to face, and one market board for every town", items: [
       "Standing in the same place as another player? Tap Trade (in Travellers, your party list or a friend's row) and, once they say yes, a trade window opens for you both.",
       "You both put in things and gold, press Ready, check what the other side offers, then both press Confirm and the swap happens at once. Any change un-readies you both, and you'll see a clear warning if they change their offer.",

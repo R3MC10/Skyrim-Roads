@@ -40,11 +40,17 @@ const FIGHTREAD = (() => {
     maul: { ic: "", label: "Maul", mul: 0.9, dot: "bleeding", stk: 3 },
     howl: { ic: "", label: "Howl", buff: true, note: "hits 25% harder for 2 turns" },
     venom: { ic: "", label: "Venom Spit", mul: 0.7, dot: "poison", stk: 3 },
-    regen: { ic: "", label: "Regenerate", heal: 0.05 },
+    regen: { ic: "", label: "Regenerate", heal: 0.05, note: "fire stops it" },
     force: { ic: "", label: "Unrelenting Force", mul: 0.6, note: "and winds you", stk: 2, st: "Winded" },
     frost_breath: { ic: "", label: "Frost Breath", mul: 1.1 },
     life_drain: { ic: "", label: "Drain Life", mul: 0.9, note: "and heals itself" },
     potion: { ic: "", label: "Drink potion", heal: 0.18 },
+    // [rows] foe roles (foeroles.js)
+    cover: { ic: "", label: "Cover", buff: true, note: "takes your next direct attack on that foe" },
+    channel: { ic: "✦", label: "Channels", tele: true, note: "a Fireball on a whole row comes next" },
+    chan: { ic: "✦", label: "Fireball", mul: 0.8, big: true, aoe: true, note: "hits everyone in that row" },
+    mend_ally: { ic: "", label: "Mend", heal: 0.12 },
+    rally: { ic: "", label: "Rally", buff: true, note: "every foe hits 25% harder for 2 turns" },
   };
 
   /* a plain blow gets a name that fits the foe: a wolf bites, a bear swipes, an archer shoots, a mage casts */
@@ -99,11 +105,14 @@ const FIGHTREAD = (() => {
   const capOf = (sess) => { const mh = typeof G !== "undefined" ? G.maxHealth(sess.f.s) : 100; return (typeof TB !== "undefined" ? TB.HIT_CAP : 0.4) * mh; };
 
   /* what the foe will do with its remaining actions this round: [{ ic, label, lo, hi, mid, big, tele, buff, heal, note }] */
-  function intents(sess) {
+  function intents(sess, nOv) {
     const f = sess.f;
     if (sess.done || f.ehp <= 0) return [];
+    // [rows] several foes on the field: each one's moves, in the order they come (foefield.js)
+    if (nOv === undefined && sess.field && !sess.field.view && typeof FOEFIELD !== "undefined") return FOEFIELD.intents(sess, (ss, k) => intents(ss, k == null ? -1 : k));
     let n = foeLeft(sess);
-    if (!n && sess.ini) n = nextFoe(sess);   // [initiative] its turns this round are over; the order is fixed a whole fight, so show next round's
+    if (!n && sess.ini) n = nextFoe(sess);
+    if (nOv != null && nOv >= 0) n = nOv;   // [initiative] its turns this round are over; the order is fixed a whole fight, so show next round's
     if (!n) return [];
     const ini = !!sess.ini;   // [initiative] the turn order already took the lost slots out (initiative.js); a stagger only moves a slot back
     const stunned = !ini && f.tbStunLeft > 0;   // older fights without it: your shield bash costs its turns this round

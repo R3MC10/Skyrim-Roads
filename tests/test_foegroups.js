@@ -2,11 +2,11 @@
 const fs = require("fs"), vm = require("vm"), path = require("path");
 const W = process.env.W || path.join(__dirname, "../game/");
 const c = vm.createContext({ console, Math, Date, JSON, Object, Array, Set, Map, Number, String, structuredClone });
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "powers.js", "engine.js", "initiative.js", "tbfight.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "powers.js", "engine.js", "initiative.js", "tbfight.js", "foekit.js", "foeroles.js", "foefield.js"])
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 let fails = 0;
 const ok = (v, m) => { if (!v) { fails++; console.log("FAIL", m); } };
-const { G, FOEGROUPS: FG, TB } = c;
+const { G, FOEGROUPS: FG, TB, FOEFIELD: FF } = c;
 const foe = (name, x = {}) => ({ name, health: 60, hp: 60, damage: 8, tags: ["humanoid"], red: 0.1, level: 10, danger: "medium", gold: [5, 10], text: "", ...x });
 
 ok(FG.kindOf(foe("Bandit outlaw")) === "bandit", "bandits are bandits");
@@ -27,7 +27,7 @@ ok(FG.archFor(foe("Bandit archer"), "bandit") === "archer" && FG.archFor(foe("Dr
 // groups: sizes, balance, who stays alone
 { const sizes = { 1: 0, 2: 0, 3: 0 };
   for (let i = 0; i < 2000; i++) { const s = G.newSave("g" + i, "G", "nord"); s.level = 12; const f = new G.Fight(s, foe("Bandit outlaw")); f.allies = []; sizes[FG.prep(f, 0).n]++; }
-  ok(sizes[1] > 900 && sizes[2] > 400 && sizes[3] > 100 && sizes[3] < 400, "mostly one, sometimes two, now and then three: " + JSON.stringify(sizes));
+  ok(sizes[1] > 1000 && sizes[2] > 600 && sizes[3] === 0, "mostly one, sometimes two side by side, never three alone (rows): " + JSON.stringify(sizes));
   const s5 = G.newSave("l5", "L", "nord"); s5.level = 4; let three = 0;
   for (let i = 0; i < 500; i++) { const f = new G.Fight(s5, foe("Bandit outlaw")); f.allies = []; if (FG.prep(f, 0).n === 3) three++; }
   ok(three === 0, "no groups of three at low level");
@@ -38,14 +38,16 @@ ok(FG.archFor(foe("Bandit archer"), "bandit") === "archer" && FG.archFor(foe("Dr
     const avgArch = g.hpMul.reduce((a, m, j) => a + m / FG.ARCH[f.e.group[j]].hp, 0);
     ok(Math.abs(avgArch - (1 + FG.GROUP_HP * (g.n - 1))) < 1e-9, "group total health is +30% per extra foe, split up"); if (fails) break; } }
 
-// in a turn-by-turn fight the next foe of the group steps in with its own archetype
+// [rows] in a turn-by-turn fight the group stands on the field together; when the one you aim at falls you turn to the next
 if (TB) { let seen = false;
   for (let i = 0; i < 200 && !seen; i++) {
     const s = G.newSave("t" + i, "T", "nord"); s.level = 15; const f = new G.Fight(s, foe("Bandit outlaw")); f.allies = [];
     const ss = new TB.Session(f, { trySneak: false }); if (ss.waves < 2) continue;
     seen = true; const first = ss.ehpMax; f.ehp = 0; void ss.over;
-    ok(ss.wave === 2 && f.ehp === ss.ehpMax && f.ehp > 0, "the next foe steps in with full health");
-    ok(ss.ev.some((e) => /steps in/.test(e.text) && new RegExp(f.e.archLabel).test(e.text)), "the log names its archetype: " + ss.ev.map((e) => e.text).filter((t) => /steps in/.test(t)));
+    ok(ss.field && ss.field.foes.length === ss.waves, "both stand on the field (foefield.js)");
+    ok(ss.wave === 2 && f.ehp === ss.ehpMax && f.ehp > 0, "the next foe is aimed at, with its own full health");
+    const nm = FF.label(ss.field.foes[ss.field.cur]);
+    ok(ss.ev.some((e) => /falls!/.test(e.text) && e.text.includes(nm)), "the log names who you turn to: " + ss.ev.map((e) => e.text).filter((t) => /falls/.test(t)));
     ok(first > 0, "first foe had health"); }
   ok(seen, "groups happen in turn-based fights"); }
 else ok(false, "tbfight.js loaded");

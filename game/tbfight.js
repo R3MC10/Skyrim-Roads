@@ -247,8 +247,9 @@ const TB = (() => {
       // within bounds, so fights don't end in two rounds at one level and drag on at another
       const dpr = this.estimate(f);   // you, your followers and summons, and every teammate's own turn
       const base = Math.max(1, f.ehp), kk = dpr > 0 ? clamp(dpr * T.rounds[this.kind] / base, T.min[this.kind], T.max[this.kind] * (1 + this.players)) : T.hp[this.kind];
-      // a party faces more foes, not one sponge: the same total toughness, split over one foe per hero
-      this.waves = this.players > 0 && !f.e.boss && !f.e.pool ? Math.min(MAX_FOES, 1 + this.players) : grp.n; this.wave = 1;
+      // a party faces more foes, not one sponge: the same total toughness, split over the foes. [rows] they stand on the
+      // field together (foefield.js): a party of 2 meets 2-3, of 8 meets 6
+      this.waves = this.players > 0 && !f.e.boss && !f.e.pool ? (typeof FOEFIELD !== "undefined" ? FOEFIELD.count(this.players + 1) : Math.min(MAX_FOES, 1 + this.players)) : grp.n; this.wave = 1;
       // another player fights with their real health; a raid dragon's health is shared by everyone fighting it (wevents.js)
       const k = f.e.player || f.e.pool ? 1 : this.players > 0 ? kk * (1 + PARTY_HP[this.kind]) / this.waves : kk;   // another player fights with their real health, no monster boost
       this.ehpBase = f.ehp * k * (f.diffHp = typeof DIFF !== "undefined" ? DIFF.hp(f) : 1);   // Story / Normal / Hard foe health, from the fight's snapshot (difficulty.js)
@@ -265,6 +266,7 @@ const TB = (() => {
       if (typeof DRAGONS !== "undefined") DRAGONS.setup(f, this);   // dragons start in the air (dragons.js)
       if (typeof FOEKIT !== "undefined") FOEKIT.setup(f);   // what the foe can do besides a plain blow (foekit.js)
       if (typeof BOSSFIGHT !== "undefined") BOSSFIGHT.setup(f, this);   // bosses: phases, big attacks you see coming (bossfight.js)
+      if (typeof FOEFIELD !== "undefined") FOEFIELD.setup(this);   // [rows] a group stands together in a front and a back row
     }
     /* rough damage a round from you and your allies (a typical turn of weapon swings, or your best damage spell) */
     estimate(f) {
@@ -304,6 +306,7 @@ const TB = (() => {
     get over() { const f = this.f; if (f.bf && typeof BOSSFIGHT !== "undefined") BOSSFIGHT.check(this); if (f.ehp <= 0 && f.hp > 0 && !f.endWon && this.wave < this.waves) this.nextFoe(); return f.hp <= 0 || f.ehp <= 0 || !!f.endWon || this.round > this.maxRounds; }
     /* a party fight: the foe fell, the next one steps in */
     nextFoe() {
+      if (this.field && typeof FOEFIELD !== "undefined") { FOEFIELD.fell(this); return; }   // [rows] the others were already standing there: aim at the next one
       const f = this.f; this.wave++;
       const a = this.grp?.n > 1 && typeof FOEGROUPS !== "undefined" ? FOEGROUPS.next(f, this.wave - 1) : null;
       if (a) this.ehpMax = Math.round(this.ehpBase * (this.grp.hpMul[this.wave - 1] || 1));
@@ -329,10 +332,13 @@ const TB = (() => {
       this.round++; f.turn = this.round; this.order = this.rollOrder(); this.idx = 0; this.hitters = 0;
       this.lines = { me: [], them: [], a: null };
       this.emit("round", `Round ${this.round}`, "round", { order: this.order.map((o) => ({ id: o.id, name: o.name, init: o.init, u: o.u, slot: o.slot })) });
-      if (typeof FIGHTREAD !== "undefined") FIGHTREAD.plan(this);   // the foe's intents for this round (fightread.js)
-      if (typeof FOEINTENT !== "undefined") FOEINTENT.plan(this);   // and who each one goes for (foeintent.js)
+      if (this.field && typeof FOEFIELD !== "undefined") FOEFIELD.plan(this);   // [rows] the foe side's moves spread over every foe standing, each with its own plan
+      else {
+        if (typeof FIGHTREAD !== "undefined") FIGHTREAD.plan(this);   // the foe's intents for this round (fightread.js)
+        if (typeof FOEINTENT !== "undefined") FOEINTENT.plan(this);   // and who each one goes for (foeintent.js)
+      }
       if (this.f.bf && typeof BOSSFIGHT !== "undefined") BOSSFIGHT.plan(this);   // a boss shows its big attacks a turn ahead
-      if (typeof REACT !== "undefined") REACT.retarget(this);   // covering your friends: its blows come to you
+      if (typeof REACT !== "undefined" && !this.field) REACT.retarget(this);   // covering your friends: its blows come to you (foefield.js plan does it per foe)
     }
     /* the foe gets a free action first (you were spotted, or fled and got caught) */
     begin() {
@@ -364,6 +370,7 @@ const TB = (() => {
     skipSlot(o) {
       const t = INIT.spend(this, o);
       if (t) { this.lines.them.push(t); this.emit("foe", t, "foe", { dmg: 0, skipped: o.moves || 1 }); }
+      if (this.field && typeof FOEFIELD !== "undefined") FOEFIELD.skip(this);   // [rows] the stunned foe's move is the one lost
     }
     /* a real player in a party fight whose own phone picks (an older or offline phone: the AI never plays them) */
     isRemote(o) { return !!(o.al && o.al.player && o.al.pid && this.remote && !o.al.down && (!this.remote.live || this.remote.live())); }
@@ -510,6 +517,7 @@ const TB = (() => {
       if (this.gone(a, al)) { this.held = null; return { err: "Your target is already down: that move cost nothing", free: true }; }
       this.held = null;
       if (!this.canAfford(a)) return { err: this.why(a) || "You can't do that now" };
+      const rowNote = this.field && typeof FOEFIELD !== "undefined" ? FOEFIELD.heroPre(this, a) : "";   // [rows] aim at a foe this move can reach (a Shieldwarden may step in)
       const price = cost(f, a, this);
       const before = f.ehp, myBefore = f.hp;
       let text = null;
@@ -526,6 +534,8 @@ const TB = (() => {
       if (grade && typeof MINIGAME !== "undefined" && MINIGAME.itemFx) text += MINIGAME.itemFx(f, a, grade);   // [itemgames] an oil flask thrown well soaks longer
       if (typeof DRAGONS !== "undefined") text += DRAGONS.graze(f, a, before);
       if (typeof FOEKIT !== "undefined") text += FOEKIT.defend(f, a, before);   // its raised shield, ward or dodge
+      if (typeof FOEROLES !== "undefined") text += FOEROLES.answer(this, a, before);   // [rows] a bash, a shock or a stagger breaks a channelled spell
+      text += rowNote;
       if (f.bf && typeof BOSSFIGHT !== "undefined") text += BOSSFIGHT.answer(this, a, before);   // its helpers, and breaking a big attack
       const rx = typeof REACT !== "undefined" ? REACT.after(this, a, before, rxPre) : { text: "", key: null };   // Shatter, Exploit, Precision, Stagger exploit
       if (rx.key) { text += rx.text; setup = ""; f._rxPend = rx.key; }   // the combo replaces the plain opening
@@ -541,6 +551,7 @@ const TB = (() => {
       this.emit("me", text, "me", { a, wt: f.wt, dmg: Math.max(0, Math.round(before - f.ehp)), healed: Math.max(0, Math.round(f.hp - myBefore)) });
       this.tidy();   // a stun, a freeze, a stagger or a slow moves the foe in the order at once
       if (this.over) { this.passMe(); return { turn: "next" }; }
+      if (this.field && typeof FOEFIELD !== "undefined") FOEFIELD.restore(this);   // [rows] back to the foe you aim at
       if (typeof STRAT !== "undefined" && STRAT.ends && STRAT.ends(a)) return this.endTurn(true);   // Breathe is your whole turn
       if (typeof REACT !== "undefined" && REACT.ends(a)) return this.endTurn(true);   // Cover allies is a stance
       if (this.myActs >= this.st.acts || !this.anyAffordable()) return this.endTurn(true);
@@ -593,6 +604,7 @@ const TB = (() => {
         if (!a) break;
         if (a === "block" && this.myActs > 0) break;   // keep the guard from AP you don't spend instead of a second raise
         if (this.used[a] >= 2 && this.myActs >= 2) break;   // a third of the same move costs double: save the breath, keep some guard
+        if (this.field && typeof FOEFIELD !== "undefined") FOEFIELD.aiTarget(this, a);   // [rows] break a channelled spell first, then the most hurt foe in reach
         const n0 = this.ev.length, r = this.act(a);
         this.aiNote(n0, a, a === a0 ? f.aiPickWhy : "plays the opening");   // "[AI] reason" on the log line of a move the AI picked
         if (!r || r.turn !== "me" || r.err) break;
@@ -612,12 +624,18 @@ const TB = (() => {
       const f = this.f;
       if (o.id.startsWith("foe")) return this.foeAct("");
       if (o.id === "sum") {
+        if (this.field && typeof FOEFIELD !== "undefined" && f.summonTurns > 0) FOEFIELD.allyPre(this, { summon: true });   // [rows] your summon fights in the front row
         if (f.summonTurns > 0 && f.ehp > 0) { const b = f.ehp; f.summonTurns--; f.ehp -= f.summonDmg; const t = `Your ${f.summonName || "summon"} strikes ${Math.round(f.summonDmg)}` + this.capFoe(b) + this.flank(b); this.hitters++; this.lines.me.push(t); this.emit("sum", t, "ally"); }
         return;
       }
       if (o.al) return o.al.player && o.al.pid && !this.opts.auto ? this.allyMove(o.al, "guard", true) : this.allyMove(o.al, "auto");   // a real player is never played by the AI: no word from their phone, they just guard (noautoplay.js)
     }
     allyMove(al, move, timedOut) {
+      if (!this.field || typeof FOEFIELD === "undefined" || this.mirror) return this.allyMove0(al, move, timedOut);
+      FOEFIELD.allyPre(this, al);   // [rows] a friend's blade reaches the front row while it stands
+      try { return this.allyMove0(al, move, timedOut); } finally { FOEFIELD.restore(this); }
+    }
+    allyMove0(al, move, timedOut) {
       const f = this.f;
       if (al.down || f.ehp <= 0) return;
       al.guard = 0; if (!al.pid) al.tbGuard = 0;   // [threeap] the guard kept on its last turn ends now, its next turn (a real player's comes back with their reply)
@@ -656,7 +674,13 @@ const TB = (() => {
       const f = this.f;
       if (!r || !al || al.down) return;
       if (typeof PARTYSPELLS !== "undefined") PARTYSPELLS.learn(r.spells, f.s);   // the crafted spells they cast (partyspells.js)
-      const name = al.name, b = f.ehp, sameFoe = r.wave == null || r.wave === this.wave;
+      // [rows] the foe their phone aimed at (r.fi): it comes into aim here for their moves, then back to yours
+      const fx = this.field && typeof FOEFIELD !== "undefined" && !this.mirror ? FOEFIELD.remotePre(this, r) : null;
+      try { this.applyRemote0(al, r, fx); } finally { if (fx) FOEFIELD.restore(this); }
+    }
+    applyRemote0(al, r, fx) {
+      const f = this.f;
+      const name = al.name, b = f.ehp, sameFoe = fx ? fx.ok : r.wave == null || r.wave === this.wave;
       if (sameFoe && r.fs) for (const k of FOE_KEYS) {
         if (k === "ehp0") continue;
         if (r.fs0) { if (sameJ(r.fs[k], r.fs0[k])) continue; if (!(k in r.fs)) { delete f[k]; continue; } }   // [initiative] only what their turn changed: others in the same shared turn changed the rest
@@ -712,6 +736,11 @@ const TB = (() => {
       } else if (!isDown && up) al.hp = Math.max(1, (al.hp || 0) + up);
     }
     foeAct(prefix) {
+      if (this.field && typeof FOEFIELD !== "undefined" && !this.mirror && !this._ffAct) {   // [rows] the next foe in line acts
+        this._ffAct = true;
+        try { FOEFIELD.foeTurn(this, (lb) => this.foeAct(prefix + (lb ? lb + ": " : ""))); } finally { this._ffAct = false; }
+        return;
+      }
       const f = this.f;
       if (f.ehp <= 0 || f.endWon) return;
       if (f.stagger && f._stagUsed) { f.stagger = false; f._stagUsed = false; }   // its stagger already cost it its place in the order (initiative.js)
@@ -726,6 +755,8 @@ const TB = (() => {
       // [partyfoeturns] read this move's intent BEFORE its target is taken off the list: read after, it named the next
       // move's target ("Heavy Swing → you" while the blow hit a teammate)
       try { if (typeof FIGHTREAD !== "undefined" && !this.mirror) act = FIGHTREAD.actName(FIGHTREAD.intents(this)[0], this); } catch (x) { act = null; }
+      const chRow = f.kit ? (f.kit.windup === "chan" ? f.kit.chanRow || "front" : f.kit.plan && f.kit.plan[0] && f.kit.plan[0].id === "channel" ? f.kit.plan[0].row || "front" : null) : null;
+      if (act && chRow) { act.tgt = tr0(chRow === "back" ? "your back row" : "your front row"); act.row = true; }   // [rows] a channelled Fireball goes for a whole row
       if (FI) FI.next(this);   // foeintent.js: the target its intent showed (healers first is part of that roll)
       if (typeof REACT !== "undefined") REACT.foePre(this);   // Intercept: a blow meant for a friend comes to you
       else if (!FI && f.allies.length && !f.coverAl) { const h = f.allies.find((a) => !a.down && a.player && (a.role === "healer" || a.heals > 0)); if (h && Math.random() < 0.5) f.coverAl = h; }
@@ -736,7 +767,7 @@ const TB = (() => {
       const go = () => (typeof DRAGONS !== "undefined" && f.dStance ? DRAGONS.turn(f, () => f.enemyTurn()) : typeof FOEKIT !== "undefined" && f.kit ? FOEKIT.turn(f, () => f.enemyTurn()) : f.enemyTurn());
       let t = f.bf && typeof BOSSFIGHT !== "undefined" ? BOSSFIGHT.turn(this, go) : go();   // bosses: phases and big attacks (bossfight.js)
       guards.forEach((a) => { a.red = a._red; });   // [threeap] a guard lasts until that friend's next turn (allyMove / FAI.turn / applyRemote reset it)
-      if (act && act.tgt && f.tgtHit !== undefined) act.tgt = f.tgtHit ? String(f.tgtHit.name || act.tgt) : "you";   // someone stepped in front: name who it really hit
+      if (act && act.tgt && !act.row && f.tgtHit !== undefined) act.tgt = f.tgtHit ? String(f.tgtHit.name || act.tgt) : "you";   // someone stepped in front: name who it really hit
       if (FI) { FI.done(this); t = FI.say(this, t); }   // "takes aim at Lydia"
       if (typeof STACKS !== "undefined") {   // Chill and Weak stacks soften its blows (stacks.js)
         const so = STACKS.foeSoften(f), l0 = hpB - f.hp;
@@ -776,6 +807,7 @@ const TB = (() => {
       const f = this.f, line = { turn: this.round, rule: null, me: this.lines.me.join(" · "), them: this.lines.them.join(" · "), a: this.lines.a || "attack", wt: f.wt, tb: true };
       if (this.aiRound === this.round) { line.ai = true; if (this.aiWhys && this.aiWhys.length) line.why = this.aiWhys.join(" · "); }   // only rounds the AI played for you
       this.aiWhys = [];
+      if (this.field && typeof FOEFIELD !== "undefined") FOEFIELD.tick(this, line);   // [rows] bleeding and burning on the foes you're not aiming at
       if (f.bleed.length && f.ehp > 0) { const b = f.bleed.reduce((x, y) => x + y.dmg, 0); f.ehp -= b; f.bleed = f.bleed.map((y) => ({ ...y, turns: y.turns - 1 })).filter((y) => y.turns > 0); line.me += ` · bleeds ${Math.round(b)}`; }
       const n0 = line.me.length, t0 = line.them.length;
       if (typeof PFX !== "undefined") PFX.tick(f, line);
@@ -1119,7 +1151,8 @@ const TB = (() => {
     if (typeof REACT !== "undefined") { try { REACT.decorate(el, sess, newEv, playing); } catch (e) { console.warn("combos", e); } }   // combo icons on moves, the combo banner
     if (typeof HOTBAR !== "undefined") { try { HOTBAR.decorate(el, sess); } catch (e) { console.warn("hotbar", e); } }   // "Edit hotbar" for the … menu (hotbar.js)
     if (typeof FIGHTDC !== "undefined") { try { FIGHTDC.decorate(el, sess); } catch (e) { console.warn("declutter", e); } }   // the "…" menu, the foe's folded moves (fightdeclutter.js)
-    if (typeof FOEPANEL !== "undefined") { try { FOEPANEL.decorate(el, sess); } catch (e) { console.warn("foepanel", e); } }   // the slim foe plate, the scrollable log (foepanel.js)
+    if (typeof FOEPANEL !== "undefined") { try { FOEPANEL.decorate(el, sess); } catch (e) { console.warn("foepanel", e); } }
+    if (typeof FOEFIELD !== "undefined") { try { FOEFIELD.decorate(el, sess); } catch (e) { console.warn("rows", e); } }   // [rows] both sides' front and back rows, tap a foe to aim   // the slim foe plate, the scrollable log (foepanel.js)
     if (typeof PHONEFIGHT !== "undefined") { try { PHONEFIGHT.decorate(el, sess); } catch (e) { console.warn("phonefight", e); } }   // phones: the log folds, the foe's health in numbers (phonefight.js)
     if (typeof FIGHTPRES !== "undefined") { try { FIGHTPRES.after(el); } catch (e) { console.warn("fightpres", e); } }   // one big banner at a time (fightpres.js)
   }
@@ -1361,10 +1394,10 @@ const TB = (() => {
     const fs = {}; for (const k of FOE_KEYS) if (f[k] !== undefined) fs[k] = f[k];
     const e = {}; for (const [k, v] of Object.entries(f.e || {})) if (!["loot", "drops", "group"].includes(k) && typeof v !== "function") e[k] = v;
     const look = typeof HEROART !== "undefined" && HEROART.lookOf ? (() => { try { return HEROART.lookOf(f.s); } catch (x) { return null; } })() : null;
-    const roster = [{ k: "host", host: true, player: true, name: f.s.name || "Leader", hp: Math.max(0, Math.round(f.hp)), hpMax: G.maxHealth(f.s), down: f.hp <= 0, look, ward: Math.round(f.ward || 0), form: typeof BEASTPATH !== "undefined" ? BEASTPATH.form(f) : null, ...(f.potOT ? { potOT: f.potOT } : {}) },
+    const roster = [{ k: "host", host: true, player: true, row: typeof FOEFIELD !== "undefined" ? FOEFIELD.myRow(f) : null, name: f.s.name || "Leader", hp: Math.max(0, Math.round(f.hp)), hpMax: G.maxHealth(f.s), down: f.hp <= 0, look, ward: Math.round(f.ward || 0), form: typeof BEASTPATH !== "undefined" ? BEASTPATH.form(f) : null, ...(f.potOT ? { potOT: f.potOT } : {}) },
       ...all.map((a) => { a.tbk = a.tbk || (a.pid ? "p:" + a.pid : "a" + ++kseq);
         const o = { k: a.tbk, pid: a.pid || null, name: a.name, hp: Math.max(0, Math.round(a.hp || 0)), hpMax: Math.round(a.maxHp || a.hpMax || a._max || a.hp0 || Math.max(1, a.hp || 1)), down: !!a.down || !f.allies.includes(a),
-          player: !!a.player, follower: !!(a.follower || a.kind === "follower"), role: a.role || null, look: a.look || null, kind: a.kind || null, fid: a.fid || null };
+          player: !!a.player, follower: !!(a.follower || a.kind === "follower"), role: a.role || null, row: typeof FOEFIELD !== "undefined" ? FOEFIELD.allyRow(a) : null, look: a.look || null, kind: a.kind || null, fid: a.fid || null };
         for (const k of BUFF_KEYS) if (a[k] != null) o[k] = a[k];
         return o; })];
     if (typeof MOUNTFIGHT !== "undefined") MOUNTFIGHT.roster(f, all, roster);   // who's in the saddle, and their horses' health (mountfight.js)
@@ -1385,7 +1418,7 @@ const TB = (() => {
       next: typeof INIT !== "undefined" && sess.ini ? INIT.predict(sess).map((o) => ({ id: o.id, name: o.name, init: o.init, side: o.side, slot: o.slot, pid: o.al?.pid || null, fid: o.al?.fid || null, uid: o.uid })) : [],
       cur: sess.cur ? { id: sess.cur.id, name: sess.cur.name, pid: sess.cur.al?.pid || null } : null, evs,
       escaped: sess.done ? !!f.escaped : null, ...(typeof PARTYSPELLS !== "undefined" ? PARTYSPELLS.forRecord(sess) : {}),
-      ...(typeof CHANNEL !== "undefined" ? CHANNEL.forRecord(sess) : {}) };   // [channel] the moves being prepared right now (also restores them after a reconnect)   // crafted spells cast in this fight (partyspells.js)
+      ...(typeof CHANNEL !== "undefined" ? CHANNEL.forRecord(sess) : {}), ...(sess.field && typeof FOEFIELD !== "undefined" ? { field: FOEFIELD.view(sess) } : {}) };   // [channel] the moves being prepared right now (also restores them after a reconnect)   // crafted spells cast in this fight (partyspells.js)
   }
   function remoteFor(store, myId, cards) {
     if (!store || typeof store.put !== "function") return null;

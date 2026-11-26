@@ -3,10 +3,10 @@
       your spells put on the foe (calm, frenzy, fear, burning walls, a waiting rune, soul trap) sits under its bar, each
       with a tip and the turns left. The ward bar, healing circle and paralysis already had their own chips and stay.
    2. Area spells. Fireball, Chain Lightning, the storms and walls, Mass Paralysis, Hysteria, Harmony and Mayhem are
-      marked "area". When foes come in a group (2 or 3, one after another), the ones waiting behind take half of an
-      area spell's damage (they step in already hurt, never below half their health), and area paralysis, fear, calm
-      and walls keep working on them. A single-target spell (Paralyze, Fear, a Firebolt's burn) ends with the foe it
-      was cast on, so the next one starts fresh.
+      marked "area". [rows] When a group stands on the field together (foefield.js), an Adept or Expert one hits the
+      row of the foe you aim at and a Master one both rows: that foe takes it all, the others a share at once (and its
+      paralysis, fear, calm and burning). Fights without a field (old one-after-another waves) keep the old rule: the
+      ones waiting behind take half (never below half their health) and a single-target spell ends with its foe.
    Loaded after engine.js, magic.js, spellbook.js, foecap.js and tbfight.js; without it everything works as before. */
 const SPELLFX = (() => {
   const AREA = ["fireball", "chain_lightning", "ice_storm", "fire_storm", "lightning_storm", "thunderclap", "stendarrs_aura",
@@ -28,6 +28,8 @@ const SPELLFX = (() => {
       const b = this.ehp, n0 = (this.dots || []).length;
       const out = cast0.call(this, id, free, dual);
       const d = b - this.ehp;
+      const ss = this._tbs && this._tbs.field && typeof FOEFIELD !== "undefined" ? this._tbs : null;
+      if (ss) { const t = FOEFIELD.area(ss, id, sp, d, n0); return typeof out === "string" ? out + t : out; }   // [rows] the rest of that row (or both) at once
       if (d > 0) this.splashTot = (this.splashTot || 0) + d * SPLASH;
       for (const x of (this.dots || []).slice(n0)) x.area = true;
       for (const k of HOLD) if ((this[k] || 0) > 0) (this.areaHold || (this.areaHold = {}))[k] = true;

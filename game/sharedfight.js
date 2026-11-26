@@ -78,6 +78,7 @@ const SHAREDFIGHT = (() => {
         f.ehp = d.ehp;
         for (const k of TB.FOE_KEYS) if (d.fs && k in d.fs) f[k] = clone(d.fs[k]); else if (k !== "ehp0") delete f[k];
         if (!(f.ehp0 > 0)) f.ehp0 = this.ehpMax;
+        if (typeof FOEFIELD !== "undefined") FOEFIELD.mirror(this, d.field);   // [rows] the foes' rows as the leader's phone has them
         this.hitters = d.hitters || 0;
         this.roster(d.roster || []);
         if (typeof MOUNTFIGHT !== "undefined") MOUNTFIGHT.mirror(this, d);   // your horse and everyone else's, as the leader's phone has them
@@ -115,7 +116,7 @@ const SHAREDFIGHT = (() => {
       for (const r of list) {
         if (r.k === "p:" + me || (r.pid && r.pid === me)) { this.meDown = !!r.down; f.hp = r.down ? 0 : r.hp; continue; }
         let a = this.byKey.get(r.k); if (!a) { a = {}; this.byKey.set(r.k, a); }
-        Object.assign(a, { tbk: r.k, name: r.name, hp: r.hp, maxHp: r.hpMax, player: !!r.player, follower: !!r.follower, pid: r.pid || null, look: r.look || null, role: r.role || null, host: !!r.host, down: !!r.down, kind: r.kind || null, fid: r.fid || null });   // kind: a dog stays a dog on every phone
+        Object.assign(a, { tbk: r.k, name: r.name, hp: r.hp, maxHp: r.hpMax, player: !!r.player, follower: !!r.follower, pid: r.pid || null, look: r.look || null, role: r.role || null, row: r.row || null, host: !!r.host, down: !!r.down, kind: r.kind || null, fid: r.fid || null });   // kind: a dog stays a dog on every phone
         for (const k of TB.BUFF_KEYS) if (r[k] != null) a[k] = clone(r[k]); else if (k !== "dmg") delete a[k];
         if (a.dmg == null) a.dmg = 0;
         (r.down ? down : live).push(a);
@@ -168,7 +169,7 @@ const SHAREDFIGHT = (() => {
       const armorUp = (f.armorSpell || 0) > t0.armor;
       const mine = this.ev.slice(t0.ev).filter((e) => e.who === "me");
       const spells = typeof PARTYSPELLS !== "undefined" ? PARTYSPELLS.used(f.s, mine) : {};   // your crafted spells, so every phone knows them (partyspells.js)
-      return { ...(Object.keys(spells).length ? { spells } : {}), pid: this.me, tid: this.myTurn?.tid || null, round: this.round, wave: this.wave, e0: t0.ehp, ehp: f.ehp, fs, fs0: t0.fs || null,
+      return { ...(Object.keys(spells).length ? { spells } : {}), pid: this.me, tid: this.myTurn?.tid || null, round: this.round, wave: this.wave, e0: t0.ehp, ehp: f.ehp, fs, fs0: t0.fs || null, ...(this.field ? { fi: this.field.tgt } : {}),
         hp0: t0.hp, hp: f.hp, hpMax: G.maxHealth(f.s), guard: f.tbGuard || 0, ap: this.myActs || 0,   // ap: what you spent (the leader checks the guard against it)
         self: { ward: (f.ward || 0) > t0.ward ? f.ward : 0, armorRed: armorUp ? Math.min(0.5, f.armorSpell * 0.0012) : 0, armorT: armorUp ? 6 : 0 },   // [Skyrim] 0.12% less damage per armour point
         allies, summon: f.summonTurns > 0 ? { turns: f.summonTurns, dmg: f.summonDmg, name: f.summonName || "summon" } : null,

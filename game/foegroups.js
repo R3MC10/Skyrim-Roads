@@ -5,9 +5,9 @@
    - Archetypes: bandits, Forsworn, draugr, skeletons, vampires and Falmer come as warriors (sword and shield, harder to hurt),
      brutes (two-handed, hit harder), archers (bow), mages (staff and spells) or rogues (dagger, quick and fragile).
      Each one changes the foe's real numbers and what it carries in the fight scene.
-   - Groups: on your own, a fight against these foes is sometimes 2 or 3 of them, one after another (like a party fight).
-     Balanced: the group's total health is only +30% per extra foe, split between them, and only one acts at a time.
-     Bosses, named foes and other players always come alone. Parties keep their own one-foe-per-hero rule. */
+   - Groups: on your own, a fight against these foes is sometimes 2 of them, side by side in a front and a back row (foefield.js).
+     Balanced: the group's total health is only +30% per extra foe, split between them, and they share the foe side's moves.
+     Bosses, named foes and other players always come alone. Parties meet 2-6 by party size (foefield.js count). */
 const FOEGROUPS = (() => {
   //            label        weapon        shield  hp     dmg    armour  look
   const ARCH = {
@@ -16,6 +16,9 @@ const FOEGROUPS = (() => {
     archer:  { label: "archer", wt: "bow", shield: false, hp: 0.85, dmg: 1.05, red: 0, look: { head: "hood" } },
     mage:    { label: "mage", wt: "staff", shield: false, hp: 0.8, dmg: 1.15, red: -0.04, look: { legs: "robe", head: "hood" }, cast: true },
     rogue:   { label: "rogue", wt: "dagger", shield: false, hp: 0.85, dmg: 1.12, red: 0, look: { head: "hood" } },
+    // [rows] party fights only (foefield.js composition): a healer in the back, and a leader who rallies the rest
+    healer:  { label: "healer", wt: "staff", shield: false, hp: 0.85, dmg: 0.8, red: -0.04, look: { legs: "robe", head: "hood" }, cast: true, party: true },
+    chief:   { label: "chief", wt: "battleaxe", shield: false, hp: 1.1, dmg: 1.0, red: 0.04, look: { head: "helm" }, party: true },
   };
   // which archetypes each kind of foe comes in (draugr mages are frost casters, like Skyrim's wights and scourges)
   const KINDS = {
@@ -28,7 +31,7 @@ const FOEGROUPS = (() => {
   };
   const EL = { draugr: "frost", skeleton: "frost", vampire: "frost", falmer: "shock", forsworn: "fire", bandit: "fire" };
   const GROUP_HP = 0.3;    // each extra foe adds 30% to the group's total health
-  const MAX_GROUP = 3;
+  const MAX_GROUP = 2;
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
   function kindOf(e) {
@@ -56,12 +59,10 @@ const FOEGROUPS = (() => {
   }
   const lone = (e) => !!(e.boss || e.unique || e.named || e.noGroup || e.player || e.look || e.cart || e.caravan || (e.tags || []).includes("boss"));
 
-  /* how many come at you on your own: mostly one, sometimes two, at higher levels now and then three */
+  /* how many come at you on your own: mostly one, sometimes two ([rows] never three: a lone hero meets 1-2) */
   function groupSize(e, level) {
     if (lone(e) || e.danger === "high") return 1;
-    const r = Math.random();
-    if (level >= 8 && r < 0.12) return 3;
-    return r < 0.4 ? 2 : 1;
+    return Math.random() < 0.4 ? 2 : 1;
   }
   /* apply one archetype's numbers to the foe (from its base numbers, so a new wave doesn't stack) */
   function setArch(e, id) {
