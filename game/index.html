@@ -1069,7 +1069,7 @@ em.fx-good,em.fx-bad,em.fx-unk{font-style:normal;display:inline}.fx-good{color:#
   --fs-xs:11px;--fs-sm:13px;--fs-md:15px;--fs-lg:18px;--fs-xl:22px;
   --gold-1:#f4dc9a;--gold-2:#e2bb64;--gold-3:#9b7a35;--steel-1:#e9eef3;--steel-2:#9aa6b2;--steel-3:#4a525b;
   --el-fire:#ff8c42;--el-frost:#9fdcff;--el-shock:#d6bcff;--el-poison:#9fe26a;--el-heal:#d6e88a;
-  --q-common:#ece8de;--q-fine:#7fdc7f;--q-superior:#6fb6ff;--q-exquisite:#c48cff;--q-legendary:#ffcf5a;--q-unique:#ff9a3c;
+  --q-common:#ece8de;--q-fine:#7fdc7f;--q-rare:#6fb6ff;--q-epic:#c48cff;--q-legendary:#ffcf5a;--q-unique:#ff9a3c;
   --sch-destruction:#ff8c5a;--sch-restoration:#f2dc84;--sch-alteration:#8fd0c8;--sch-conjuration:#b49aff;--sch-illusion:#f19ad8;--sch-mysticism:#86b7ff;--sch-shout:#e8d7b0;--sch-power:#e2bb64;
   --cat-warrior:#ff7a6a;--cat-mage:#7fb2ff;--cat-thief:#7fd98c;--cat-crafting:#e2bb64;--cat-social:#e9a9d6;--cat-movement:#9fe0d8;
   --buff:#8fe38a;--debuff:#ff7f72;--stolen:#ff6a5a;--ease:cubic-bezier(.2,.8,.2,1)}
@@ -1109,8 +1109,8 @@ body:has(#sky) .toast{top:auto!important;bottom:calc(58px + env(safe-area-inset-
 :root.has-ui-nightsky .tw-bigw,:root.has-ui-nightsky .skc{background-image:linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.55)),var(--asset-nightsky);background-size:cover;background-position:center}
 
 /* ---------------------------------------------------------------- colour coding */
-.q-common{color:var(--q-common)}.q-fine{color:var(--q-fine)}.q-superior{color:var(--q-superior)}.q-exquisite{color:var(--q-exquisite)}.q-legendary{color:var(--q-legendary)}.q-unique{color:var(--q-unique)}
-.sky-row .nm.q-legendary,.sky-row .nm.q-unique,h3.q-legendary,h3.q-unique{text-shadow:0 0 10px color-mix(in srgb,currentColor 45%,transparent)}
+.q-common{color:var(--q-common)}.q-fine{color:var(--q-fine)}.q-rare{color:var(--q-rare)}.q-epic{color:var(--q-epic)}.q-legendary{color:var(--q-legendary)}.q-unique,.rar-u{color:var(--q-unique)}
+.sky-row .nm.q-legendary,h3.q-legendary{text-shadow:0 0 10px color-mix(in srgb,currentColor 45%,transparent)}
 .sky-row .nm[class*=" q-"]::before,.sky-row .nm[class^="q-"]::before{content:"";flex:none;width:3px;align-self:stretch;margin-right:6px;background:currentColor;opacity:.75;border-radius:1px}
 .sky-row .nm.q-common::before{opacity:.18}
 .tierline{margin:2px 0 6px;font:600 var(--fs-xs)/1 var(--sk-ui,"Barlow Condensed",sans-serif);letter-spacing:.18em;text-transform:uppercase}
@@ -1301,7 +1301,7 @@ html.a11y-zoom .tab{letter-spacing:0}
 html[data-cb=protan],html[data-cb=deutan]{--hp:#e0601a;--mp:#3f7fd6;--sp:#fff27a;--ember:#ff6a2a;--cb-low:#6fb6ff;--cb-med:#f2d27a;--cb-high:#e0501a;--cb-raid:#ff8a2a;--buff:#6fb6ff;--debuff:#ff8a2a;--stolen:#ff8a2a;--el-poison:#c88aff;--el-heal:#fff27a;--cat-thief:#6fb6ff;--cat-warrior:#ff8a2a}
 html[data-cb=protan]{--hp:#f07020;--ember:#ff7a3a;--cb-high:#ff6a1a}
 html[data-cb=tritan]{--hp:#e0303a;--mp:#2a9ad8;--sp:#ece6dc;--ember:#ff4d5a;--cb-low:#5fd0c8;--cb-med:#ff9ad0;--cb-high:#ff3a3a;--cb-raid:#ff4d5a;--buff:#5fd0c8;--debuff:#ff5a5a;--stolen:#ff5a5a;--el-frost:#bfefff;--el-poison:#c88aff;--sch-mysticism:#c8b4ff;--cat-mage:#c8b4ff}
-html[data-cb]{--q-common:#ece8de;--q-fine:#20c0a0;--q-superior:#5b8cff;--q-exquisite:#f0a8ff;--q-legendary:#ffd84a;--q-unique:#ff5a3a}
+html[data-cb]{--q-common:#ece8de;--q-fine:#20c0a0;--q-rare:#5b8cff;--q-epic:#f0a8ff;--q-legendary:#ffd84a;--q-unique:#ff5a3a}
 html[data-cb] .hb.hp .track i{background:linear-gradient(color-mix(in srgb,var(--hp) 62%,#fff),var(--hp) 60%,color-mix(in srgb,var(--hp) 62%,#000));color:color-mix(in srgb,var(--hp) 55%,transparent)}
 html[data-cb] .hb.mp .track i{background:linear-gradient(color-mix(in srgb,var(--mp) 62%,#fff),var(--mp) 60%,color-mix(in srgb,var(--mp) 62%,#000));color:color-mix(in srgb,var(--mp) 55%,transparent)}
 html[data-cb] .hb.sp .track i{background:linear-gradient(color-mix(in srgb,var(--sp) 62%,#fff),var(--sp) 60%,color-mix(in srgb,var(--sp) 62%,#000));color:color-mix(in srgb,var(--sp) 55%,transparent)}
@@ -5532,8 +5532,8 @@ html.pcmap.pc-full #side>.mn-sub::before,html.pcmap.pc-full #side>.mn-sub::after
 .lvn-next{margin:6px 0 0;font:500 12px/1.3 var(--sk-ui,Georgia,serif);color:#e2cf9a;text-align:center}
 .lvk-next{margin:14px auto 0;max-width:46ch;color:#e2cf9a;font-size:13px;text-align:center}
 .rw-nextl{color:#c9b98e}
-/* item names on the reward line in their rarity colour (.q-<tier> above); "rare" and "epic" are ready for the coming rarity field */
-.rw-qn{font-weight:600}.rw-qn.q-rare{color:var(--q-superior)}.rw-qn.q-epic{color:var(--q-exquisite)}
+/* item names on the reward line in their rarity colour (.q-<rarity> above, rarity.js) */
+.rw-qn{font-weight:600}
 @media (prefers-reduced-motion:reduce){.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine{animation:none!important}.rw-rays{opacity:.6}}
 html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),.rw-still :is(.rw-sheet,.rw-burst,.rw-rays,.rw-crest){animation:none!important}
 @media (min-width:900px){.modal.rw-scene .sheet.rw-sheet{width:520px;padding:44px 34px 28px}.rw-sheet h2.rw-t{font-size:32px}.rw-acts{flex-direction:row-reverse}.rw-acts .btn{flex:1}}
@@ -5607,6 +5607,15 @@ html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),
 #tbf .chb.r-cancel .chb-fl{background:#6d6a66}
 #tbf .chb.still,#tbf .chb.still .chb-fl{animation:none!important;transition:none!important}
 @media (prefers-reduced-motion:reduce){#tbf .chb,#tbf .chb .chb-fl{animation:none!important;transition:none!important}}
+/* [rarity] item rarity (rarity.js): a colour AND a word, so it reads without colour too. Icons get a thin frame in the
+   rarity colour until painted rarity frames exist. */
+.rar{display:inline-block;margin-left:6px;padding:0 4px;border:1px solid color-mix(in srgb,currentColor 70%,transparent);border-radius:3px;font:600 10px/14px var(--sk-ui,"Barlow Condensed",sans-serif);letter-spacing:.08em;text-transform:uppercase;font-style:normal;white-space:nowrap;vertical-align:middle;flex:none}
+.rar .rar-u{color:var(--q-unique)}
+.sky-row .nm .rar{margin-left:4px;font-size:9px;line-height:13px;padding:0 3px}
+@media (max-width:600px){.sky-row .nm .rar,.loot-row .nm .rar{display:table;margin:1px 0 0}}   /* phones: the rarity word on its own line under the name, so a long name never cuts it off */
+img.ico.rar-fine{outline:1px solid var(--q-fine);outline-offset:-1px}img.ico.rar-rare{outline:1px solid var(--q-rare);outline-offset:-1px}
+img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar-legendary{outline:2px solid var(--q-legendary);outline-offset:-2px;filter:drop-shadow(0 0 3px color-mix(in srgb,var(--q-legendary) 60%,transparent))}
+.tt-sub .rar,.tierline .rar{margin-left:0}
 /* [difficulty] Story / Normal / Hard (difficulty.js): the chip on the fight screen and the party panel, the Settings note, the picker in hero creation */
 .diffchip{display:inline-flex;align-items:center;flex:none;height:20px;padding:0 7px;border-radius:10px;font:600 11px/1 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;border:1px solid rgba(226,187,100,.55);color:#e9d7a6;background:rgba(10,10,12,.6)}
 .diffchip.d-story{border-color:rgba(143,208,138,.6);color:#b9e3b4}
@@ -5849,6 +5858,7 @@ html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),
 <script src="fitcanvas.js"></script><script src="artfit.js"></script><script src="art.js"></script>
 <script src="assets.js"></script>
 <script src="horseart.js"></script>
+<script src="rarity.js"></script>
 <script src="colorcode.js"></script>
 <script src="skyart.js"></script>
 <script src="combatfx.js"></script>
@@ -6136,6 +6146,7 @@ html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),
 <script src="i18n_tabs5.js"></script>
 <script src="i18n_first30.js"></script>
 <script src="i18n_rewards.js"></script>
+<script src="i18n_rarity.js"></script>
 <script src="i18n_dollrig2.js"></script>
 <script src="i18n_difficulty.js"></script>
 <script src="i18n_perkreset.js"></script>

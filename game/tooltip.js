@@ -22,6 +22,7 @@ const TIP = (() => {
     COOK: () => (typeof COOK !== "undefined" ? COOK : undefined),
     POTFX: () => (typeof POTFX !== "undefined" ? POTFX : undefined),   // potionfx.js: potions work over a few rounds
     ITEMCMP: () => (typeof ITEMCMP !== "undefined" ? ITEMCMP : undefined),   // itemcmp.js: against what you wear (also the Items side panel)
+    RARITY: () => (typeof RARITY !== "undefined" ? RARITY : undefined),   // rarity.js: an item's rarity
   };
   const g = (n) => { try { return MODS[n] ? MODS[n]() : undefined; } catch { return undefined; } };
   const has = (n) => g(n) !== undefined;
@@ -49,7 +50,7 @@ const TIP = (() => {
   // ---- items (a bare item id, or one of your pack rows with its temper, charge and name)
   function itemHTML(itemId, s, r = null) {
     const D_ = g("D"), G_ = g("G"); const it = D_?.ITEMS?.[itemId]; if (!it) return null;
-    const CC_ = g("CC"), tier = CC_ ? CC_.tier(itemId, r) : "common";
+    const RA = g("RARITY"), tier = RA ? RA.of(itemId, r) : "common";   // rarity.js: colour and word
     const name = (r?.tq && g("TOWNS")?.QUALITY ? g("TOWNS").QUALITY[r.tq] + " " : "") + it.name + (r?.nm ? ` “${r.nm}”` : "");
     const hd = it.hands === 2 ? "Two-handed" : "One-handed";   // the skill only when it says something new ("One-handed weapon", not "· One-Handed" again)
     const kind = it.slot === "weapon" ? `${hd} ${it.skill === "Archery" ? "bow" : "weapon"}${it.skill && String(it.skill).toLowerCase() !== hd.toLowerCase() ? ` · ${it.skill}` : ""}`
@@ -120,7 +121,7 @@ const TIP = (() => {
     }
     let haveL = "";   // [rewardtips] a bare item (a reward, a shop row): how many you already carry
     if (!r && s?.inv) { const n = s.inv.reduce((a, x) => a + (x.item === itemId ? x.qty || 1 : 0), 0); haveL = n ? `<p class="tt-have">Already have ${n}</p>` : ""; }
-    return head(name, "q-" + tier) + sub(kind + (CC_ && tier !== "common" ? ` · ${CC_.TIER_NAME[tier]}` : "")) + stats(st) + L.map((x) => line(x)).join("") + (g("CHARGE") ? g("CHARGE").detail(itemId, r, s) : "") + (tomeCard ? `<div class="tt-tome">${tomeCard}</div>` : "") + cmp + haveL;
+    return head(name, "q-" + tier) + sub(kind + (RA ? ` · ${RA.line(itemId, r)}` : "")) + stats(st) + L.map((x) => line(x)).join("") + (g("CHARGE") ? g("CHARGE").detail(itemId, r, s) : "") + (tomeCard ? `<div class="tt-tome">${tomeCard}</div>` : "") + cmp + haveL;
   }
   register("item", (id, s) => itemHTML(id, s));
   register("inv", (id, s) => { const r = s?.inv?.find((x) => String(x.id) === String(id)); return r ? itemHTML(r.item, s, r) : null; });

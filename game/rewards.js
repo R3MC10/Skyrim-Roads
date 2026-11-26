@@ -45,18 +45,14 @@ const REWARDS = (() => {
     xp: (skill, n) => ({ k: "xp:" + skill, cat: "xp", n: +n || 0, one: `+{n} ${skill}` }),
     item: (name, n = 1, q = rarity(name)) => ({ k: "item:" + String(name).toLowerCase(), cat: "item", n: +n || 1, one: String(name), many: `${name} ×{n}`, q: q || "" }),
   };
-  /* an item's rarity, for its colour (.q-<rarity> in index.html). A rarity field on the item wins (common / fine / rare /
-     epic / legendary, coming in another task); until then colorcode.js's tier. "" = no colour. */
+  /* an item's rarity, for its colour and word (.q-<rarity> in index.html): rarity.js decides, by id or by name. "" = unknown */
   let byName = null;
   function rarity(nameOrId) {
-    if (typeof D === "undefined" || !D.ITEMS) return "";
+    if (typeof D === "undefined" || !D.ITEMS || typeof RARITY === "undefined") return "";
     let id = D.ITEMS[nameOrId] ? nameOrId : null;
     if (!id) { if (!byName) { byName = {}; for (const [k, v] of Object.entries(D.ITEMS)) if (v && v.name && !byName[v.name.toLowerCase()]) byName[v.name.toLowerCase()] = k; } id = byName[String(nameOrId).toLowerCase()]; }
     if (!id) return "";
-    const it = D.ITEMS[id];
-    const r = it.rarity || it.q;
-    if (r) return String(r).toLowerCase();
-    try { return typeof CC !== "undefined" ? CC.tier(id) : ""; } catch { return ""; }
+    try { return RARITY.of(id); } catch { return ""; }
   }
   /* colour the item names on the tiny line that's on screen (it is plain text; this wraps the names in .q-<rarity>) */
   function paint(el, parts) {
@@ -67,7 +63,8 @@ const REWARDS = (() => {
     let h = esc(el.textContent);
     for (const p of names) for (const nm of new Set([p.one, tr(p.one)])) {
       const e = esc(nm); if (!e || !h.includes(e)) continue;
-      h = h.split(e).join(`<b class="q-${esc(p.q)} rw-qn">${e}</b>`); break;
+      const word = typeof RARITY !== "undefined" && RARITY.NAME[p.q] ? `<i class="rar q-${esc(p.q)}">${esc(RARITY.NAME[p.q])}</i>` : "";   // the word too: colour alone isn't enough
+      h = h.split(e).join(`<b class="q-${esc(p.q)} rw-qn">${e}</b>${word}`); break;
     }
     if (h !== esc(el.textContent)) el.innerHTML = `<span class="rw-line">${h}</span>`;   // one span: the toast is a flex row
   }
@@ -307,10 +304,10 @@ const REWARDS = (() => {
   const WEAR = new Set(["weapon", "shield", "head", "chest", "hands", "feet", "ring", "neck", "amulet"]);
   function gained(s, id) {
     const it = typeof D !== "undefined" && D.ITEMS[id]; if (!it || !WEAR.has(it.slot)) return;
-    const tier = typeof CC !== "undefined" ? CC.tier(id) : "common";
-    if ((tier === "legendary" || tier === "unique") && !seen(s, "i:" + id)) {
+    const legendary = typeof RARITY !== "undefined" && RARITY.of(id) === "legendary", one = typeof RARITY !== "undefined" && RARITY.unique(id);
+    if ((legendary || one) && !seen(s, "i:" + id)) {
       see(s, "i:" + id);
-      return push({ kind: "legendary", key: "i:" + id, kicker: tier === "unique" ? "One of a kind" : "Legendary find", title: it.name, line: "Look at it in your Items. Nothing else in Skyrim is quite like it." });
+      return push({ kind: "legendary", key: "i:" + id, kicker: legendary ? "Legendary find" : "One of a kind", title: it.name, line: "Look at it in your Items. Nothing else in Skyrim is quite like it." });
     }
     if (typeof ITEMCMP === "undefined") return;
     const row = [...(s.inv || [])].reverse().find((r) => r.item === id); if (!row) return;

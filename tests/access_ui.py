@@ -80,7 +80,7 @@ async def main():
                 await pg.evaluate(f"ACCESS.pref('a11yColour','{mode}')")
                 hp = await pg.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--hp').trim()")
                 await pg.evaluate(CLEAR); await pg.evaluate("scrollTo(0,0)"); await shot(f"cb_{mode}_map")
-                await pg.evaluate("()=>{const S=window.__dbg.save(); const seen={}; for (const id of Object.keys(D.ITEMS)) { const t=CC.tier(id); if (!seen[t] && !S.inv.some(r=>r.item===id)) { seen[t]=1; G.give(S,id); } } }")
+                await pg.evaluate("()=>{const S=window.__dbg.save(); const seen={}; for (const id of Object.keys(D.ITEMS)) { const t=RARITY.of(id); if (!seen[t] && !S.inv.some(r=>r.item===id)) { seen[t]=1; G.give(S,id); } } }")
                 await pg.evaluate("__ui.go('items')"); await pg.wait_for_timeout(400)
                 await pg.evaluate("document.querySelectorAll('.sky-cat')[1]?.click()"); await pg.wait_for_timeout(300); await shot(f"cb_{mode}_pack")
                 await pg.evaluate(CLEAR)

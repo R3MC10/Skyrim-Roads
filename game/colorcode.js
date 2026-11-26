@@ -1,32 +1,12 @@
 /* Colour coding [OURS]: one place that decides what colour a thing is, so every screen agrees.
-   CC.tier(itemId, row)   → "common" | "fine" | "superior" | "exquisite" | "legendary" | "unique"
+   Item rarity is not here: it lives in rarity.js (RARITY.of / .cls / .tag), the one source of truth for item colours.
    CC.school(spellOrId)   → "destruction" | "restoration" | "alteration" | "conjuration" | "illusion" | "mysticism" | "shout" | "power"
    CC.element(spellOrId)  → "fire" | "frost" | "shock" | "poison" | "heal" | "" (none)
    CC.skillCat(skill)     → "warrior" | "mage" | "thief" | "movement" | "social" | "crafting"
    CC.questType(id)       → "main" | "sol" | "war" | "guild" | "daedric" | "side" | "misc"
    CC.paint(root)         → colours log lines, damage numbers and +/- effect text inside root (safe to call often)
-   The colours themselves live in CSS (index.html, "colour coding" block): .q-<tier> .sch-<school> .el-<element> .cat-<cat> .qt-<type> .buff .debuff */
+   The colours themselves live in CSS (index.html, "colour coding" block): .q-<rarity> .sch-<school> .el-<element> .cat-<cat> .qt-<type> .buff .debuff */
 const CC = (() => {
-  const TIERS = ["common", "fine", "superior", "exquisite", "legendary", "unique"];
-  const TIER_NAME = { common: "Common", fine: "Fine", superior: "Superior", exquisite: "Exquisite", legendary: "Legendary", unique: "Unique" };
-  function tier(id, row) {
-    const it = (typeof D !== "undefined" && D.ITEMS[id]) || null; if (!it) return "common";
-    if (it.unique || it.dae || (it.noTrade && (it.value || 0) >= 1000)) return "unique";
-    const n = (it.name || id).toLowerCase();
-    let t = 0;
-    if (/daedric|dragonbone|dragonscale|dragonplate|stalhrim|dragon /.test(n)) t = 4;
-    else if (/ebony|glass|falmer hardened|nightingale|ancient shrouded/.test(n)) t = 3;
-    else if (/elven|orcish|dwarven|scaled|steel plate|bonemold|chitin|nordic|ancient nord|imperial officer|stormcloak officer|forsworn|silver/.test(n)) t = 2;
-    else if (/steel|imperial|banded|studded|leather/.test(n) && it.slot !== "potion") t = 1;
-    const ench = !!(it.enchant || it.aenchant || row?.ench || row?.enchant);
-    if (ench) t = Math.max(t + 1, 1);
-    if (row?.mw && /perfect|masterful/i.test(String(row.mw))) t += 1;
-    if (row?.temper >= 3) t = Math.max(t, 1);
-    if (["potion", "food", "ingredient", "misc", "ore", "ingot", "gem"].includes(it.slot)) {
-      const v = it.value || 0; t = v >= 400 ? 3 : v >= 150 ? 2 : v >= 60 ? 1 : 0;
-    }
-    return TIERS[Math.max(0, Math.min(4, t))];
-  }
   const spellOf = (x) => {
     if (x && typeof x === "object") return x;
     const s = String(x || ""); const [k, a] = s.includes(":") ? s.split(":") : ["spell", s];
@@ -83,7 +63,7 @@ const CC = (() => {
   function legend() {
     const sw = (cls, t) => `<span class="ccsw ${cls}">${t}</span>`;
     return `<div class="cclegend"><b>Colour key</b>
-      <p>${TIERS.map((t) => sw("q-" + t, TIER_NAME[t])).join("")}</p>
+      ${typeof RARITY !== "undefined" ? `<p>${RARITY.legend(sw)}</p>` : ""}
       <p>${sw("el-fire", " Fire")}${sw("el-frost", " Frost")}${sw("el-shock", " Shock")}${sw("el-poison", " Poison")}${sw("el-heal", "✚ Healing")}</p>
       <p>${["destruction", "restoration", "alteration", "conjuration", "illusion", "mysticism"].map((x) => sw("sch-" + x, x[0].toUpperCase() + x.slice(1))).join("")}</p>
       <p>${sw("cat-warrior", "Warrior skills")}${sw("cat-mage", "Mage skills")}${sw("cat-thief", "Thief skills")}${sw("cat-crafting", "Crafting")}${sw("cat-social", "Social")}${sw("cat-movement", "Movement")}</p>
@@ -98,5 +78,5 @@ const CC = (() => {
     } catch { /* old browser: no colour on log lines */ }
   }
   try { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", watch); else watch(); } catch { /* ignore */ }
-  return { TIERS, TIER_NAME, legend, tier, school, element, skillCat, questType, paint, lineElement };
+  return { legend, school, element, skillCat, questType, paint, lineElement };
 })();

@@ -11,6 +11,14 @@ const PATCHNOTES = (() => {
       "If your target falls before your move lands, that move costs nothing. Followers get 2 AP a turn.",
       "Six new perks: Heavy Momentum, Flowing Strikes and Quick Draw (once a fight, a power attack or an aimed shot for 1 AP), Spell Weaving and Swift Mending (once a fight, a big spell for 1 AP) and Steady Guard (more guard from AP you keep).",
     ] },
+    { id: "b349-rarity", build: 349, date: "26 Nov 2026", title: "Item rarity", items: [
+      "Every item now has a rarity: Common, Fine, Rare, Epic or Legendary. You see it as a colour and as a word, in your Items, on the paper doll, in tooltips, shops, loot, dungeon loot votes and trades.",
+      "Rarity tells you how special an item is. It never changes its numbers: a Rare sword hits just as hard as it did yesterday.",
+      "Plain gear is Common or Fine (better metals and tempered gear are Fine). Enchanted gear is Fine, Rare or Epic, by how strong its enchantment is. Legendary is kept for true artifacts, like Daedric artifacts and dragon priest masks.",
+      "One-of-a-kind items also say Unique, apart from their rarity.",
+      "Tougher foes and bosses drop rarer things. Items can be sorted by Rarity.",
+      "Item icons get a thin frame in their rarity colour.",
+    ] },
     { id: "b348-initiative", build: 348, date: "26 Nov 2026", title: "A smarter turn order", items: [
       "Who goes first is rolled once when a fight starts: a roll of 1 to 4 plus your speed. Light armour makes you a bit quicker, heavy armour a bit slower, and some perks help.",
       "The turn order now changes during the fight. A stunned or frozen foe loses its next turn, a staggered one is pushed back two places, haste moves you up and slow moves you down. Every change slides into place so you can see it happen, with the reason flashing on the portrait.",
