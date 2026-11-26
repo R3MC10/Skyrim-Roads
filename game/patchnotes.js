@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b368-framesize", build: 368, date: "26 Nov 2026", title: "Roomier frames", items: [
+      "The knotwork corners on panels and buttons are smaller, and framed panels have more room at the bottom and between them, so screens feel less cramped.",
+    ] },
     { id: "b367-namerow", build: 367, date: "26 Nov 2026", title: "Tidier name change", items: [
       "In Settings, the box for your character's name now has its own full-width row, with the Change name button underneath it.",
     ] },

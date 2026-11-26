@@ -33,5 +33,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "All of it calms down with the Motion setting (Lite or Off) or when your phone asks for less motion.": "Wszystko to się uspokaja przy ustawieniu Ruch (Lekki lub Wyłączony) albo gdy telefon prosi o mniej ruchu.",
     "Tidier name change": "Schludniejsza zmiana imienia",
     "In Settings, the box for your character's name now has its own full-width row, with the Change name button underneath it.": "W Ustawieniach pole z imieniem postaci ma teraz własny wiersz na całą szerokość, a przycisk Zmień imię jest pod nim.",
+    "Roomier frames": "Przestronniejsze ramki",
+    "The knotwork corners on panels and buttons are smaller, and framed panels have more room at the bottom and between them, so screens feel less cramped.": "Plecione narożniki paneli i przycisków są mniejsze, a panele w ramkach mają więcej miejsca u dołu i między sobą, więc ekrany są mniej ściśnięte.",
   });
 })();
