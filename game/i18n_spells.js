@@ -33,7 +33,6 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     jolts: "poraża", slows: "spowalnia", "not dragons": "nie na smoki", "next blow is a sneak attack": "następny cios to atak z ukrycia",
     "fills an empty soul gem if it dies": "napełnia pusty kamień dusz, jeśli zginie",
     "If the foe dies, its soul fills an empty soul gem": "Jeśli wróg zginie, jego dusza napełni pusty kamień dusz",
-    "reaches the whole group (half to the ones behind)": "sięga całej grupy (połowa dla czekających z tyłu)",
     // out-of-fight spells
     "Out of fights: better odds against dungeon traps for 6 in-game hours": "Poza walką: większa szansa na uniknięcie pułapek w lochach przez 6 godzin w grze",
     "Out of fights: +15% to stay hidden for 3 in-game hours": "Poza walką: +15% do pozostania w ukryciu przez 3 godziny w grze",

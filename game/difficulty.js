@@ -3,7 +3,8 @@
    in a party the LEADER's setting applies. Difficulty changes the challenge, never the economy:
      Story  : foe health 85%, foe damage 70%, fight minigame sweet spots 140% wider, foes fight plainly
      Normal : everything as it was
-     Hard   : foe health 110%, foe damage 125%, fight minigame sweet spots 80%, foes fight smarter
+     Hard   : foe health 110%, foe damage 125%, fight minigame sweet spots 80%, foes fight smarter, and they shrug off
+              part of every damage spell (ward; build 354: mages won far more Hard fights than any other build)
    XP, gold and loot are the same on all three (skill practice from a fight is evened out below, so a longer or shorter
    fight doesn't teach more or less). Foes never cheat: "smarter" only means they use their kit more and go for the most
    hurt hero (and healers) more often.
@@ -21,7 +22,7 @@ const DIFF = (() => {
       blurb: "Foes hit softer and fall sooner, and fight timing is easier. For enjoying the story." },
     normal: { id: "normal", name: "Normal", hp: 1, dmg: 1, win: 1, tac: "normal", kit: 1,
       blurb: "The game as it's meant to be played." },
-    hard: { id: "hard", name: "Hard", hp: 1.1, dmg: 1.25, win: 0.8, tac: "smart", kit: 1.2,
+    hard: { id: "hard", name: "Hard", hp: 1.1, dmg: 1.25, win: 0.8, tac: "smart", kit: 1.2, ward: 0.2,
       blurb: "Foes hit harder, fight smarter and go for whoever is hurt. Timing is tighter." },
   };
   const IDS = ["story", "normal", "hard"];
@@ -46,7 +47,7 @@ const DIFF = (() => {
   const level = (s) => leaderOf(s) || own(s);
   /* foes that are the same for everyone: other players, shared raid dragons, world events and world bosses */
   const shared = (e) => !!(e && (e.player || e.pool || e.gev || e.wev));
-  const snapOf = (id, lead) => { const L = LEVELS[valid(id)]; return { id: L.id, hp: L.hp, dmg: L.dmg, win: L.win, tac: L.tac, kit: L.kit, ...(lead ? { lead: true } : {}) }; };
+  const snapOf = (id, lead) => { const L = LEVELS[valid(id)]; return { id: L.id, hp: L.hp, dmg: L.dmg, win: L.win, tac: L.tac, kit: L.kit, ward: L.ward || 0, ...(lead ? { lead: true } : {}) }; };
   function snap(s, e) {
     if (shared(e)) return snapOf("normal");
     const ld = leaderOf(s);
@@ -71,6 +72,7 @@ const DIFF = (() => {
   const window_ = (f) => (f && f.diff ? f.diff.win : 1);
   const tactics = (f) => (f && f.diff ? f.diff.tac : "normal");
   const kitUse = (f) => (f && f.diff ? f.diff.kit : 1);
+  const ward = (f) => (f && f.diff ? f.diff.ward || 0 : 0);   // engine.js Fight.cast: the share of a damage spell Hard foes shrug off
   /* skill practice from one fight, evened out so every difficulty teaches the same: offence practice grows with the
      foe's health (more blows), defence practice with health × damage (more and harder blows taken) */
   function xp(f, skill) {
@@ -121,6 +123,6 @@ const DIFF = (() => {
       PARTY.cardBits.diffWrapped = true;
     }
   }
-  return { LEVELS, IDS, valid, own, set, level, leaderOf, shared, snap, apply, adopt, hp, window: window_, tactics, kitUse, xp, chip, settingsHTML, pref, partyLine, chooserHTML, cardBits, mount, nameOf };
+  return { LEVELS, IDS, valid, own, set, level, leaderOf, shared, snap, apply, adopt, hp, window: window_, tactics, kitUse, xp, chip, settingsHTML, pref, partyLine, chooserHTML, cardBits, mount, nameOf, ward };
 })();
 if (typeof module !== "undefined") module.exports = DIFF;

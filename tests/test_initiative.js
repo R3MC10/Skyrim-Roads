@@ -89,7 +89,7 @@ const foesIn = (ord) => ord.filter((o) => o.side === "foe");
   ok(slots().length === 2, "a boss has two slots (①②)");
   const fo = foesIn(ss.order), s1 = fo.filter((o) => o.slot === 1), s2 = fo.filter((o) => o.slot === 2);
   ok(s1.length && s2.length && s1[0].init - s2[0].init === CFG.slotGap, `the 2nd slot sits ${CFG.slotGap} lower (${s1[0].init} → ${s2[0].init})`);
-  ss.order = INIT.build(ss, 2); ss.idx = 0;   // a fresh round: both slots still to come
+  ss.order = INIT.build(ss, 2); ss.idx = 0; ss.gr = null;   // a fresh round: both slots still to come (no shared turn left open by begin())
   const pending = () => foesIn(ss.order).filter((o) => !o.done && !o.skip);
   const pend0 = pending().length;
   f.tbStunLeft = 1; ss.tidy();
@@ -108,7 +108,8 @@ const foesIn = (ord) => ord.filter((o) => o.side === "foe");
   ok(foesIn(ss.order).some((o) => o.skip === "stun"), "after that a stun works again");
 }
 { // frozen: skips its next slot, then thaws
-  const { f } = fight(); const ss = new TB.Session(f, { trySneak: false }); ss.begin();
+  const { f } = fight(); f.e.noGroup = true; const ss = new TB.Session(f, { trySneak: false }); ss.begin();
+  ss.order = INIT.build(ss, 2); ss.idx = 0; ss.gr = null;   // a fresh round: its slots still to come (the dice may have let it act first)
   f.eParalyzed = 3; ss.tidy();
   const sk = foesIn(ss.order).filter((o) => o.skip === "freeze" && !o.done);
   ok(sk.length > 0, "frozen: the next slot is lost");

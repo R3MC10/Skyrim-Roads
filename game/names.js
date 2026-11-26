@@ -65,13 +65,24 @@ const NAMES = (() => {
   for (const g of ["Akatosh", "Arkay", "Dibella", "Julianos", "Kynareth", "Mara", "Stendarr", "Zenithar", "Talos",
     "Azura", "Boethiah", "Clavicus Vile", "Hermaeus Mora", "Hircine", "Malacath", "Mehrunes Dagon", "Mephala", "Meridia",
     "Molag Bal", "Namira", "Nocturnal", "Peryite", "Sanguine", "Sheogorath", "Vaermina"]) GOD[g] = { en: g };
+  /* [rows] foe roles on the fight screen (foeroles.js): our own names, keyed by the role id */
+  const ROLE = {
+    guardian: { en: "Shieldwarden", pl: { name: "Tarczownik" } },
+    berserker: { en: "Ravager", pl: { name: "Siepacz" } },
+    archer: { en: "Marksman", pl: { name: "Strzelec" } },
+    mage: { en: "Spellcaster", pl: { name: "Czarownik" } },
+    healer: { en: "Mender", pl: { name: "Uzdrowiciel" } },
+    assassin: { en: "Cutthroat", pl: { name: "Nożownik" } },
+    regenerator: { en: "Regrower", pl: { name: "Odrastacz" } },
+    commander: { en: "Warleader", pl: { name: "Dowódca" } },
+  };
   /* new names for things the table reads from the game's own data: place (WORLD.places), item (D.ITEMS), foe (foe
      names), npc. Example: item: { iron_sword: { en: "Iron Blade", pl: { name: "Żelazne ostrze" } } } */
   const OVERRIDE = { town: {}, place: {}, hold: {}, item: {}, foe: {}, npc: {} };
 
   // ---------------------------------------------------------------- the registry
-  const TYPES = ["town", "place", "hold", "region", "faction", "race", "god", "foe", "item", "npc"];
-  const CURATED = { town: TOWN, hold: HOLD, region: REGION, faction: FACTION, race: RACE, god: GOD };
+  const TYPES = ["town", "place", "hold", "region", "faction", "race", "god", "role", "foe", "item", "npc"];
+  const CURATED = { town: TOWN, hold: HOLD, region: REGION, faction: FACTION, race: RACE, god: GOD, role: ROLE };
   const REG = new Map();   // "type:id" → { type, id, base, en: {name}, pl: {name?, gen?, loc?} }
   const norm = (id, type, def, base) => {
     const en = typeof def.en === "string" ? { name: def.en } : { ...(def.en || {}) };
@@ -106,7 +117,7 @@ const NAMES = (() => {
   const baseItem = {};   // items' original English names (before an override was copied onto D.ITEMS)
 
   // ---------------------------------------------------------------- lookups
-  const ORDER = ["town", "place", "hold", "region", "race", "faction", "god", "foe", "item", "npc"];
+  const ORDER = ["town", "place", "hold", "region", "race", "faction", "god", "role", "foe", "item", "npc"];
   function entry(id, type) {
     if (id == null) return null;
     id = String(id);
@@ -164,10 +175,11 @@ const NAMES = (() => {
   const item = (id, o) => (entry(id, "item") ? get(id, { ...o, type: "item" }) : ((G0.D || {}).ITEMS?.[id]?.name ?? String(id ?? "")));
   const foe = (name, o) => (entry(name, "foe") ? get(name, { ...o, type: "foe" }) : String(name ?? ""));
   const race = (id, o) => get(id, { ...o, type: "race" });
+  const role = (id, o) => get(id, { ...o, type: "role" });
   /* {type:id} templates: "Go to {town:Whiterun}." → "Go to Whiterun." ({place:…} finds towns too) */
   function fill(text, o) {
     if (typeof text !== "string" || !text.includes("{")) return text;
-    return text.replace(/\{(town|place|hold|region|faction|race|god|foe|item|npc):([^{}]+)\}/g, (m, t, id) => (t === "place" ? place(id, o) : get(id, { ...o, type: t })));
+    return text.replace(/\{(town|place|hold|region|faction|race|god|role|foe|item|npc):([^{}]+)\}/g, (m, t, id) => (t === "place" ? place(id, o) : get(id, { ...o, type: t })));
   }
   /* copy new display names onto the game's own tables (items, races, the three sides). Safe to call twice. */
   function apply() {
@@ -191,6 +203,6 @@ const NAMES = (() => {
   if (typeof document !== "undefined" && typeof addEventListener === "function") {
     if (document.readyState === "loading") addEventListener("DOMContentLoaded", apply); else apply();
   }
-  return { get, local, place, hold, item, foe, race, fill, entry, ids, dump, apply, build, TYPES, TABLES: { TOWN, HOLD, REGION, FACTION, RACE, GOD, OVERRIDE } };
+  return { get, local, place, hold, item, foe, race, role, fill, entry, ids, dump, apply, build, TYPES, TABLES: { TOWN, HOLD, REGION, FACTION, RACE, GOD, ROLE, OVERRIDE } };
 })();
 if (typeof globalThis !== "undefined") globalThis.NAMES = NAMES;

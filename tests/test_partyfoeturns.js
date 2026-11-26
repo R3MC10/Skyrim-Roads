@@ -67,7 +67,7 @@ for (const np of [2, 3, 4, 8]) {
     st.fights++; st.rounds += ss.round; if (f.won) st.won++;
     // every foe move in the order was played (rounds that were played to the end)
     const per = {}, rounds = ss.ev.filter((e) => e.kind === "round");
-    for (const e of ss.ev) if (e.kind === "foe" && !/steps in/.test(e.text)) per[e.round] = (per[e.round] || 0) + (e.skipped || 1);   // a stunned or frozen slot is lost whole (initiative.js)
+    for (const e of ss.ev) if (e.kind === "foe" && !/steps in/.test(e.text) && e.fell == null) per[e.round] = (per[e.round] || 0) + (e.skipped || 1);   // a stunned or frozen slot is lost whole (initiative.js)
     for (const e of rounds) {
       const ids = e.order.filter((o) => /^foe/.test(o.id)).map((o) => o.id);
       if (ids.length >= 2) st.twice++;
@@ -77,7 +77,7 @@ for (const np of [2, 3, 4, 8]) {
     // the name of the move says who it goes for, and that is who it hit
     const pidName = new Map([["p1", "you"], ...mates.map((m) => [m.s.id, m.s.name])]);
     for (const e of ss.ev) {
-      if (e.kind !== "foe" || !e.act || !e.act.tgt || !e.hits) continue;
+      if (e.kind !== "foe" || !e.act || !e.act.tgt || !e.hits || e.act.row) continue;   // [rows] a spell on a whole row names the row
       const hit = Object.keys(e.hits).map((p) => pidName.get(p)).filter(Boolean);
       if (!hit.length) continue;   // a teammate took the blow (the leader's own losses mix in poison and bleeding)
       st.tgtChecked++;

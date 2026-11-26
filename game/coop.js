@@ -180,6 +180,11 @@ const COOP = (() => {
 
   // ---- who stands beside you, and how they fight (from their own tactics)
   function profile(s) {
+    const p = profile0(s);
+    if (typeof FOEFIELD !== "undefined") { try { p.row = FOEFIELD.saveRow(s); } catch (e) { /* front */ } }   // [rows] where you stand: from your gear, or your own pick in the Hero panel
+    return p;
+  }
+  function profile0(s) {
     const speed = typeof INIT !== "undefined" ? INIT.heroSpeed(s).speed : undefined;   // [initiative] your speed in a fight (armour, perks), for the turn order on the leader's phone
     if (typeof COMBATAI !== "undefined" && COMBATAI.isSmart(G.loadout(s))) { const st = MP.stats(s); return { dmg: st.dmg, hp: st.hp, red: st.red, speed, ...COMBATAI.coopProfile(s) }; }   // Smart AI: worked out from your own kit, on your own phone
     const st = MP.stats(s), rules = (G.loadout(s)?.rules || []).filter((r) => r && !r.off);
@@ -205,7 +210,7 @@ const COOP = (() => {
     const p = c.coop?.prof || { dmg: c.dmg || 5, hp: c.hp || 100, red: c.red || 0, role: "fighter" };
     const hp = Math.max(30, c.cur || p.hp);
     return { name: c.name, dmg: Math.max(2, (p.dmg || 5) * ALLY_DMG), hp, maxHp: p.hp || hp, red: clamp(p.red || 0, 0, 0.8), role: p.role || "fighter", sneaky: !!p.sneaky,
-      healAt: p.healAt || 50, healAmt: p.healAmt || 0, heals: p.heals || 0, potAt: p.potAt || 0, pots: p.pots || 0, potAmt: p.potAmt || 50, player: true, coop: true, pid: c.id || null, ...(p.speed ? { speed: p.speed } : {}) };   // pid: their phone picks their moves in turn-based fights
+      healAt: p.healAt || 50, healAmt: p.healAmt || 0, heals: p.heals || 0, potAt: p.potAt || 0, pots: p.pots || 0, potAmt: p.potAmt || 50, player: true, coop: true, pid: c.id || null, ...(p.speed ? { speed: p.speed } : {}), ...(p.row === "front" || p.row === "back" ? { row: p.row } : {}) };   // pid: their phone picks their moves in turn-based fights
   }
   /* the ally's turn (called from the fight loop) */
   function allyAct(f, al) {

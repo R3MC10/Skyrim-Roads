@@ -52,6 +52,7 @@ const FOEINTENT = (() => {
       if (rnd() < aw / (aw + 1) * 0.7) al = typeof FAI !== "undefined" ? FAI.pickAlly(f) : all[Math.floor(rnd() * all.length)];
     }
     if (al && al.coop) { const g = all.find((a) => a.coop && !a.down && a.role === "guard"); if (g && g !== al && rnd() < 0.5) al = g; }   // coop.js: a guard steps in
+    if (typeof FOEFIELD !== "undefined") al = FOEFIELD.fixTarget(f, al, rnd);   // [rows] melee can't reach your back row while your front row stands
     return al;
   }
 
@@ -67,9 +68,9 @@ const FOEINTENT = (() => {
   const foeSlots = (sess) => (typeof FIGHTREAD !== "undefined" ? FIGHTREAD.foeLeft(sess) : (sess.order || []).slice(sess.idx || 0).filter((o) => String(o.id).startsWith("foe")).length);
 
   /* roll a target for each foe action left this round (call right after FIGHTREAD.plan) */
-  function plan(sess, rnd = Math.random) {
+  function plan(sess, rnd = Math.random, cnt) {
     if (!sess || sess.mirror || !sess.f) return [];
-    const f = sess.f, n = foeSlots(sess), pl = f.kit?.plan || [], out = [];
+    const f = sess.f, n = cnt != null ? cnt : foeSlots(sess), pl = f.kit?.plan || [], out = [];
     for (const a of f.allies || []) keyOf(a);
     for (let i = 0; i < n; i++) {
       const p = pl[i];
@@ -135,6 +136,7 @@ const FOEINTENT = (() => {
   function label(d, sess) {
     if (!d) return "";
     if (d.k === myKey(sess)) return "you";
+    if (d.kind === "row" || d.kind === "foe") return String(d.n || "");   // [rows] "front row", "Spellcaster"
     return String(d.n || "ally").split(" ")[0];
   }
   /* rough damage a blow does to an ally: the engine's sums for them (engine.js, followerai.js hitSummon, coop.js hitAlly),

@@ -829,6 +829,7 @@ const G = (() => {
         let label = sp.name + (stormHit ? "  (the storm answers)" : "");
         if (this.turn === 1 && this.hidden && P(s, "quiet_casting")) { amt *= 2; label += " (sneak ×2)"; }
         if (sp.school === "Destruction" && P(s, "impact") && Math.random() < 0.3) { this.stagger = true; label += ", staggers"; }
+        if (typeof DIFF !== "undefined" && DIFF.ward && DIFF.ward(this)) amt *= 1 - DIFF.ward(this);   // Hard: foes shrug off part of it
         if (this.fp && this.fp.ward) { amt *= 1 - this.fp.ward; label += ` (${this.e.name}'s ward soaks ${Math.round(this.fp.ward * 100)}%)`; }   // Ward Absorb, Magic Resistance, Atronach
         if (capBlow(this, amt) < amt) { amt = capBlow(this, amt); label += " (it reels, but stands)"; }   // no one-shots on strong foes
         this.ehp -= amt;

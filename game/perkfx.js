@@ -383,6 +383,11 @@ const PFX = (() => {
     [ "Destruction", "spell_weaving", "Spell Weaving", 1, [40], ["apprentice_destruction"], "Once a fight, a big spell (Adept or higher, or a dual cast) costs only 1 AP instead of 2. [OURS]", [["tbsp1", 1, {}]]],
     [ "Restoration", "swift_mending", "Swift Mending", 1, [40], ["novice_restoration"], "Once a fight, a big spell (Adept or higher, or a dual cast) costs only 1 AP instead of 2. [OURS]", [["tbsp1", 1, {}]]],
     [ "Blocking", "steady_guard", "Steady Guard", 1, [30], ["shield_wall"], "Every AP you don't spend on your turn gives 5% more guard (up to 10% more, so 40% at most). [OURS]", [["tbguard", 1, {}]]],
+    // [rows] front and back rows, foe roles (foefield.js, foeroles.js)
+    [ "One-Handed", "line_breaker", "Line Breaker", 1, [40], ["armsman"], "Once a fight, a melee move reaches a foe in the back row even while their front row stands. [OURS]", [["rowreach", 1, {}]]],
+    [ "Two-Handed", "sweeping_reach", "Sweeping Reach", 1, [40], ["barbarian"], "Once a fight, a melee move reaches a foe in the back row even while their front row stands. [OURS]", [["rowreach", 1, {}]]],
+    [ "Blocking", "spell_breaker", "Spellbreaker", 1, [40], ["shield_wall"], "When you break a foe's channelled spell (a bash, a shock spell, a stun or a stagger), it also staggers. [OURS]", [["rowint", 1, {}]]],
+    [ "Archery", "through_the_gap", "Through the Gap", 1, [40], ["overdraw"], "Your arrows and direct spells slip past a Shieldwarden's Cover: they always hit the foe you aim at. [OURS]", [["nocover", 1, {}]]],
     [ "Smithing", "cm_mark", "Master's Mark", 1, [35], ["steel_smithing"], "Towns trust your maker's mark: orders for crafted goods you finish give the company half again the materials, and a better chance of an extra item. [OURS]", [["cmcraft", 0.5, {}]]],
   ];
   const FX = {};

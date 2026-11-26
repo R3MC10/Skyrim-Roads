@@ -7,7 +7,7 @@ const RUNS = +(process.env.RUNS || process.argv[2] || 40);
 const TUNE = process.env.TUNE ? JSON.parse(process.env.TUNE) : null;
 const c = { process: { env: process.env }, console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String, RUNS, structuredClone };
 vm.createContext(c);
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "foecap.js", "stacks.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "foeintent.js", "initiative.js", "tbfight.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "foecap.js", "stacks.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "foeintent.js", "initiative.js", "tbfight.js", "foeroles.js", "foefield.js"])
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 if (fs.existsSync(W + "sharedfight.js")) vm.runInContext(fs.readFileSync(W + "sharedfight.js", "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);   // shared party fights (section 8b; kept out of the list other tests copy)
 vm.runInContext(`
@@ -192,11 +192,11 @@ if (!process.env.SIMONLY) {
 { const s = fresh("warrior", 20), f = new G.Fight(s, enc("Bandit outlaw", 20));
   const mate = COOP.allyFromCard({ id: "p2", name: "Beta", coop: { prof: { dmg: 20, hp: 300, red: 0.2, role: "fighter" } } }); mate.pid = "p2"; f.allies.push(mate);
   const asked = []; const ss = new TB.Session(f, { trySneak: false }); ss.remote = { ask: (sess, al) => asked.push(al.pid), end() {} };
-  ok(ss.waves === 2 && ss.ehpMax * ss.waves > Math.round(f.e.hp * TB.FOE_HP), "party fights: two heroes meet two foes, tougher in total");
+  ok((ss.waves === 2 || ss.waves === 3) && ss.ehpMax * ss.waves > Math.round(f.e.hp * TB.FOE_HP), "party fights: two heroes meet two or three foes, tougher in total");
   let r = ss.begin(), waited = false, g = 0, skipped = 0;
   while (!ss.done && g++ < 300) { if (r.turn === "me") { r = ss.act("attack"); if (r.turn === "next") r = ss.advance(); continue; } if (r.turn === "wait") { waited = true; if (asked.length === 1) ss.waiting.move = "power"; else { ss.waiting.skip = true; skipped++; } r = ss.advance(); continue; } r = ss.advance(); }
   ok(waited && asked[0] === "p2", "the fight waited for Beta's phone"); ok(ss.ev.some((e) => /Beta power attack/.test(e.text)), "Beta's chosen move was played"); ok(ss.ev.some((e) => /is skipped and keeps their guard up/.test(e.text)) || !skipped, "a skipped player just guards (no auto fighting)");
-  ok(ss.wave === 2 || !f.won, "a won party fight went through every foe"); ok(!f.won || ss.ev.some((e) => /Another .* steps in/.test(e.text)), "the next foe steps in"); }
+  ok(ss.wave === ss.waves || !f.won, "a won party fight went through every foe"); ok(!f.won || ss.ev.some((e) => /falls!/.test(e.text)), "the foes fall one by one (rows: they stood together)"); }
 // 8b. shared party fights (sharedfight.js): Beta plays a real turn on her own full fight screen, the leader's phone takes it over
 ok(typeof SHAREDFIGHT !== "undefined", "sharedfight.js loaded");
 if (typeof SHAREDFIGHT !== "undefined") { console.log("8b: shared party fights");
@@ -270,7 +270,7 @@ if (typeof SHAREDFIGHT !== "undefined") { console.log("8b: shared party fights")
 { const s = fresh("warrior", 20), f = new G.Fight(s, enc("Bandit outlaw", 20));
   for (let i = 0; i < 7; i++) { const m = COOP.allyFromCard({ id: "p" + i, name: "M" + i, coop: { prof: { dmg: 20, hp: 300, red: 0.2, role: "fighter" } } }); m.pid = "p" + i; f.allies.push(m); }
   const ss = new TB.Session(f, { trySneak: false }); ok(ss.waves === 6, "8 heroes meet 6 foes"); }
-{ const s = fresh("warrior", 20), f = new G.Fight(s, enc("Bandit outlaw", 20)); const ss = new TB.Session(f, { trySneak: false }); ok(ss.waves >= 1 && ss.waves <= 3, "alone: one bandit or a small group (foegroups.js)"); }
+{ const s = fresh("warrior", 20), f = new G.Fight(s, enc("Bandit outlaw", 20)); const ss = new TB.Session(f, { trySneak: false }); ok(ss.waves >= 1 && ss.waves <= 2, "alone: one bandit or two side by side (foegroups.js, rows)"); }
 { const s = fresh("warrior", 20), f = new G.Fight(s, enc("Black bear", 20)); const ss = new TB.Session(f, { trySneak: false }); ok(ss.waves === 1, "alone vs a beast: one foe"); }
 }
 console.log(fails ? "FAILED " + fails : "ALL OK");

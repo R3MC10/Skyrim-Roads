@@ -124,7 +124,7 @@ const FOEKIT = (() => {
 
   function setup(f) {
     if (!f || !f.e) return null;
-    const ids = kitFor(f.e), pots = potsFor(f.e);
+    const ids = typeof FOEROLES !== "undefined" ? FOEROLES.kit(f.e, kitFor(f.e)) : kitFor(f.e), pots = potsFor(f.e);   // [rows] a role adds its moves (foeroles.js)
     if (pots && !ids.includes("potion")) ids.push("potion");
     f.kit = { ids, cd: {}, used: {}, pots, guard: 0, ward: 0, evade: 0, rage: 0, windup: null };
     return f.kit;
@@ -159,6 +159,7 @@ const FOEKIT = (() => {
     if (k.windup && f.e.teach && k.windTurn === (k.myTurns || 0)) { const r = hit(f, enemyTurn, 1, { keepName: true }); return pre + r.t; }
     if (k.windup) {
       const w = WIND[k.windup]; k.windup = null;
+      if (w.run) return pre + w.run(f, enemyTurn, n);   // [rows] a channelled spell lands on a whole row (foeroles.js)
       const r = hit(f, enemyTurn, w.mul);
       return pre + w.text(n, r.t);
     }
@@ -167,7 +168,8 @@ const FOEKIT = (() => {
     const id = pl && ready(f).includes(pl.id) ? pl.id : pick(f, rnd);
     if (!id) { const r = hit(f, enemyTurn, 1, { keepName: true }); return pre + r.t; }
     const m = MOVES[id]; k.cd[id] = m.cd; k.used[id] = (k.used[id] || 0) + 1; f.kitLast = id;
-    return pre + m.run(f, enemyTurn, n);
+    k.cur = pl && pl.id === id ? pl : null;   // [rows] the plan's own target ("Cover → Spellcaster")
+    try { return pre + m.run(f, enemyTurn, n); } finally { k.cur = null; }
   }
   /* [OURS] intents (fightread.js shows them): decide now what its next `n` turns will be, so the screen can show it
      before it happens. The same odds as rolling each turn; turn() follows the plan while the move is still possible
@@ -188,7 +190,7 @@ const FOEKIT = (() => {
         const id = pick(f, rnd);
         if (!id) { out.push({ id: "blow" }); continue; }
         sim.cd[id] = MOVES[id].cd; sim.used[id] = (sim.used[id] || 0) + 1;
-        if (id === "wind_up") wind = "smash"; else if (id === "take_aim") wind = "aimed";
+        if (id === "wind_up") wind = "smash"; else if (id === "take_aim") wind = "aimed"; else if (id === "channel") wind = "chan";
         out.push({ id });
       }
     } finally { f.kit = k; }
@@ -211,7 +213,8 @@ const FOEKIT = (() => {
   function chips(f) {
     const k = f.kit; if (!k) return [];
     const out = [];
-    if (k.windup) out.push(["windup", k.windup === "aimed" ? "" : "", k.windup === "aimed" ? "Taking aim: a big shot lands next turn. Guard, or hit it hard to throw it off." : "Winding up: a huge blow lands next turn. Guard, or hit it hard to break it."]);
+    if (k.windup === "chan") out.push(["windup", "✦", `Channelling a Fireball at your ${k.chanRow === "back" ? "back" : "front"} row: it lands on its next move. Bash it, shock it, stun or stagger it to break it.`]);   // [rows] foeroles.js
+    else if (k.windup) out.push(["windup", k.windup === "aimed" ? "" : "", k.windup === "aimed" ? "Taking aim: a big shot lands next turn. Guard, or hit it hard to throw it off." : "Winding up: a huge blow lands next turn. Guard, or hit it hard to break it."]);
     if (k.guard > 0) out.push(["guard", "", "Shield raised: your next melee blow does half."]);
     if (k.ward > 0) out.push(["ward", "" + k.ward, "Ward up: soaks damage from your spells."]);
     if (k.evade > 0) out.push(["evade", "", "In the shadows: your next blow may miss."]);
