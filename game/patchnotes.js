@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b369-setscroll", build: 369, date: "26 Nov 2026", title: "Settings stay put", items: [
+      "Changing a setting no longer throws you back to the top of the Settings page: you stay where you were.",
+    ] },
     { id: "b368-framesize", build: 368, date: "26 Nov 2026", title: "Roomier frames", items: [
       "The knotwork corners on panels and buttons are smaller, and framed panels have more room at the bottom and between them, so screens feel less cramped.",
     ] },

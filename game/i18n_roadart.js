@@ -35,5 +35,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "In Settings, the box for your character's name now has its own full-width row, with the Change name button underneath it.": "W Ustawieniach pole z imieniem postaci ma teraz własny wiersz na całą szerokość, a przycisk Zmień imię jest pod nim.",
     "Roomier frames": "Przestronniejsze ramki",
     "The knotwork corners on panels and buttons are smaller, and framed panels have more room at the bottom and between them, so screens feel less cramped.": "Plecione narożniki paneli i przycisków są mniejsze, a panele w ramkach mają więcej miejsca u dołu i między sobą, więc ekrany są mniej ściśnięte.",
+    "Settings stay put": "Ustawienia zostają na miejscu",
+    "Changing a setting no longer throws you back to the top of the Settings page: you stay where you were.": "Zmiana ustawienia nie przerzuca już na górę strony Ustawień: zostajesz tam, gdzie byłeś.",
   });
 })();
