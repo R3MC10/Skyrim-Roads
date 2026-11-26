@@ -25,5 +25,11 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "On phones, a soft winter wind now blows quietly under the main menu music, to go with the moving painting.": "Na telefonach pod muzyką menu głównego cicho wieje zimowy wiatr, pasujący do ruchomego obrazu.",
     "Nordic frames": "Nordyckie ramki",
     "Settings, the other main menu pages and pop-up windows now sit in a painted bronze frame with Nordic knotwork corners, to match the compass.": "Ustawienia, pozostałe strony menu głównego i okienka mają teraz malowaną brązową ramkę z nordyckimi plecionymi narożnikami, pasującą do kompasu.",
+    "Nordic menus": "Nordyckie menu",
+    "Buttons now have bronze knotwork frames, section titles get a knotwork line underneath, and the chosen option in a switch sits on a small bronze plate. On a phone, settings with three or more choices get their own row so nothing is squashed.": "Przyciski mają teraz brązowe ramki z plecionką, nagłówki sekcji ozdobną linię pod spodem, a wybrana opcja przełącznika leży na małej brązowej płytce. Na telefonie ustawienia z trzema lub więcej opcjami mają własny wiersz, więc nic się nie ściska.",
+    "Volume and other sliders have a compass for a knob: the star spins as you drag it and throws sparks off the track, the gold part of the track glows, and it ticks softly as it moves.": "Suwaki głośności i inne mają gałkę w kształcie kompasu: gwiazda kręci się podczas przesuwania i sypie iskrami, złota część suwaka świeci, a ruch cicho tyka.",
+    "Pressing a button sends a glint across its bronze and sinks it slightly; a new choice flashes gold; a window opening catches the light along its frame.": "Naciśnięty przycisk lśni na brązie i lekko się zapada, nowy wybór błyska złotem, a otwierane okno łapie światło wzdłuż ramki.",
+    "The panels on the Hero page have the bronze frame too, text boxes have a bronze edge, and Settings no longer goes see-through for a moment after you change something.": "Panele na stronie Bohatera też mają brązową ramkę, pola tekstowe brązową krawędź, a Ustawienia nie robią się na chwilę przezroczyste po zmianie opcji.",
+    "All of it calms down with the Motion setting (Lite or Off) or when your phone asks for less motion.": "Wszystko to się uspokaja przy ustawieniu Ruch (Lekki lub Wyłączony) albo gdy telefon prosi o mniej ruchu.",
   });
 })();

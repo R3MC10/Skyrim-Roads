@@ -292,7 +292,9 @@
         ${item("credits", "Credits")}</nav>`;
     }
     else body = `<div class="page">${titleSubpage()}</div>`;
-    $("#tbody").innerHTML = body;
+    const tb = $("#tbody"), samePage = tb.dataset.page === titlePage && !!tb.querySelector(".page");
+    tb.innerHTML = body; tb.dataset.page = titlePage;
+    if (samePage) tb.querySelector(".page")?.classList.add("still");   // redrawn after a change on the same page: no fade-in, so it never goes see-through
     if (titlePage !== "press") inner.querySelector(".mi, .page .btn")?.focus({ preventScroll: true });
     if (titlePage !== "menu" && titlePage !== "press") inner.scrollTop = 0;
     // the phone app's updater counts these game files as working only once the title has drawn (app.js)
