@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b370-tabs", build: 370, date: "26 Nov 2026", title: "Nordic tabs", items: [
+      "Tabs (Travel and Places, the Journal's Quests, Discoveries and the rest, Active, Misc and Completed) now sit on a thin bronze line, and the one you're on gets a small knotwork ornament under its name.",
+    ] },
     { id: "b369-setscroll", build: 369, date: "26 Nov 2026", title: "Settings stay put", items: [
       "Changing a setting no longer throws you back to the top of the Settings page: you stay where you were.",
     ] },

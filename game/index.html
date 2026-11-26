@@ -5887,6 +5887,17 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 :root.has-ui-frame-panel .title .page{padding-bottom:26px}
 :root.has-ui-frame-panel .modal .sheet:not(.hz-fs){padding-bottom:28px}
 :root.has-ui-frame-btn .btn{margin-top:4px}
+
+/* [uinordic] tabs (the rows at the top of World, Area, Journal…, and the Journal's Active/Misc/Completed) stay tabs:
+   plain engraved words on a thin bronze rule; the chosen one gets a small knotwork divider under it, like the headings */
+:root.has-ui-divider :is(.mn-sub,.seg.jseg){border-top:0;border-bottom:1px solid rgba(217,181,106,.35);border-radius:0;gap:0;padding:0}
+:root.has-ui-divider :is(.mn-sub,.seg.jseg) button{position:relative;background:none;border:0;border-image:none;box-shadow:none;padding:12px 10px 16px;min-width:0;color:#a29c8e}
+:root.has-ui-divider :is(.mn-sub,.seg.jseg) button.on{background:none;border:0;border-image:none;box-shadow:none;color:#f6e7bf;text-shadow:0 0 8px rgba(226,187,100,.45)}
+:root.has-ui-divider :is(.mn-sub,.seg.jseg) button.on::before{display:none}
+:root.has-ui-divider :is(.mn-sub,.seg.jseg) button.on::after{content:"";position:absolute;left:50%;bottom:2px;width:min(130px,92%);height:12px;transform:translateX(-50%);background:var(--asset-divider) center/contain no-repeat;pointer-events:none}
+:root.has-ui-divider #side[data-tab=log] .seg.jseg button{color:#6b5536;background:none;box-shadow:none}
+:root.has-ui-divider #side[data-tab=log] .seg.jseg button.on{color:#2e1f0d;text-shadow:none;background:none;box-shadow:none}
+html.pcmap.pc-full #side>.mn-sub button.on::after{display:none}   /* on a wide PC the tabs are a side column with their own marker */
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
