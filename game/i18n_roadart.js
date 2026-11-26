@@ -16,5 +16,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Compass fix": "Poprawka kompasu",
     "The main menu compass ring no longer drifts and spins: it stays still.": "Pierścień kompasu w menu głównym już nie dryfuje i nie obraca się: stoi w miejscu.",
     "The star now slides flat, straight up, down, left or right toward the direction you swipe.": "Gwiazda przesuwa się teraz płasko, prosto w górę, w dół, w lewo lub w prawo, w stronę przesunięcia palca.",
+    "A living main menu": "Żywe menu główne",
+    "On phones, the main menu is now a moving painting: northern lights ripple over the valley, snow drifts down and the hero's cloak stirs in the wind.": "Na telefonach menu główne to teraz ruchomy obraz: zorza faluje nad doliną, pada śnieg, a płaszcz bohatera porusza się na wietrze.",
+    "It comes with its own quiet music and the sound of the wind.": "Do tego cicha muzyka i szum wiatru.",
   });
 })();
