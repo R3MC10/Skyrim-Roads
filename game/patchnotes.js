@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b364-titlewind", build: 364, date: "26 Nov 2026", title: "Wind on the main menu", items: [
+      "On phones, a soft winter wind now blows quietly under the main menu music, to go with the moving painting.",
+    ] },
     { id: "b363-titleclear", build: 363, date: "26 Nov 2026", title: "Clearer main menu", items: [
       "The dark patch in the middle of the main menu is gone, so the painting shows through clearly behind the buttons.",
     ] },

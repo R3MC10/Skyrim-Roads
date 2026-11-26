@@ -21,5 +21,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "The usual title music plays over it, and the old drawn snowflakes step aside since the painting has its own snow.": "Gra przy nim zwykła muzyka z menu, a dawne rysowane płatki śniegu znikają, bo obraz ma własny śnieg.",
     "Clearer main menu": "Wyraźniejsze menu główne",
     "The dark patch in the middle of the main menu is gone, so the painting shows through clearly behind the buttons.": "Ciemna plama na środku menu głównego zniknęła, więc obraz wyraźnie widać za przyciskami.",
+    "Wind on the main menu": "Wiatr w menu głównym",
+    "On phones, a soft winter wind now blows quietly under the main menu music, to go with the moving painting.": "Na telefonach pod muzyką menu głównego cicho wieje zimowy wiatr, pasujący do ruchomego obrazu.",
   });
 })();
