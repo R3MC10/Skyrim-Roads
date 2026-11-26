@@ -4,9 +4,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
 (() => {
   Object.assign(I18N_EXTRA.words, {
     "Action points": "Punkty akcji",
-    "Moves": "Ruchy", "Made": "Wykonane", "Moves made": "Wykonane ruchy", "Moves a turn": "Ruchów na turę", "Costs": "Kosztuje", "free": "za darmo",
-    "Make up to 4 moves a turn. Blows and guards cost stamina, spells magicka: the coloured numbers on each button.": "Wykonaj do 4 ruchów na turę. Ciosy i garda kosztują wytrzymałość, czary magię: kolorowe liczby na każdym przycisku.",
-    "The same move again in one turn costs 50% more. Moves you don't make become guard when you end your turn (up to 30% less damage).": "Ten sam ruch drugi raz w jednej turze kosztuje 50% więcej. Ruchy, których nie wykonasz, zamieniają się w gardę, gdy kończysz turę (do 30% mniej obrażeń).",
+    "Costs": "Kosztuje", "free": "za darmo",
     "Stamina and magicka come back a bit every round.": "Wytrzymałość i magia wracają trochę co rundę.",
     "Every move costs AP: the gold pips on its button.": "Każdy ruch kosztuje AP: złote kropki na jego przycisku.",
     "Blue ✦ spell AP pays for spells and scrolls first.": "Niebieskie ✦ AP na czary płacą najpierw za czary i zwoje.",

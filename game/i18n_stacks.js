@@ -6,9 +6,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     // the action bar and costs
     "Moves": "Ruchy", "ready": "gotowe", "free": "za darmo", "Free.": "Za darmo.", "Too hurt": "Zbyt ranny", "Once a turn": "Raz na turę",
     "Minigames": "Minigry", "On": "Wł.", "Off": "Wył.", "Fight minigames": "Minigry w walce",
-    "End your turn. Moves you didn't make become guard (up to 30% less damage until your next turn).": "Kończysz turę. Ruchy, których nie zrobiłeś, stają się gardą (do 30% mniej obrażeń do twojej następnej tury).",
     "Try to break away from the fight. Ends your turn; the foe may cut you off.": "Spróbuj uciec z walki. Kończy turę; wróg może odciąć ci drogę.",
-    "Free, but it ends your turn.": "Za darmo, ale kończy turę.",
     "Blows, power attacks, bashes and guards need stamina, spells need magicka.": "Ciosy, potężne ataki, uderzenia tarczą i garda zużywają wytrzymałość, czary magię.",
     // minigames
     "Tap in the bright zone": "Stuknij w jasnej strefie", "Press as the blow meets your shield": "Naciśnij, gdy cios trafia w tarczę",
@@ -42,10 +40,6 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Burning, chills and shocks put on you have one stack less. [OURS, from Dispel]": "Podpalenia, chłód i porażenia nałożone na ciebie mają o jeden stos mniej.",
     "Elemental statuses from your enchanted weapons put on 1 more stack. [OURS]": "Statusy żywiołów z zaklętej broni nakładają o 1 stos więcej.",
     // bosses, the tutorial
-    "Block (or end your turn after 2 moves or fewer) to halve it": "Zablokuj (albo skończ turę po 2 ruchach lub mniej), żeby go zmniejszyć o połowę",
-    "On your turn, make up to 4 moves: blows and power attacks cost stamina, spells cost magicka, dark magic costs a little health (the same move again costs more).":
-      "W swojej turze zrób do 4 ruchów: ciosy i potężne ataki kosztują wytrzymałość, czary magię, mroczna magia trochę zdrowia (ten sam ruch drugi raz kosztuje więcej).",
-    "Press End turn when you're done; moves you don't make turn into guard.": "Naciśnij Koniec tury, gdy skończysz; ruchy, których nie zrobisz, stają się gardą.",
     // foe moves by name (fightread.js intents)
     "Strike": "Cios", "Heavy Swing": "Ciężki zamach", "Bite": "Ugryzienie", "Claw Swipe": "Cios pazurami", "Stomp": "Tupnięcie", "Spell": "Czar", "Shoot": "Strzał",
     "Crushing Blow": "Miażdżący cios", "Aimed Shot": "Celny strzał", "Shield Bash": "Uderzenie tarczą", "Brace": "Zasłona", "Winds up": "Bierze zamach",
@@ -86,7 +80,6 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
   I18N_EXTRA.pat.push(
     [/^((?:\d+ (?:stamina|magicka|health)(?: · )?)+)$/, (m) => costPL(m[1])],
     [/^Costs (.+?)( \(done (\d+)× this turn, so it costs more\))?\.$/, (m) => `Koszt: ${costPL(m[1])}${m[2] ? ` (zrobione ${m[3]}× w tej turze, więc kosztuje więcej)` : ""}.`],
-    [/^(\d+) moves a turn$/, (m) => `${m[1]} ruchy na turę`],
     [/^(\d+) potions a turn$/, (m) => `${m[1]} mikstury na turę`],
     [/^Need (\d+) more health$/, (m) => `Brakuje ${m[1]} zdrowia`],
     [/^\+(\d+)% guard$/, (m) => `+${m[1]}% gardy`],
@@ -95,7 +88,6 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     [/^Regen: \+(\d+) health at the end of each round\.$/, (m) => `Regeneracja: +${m[1]} zdrowia na koniec każdej rundy.`],
     [/^Poisoned: −(\d+) health every turn\.$/, (m) => `Zatruty: −${m[1]} zdrowia co turę.`],
     [/^Poisoned: you lose (\d+) health each time a foe acts\. A Cure Poison potion or winning the fight ends it\.$/, (m) => `Zatruty: tracisz ${m[1]} zdrowia za każdym razem, gdy wróg działa. Kończy to mikstura leczenia trucizny albo wygrana walka.`],
-    [/^Up to (\d+) moves a turn, initiative (\d+)\.$/, (m) => `Do ${m[1]} ruchów na turę, inicjatywa ${m[2]}.`],
     [/^Catch your breath: get back (\d+) stamina and (\d+) magicka\.$/, (m) => `Oddech: odzyskujesz ${m[1]} wytrzymałości i ${m[2]} magii.`],
     [/^winded −(\d+) stamina$/, (m) => `zadyszka −${m[1]} wytrzymałości`],
     [/^drained −(\d+) magicka$/, (m) => `wyczerpanie −${m[1]} magii`],

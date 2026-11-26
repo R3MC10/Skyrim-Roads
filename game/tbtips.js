@@ -20,7 +20,8 @@ const TBTIPS = (() => {
   /* text for one action card */
   function action(f, a, c) {
     const ct = c && typeof c === "object" && typeof TB !== "undefined" && TB.costTxt ? TB.costTxt(c) : "";
-    const apTxt = !ct ? "" : ct === "free" ? "Free." : `Costs ${ct}${c.n ? ` (done ${c.n}× this turn, so it costs more)` : ""}.`;
+    const apN = c && c.acts > 0 ? c.acts : 0;   // [threeap] the AP it takes, said last (fighttips.js shows AP in its own row and drops that sentence)
+    const apTxt = [!ct || (ct === "free" && apN) ? "" : ct === "free" ? "Free." : `Costs ${ct}${c.n ? ` (done ${c.n}× this turn, so it costs more)` : ""}.`, apN ? `${apN} AP.` : ""].filter(Boolean).join(" ");
     if (typeof STRAT !== "undefined" && STRAT.owns(a)) return `${STRAT.tip(f, a)} ${apTxt}`;
     if (typeof MOUNTFIGHT !== "undefined" && MOUNTFIGHT.owns(a)) return `${MOUNTFIGHT.tip(f, a)} ${apTxt}`;   // mountfight.js
     if (typeof REACT !== "undefined" && REACT.owns(a)) return `${REACT.tip(f, a)} ${apTxt}`;   // reactions.js
@@ -37,7 +38,7 @@ const TBTIPS = (() => {
       : `Raise your guard: the next blow is partly blocked. ${apTxt}`;
     if (a === "bash") return `Slam your shield into the foe: small damage and they're stunned and lose their next turn. Costs a lot of stamina. ${apTxt}`;
     if (a === "flee") return "Try to break away from the fight. Ends your turn; the foe may cut you off.";
-    if (a === "end") return "End your turn. Moves you didn't make become guard (up to 30% less damage until your next turn).";
+    if (a === "end") return "End your turn. AP you didn't spend become guard: 10% less damage each, up to 30%, until your next turn.";
     const [k, arg] = a.split(":");
     if (k === "spell" || k === "dual" || k === "scroll") {
       const id = k === "scroll" ? D.ITEMS[arg]?.spell : arg, sp = D.SPELLS[id];
@@ -60,7 +61,7 @@ const TBTIPS = (() => {
     let arm = 0, red = 0;
     try { const { rating, pieces } = f.armorRating(); arm = r0(rating); red = r0(100 * F.damageReduction(rating, pieces)); } catch (e) { /* no armour info */ }
     const blk = typeof SHIELDFX !== "undefined" ? r0(100 * SHIELDFX.passive(f)) : 0;
-    return `You. Armour ${arm} (blows ${red}% weaker)${blk ? `, ${blk}% chance to block with your shield` : ""}. Up to ${st.acts || 4} moves a turn, speed ${st.speed}.`;
+    return `You. Armour ${arm} (blows ${red}% weaker)${blk ? `, ${blk}% chance to block with your shield` : ""}. ${st.acts || 3} AP a turn, speed ${st.speed}.`;
   }
   /* text for the foe's frame */
   function foe(f, ehpMax) {

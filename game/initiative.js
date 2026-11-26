@@ -13,19 +13,20 @@
         frozen  (paralysis, f.eParalyzed)    skips its next slot, then thaws
         staggered (f.stagger)                its next slot moves back 2 places (it still acts)
         slowed (f.slowed, Chill, Numbing Cold) -2 speed;   hasted (Haste stacks) +2 speed
-        knocked down (thrown from the saddle, f.kitApLoss)  one move of the turn goes into standing up
+        knocked down (thrown from the saddle, f.kitApLoss)  1 of the turn's 3 AP goes into standing up
         knocked out / dead                   its slots are taken out
    4. No stun-lock: after losing a slot to a stun or a freeze, the fighter shrugs off stuns and freezes through the next
       round. Bosses always have two slots, so they lose one, never the whole round. A slot moves back at most 2 places
-      a round. Speed decides WHEN you act, never how many moves you get.
+      a round. Speed decides WHEN you act, never how many AP you get (3 a turn, followers 2).
    5. Shared turns: heroes next to each other in the order (players, followers, pets, summons) form one group and act at
       the same time. Followers act on their orders automatically; every player picks their own moves, each move
       resolving when it's made, the leader's phone keeping the order. A skipped foe slot between two groups joins them.
-   6. No timer (owner's call): a shared turn waits until everyone in it has used their moves or ended their turn.
+   6. No timer (owner's call): a shared turn waits until everyone in it has spent their AP or ended their turn.
       A player whose phone dropped out guards by themselves; after 30 s with no move from a player the leader gets a
-      "Skip <name>" button, and that player's unused moves turn into guard.
+      "Skip <name>" button, and that player's unused AP turn into guard.
    7. Fast foes (a trait: bosses, tough foes, beasts, dragons) have two slots, the 2nd at initiative -4; the foe's moves
-      for the round are shared out over its slots.
+      for the round are shared out over its slots: each slot gets its own set number of moves (foeSlots), never a
+      hero's 3 AP twice.
    The leader's phone owns all of this (tbfight.js Session); teammates' phones only show it (sharedfight.js). Every slot
    has its own id (uid) so nothing runs twice. Pure maths here; the strip on screen is initroster.js.
    Checked by tests/test_initiative.js (rules + the seeded party round-time sims). */
@@ -41,7 +42,7 @@ const INIT = (() => {
     fastSlots: 2, slotGap: 4,      // a fast foe's 2nd slot sits 4 initiative lower
     stagger: 2, pushMax: 2,        // staggered: back 2 places; at most 2 places a round per slot
     immune: 1,                     // rounds of shrugging off stuns and freezes after losing a slot to one
-    standUp: 1,                    // moves it takes to get back on your feet
+    standUp: 1,                    // AP it takes to get back on your feet
     skipAfter: 30,                 // party fights: no timer; after 30 s with no move from a player the leader may skip them (guard)
     lostAfter: 20,                 // a player's phone that never picked up its turn in 20 s (and shows offline) has dropped out: guard
     slideMs: 220, skipMs: 700,     // roster animation (initroster.js)
@@ -304,7 +305,7 @@ const INIT = (() => {
     if (!first) return "";
     return o.skip === "freeze" ? `${nm} is frozen solid and loses this turn, then thaws` : `${nm} is stunned and loses this turn`;
   }
-  /* knocked down: moves that go into getting up this turn */
+  /* knocked down: AP that go into getting up this turn */
   const standUp = (f) => (f && f.kitApLoss > 0 ? CFG.standUp : 0);
 
   // ------------------------------------------------------------------ what the roster shows
@@ -320,7 +321,7 @@ const INIT = (() => {
       if (st.imm >= (sess.round || 0) && !o.skip) out.push({ k: "resolve", ic: ic("resolve"), nm: "Bracing: shrugs off stuns and freezes until the next round ends" });
     } else if (o.id === "me") {
       if (meHasted(f)) out.push({ k: "haste", ic: ic("haste"), nm: `Hasted: speed +${CFG.haste}` });
-      if (standUp(f)) out.push({ k: "down", ic: ic("down"), nm: "Knocked down: one move goes into getting up" });
+      if (standUp(f)) out.push({ k: "down", ic: ic("down"), nm: "Knocked down: 1 AP goes into getting up" });
     } else if (o.al) {
       if ((o.al.stk && o.al.stk.haste) > 0) out.push({ k: "haste", ic: ic("haste"), nm: `Hasted: speed +${CFG.haste}` });
       if (o.out) out.push({ k: "down", ic: ic("down"), nm: "Knocked down" });

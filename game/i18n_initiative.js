@@ -31,13 +31,11 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Slowed: speed -2": "Spowolniony: szybkość -2",
     "Hasted: speed +2": "Przyspieszony: szybkość +2",
     "Bracing: shrugs off stuns and freezes until the next round ends": "Czujny: otrząsa się z ogłuszeń i zamrożeń do końca następnej rundy",
-    "Knocked down: one move goes into getting up": "Powalony: jeden ruch idzie na wstanie",
     "Knocked down": "Powalony",
     // speed parts
     "Base": "Podstawa", "No armour": "Bez pancerza", "Light armour": "Lekki pancerz", "Medium armour": "Średni pancerz", "Heavy armour": "Ciężki pancerz", "Perks and gear": "Atuty i ekwipunek",
     "Slowed": "Spowolniony", "Hasted": "Przyspieszony", "Speed": "Szybkość",
     // the fight log
-    "You get back on your feet (one move)": "Podnosisz się z ziemi (jeden ruch)",
     // perks
     "Heavy armour no longer slows you in fights.": "Ciężki pancerz nie spowalnia cię już w walce.",
     // patch note

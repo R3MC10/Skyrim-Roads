@@ -126,7 +126,7 @@ const SHAREDFIGHT = (() => {
       const f = this.f;
       this.myTurn = { tid: t.tid, until: t.until }; this.until = t.until ? t.until - EARLY : 0; this.waitOn = null;
       this.cur = { id: "me", name: f.s.name || "You" };
-      this.beginTurn();   // no action points any more: moves cost stamina, magicka or health (tbfight.js)
+      this.beginTurn();   // 3 AP for this turn, as on the leader's phone (tbfight.js)
       f.summonTurns = 0; f.tbGuard = 0;
       this.t0 = { ehp: f.ehp, hp: f.hp, ev: this.ev.length, hitters: this.hitters, ward: f.ward || 0, armor: f.armorSpell || 0, snap: this.snap(), fs: this.foeSnap() };
       this.beatN = 0; this.beat();   // tell the leader's phone you're here (after t0: a store that answers at once runs apply again)
@@ -169,7 +169,7 @@ const SHAREDFIGHT = (() => {
       const mine = this.ev.slice(t0.ev).filter((e) => e.who === "me");
       const spells = typeof PARTYSPELLS !== "undefined" ? PARTYSPELLS.used(f.s, mine) : {};   // your crafted spells, so every phone knows them (partyspells.js)
       return { ...(Object.keys(spells).length ? { spells } : {}), pid: this.me, tid: this.myTurn?.tid || null, round: this.round, wave: this.wave, e0: t0.ehp, ehp: f.ehp, fs, fs0: t0.fs || null,
-        hp0: t0.hp, hp: f.hp, hpMax: G.maxHealth(f.s), guard: f.tbGuard || 0,
+        hp0: t0.hp, hp: f.hp, hpMax: G.maxHealth(f.s), guard: f.tbGuard || 0, ap: this.myActs || 0,   // ap: what you spent (the leader checks the guard against it)
         self: { ward: (f.ward || 0) > t0.ward ? f.ward : 0, armorRed: armorUp ? Math.min(0.5, f.armorSpell * 0.0012) : 0, armorT: armorUp ? 6 : 0 },   // [Skyrim] 0.12% less damage per armour point
         allies, summon: f.summonTurns > 0 ? { turns: f.summonTurns, dmg: f.summonDmg, name: f.summonName || "summon" } : null,
         hits: this.hitters - t0.hitters, fled: !!f.ranAway, wt: f.wt,

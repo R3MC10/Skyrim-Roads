@@ -8,7 +8,7 @@
      (they take some of your blows until you cut them down), switches to a new element, or covers the ground in
      something nasty that hurts every round. One blow can only push it one phase on, and it can't fall before its last.
    - Big attacks are shown a turn ahead (the intent chips show them too) and you can answer: block, a ward, hold back
-     (end your turn after two moves or fewer) to dodge, or break it with a shout or a shield bash (a very heavy hit can break it too).
+     (end your turn with 1 AP or more left) to dodge, or break it with a shout or a shield bash (a very heavy hit can break it too).
    - A slow-motion finishing blow, and a bigger loot reveal at the end.
    - Perks (perkfx.js): Giant Slayer, Read the Signs, Break Their Focus.
    Balance (tests/test_bossfight.js): bosses last longer than before but stay winnable at levels 10, 25 and 40.
@@ -40,9 +40,9 @@ const BOSSFIGHT = (() => {
     doom: { ic: "\uE145", name: "Marked for Death", mul: 2.2, ans: ["cover"], cut: 0.5, doom: true },                          // reactions.js: protect a friend
   };
   const HINT = {
-    block: "Block (or end your turn after 2 moves or fewer) to halve it",
+    block: "Block (or end your turn with 1 AP or more left) to halve it",
     ward: "A ward soaks most of it",
-    dodge: "End your turn after 2 moves or fewer to dodge most of it",
+    dodge: "End your turn with 1 AP or more left to dodge most of it",
     cover: "It goes for a friend: Cover allies to take it yourself, at half",
     cleanse: "If it lands, a potion or a healing spell washes the hex off",
   };
@@ -275,7 +275,7 @@ const BOSSFIGHT = (() => {
         return say(f, "{0} unleashes {1}!", T(d.name)) + " " + t;
       }
     }
-    const blocked = !!f.blocking || (f.tbGuard || 0) >= 0.1, warded = (f.ward || 0) > 0, dodged = (f.tbGuard || 0) >= 0.1;   // 2 moves or fewer
+    const blocked = !!f.blocking || (f.tbGuard || 0) >= 0.1, warded = (f.ward || 0) > 0, dodged = (f.tbGuard || 0) >= 0.1;   // 1 AP or more kept
     const how = d.ans.find((a) => (a === "block" && blocked) || (a === "ward" && warded) || (a === "dodge" && dodged) || (a === "cover" && covering));
     const hpB = f.hp;
     f.tgtNow = null; f.eMagic = !!d.magic;

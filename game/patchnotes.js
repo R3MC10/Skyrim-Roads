@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b350-threeap", build: 350, date: "26 Nov 2026", title: "3 AP a turn", items: [
+      "Your turn now runs on 3 AP (action points), shown as gold diamonds. Most moves take 1 AP: a blow, a bow shot, guarding, a shield bash, a small spell, a short shout, a potion, catching your breath, a poison or a small scroll.",
+      "Big moves take 2 AP: power attacks, spells of Adept level and up, dual casts, full three-word shouts, big scrolls and a beast's heavy moves. Every button shows its AP and goes grey when you can't pay for it.",
+      "AP you don't spend become guard: 10% less damage for each one, up to 30%, and it lasts until your next turn. One potion a turn.",
+      "With a blade in each hand, one attack is a blow plus a quick left-hand follow-up. Poisons, bleeding and enchantments still land only once.",
+      "If your target falls before your move lands, that move costs nothing. Followers get 2 AP a turn.",
+      "Six new perks: Heavy Momentum, Flowing Strikes and Quick Draw (once a fight, a power attack or an aimed shot for 1 AP), Spell Weaving and Swift Mending (once a fight, a big spell for 1 AP) and Steady Guard (more guard from AP you keep).",
+    ] },
     { id: "b348-initiative", build: 348, date: "26 Nov 2026", title: "A smarter turn order", items: [
       "Who goes first is rolled once when a fight starts: a roll of 1 to 4 plus your speed. Light armour makes you a bit quicker, heavy armour a bit slower, and some perks help.",
       "The turn order now changes during the fight. A stunned or frozen foe loses its next turn, a staggered one is pushed back two places, haste moves you up and slow moves you down. Every change slides into place so you can see it happen, with the reason flashing on the portrait.",

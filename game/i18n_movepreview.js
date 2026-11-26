@@ -5,7 +5,6 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
   Object.assign(I18N_EXTRA.words, {
     "Guard": "Garda",
     "blows hit softer until your next turn": "ciosy trafiają słabiej do twojej następnej tury",
-    "No guard left: you used all your moves": "Brak gardy: wykorzystałeś wszystkie ruchy",
     " (one blow can't take more than 40% of a strong foe)": " (jeden cios nie zabierze silnemu wrogowi więcej niż 40%)",
     // patch note (build 271)
     "See a move before you make it": "Zobacz ruch, zanim go wykonasz",
