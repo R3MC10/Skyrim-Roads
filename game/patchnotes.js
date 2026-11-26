@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b367-namerow", build: 367, date: "26 Nov 2026", title: "Tidier name change", items: [
+      "In Settings, the box for your character's name now has its own full-width row, with the Change name button underneath it.",
+    ] },
     { id: "b366-uinordic", build: 366, date: "26 Nov 2026", title: "Nordic menus", items: [
       "Buttons now have bronze knotwork frames, section titles get a knotwork line underneath, and the chosen option in a switch sits on a small bronze plate. On a phone, settings with three or more choices get their own row so nothing is squashed.",
       "Volume and other sliders have a compass for a knob: the star spins as you drag it and throws sparks off the track, the gold part of the track glows, and it ticks softly as it moves.",

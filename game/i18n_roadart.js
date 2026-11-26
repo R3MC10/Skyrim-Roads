@@ -31,5 +31,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Pressing a button sends a glint across its bronze and sinks it slightly; a new choice flashes gold; a window opening catches the light along its frame.": "Naciśnięty przycisk lśni na brązie i lekko się zapada, nowy wybór błyska złotem, a otwierane okno łapie światło wzdłuż ramki.",
     "The panels on the Hero page have the bronze frame too, text boxes have a bronze edge, and Settings no longer goes see-through for a moment after you change something.": "Panele na stronie Bohatera też mają brązową ramkę, pola tekstowe brązową krawędź, a Ustawienia nie robią się na chwilę przezroczyste po zmianie opcji.",
     "All of it calms down with the Motion setting (Lite or Off) or when your phone asks for less motion.": "Wszystko to się uspokaja przy ustawieniu Ruch (Lekki lub Wyłączony) albo gdy telefon prosi o mniej ruchu.",
+    "Tidier name change": "Schludniejsza zmiana imienia",
+    "In Settings, the box for your character's name now has its own full-width row, with the Change name button underneath it.": "W Ustawieniach pole z imieniem postaci ma teraz własny wiersz na całą szerokość, a przycisk Zmień imię jest pod nim.",
   });
 })();
