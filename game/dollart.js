@@ -52,7 +52,7 @@ const DOLL = (() => {
   const rarN = (row, text) => { if (typeof RARITY === "undefined") return esc(text); const r = RARITY.of(row.item, row); return (r === "common" ? esc(text) : `<span class="q-${r}">${esc(text)}</span>`) + RARITY.tag(row.item, row); };
   function slotBtn(s, slot, eq, size = 44) {
     const r = eq[slot], it = r && D.ITEMS[r.item];
-    const label = it ? `${(r.tq && typeof TOWNS !== "undefined" ? TOWNS.QUALITY[r.tq] + " " : "") + it.name}${typeof RARITY !== "undefined" ? ` (${RARITY.line(r.item, r)})` : ""}` : `Nothing (${NAMES[slot].toLowerCase()})`;   // the rarity word for screen readers; the icon has its rarity frame
+    const label = it ? `${NAMES.improved(it.name, r)}${typeof RARITY !== "undefined" ? ` (${RARITY.line(r.item, r)})` : ""}` : `Nothing (${NAMES[slot].toLowerCase()})`;   // the rarity word for screen readers; the icon has its rarity frame
     return `<button class="dslot ${r ? "full" : ""}" data-act="dollslot" data-slot="${slot}" aria-label="${esc(NAMES[slot])}: ${esc(label)}">
       ${r ? ICONART.item(r.item, size, r) : emptyIcon(slot, size)}<span class="dsl">${NAMES[slot]}</span>${r && !isJewel(slot) ? `<span class="dst num">${statOf(r)}</span>` : r && it.aenchant ? `<span class="dst dench">✦</span>` : ""}</button>`;
   }
@@ -89,7 +89,7 @@ const DOLL = (() => {
     const twoH = slot === "shield" && worn == null && G.equipment(s).weapon && D.ITEMS[G.equipment(s).weapon.item]?.hands === 2;
     return `<h2>${NAMES[slot]}</h2><p class="sub">${worn ? `Wearing ${esc(D.ITEMS[worn.item].name)} (${statOf(worn)} ${unit}).` : "Nothing in this slot."} Tap one to put it on.${twoH ? ` Your ${esc(D.ITEMS[G.equipment(s).weapon.item].name)} needs both hands: it comes off if you put on a shield.` : ""}</p>
       <div class="list dpick">${list.length ? list.map((c) => { const it = D.ITEMS[c.row.item];
-        return `<button class="item ${c.worn ? "on" : ""}" data-act="${c.worn ? "dolloff" : "dolleq"}" data-id="${c.row.id}" data-slot="${slot}">${ICONART.item(c.row.item, 36, c.row)}<div class="t">${rarN(c.row, (c.row.tq && typeof TOWNS !== "undefined" ? TOWNS.QUALITY[c.row.tq] + " " : "") + it.name)}${c.worn ? " ✓" : ""}<span>${esc(G.itemStats(c.row.item))}${c.row.temper ? ` · +${c.row.temper}` : ""}${typeof CHARGE !== "undefined" && CHARGE.info(c.row.item, c.row) ? " · " + CHARGE.inline(c.row.item, c.row, s) : ""} · ${it.weight} wt</span></div>
+        return `<button class="item ${c.worn ? "on" : ""}" data-act="${c.worn ? "dolloff" : "dolleq"}" data-id="${c.row.id}" data-slot="${slot}">${ICONART.item(c.row.item, 36, c.row)}<div class="t">${rarN(c.row, NAMES.improved(it.name, c.row))}${c.worn ? " ✓" : ""}<span>${esc(G.itemStats(c.row.item))}${c.row.temper ? ` · +${c.row.temper}` : ""}${typeof CHARGE !== "undefined" && CHARGE.info(c.row.item, c.row) ? " · " + CHARGE.inline(c.row.item, c.row, s) : ""} · ${it.weight} wt</span></div>
           <span class="dcmp">${c.worn ? `<i>worn</i>` : arrow(c.cmp)}</span></button>`; }).join("") : `<p class="sub">You have nothing for this slot. Blacksmiths and the forge can help.</p>`}</div>
       <div class="evc">${worn ? `<button class="btn" data-act="dolloff" data-slot="${slot}">Take it off</button>` : ""}<button class="btn" data-act="close">Close</button></div>`;
   }

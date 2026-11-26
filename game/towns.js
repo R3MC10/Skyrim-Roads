@@ -262,8 +262,10 @@ const TOWNS = (() => {
     return `${who} trains you. ${skill} is now ${sk.lvl}. (${5 - s.trained.n} sessions left this level)` + (msgs.length ? " " + msgs.join(" ") : "");
   }
 
-  // ---- the forge: improving weapons and armor ([Skyrim] quality names; [OURS] simplified improvement amounts)
-  const QUALITY = ["", "Fine", "Superior", "Exquisite", "Flawless", "Epic", "Legendary"];
+  // ---- the forge: improving weapons and armor ([OURS] simplified improvement amounts)
+  /* improvement levels show as +1..+6 ("Iron Sword +2", NAMES.improved), not words: Fine / Epic / Legendary belong to item
+     rarity (rarity.js) alone. The stored level is still row.tq (0-6) and row.temper the bonus, so old saves read the same. */
+  const QUALITY = ["", "+1", "+2", "+3", "+4", "+5", "+6"];
   // [Skyrim] each improvement uses one piece of the item's own material (value, weight)
   Object.assign(D.ITEMS, {
     mat_iron: { name: "Iron Ingot", slot: "material", weight: 1, value: 7 }, mat_steel: { name: "Steel Ingot", slot: "material", weight: 1, value: 20 },

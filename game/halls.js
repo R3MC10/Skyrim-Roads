@@ -55,7 +55,7 @@ const HALLS = (() => {
   const comfort = (h) => (h?.decor || []).reduce((a, id) => a + (DECOR[id]?.[2] || 0), 0) + (lvl(h, "shrine") ? 1 : 0);
   const roomCount = (h) => Object.values(h?.rooms || {}).filter(Boolean).length;
   const wages = (h) => Object.keys(h?.staff || {}).reduce((a, id) => a + (STAFF[id]?.[2] || 0), 0);
-  const name = (r) => (r.tq && typeof TOWNS !== "undefined" ? TOWNS.QUALITY[r.tq] + " " : "") + (D.ITEMS[r.item]?.name || r.item);
+  const name = (r) => NAMES.improved((D.ITEMS[r.item]?.name || r.item), r);
   const day = (t) => Math.floor(t / DAY);
 
   function blank(town, hallName, t, extra = {}) {

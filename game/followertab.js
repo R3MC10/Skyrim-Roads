@@ -39,7 +39,7 @@ const FOLTAB = (() => {
     const on = side === "yours" ? new Set() : new Set(Object.values(f.eq || {}));
     const out = src.filter((r) => itemOf(r) && (cat === "all" || catOf(itemOf(r)) === cat)).map((r) => {
       const it = itemOf(r), st = statOf(r, it);
-      return { id: r.id, r, it, name: (r.tq && typeof TOWNS !== "undefined" && TOWNS.QUALITY ? TOWNS.QUALITY[r.tq] + " " : "") + it.name, type: typeOf(it), stat: st, weight: +((it.weight || 0) * r.qty).toFixed(2), value: it.value || 0, qty: r.qty || 1, eq: on.has(r.id), cat: catOf(it) };
+      return { id: r.id, r, it, name: NAMES.improved(it.name, r), type: typeOf(it), stat: st, weight: +((it.weight || 0) * r.qty).toFixed(2), value: it.value || 0, qty: r.qty || 1, eq: on.has(r.id), cat: catOf(it) };
     });
     return sortRows(out, sort, dir);
   }

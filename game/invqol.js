@@ -17,7 +17,7 @@ const INVQOL = (() => {
   const SORTS = [["type", "Normal"], ["name", "Name"], ["value", "Value"], ["weight", "Weight"], ["ratio", "Value/wt"], ["new", "Newest"]];
   const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const item = (r) => (r && D.ITEMS[r.item]) || null;
-  const nameOf = (r) => { const it = item(r); return it ? (r.tq && typeof TOWNS !== "undefined" ? TOWNS.QUALITY[r.tq] + " " : "") + it.name + (r.nm ? ` “${r.nm}”` : "") : "?"; };
+  const nameOf = (r) => { const it = item(r); return it ? NAMES.improved(it.name, r) + (r.nm ? ` “${r.nm}”` : "") : "?"; };
 
   // ---------------------------------------------------------------- marks
   const isKeep = (r) => !!r?.keep;

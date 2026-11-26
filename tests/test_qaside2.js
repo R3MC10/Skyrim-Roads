@@ -25,9 +25,12 @@ const want = {
   "Can make now": /Do zrobienia/,
   "You make an Iron Dagger from 1 Iron Ingot, 1 Leather Strips. Masterful work! +1 damage.": /Wykuwasz: Iron Dagger.*Mistrzowska.*obrażeń/,
   "You smelt 2 Iron Ore into 1 Iron Ingot.": /Przetapiasz 2 Iron Ore na 1 Iron Ingot/,
-  "→ Fine (+1 damage) · uses 1 Iron Ingot (you have 4)": /Dobra.*obrażeń.*masz 4/,
-  "Each improvement uses one piece of the item's material (ingots, leather, firewood, moonstone or dwarven metal). Blacksmiths sell the common ones; dungeons hide the rest. Your Smithing (25) sets how far: every 20 points allows one more quality level.": /Kowalstwo \(25\)/,
-  "Blacksmiths sell the common ones; dungeons hide the rest. Your Smithing (20) sets how far: every 20 points allows one more quality level.": /^Kowale.*(20)/,
+  // forge levels are "+1".."+6" now (rarity owns Fine / Epic / Legendary)
+  "→ +1 (+1 damage) · uses 1 Iron Ingot (you have 4)": /^→ \+1 \(\+1 obrażeń\).*masz 4/,
+  "Your Smithing (100) can't improve it past +6.": /Kowalstwo \(100\).*\+6/, "Iron Sword is now +2": /^Iron Sword: teraz \+2$/,
+  "You hammer 1 Iron Ingot into it. Iron Sword is now +2 (+2 damage).": /Iron Sword jest teraz \+2 \(\+2 obrażeń\)/,
+  "Each improvement uses one piece of the item's material (ingots, leather, firewood, moonstone or dwarven metal). Blacksmiths sell the common ones; dungeons hide the rest. Your Smithing (25) sets how far: every 20 points lets you go one step further, up to +6.": /Kowalstwo \(25\)/,
+  "Blacksmiths sell the common ones; dungeons hide the rest. Your Smithing (20) sets how far: every 20 points lets you go one step further, up to +6.": /^Kowale.*(20)/,
   "Each improvement uses one piece of the item's material (ingots, leather, firewood, moonstone or dwarven metal).": /^Każde/,
   "Drag on the lock to aim the pick, then hold Turn. If it shakes, let go before the pick snaps.": /./,
   // batch 2: halls, neighbours, the inn, festivals

@@ -111,5 +111,19 @@ for (const f of fs.readdirSync(W).filter((f) => f.endsWith(".js") && !EXEMPT.tes
 console.log("hardcoded place names in UI text:", hits, "(baseline " + BASELINE + ")");
 ok(hits <= BASELINE, `hardcoded place names in UI text grew: ${hits} > ${BASELINE}. Top: ` + Object.entries(per).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([f, n]) => f + " " + n).join(", "));
 
+// forge levels: "+N" after the name, never a rarity word (rarity.js owns Common / Fine / Rare / Epic / Legendary)
+ok(N.improved("Iron Sword", { tq: 2 }) === "Iron Sword +2", "improved: Iron Sword +2");
+ok(N.improved("Iron Sword", { tq: 0 }) === "Iron Sword" && N.improved("Iron Sword", null) === "Iron Sword" && N.improved("Iron Sword", {}) === "Iron Sword", "improved: plain gear keeps its name");
+{
+  const towns = src("towns.js"), q = /const QUALITY = (\[[^\]]*\]);/.exec(towns);
+  const QL = q ? JSON.parse(q[1]) : [];
+  ok(QL.length === 7 && QL.slice(1).every((x, i) => x === "+" + (i + 1)), "TOWNS.QUALITY is +1..+6 " + JSON.stringify(QL));
+  const RW = /\b(Fine|Superior|Exquisite|Flawless|Epic|Legendary)\b/;
+  ok(!QL.some((x) => RW.test(x)), "no rarity / old quality word in forge levels");
+  // nothing builds "<level word> <name>" any more: every shown name goes through NAMES.improved
+  const stale = fs.readdirSync(W).filter((f) => /\.js$/.test(f) && !/^i18n|patchnotes/.test(f)).filter((f) => /QUALITY\[[^\]]*tq\] \+ " "/.test(src(f)));
+  ok(!stale.length, "forge level still put in front of a name in: " + stale.join(", "));
+}
+
 console.log(fail ? `${fail} FAILED of ${checks}` : `ok: ${checks} checks`);
 process.exit(fail ? 1 : 0);
