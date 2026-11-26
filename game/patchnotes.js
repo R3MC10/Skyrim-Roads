@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b357-riglayers", build: 357, date: "26 Nov 2026", title: "Shields and weapons sit right in your hands", items: [
+      "Painted fighters hold together better: a raised shield now sits in front of your hero, with the weapon arm behind it, instead of a hand and sword floating over the shield's face.",
+      "When you swing, get hit or walk the map, the shield drops down behind your body, under the arm that holds it, and comes back up in front when you guard again.",
+      "Swords, maces, staffs and bows sit in the closed fingers of the fist, not beside the hand.",
+      "Taking a blow no longer swings your blade across your own face, and a resting bow or staff leans forward instead of crossing your head.",
+    ] },
     { id: "b356-partyboss", build: 356, date: "26 Nov 2026", title: "Party fights last as long as solo ones", items: [
       "In a party, the foe is now sized for what each teammate really deals on their turn (their own phone works it out from their gear, perks and spells), not for one plain blow each. Big parties no longer get bosses that drag on for 30-40 rounds, and a party of mages isn't counted as fist fighters any more.",
       "A boss takes about 8-12 rounds whether you're on your own or eight strong; tough fights about 5-8 rounds, normal ones 3-5.",

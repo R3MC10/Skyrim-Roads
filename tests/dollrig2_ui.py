@@ -7,7 +7,8 @@ Paper doll (DOLLFRONT.probe), every weapon class x with / without shield x man /
   3. nothing touches the doll frame's edge
 Fight figure (PAINTRIG.draw + PAINTRIG.last): idle, attack (swing) and stagger, each with a shield and with dual wield:
   the main weapon in the right fist, the shield / second blade on the left fist (2 px), and the layer order
-  left arm < left blade < left fist < body < shield < right arm < weapon < right fist.
+  left arm < left blade < left fist < body < right arm < weapon < right fist, with the shield last when it is raised
+  (idle guard) or first, behind the left arm, when it is let down (stagger) [riglayers].
 Then the Pack tab live on phone and PC: the moving layers mount, they animate, and they don't under reduced motion.
 Contact sheets and Pack shots go to $SHOTS (dollrig2_*.png).  Usage: python3 dollrig2_ui.py PORT"""
 import asyncio, sys, os, tempfile
@@ -96,7 +97,13 @@ async def main():
             ok("main" in h and d(h["main"]["grip"], h["mainFist"]) <= 2, f"{tag}: weapon grip in the right fist")
             if x["mode"] == "shield": ok("shield" in h and d(h["shield"]["grip"], h["offFist"]) <= 2 and "off" not in h, f"{tag}: shield on the left fist")
             else: ok("off" in h and d(h["off"]["grip"], h["offFist"]) <= 2 and "shield" not in h, f"{tag}: second blade in the left fist")
-            want = ["offArm"] + (["offWeapon"] if x["mode"] == "dual" else []) + ["offFist", "legs", "body"] + (["shield"] if x["mode"] == "shield" else []) + ["mainArm", "mainWeapon", "mainFist"]
+            # [riglayers] a raised shield (front >= 0.5) is over everything; a lowered one hangs behind the body, under the left arm
+            sf = h["shield"].get("front", 0) if "shield" in h else 0
+            if x["mode"] == "shield" and x["clip"] == "idle": ok(sf >= 0.5, f"{tag}: the guard holds the shield up in front ({sf})")
+            if x["mode"] == "shield" and x["clip"] == "stagger": ok(sf < 0.5, f"{tag}: a hard blow throws the shield back ({sf})")
+            back = ["shield"] if x["mode"] == "shield" and sf < 0.5 else []
+            front = ["shield"] if x["mode"] == "shield" and sf >= 0.5 else []
+            want = back + ["offArm"] + (["offWeapon"] if x["mode"] == "dual" else []) + ["offFist", "legs", "body"] + ["mainArm", "mainWeapon", "mainFist"] + front
             ok(o == want, f"{tag}: layer order {o}")
         await pg.locator("#sheet").screenshot(path=_SHOTS + "dollrig2_sheet_fight.png")
         await ctx.close()
