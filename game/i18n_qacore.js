@@ -257,7 +257,7 @@ const I18N_QACORE = (() => {
   }
   {
     const T0 = (x) => { if (typeof I18N === "undefined" || !x) return x; const r = I18N.tr(x); return r == null ? x : r; };
-    const Q = { Fine: "Dobra", Superior: "Przednia", Exquisite: "Wyśmienita", Flawless: "Bez skazy", Epic: "Epicka", Legendary: "Legendarna" };
+    const Q = (x) => x;   // forge levels are "+1".."+6" now (towns.js QUALITY), the same in Polish
     const cap = (x) => x.charAt(0).toUpperCase() + x.slice(1), low = (x) => x.charAt(0).toLowerCase() + x.slice(1);
     const tail = (x) => (x || "").trim().split(/(?<=[.!]) (?=[A-Z+])/).filter(Boolean).map((p) => {
       const g = /^\+(\d+)% (strength|magnitude)\.$/.exec(p); return g ? `+${g[1]}% mocy.` : T0(p); }).join(" ");
@@ -316,8 +316,8 @@ const I18N_QACORE = (() => {
       [/^You cook (.+?)\. It's in your pack\. Eat it when you need it: (.+) for (\d+) minutes\.$/, (m) => `Gotujesz: ${T0(m[1])}. Danie jest w plecaku. Zjedz je, kiedy trzeba: ${low(T0(cap(m[2])))} przez ${m[3]} min.`],
       [/^You eat the (.+?)\. (.+) for (\d+) minutes\.$/, (m) => `Zjadasz: ${T0(m[1])}. ${T0(m[2])} przez ${m[3]} min.`],
       [/^You still need: (.+)\.$/, (m) => `Wciąż brakuje: ${m[1]}.`],
-      [/^You hammer (\d+) (.+?) into it\. (.+) is now (Fine|Superior|Exquisite|Flawless|Epic|Legendary) \(\+(\d+) (damage|armor)\)\.$/,
-        (m) => `Wkuwasz w to: ${m[1]} ${m[2]}. ${m[3]} jest teraz ${Q[m[4]]} (+${m[5]} ${m[6] === "damage" ? "obrażeń" : "pancerza"}).`],
+      [/^You hammer (\d+) (.+?) into it\. (.+) is now (\+\d) \(\+(\d+) (damage|armor)\)\.$/,
+        (m) => `Wkuwasz w to: ${m[1]} ${m[2]}. ${m[3]} jest teraz ${Q(m[4])} (+${m[5]} ${m[6] === "damage" ? "obrażeń" : "pancerza"}).`],
       [/^Missing: ((?:an unenchanted weapon or piece of armor|a known effect \(break enchanted gear here to learn one\)|a filled soul gem \(court wizards sell them\))(?:, | and )?)+\.$/,
         (m) => "Brakuje: " + m[0].slice(9, -1).split(/, | and /).map((x) => MISS[x] || x).join(", ").replace(/, ([^,]+)$/, " i $1") + "."],
       [/^(Pick two or three ingredients that share an effect\. )?You only see effects you've discovered: eat ingredients or experiment\. Alchemy (\d+)\.$/,

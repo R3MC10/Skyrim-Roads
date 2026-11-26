@@ -12,7 +12,7 @@ const SEARCH = (() => {
   const esc = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   /* which other modules are loaded (top-level consts aren't on window, so each needs its own typeof) */
   const LOADED = { QUESTS: () => typeof QUESTS, WORLD: () => typeof WORLD, PERKS: () => typeof PERKS, POWERS: () => typeof POWERS, TOWNS: () => typeof TOWNS, SMITH: () => typeof SMITH,
-    COOK: () => typeof COOK, EFFECTS: () => typeof EFFECTS, INGREDIENT_FX: () => typeof INGREDIENT_FX, SKILLINFO: () => typeof SKILLINFO, SPELLBOOK: () => typeof SPELLBOOK, MAGIC: () => typeof MAGIC, GATHER: () => typeof GATHER, TOMEINFO: () => typeof TOMEINFO };
+    COOK: () => typeof COOK, EFFECTS: () => typeof EFFECTS, INGREDIENT_FX: () => typeof INGREDIENT_FX, SKILLINFO: () => typeof SKILLINFO, SPELLBOOK: () => typeof SPELLBOOK, MAGIC: () => typeof MAGIC, GATHER: () => typeof GATHER, TOMEINFO: () => typeof TOMEINFO, NAMES: () => typeof NAMES };
   const has = (n) => { try { return LOADED[n]() !== "undefined"; } catch { return false; } };
   const PER_GROUP = 5, MORE_GROUP = 30, MAX_Q = 60;
 
@@ -151,8 +151,8 @@ const SEARCH = (() => {
   /* your own pack, one entry per stack */
   function mine(S) {
     return (S.inv || []).filter((r) => D.ITEMS[r.item]).map((r) => {
-      const it = D.ITEMS[r.item], q = r.tq && has("TOWNS") ? (TOWNS.QUALITY[r.tq] || "") + " " : "";
-      return mk("mine", r.id, q + it.name + (r.nm ? ` ${r.nm}` : ""), `${it.slot || ""} ${it.skill || ""}`, { row: r, item: r.item, boost: 8 });
+      const it = D.ITEMS[r.item], nm = has("NAMES") ? NAMES.improved(it.name, r) : it.name;
+      return mk("mine", r.id, nm + (r.nm ? ` ${r.nm}` : ""), `${it.slot || ""} ${it.skill || ""}`, { row: r, item: r.item, boost: 8 });
     });
   }
 

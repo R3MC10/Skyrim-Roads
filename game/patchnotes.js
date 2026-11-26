@@ -3,6 +3,38 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b358-rows", build: 358, date: "26 Nov 2026", title: "Front and back rows", items: [
+      "Groups of foes now stand on the field together, in a front row and a back row. A strip over the fight shows both rows: tap a foe (or press [ and ] on PC) to aim at it.",
+      "Blades, shield bashes and power attacks reach only the front row while anyone stands there. Bows, thrown things and spells you aim reach both rows. A foe you can't reach yet is greyed out and says why.",
+      "Area spells hit the whole row of the foe you aim at (Adept and Expert) or both rows (Master). The foe you aim at takes it all, the others a share.",
+      "You stand in a row too: your gear picks it (sword and shield, two-hander or dagger in front; bow, staff or a mage in the back). Change it in the Hero panel (Fight row: Auto, Front or Back); it's saved with your loadout. Foes' blades can't reach your back row while your front row stands. Rows never change how hard anyone hits.",
+      "Foes have roles you can read on their plates: Shieldwardens cover a friend once, Ravagers hit hard, Marksmen shoot from the back, Spellcasters channel a Fireball at a whole row (bash it, shock it, stun or stagger it to break it), Menders heal, Cutthroats slip round your front, Regrowers heal unless they burn, Warleaders rally the rest. Bosses change role as their fight goes on.",
+      "A party meets more foes the bigger it is (2-3 for two players, up to 5-6 for eight). Their total health stays the same, just spread over more foes.",
+      "Four new perks: Line Breaker and Sweeping Reach (once a fight, a blade reaches the back row), Spellbreaker (breaking a channelled spell also staggers the caster) and Through the Gap (your arrows and spells slip past a Shieldwarden's cover).",
+      "On Hard, foes shrug off a fifth of every damage spell: mages were winning far more Hard fights than anyone else.",
+      "Auto no longer wastes Sun Fire on foes that aren't undead.",
+    ] },
+    { id: "b357-riglayers", build: 357, date: "26 Nov 2026", title: "Shields and weapons sit right in your hands", items: [
+      "Painted fighters hold together better: a raised shield now sits in front of your hero, with the weapon arm behind it, instead of a hand and sword floating over the shield's face.",
+      "When you swing, get hit or walk the map, the shield drops down behind your body, under the arm that holds it, and comes back up in front when you guard again.",
+      "Swords, maces, staffs and bows sit in the closed fingers of the fist, not beside the hand.",
+      "Taking a blow no longer swings your blade across your own face, and a resting bow or staff leans forward instead of crossing your head.",
+    ] },
+    { id: "b356-partyboss", build: 356, date: "26 Nov 2026", title: "Party fights last as long as solo ones", items: [
+      "In a party, the foe is now sized for what each teammate really deals on their turn (their own phone works it out from their gear, perks and spells), not for one plain blow each. Big parties no longer get bosses that drag on for 30-40 rounds, and a party of mages isn't counted as fist fighters any more.",
+      "A boss takes about 8-12 rounds whether you're on your own or eight strong; tough fights about 5-8 rounds, normal ones 3-5.",
+      "A party's foe gets a little more health, and acts a bit more often for every extra player, so a big party still has to watch its health: a party wins about as often as a lone hero does.",
+    ] },
+    { id: "b355-paintclean", build: 355, date: "26 Nov 2026", title: "Cleaner fights over the painted art", items: [
+      "Fights look cleaner: no more drawn-on helmets and cartoon wagon over the painted art. Your hero and followers show their painted heads until real painted helmets arrive.",
+      "Bows, swords and shields made of elven, glass, ebony and other coloured stuff keep a light tint of their colour instead of turning into a bright gold or green cut-out.",
+      "Enchanted weapons glow more softly along the blade and no longer shed sparks into the air; a spell in your hand is a gentle light, not a big glowing ball.",
+      "No more orange leaves and petals floating over the painted scenes (snow and rain still fall).",
+    ] },
+    { id: "b353-forgenames", build: 353, date: "26 Nov 2026", title: "Forge upgrades read +1 to +6", items: [
+      "Gear you improve at the forge now shows its level as a number after the name: Iron Sword +1, +2 ... up to +6. The old words (Fine, Superior, Exquisite, Flawless, Epic, Legendary) are gone, so they no longer get mixed up with item rarity.",
+      "Nothing about your gear changes: same bonuses, same upgrades, and everything you already improved keeps its level.",
+    ] },
     { id: "b352-updfix", build: 352, date: "26 Nov 2026", title: "Phone updates work again", items: [
       "On phones, tapping Update now could do nothing and say \"Not an update address\". The app misread the build number, so it turned down every small update.",
       "Fixed in the app itself. If your phone is stuck, install the newest app once (Update now gets it for you); after that, updates download by themselves again.",

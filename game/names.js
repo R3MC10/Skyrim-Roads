@@ -173,6 +173,9 @@ const NAMES = (() => {
   const place = (id, o) => get(id, { ...o, type: entry(id, "town") ? "town" : entry(id, "place") ? "place" : undefined });
   const hold = (id, o) => get(id, { ...o, type: "hold" });
   const item = (id, o) => (entry(id, "item") ? get(id, { ...o, type: "item" }) : ((G0.D || {}).ITEMS?.[id]?.name ?? String(id ?? "")));
+  /* forge-improved gear: the improvement level (pack row .tq, 0-6) goes after the name as "+N" ("Iron Sword +2"). Rarity words
+     (Common / Fine / Rare / Epic / Legendary, rarity.js) are never used for it. Works on any name, English or reskinned. */
+  const improved = (name, row) => { const q = +(row && row.tq) || 0; return q > 0 ? `${name} +${q}` : String(name ?? ""); };
   const foe = (name, o) => (entry(name, "foe") ? get(name, { ...o, type: "foe" }) : String(name ?? ""));
   const race = (id, o) => get(id, { ...o, type: "race" });
   const role = (id, o) => get(id, { ...o, type: "role" });
@@ -203,6 +206,6 @@ const NAMES = (() => {
   if (typeof document !== "undefined" && typeof addEventListener === "function") {
     if (document.readyState === "loading") addEventListener("DOMContentLoaded", apply); else apply();
   }
-  return { get, local, place, hold, item, foe, race, role, fill, entry, ids, dump, apply, build, TYPES, TABLES: { TOWN, HOLD, REGION, FACTION, RACE, GOD, ROLE, OVERRIDE } };
+  return { get, local, place, hold, item, improved, foe, race, role, fill, entry, ids, dump, apply, build, TYPES, TABLES: { TOWN, HOLD, REGION, FACTION, RACE, GOD, ROLE, OVERRIDE } };
 })();
 if (typeof globalThis !== "undefined") globalThis.NAMES = NAMES;

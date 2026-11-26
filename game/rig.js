@@ -16,8 +16,10 @@
                           (canvas px) and the order the layers went down in (the screen tests check them)
    Hands and layers [dollrig2]: the main weapon is always in the RIGHT (near) hand, the off-hand item (shield, a second
    blade, a bow's string hand) in the LEFT (far) hand, each placed by its grip on the fist. Back to front: the off-hand
-   group (left arm, a dual-wield blade, the left fist over its grip), legs, torso and head, then the shield on the left
-   arm (always over the body), then the main group (right arm, weapon, right fist over the grip).
+   group (left arm, a dual-wield blade, the left fist over its grip), legs, torso and head, then the main group (right
+   arm, weapon, right fist over the grip). [riglayers] The shield goes in one of two places: raised in a guard, a block
+   or a bash it is in front of everything (the weapon arm behind it); let down (a swing, a blow, walking, riding,
+   knocked down) it hangs behind the body, under the left arm that holds it. last(who).hands.shield.front says which (0..1).
      PAINTRIG.setOf(sp)   → which painted set a look wears · PAINTRIG.geo(set) → its skeleton in units (tests)
    Gear: light armour, robes and plain clothes → leather; iron (and banded, chain) → iron; steel and heavier → steel;
    women get the women's sets the same way. Dunmer, Khajiit and Argonians wear their own painted head (RIGDATA.HEADS, scaled
@@ -285,6 +287,9 @@ const PAINTRIG = (() => {
     const q = ctx.Q[part], img = pic(ctx.r, part, v, q.w * ctx.G.u * ctx.dev);
     put(g, img, q, ctx.G.u, at[0], at[1], a, cut);
   }
+  /* [riglayers] where a closed hand holds its grip, along the hand from wrist to knuckles: in the curled fingers (it was
+     0.55, the back of the hand, so a staff or a haft showed beside the fist instead of through it) */
+  const GRIP_AT = 0.68;
   /* the hand: along the forearm, or (holding something) turned toward the grip, but never bent past what a wrist can do */
   function handAt(g, ctx, arm, part, v, want) {
     const q = ctx.Q[part], fa = angOf(arm.el, arm.wr);
@@ -292,14 +297,14 @@ const PAINTRIG = (() => {
     if (want != null) { let d = want - fa; d = Math.atan2(Math.sin(d), Math.cos(d)); a = fa + clamp(d, -1, 1); }
     const axis = Math.atan2(q.e[1] - q.p[1], q.e[0] - q.p[0]), img = pic(ctx.r, part, v, q.w * ctx.G.u * ctx.dev);
     put(g, img, q, ctx.G.u, arm.wr[0], arm.wr[1], a - axis);
-    const len = Math.hypot(q.e[0] - q.p[0], q.e[1] - q.p[1]) * ctx.G.u * 0.55;
+    const len = Math.hypot(q.e[0] - q.p[0], q.e[1] - q.p[1]) * ctx.G.u * GRIP_AT;
     return [arm.wr[0] + Math.cos(a) * len, arm.wr[1] + Math.sin(a) * len];   // the middle of the hand: where a grip sits
   }
   /* [dollrig2] where a hand will close (its angle a and grip point), worked out before the hand is drawn */
   function fistAt(ctx, arm, part, want) {
     const q = ctx.Q[part], fa = angOf(arm.el, arm.wr);
     let a = fa; if (want != null) { let d = want - fa; d = Math.atan2(Math.sin(d), Math.cos(d)); a = fa + clamp(d, -1, 1); }
-    const len = Math.hypot(q.e[0] - q.p[0], q.e[1] - q.p[1]) * ctx.G.u * 0.55;
+    const len = Math.hypot(q.e[0] - q.p[0], q.e[1] - q.p[1]) * ctx.G.u * GRIP_AT;
     return { a, grip: [arm.wr[0] + Math.cos(a) * len, arm.wr[1] + Math.sin(a) * len] };
   }
   function armAt(g, ctx, arm, v, handPart, handV, want) {
@@ -330,33 +335,6 @@ const PAINTRIG = (() => {
     const [kn, an] = ik(hip[0], hip[1], want[0], want[1], G.thigh, G.shin, -1);
     legAt(g, ctx, { hip, knee: kn, ankle: an, toe: 0.05 }, far ? "d" : "n");
   }
-  /* [dollrig] where the skull is in a head picture (measured pixels, neck at q.p): the top of the head, the forehead at
-     brow height, and the skull's length; read off the picture's alpha once (cached on the picture), or guessed from the
-     neck's width when it can't be read (node, a tainted canvas) */
-  const SKULL = new WeakMap();
-  function skullGuess(q) { const nw = q.nw || q.w * 0.35; return { ty: Math.max(0, q.p[1] - 2.2 * nw), fx: Math.min(q.w, q.p[0] + 1.0 * nw), w: 1.45 * nw }; }
-  function skullOf(q, img) {
-    if (img && typeof img === "object" && SKULL.has(img)) return SKULL.get(img);
-    let sk = skullGuess(q);
-    try {
-      if (img && typeof document !== "undefined") {
-        const iw = img.width || img.naturalWidth, ih = img.height || img.naturalHeight, k = Math.min(1, 240 / Math.max(iw, ih));
-        const c = mk(iw * k, ih * k), x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(img, 0, 0, c.width, c.height);
-        const d = x.getImageData(0, 0, c.width, c.height).data, fx = c.width / q.w, fy = c.height / q.h, nw = q.nw || q.w * 0.35;
-        const x0 = Math.max(0, Math.round((q.p[0] - 1.0 * nw) * fx)), x1 = Math.min(c.width - 1, Math.round((q.p[0] + 1.6 * nw) * fx));
-        const a = (X, Y) => d[(Y * c.width + X) * 4 + 3] > 128;
-        let top = -1;
-        for (let Y = 0; Y < c.height && top < 0; Y++) { let n = 0; for (let X = x0; X <= x1; X++) if (a(X, Y) && ++n >= 2) { top = Y; break; } }
-        if (top >= 0) {
-          const ty = top / fy, yb = Math.round((ty + 0.3 * (q.p[1] - ty)) * fy);
-          let front = -1; for (let X = x1; X >= x0; X--) if (a(X, yb)) { front = X; break; }
-          if (front > 0) sk = { ty, fx: front / fx, w: 1.45 * nw };
-        }
-      }
-    } catch { /* the guess */ }
-    if (img && typeof img === "object") SKULL.set(img, sk);
-    return sk;
-  }
   function figure(g, ctx, P, sp, o, wk) {
     const G = ctx.G, m = G.m, B = solve(G, P), kit = ctx.kit, st = ctx.st;
     if (o.rideLayer === "far") {   // [riding] the first of two passes in the saddle: only the far leg, drawn before the horse so its body covers it
@@ -367,18 +345,24 @@ const PAINTRIG = (() => {
     const rh = raceHead(sp, sp.fem || String((ctx.r && ctx.r.set) || "").startsWith("nordf"));   // the head matches the body: a woman's body wears a woman's head
     const ranged = RANGED.has(wk), two = TWO_MELEE.has(wk) || wk === "staff" || wk === "spear";
     const tipA = wk && kit && kit.TIP[wk] ? Math.atan2(kit.TIP[wk][1], kit.TIP[wk][0]) : -Math.PI / 4;
-    let wa = B.sa + P.aim;   // the weapon's frame, as on the ink figures
+    let wa = B.sa + P.aim, guard = 0;   // the weapon's frame, as on the ink figures; guard: how far the shield is up in front (riglayers)
+    if (!(P.down > 0) && !(P.hk > 0.05)) {   // [riglayers] at rest a bow leans forward and a staff or spear stands near upright: never across the face
+      if (wk === "bow") wa = B.sa + Math.max(P.aim, 0.3);
+      else if (wk === "staff" || wk === "spear") wa = B.sa + Math.max(P.aim, -0.2);
+    }
     if (o.shield && o.shieldOut && !two && !ranged && !P.farHand && !P.ride && !(P.down > 0) && P.hand !== "open") {
       /* [dollrig] in a fight the shield arm comes up into a guard in front of the chest (it hung back behind the hip,
          the shield floating off the body); a lunge, a wind-up or a block (P.back) hand the arm back to the clip */
-      const w = clamp(1 - (o.lunge || 0) * 1.6, 0, 1) * clamp(1 - Math.abs(P.back || 0), 0, 1) * (o.move && o.mu != null ? clamp(Math.abs(o.mu - 0.5) * 4 - 1, 0, 1) : 1);   // a swing lowers it (it never covers the face)
+      const w = clamp(1 - (o.lunge || 0) * 1.6, 0, 1) * clamp(1 - Math.abs(P.back || 0), 0, 1) * (o.move && o.mu != null ? clamp(Math.abs(o.mu - 0.5) * 4 - 1, 0, 1) : 1)
+        * clamp(1 - (P.hk || 0) * 2, 0, 1) * (P.clip === "walk" ? 0 : 1);   // walking (the map): the shield arm swings, the shield hangs at the side   // a swing lowers it (it never covers the face); [riglayers] so does the weapon arm on its own path (the viewer too)
+      guard = w;
       if (w > 0.01) { const R = G.upper + G.fore, gd = add(B.SF, rot(B.sa, [R * 0.2, R * 0.5])), h0 = B.armF.wr; P.farHand = [h0[0] + (gd[0] - h0[0]) * w, h0[1] + (gd[1] - h0[1]) * w]; Object.assign(B, solve(G, P)); }
     }
     const gear = typeof RIGGEAR !== "undefined" ? RIGGEAR : null;
     const armedN = !!wk && wk !== "fist" && !P.flask, openAll = P.hand === "open";
     const glowC = o.glow ? sp.ench || "#7fb6ff" : null, castC = wk === "staff" ? sp.staffC : sp.ench || "#9fd0f0";
     // where the far hand goes when it helps: on the bow string, under a crossbow, low on a two-handed grip
-    const nearGrip = () => { const q = ctx.Q["hand-fist"], len = Math.hypot(q.e[0] - q.p[0], q.e[1] - q.p[1]) * G.u * 0.55, wr = B.armN.wr, fa = angOf(B.armN.el, wr); return [wr[0] + Math.cos(fa) * len, wr[1] + Math.sin(fa) * len]; };
+    const nearGrip = () => { const q = ctx.Q["hand-fist"], len = Math.hypot(q.e[0] - q.p[0], q.e[1] - q.p[1]) * G.u * GRIP_AT, wr = B.armN.wr, fa = angOf(B.armN.el, wr); return [wr[0] + Math.cos(fa) * len, wr[1] + Math.sin(fa) * len]; };
     let farOn = null, bowPull = null, bowArrow = false;
     if (wk === "bow" && gear && !P.ride && !(P.down > 0) && !openAll) {
       /* a real draw: the bow arm goes out straight from the shoulder at cheek height, the string hand pulls back to the
@@ -395,7 +379,7 @@ const PAINTRIG = (() => {
         let str = [rest[0] + (cheek[0] - rest[0]) * dr, rest[1] + (cheek[1] - rest[1]) * dr];
         bowPull = Math.hypot(gp2[0] - str[0], gp2[1] - str[1]) / k; bowArrow = dr > 0.4;   // the arrow shows once it is half drawn
         if (ls > 0) { const fly = add(cheek, rot(wa, [-6 * m, -1.6 * m])); str = [str[0] + (fly[0] - str[0]) * ls, str[1] + (fly[1] - str[1]) * ls]; }
-        const q = ctx.Q["hand-fist"], len = Math.hypot(q.e[0] - q.p[0], q.e[1] - q.p[1]) * G.u * 0.55;
+        const q = ctx.Q["hand-fist"], len = Math.hypot(q.e[0] - q.p[0], q.e[1] - q.p[1]) * G.u * GRIP_AT;
         if (r > 0.05 || dr > 0.05) farOn = add(str, rot(wa, [-len, 0]));
       }
     } else if (!P.ride && !(P.down > 0) && !openAll) {
@@ -413,12 +397,29 @@ const PAINTRIG = (() => {
     const farPart = shieldOn || offW || farOn ? "hand-fist" : "hand-open", farWant = offW ? offA + offTip + Math.PI / 2 : farOn && wk === "bow" ? wa : null;
     const fist = fistAt(ctx, B.armF, farPart, farWant);   // the middle of the left fist: where its grip sits
     // the shield's strap (GRIPDATA shieldGrip: the middle of a round shield) on the left fist
-    const shieldHere = () => { if (!kit) return; g.save(); g.translate(fist.grip[0], fist.grip[1]); g.rotate(B.sa); g.scale(kS, kS); g.translate(-1.2 * 1.12, 1 * 1.08); if (gear) gear.shield(g, sp, true, st); else kit.shieldAt(g, sp, 0, 0, true, st); g.restore(); };
+    /* [riglayers] where the shield goes (sF): raised in front of the chest (a guard, a block, a bash) it is over
+       everything, the weapon arm behind it (no fist floating on its face, the blade showing past its rim); let down (a
+       swing, a blow, walking, riding, knocked down) it hangs on the far side of the body, behind the left forearm that
+       holds it. At the turn the two fade into each other for a moment, so it never pops */
+    let sF = 0;
+    if (shieldOn && !P.ride && !(P.down > 0)) {
+      const dx = fist.grip[0] - B.W[0], dy = fist.grip[1] - B.W[1], fwd = (Math.cos(B.sa) * dx + Math.sin(B.sa) * dy) / m;
+      const up = P.clip === "block" || P.clip === "bash" ? 1 : Math.max(guard, clamp((fwd - 6) / 3, 0, 1));   // the guard, or the arm pushed well out (a block, a bash)
+      sF = clamp((up - 0.42) / 0.16, 0, 1);   // a short fade at the turn, so the two never show as a ghost
+    }
+    const shieldHere = (a) => {
+      if (!kit || a < 0.01) return;
+      g.save(); if (a < 1) g.globalAlpha *= a;
+      g.translate(fist.grip[0], fist.grip[1]); g.rotate(B.sa); g.scale(kS, kS); g.translate(-1.2 * 1.12, 1 * 1.08);
+      if (gear) gear.shield(g, sp, true, st); else kit.shieldAt(g, sp, 0, 0, true, st);
+      g.restore();
+    };
+    if (shieldOn) { shieldHere(1 - sF); if (sF < 0.5) lay("shield"); rec.hands.shield = { grip: cpx(fist.grip), front: sF }; }
     // the off-hand layer, in shade, behind the body: the left arm, a second blade by its grip, the left fist over it
     armAt(g, ctx, B.armF, "d", null); lay("offArm");
     if (offW) { g.save(); g.translate(fist.grip[0], fist.grip[1]); g.rotate(offA); g.scale(m * WSC, m * WSC); (gear || kit).weapon(g, sp, offW, st, { plain: true, glow: glowC }); g.restore(); lay("offWeapon"); rec.hands.off = { item: offW, grip: cpx(fist.grip) }; }
     const fg = handAt(g, ctx, B.armF, farPart, sv(true), farWant); lay("offFist"); rec.hands.offFist = cpx(fg);
-    if (P.cast > 0.05 && kit) kit.glowAt(g, fg[0], fg[1], (5 + P.cast * 3) * m, castC, 0.75, st);
+    if (P.cast > 0.05 && kit) kit.glowAt(g, fg[0], fg[1], (3.6 + P.cast * 2.2) * m, castC, 0.45, st);   // [paintclean] a soft light in the hand, not a big orb over the painting
     // legs: the far one in shade (in the saddle only the near leg here, bent over the horse's flank: the far one went first, behind the horse)
     if (P.ride) rideLeg(g, ctx, B, false, P.stir);   // [riding] thigh, shin and boot folded over the flank into the stirrup (every set: the old one-piece bent-leg picture stopped short of it)
     else { legAt(g, ctx, B.legF, "d"); legAt(g, ctx, B.legN, "n"); }
@@ -432,14 +433,7 @@ const PAINTRIG = (() => {
     uprightAt(g, ctx, "torso", "n", B.W, B.sa, ctx.Q.torso.cut);
     { const q = ctx.Q.pelvis, ky = q.hip[1] - 10; putR(g, pic(ctx.r, "pelvis", "n", q.w * G.u * ctx.dev), q, G.u, B.W[0], B.W[1], B.pa, [[0, 0, q.w, ky + 1], [0, ky, q.w, q.h, clamp(sw * 0.55 - B.pa * 0.3, -0.25, 0.25), ky]]); }   // belt flaps, pouches and fur swing a little
     putR(g, himg, hq, hu, B.N[0], B.N[1], hk, headR(hq, hairK, "front"));
-    if (sp.helm && gear && gear.helmet) {   // [dollrig] the worn helmet over the painted head (no painted helmets yet: shaded drawing)
-      const sk = skullOf(hq, rh ? rh.imgs.head : ctx.r.imgs.head);
-      g.save(); g.translate(B.N[0], B.N[1]); g.rotate(hk);
-      gear.helmet(g, sp, { fx: (sk.fx - hq.p[0]) * hu, ty: (sk.ty - hq.p[1]) * hu, w: sk.w * hu }, st);
-      g.restore();
-    }
     lay("body");
-    if (shieldOn) { shieldHere(); lay("shield"); rec.hands.shield = { grip: cpx(fist.grip) }; }   // over the body, under the weapon arm
     // the near arm: upper arm, forearm, then whatever is in the hand, then the hand over its grip
     limbAt(g, ctx, "uparm", "n", B.armN.sh, B.armN.el);
     limbAt(g, ctx, "forearm", "n", B.armN.el, B.armN.wr, B.armN.sh); lay("mainArm");
@@ -448,7 +442,7 @@ const PAINTRIG = (() => {
     // the grip point comes from the hand's angle, so work it out first, draw the weapon, then the hand on top
     const q = ctx.Q[handPart], fa = angOf(B.armN.el, B.armN.wr);
     let ha = fa; if (want != null) { let d = want - fa; d = Math.atan2(Math.sin(d), Math.cos(d)); ha = fa + clamp(d, -1, 1); }
-    const glen = Math.hypot(q.e[0] - q.p[0], q.e[1] - q.p[1]) * G.u * 0.55, grip = [B.armN.wr[0] + Math.cos(ha) * glen, B.armN.wr[1] + Math.sin(ha) * glen];
+    const glen = Math.hypot(q.e[0] - q.p[0], q.e[1] - q.p[1]) * G.u * GRIP_AT, grip = [B.armN.wr[0] + Math.cos(ha) * glen, B.armN.wr[1] + Math.sin(ha) * glen];
     if (armedN && kit && !openAll) { g.save(); g.translate(grip[0], grip[1]); g.rotate(wa); g.scale(m * WSC, m * WSC); (gear || kit).weapon(g, sp, wk, st, { draw: P.draw, pull: bowPull, arrow: bowArrow, glow: glowC, plain: wk !== sp.wk }); g.restore(); lay("mainWeapon"); rec.hands.main = { item: wk, grip: cpx(grip) }; }
     if (armedN && !openAll && !ranged && kit && kit.TIP[wk]) {   // where the blade really is (the fight scene's swing trail follows it), in canvas pixels
       const SP = (gear && gear.SPAN) || {}, GR = (gear && gear.GRIP) || {}, L = (SP[wk] || 33) * (1 - (GR[wk] || 0.16)) * m * WSC, a = wa + tipA;
@@ -457,8 +451,9 @@ const PAINTRIG = (() => {
       TIPS.set(o.who || "me", { x: tp[0], y: tp[1], bx: bs[0], by: bs[1], gx: gp[0], gy: gp[1], n: ++drawN });   // gx,gy: the grip (fightart.js lays an enchanted weapon's glow from here to the tip)
     }
     rec.hands.mainFist = cpx(handAt(g, ctx, B.armN, handPart, sv(false), want)); lay("mainFist");
+    if (shieldOn) { shieldHere(sF); if (sF >= 0.5) lay("shield"); }   // [riglayers] a raised shield: in front of everything
     if (P.flask) flaskAt(g, grip[0], grip[1] - 0.5 * m, P.flask, m * 1.2);
-    if (P.cast > 0.05 && kit) kit.glowAt(g, grip[0] + 1.6 * m, grip[1] - 0.6 * m, (5 + P.cast * 3.4) * m, castC, 0.85, st);
+    if (P.cast > 0.05 && kit) kit.glowAt(g, grip[0] + 1.6 * m, grip[1] - 0.6 * m, (3.8 + P.cast * 2.4) * m, castC, 0.5, st);
     return B;
   }
   /* [rigcohesion] secondary motion: one damped spring per fighter, driven by how fast the neck moves (the step in, the
@@ -541,6 +536,6 @@ const PAINTRIG = (() => {
      canvas's pixels at draw time; n counts draws, so a caller can tell a fresh one (null: no blade) */
   const tip = (who) => TIPS.get(who || "me") || null;
   const last = (who) => LAST.get(who || "me") || null;
-  return { setOf, geo, raceHead, tip, last, can, fight, draw, sample, warp, controls, solve, ready, skullOf, skullGuess, get broken() { return broken; }, reset: () => { broken = false; REC.clear(); HREC.clear(); } };
+  return { setOf, geo, raceHead, tip, last, can, fight, draw, sample, warp, controls, solve, ready, get broken() { return broken; }, reset: () => { broken = false; REC.clear(); HREC.clear(); } };
 })();
 if (typeof module !== "undefined") module.exports = PAINTRIG;
