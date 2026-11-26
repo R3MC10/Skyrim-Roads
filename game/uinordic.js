@@ -40,17 +40,21 @@ const UINORDIC = (() => {
     };
     K.raf = requestAnimationFrame(step);
   }
-  function sparks(el, K, speed) {
-    const n = Math.min(lite() ? 2 : 5, Math.floor(speed / 1.2)); if (n < 1) return;
-    const box = K.k.parentElement;
-    const kx = K.k.offsetLeft, ky = K.k.offsetTop;   // translate() doesn't move these, so read the knob's matrix
-    const m = new DOMMatrixReadOnly(getComputedStyle(K.k).transform);
+  function sparks(el, K, speed, dir) {
+    const n = Math.min(lite() ? 4 : 10, 2 + Math.floor(speed)); 
+    const box = K.k.parentElement, br = box.getBoundingClientRect(), kr = K.k.getBoundingClientRect();
+    const cx = kr.left - br.left + box.scrollLeft + kr.width / 2, cy = kr.top - br.top + box.scrollTop + kr.height / 2;
     for (let i = 0; i < n; i++) {
       const s = document.createElement("i"); s.className = "uispark";
-      const a = Math.random() * Math.PI * 2, d = 14 + Math.random() * 22;
-      s.style.left = (kx + m.m41 + 16) + "px"; s.style.top = (ky + m.m42 + 16) + "px";
-      s.style.setProperty("--dx", (Math.cos(a) * d).toFixed(1) + "px"); s.style.setProperty("--dy", (Math.sin(a) * d - 6).toFixed(1) + "px");
-      box.appendChild(s); setTimeout(() => s.remove(), 520);
+      // thrown backwards off the spinning star (like a grindstone), up and out, then falling
+      const a = (dir > 0 ? Math.PI : 0) + (Math.random() - 0.5) * 1.6, d = 18 + Math.random() * 34;
+      const sz = 2 + Math.random() * 3;
+      s.style.left = (cx + (Math.random() - 0.5) * 10) + "px"; s.style.top = (cy + (Math.random() - 0.5) * 10) + "px";
+      s.style.width = s.style.height = sz.toFixed(1) + "px";
+      s.style.setProperty("--dx", (Math.cos(a) * d).toFixed(1) + "px"); s.style.setProperty("--dy", (Math.sin(a) * d * 0.6 - 10 - Math.random() * 12).toFixed(1) + "px");
+      s.style.setProperty("--fall", (14 + Math.random() * 14).toFixed(1) + "px");
+      s.style.animationDuration = (0.45 + Math.random() * 0.35).toFixed(2) + "s";
+      box.appendChild(s); setTimeout(() => s.remove(), 900);
     }
   }
   function moved(el) {
@@ -66,7 +70,7 @@ const UINORDIC = (() => {
       K.vel = (dfx / 16) * 22;   // the star rolls along the track like a wheel
       spin(K);
       const speed = Math.abs(dfx) / dt * 16;
-      if (speed > 6) sparks(el, K, speed / 6);
+      if (speed > 3) sparks(el, K, speed / 4, Math.sign(dfx));
     }
     K.last = { f, t: now };
     el.classList.add("uiglow"); clearTimeout(K.glowT); K.glowT = setTimeout(() => el.classList.remove("uiglow"), 380);
