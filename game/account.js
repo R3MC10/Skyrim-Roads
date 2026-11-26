@@ -115,6 +115,20 @@ const ACCOUNT = (() => {
   const holding = () => hold;
   function reloadToMenu() { hold = true; try { sessionStorage.setItem("rotn_open", "menu"); } catch { /* ignore */ } location.reload(); }
   /* the save as text with its keys in order, so two copies can be compared (the server's database reorders keys) */
+  /* Saves this device sent since the account last confirmed one. A save can reach the server while its reply is lost
+     (the app went to the background, the signal dropped, the 15 s limit ran out); the next save then looks out of date.
+     If the account's copy is one of ours, it was never "played somewhere else": take its number and carry on. */
+  const fp = (data) => { const t = stable(data); let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36) + "." + t.length; };
+  function sentAdd(id, data) { const o = get("sent"); const list = o && o.id === id ? o.list : []; list.push(fp(data)); set("sent", { id, list: list.slice(-40) }); }
+  const sentClear = () => set("sent", null);
+  /* the account's copy of id, and whether this device sent it ({ mine, version, data, ... } or null when unreachable) */
+  async function accountCopy(id) {
+    const r = await api("GET", "/api/characters/" + encodeURIComponent(id));
+    if (!r.ok) return null;
+    const o = get("sent"), mine = !!(o && o.id === id && o.list.includes(fp(r.character.data)));
+    return { mine, ...r.character };
+  }
+  const extra = (d) => (d && typeof d === "object" ? { gold: d.gold } : {});
   const stable = (v) => (Array.isArray(v) ? `[${v.map(stable).join(",")}]` : v && typeof v === "object" ? `{${Object.keys(v).sort().map((k) => JSON.stringify(k) + ":" + stable(v[k])).join(",")}}` : JSON.stringify(v));
   /* Before this device's character leaves the save slot, make sure it lives on somewhere besides the 3 automatic
      backups: on the account (uploaded now if it never was), or the player chooses between two different copies.
@@ -141,7 +155,7 @@ const ACCOUNT = (() => {
     const r = await api("GET", "/api/characters/" + encodeURIComponent(S.id));
     if (!r.ok) { note = r.message || "Couldn't check your account. Try again."; ctx.rerender(); return false; }
     if (stable(r.character.data) === stable({ ...S, id: S.id })) return true;
-    conflict = { server: onAcct, local: { name: S.name, level: S.level }, next }; showConflict(); return false;
+    conflict = { server: onAcct, local: local(S), next }; showConflict(); return false;
   }
   /* play a character from the account on this device */
   async function play(id, { skip = false } = {}) {
@@ -152,7 +166,7 @@ const ACCOUNT = (() => {
     if (!skip && S && S.id === id && !(l && l.id === id)) {   // this device has its own copy of this character (played while not linked)
       const r = await api("GET", "/api/characters/" + encodeURIComponent(id));
       if (!r.ok) { note = r.message || "Couldn't check your account. Try again."; ctx.rerender(); return false; }
-      if (stable(r.character.data) !== stable({ ...S, id })) { conflict = { server: { ...(sum || {}), id, name: r.character.name, level: r.character.level, updatedAt: r.character.updatedAt }, local: { name: S.name, level: S.level }, next: { play: id } }; showConflict(); return false; }
+      if (stable(r.character.data) !== stable({ ...S, id })) { conflict = { server: { ...(sum || {}), id, name: r.character.name, level: r.character.level, updatedAt: r.character.updatedAt }, local: local(S), next: { play: id } }; showConflict(); return false; }
       set("char", { id, version: r.character.version, name: r.character.name }); set("dirty", null);   // the same: just link this device to it
       note = `${S.name} is ready. Tap Continue.`; await refresh(); return true;
     }
@@ -171,7 +185,7 @@ const ACCOUNT = (() => {
     const S = ctx.getSave(); if (!S) return;
     note = "Uploading…"; ctx.rerender();
     const r = await api("PUT", "/api/characters/" + encodeURIComponent(S.id), { data: S, baseVersion: 0, force });
-    if (r.status === 409 && r.error === "version_conflict") { conflict = { server: r.server, local: { name: S.name, level: S.level }, upload: true }; note = ""; ctx.rerender(); showConflict(); return r; }
+    if (r.status === 409 && r.error === "version_conflict") { conflict = { server: r.server, local: local(S), upload: true }; note = ""; ctx.rerender(); showConflict(); return r; }
     if (!r.ok) { note = r.message || "Upload failed."; ctx.rerender(); return r; }
     set("char", { id: S.id, version: r.version, name: S.name }); set("dirty", null); conflict = null;
     note = `${S.name} is on your account now. Play them from any device.`;
@@ -196,7 +210,7 @@ const ACCOUNT = (() => {
     const l = linked();
     if (!signedIn() || !l || !state || state.id !== l.id || conflict) return;
     lastJson = json || JSON.stringify(state);
-    set("dirty", Date.now());
+    set("dirty", Date.now()); set("playedAt", { id: state.id, at: Date.now() });
     if (!firstDirty) firstDirty = Date.now();
     clearTimeout(syncT);
     syncT = setTimeout(flush, Date.now() - firstDirty > SYNC_MAX ? 0 : SYNC_DELAY);
@@ -210,13 +224,19 @@ const ACCOUNT = (() => {
     if (!json && get("dirty")) { const S = ctx.getSave(); if (S && S.id === l.id) json = JSON.stringify(S); }
     if (!json) return;
     syncing = (async () => {
-      const r = await api("PUT", "/api/characters/" + encodeURIComponent(l.id), { data: JSON.parse(json), baseVersion: l.version });
+      const data = JSON.parse(json);
+      sentAdd(l.id, data);
+      const r = await api("PUT", "/api/characters/" + encodeURIComponent(l.id), { data, baseVersion: l.version });
       if (r.ok) {
+        sentClear();
         set("char", { ...l, version: r.version, name: JSON.parse(json).name || l.name });
         if (lastJson === json) { lastJson = null; set("dirty", null); }
         firstDirty = 0; lastSync = Date.now(); set("lastSync", lastSync); syncNote = "";
       } else if (r.status === 409 && r.error === "version_conflict") {
-        const S = ctx.getSave(); conflict = { server: r.server, local: { name: S?.name, level: S?.level } }; showConflict();
+        const c = await accountCopy(l.id);
+        if (c && c.mine && c.version > l.version) { set("char", { ...linked(), version: c.version }); sentClear(); syncT = setTimeout(flush, 0); return; }   // our own save whose reply got lost: upload again on top of it
+        if (!c && r.server) { syncNote = "Not saved to your account yet: no connection. It will try again."; syncT = setTimeout(flush, RETRY); return; }   // can't tell yet: ask again later rather than guess
+        const S = ctx.getSave(); conflict = { server: { ...r.server, ...extra(c?.data) }, local: local(S) }; showConflict();
       } else if (r.status === 0) { syncNote = "Not saved to your account yet: no connection. It will try again."; syncT = setTimeout(flush, RETRY); }
       else if (r.status !== 401) syncNote = r.message || "Saving to your account failed.";
     })().finally(() => { syncing = null; });
@@ -226,7 +246,11 @@ const ACCOUNT = (() => {
   async function checkNewer(l) {
     const r = await api("GET", "/api/characters");
     const c = r.ok && r.characters.find((x) => x.id === l.id);
-    if (c && c.version > l.version) { const S = ctx.getSave(); conflict = { server: c, local: { name: S?.name, level: S?.level } }; showConflict(); }
+    if (c && c.version > l.version) {
+      const a = await accountCopy(l.id);
+      if (a && a.mine) { set("char", { ...l, version: a.version }); sentClear(); return; }   // only our own lost save
+      const S = ctx.getSave(); conflict = { server: { ...c, ...extra(a?.data) }, local: local(S) }; showConflict();
+    }
   }
 
   // ---------------------------------------------------------------- heartbeat: notices a takeover
@@ -307,14 +331,20 @@ const ACCOUNT = (() => {
       <p class="sub">Offline, this device's character stops saving to your account.</p>`);
   }
   function wallNote(t) { const el = document.querySelector("#acctwall .acwall-in"); if (el) { el.querySelector(".acnote")?.remove(); el.insertAdjacentHTML("beforeend", `<p class="acnote warn" role="status">${esc(t)}</p>`); } }
+  /* this device's copy for the choice screen: level, gold and when it was last played here */
+  function local(S) { const p = get("playedAt"); return { name: S?.name, level: S?.level, gold: S?.gold, at: p && S && p.id === S.id ? p.at : 0 }; }
   function showConflict() {
     if (!conflict) return;
-    const sv = conflict.server, lc = conflict.local;
+    const sv = conflict.server, lc = conflict.local || {};
+    const gold = (g) => (typeof g === "number" ? ` · ${Math.floor(g)} gold` : "");
+    const cloudNew = !lc.at || (sv.updatedAt || 0) > lc.at;   // which copy was played last (the device's own clock vs the server's: close enough to pick a default)
+    const tag = '<em class="acnew">Newest</em>';
+    const bCloud = `<button class="btn${cloudNew ? " pri" : ""}" data-acct="usecloud">Use the account copy</button>`;
+    const bHere = `<button class="btn${cloudNew ? "" : " pri"}" data-acct="usehere">Keep this device's copy</button>`;
     overlay(`<h2>Two copies of ${esc(sv.name)}</h2>
-      <p>${conflict.next ? `The ${esc(sv.name)} on this device isn't the same as the one on your account. Which one should be kept?` : `${esc(sv.name)} was played somewhere else after this device last saved.`}</p>
-      <div class="accmp"><div><b>On your account</b><span>Level ${sv.level} · saved ${ago(sv.updatedAt)}</span></div><div><b>On this device</b><span>Level ${lc.level ?? "?"}</span></div></div>
-      <button class="btn pri" data-acct="usecloud">Use the account copy</button>
-      <button class="btn" data-acct="usehere">Keep this device's copy</button>
+      <p>${conflict.next ? `The ${esc(sv.name)} on this device isn't the same as the one on your account. Which one should be kept?` : `${esc(sv.name)} was played on another device after this one last saved.`}</p>
+      <div class="accmp"><div${cloudNew ? ' class="on"' : ""}><b>On your account ${cloudNew ? tag : ""}</b><span>Level ${sv.level}${gold(sv.gold)}</span><span>played ${ago(sv.updatedAt)}</span></div><div${cloudNew ? "" : ' class="on"'}><b>On this device ${cloudNew ? "" : tag}</b><span>Level ${lc.level ?? "?"}${gold(lc.gold)}</span>${lc.at ? `<span>played ${ago(lc.at)}</span>` : ""}</div></div>
+      ${cloudNew ? bCloud + bHere : bHere + bCloud}
       <p class="sub">Nothing is lost: the copy you don't keep goes into this device's automatic backups (Settings → Restore).</p>`);
   }
 
@@ -359,7 +389,7 @@ const ACCOUNT = (() => {
       conflict = null; closeOverlay();
       const r = await api("PUT", "/api/characters/" + encodeURIComponent(id), { data: S, baseVersion: 0, force: true });
       if (!r.ok) { note = r.message || "Couldn't save this device's copy."; ctx.rerender(); return; }
-      set("char", { id: S.id, version: r.version, name: S.name }); set("dirty", null); lastJson = null; note = `Kept this device's ${S.name}. The account's old copy is in this device's backups.`;
+      set("char", { id: S.id, version: r.version, name: S.name }); set("dirty", null); sentClear(); lastJson = null; note = `Kept this device's ${S.name}. The account's old copy is in this device's backups.`;
       await refresh();
       if (c.next?.play) return play(c.next.play, { skip: true });
       if (c.next?.fresh) return newCharacter({ skip: true });
