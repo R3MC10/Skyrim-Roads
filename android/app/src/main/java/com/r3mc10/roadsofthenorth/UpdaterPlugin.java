@@ -115,8 +115,8 @@ public class UpdaterPlugin extends Plugin {
     @PluginMethod
     public void downloadGame(PluginCall call) {
         final String url = call.getString("url");
-        final long expected = call.getLong("size", 0L);
-        final long build = call.getLong("build", 0L);
+        final long expected = num(call, "size");
+        final long build = num(call, "build");
         final String sha = call.getString("sha256", "");
         if (url == null || !isAllowed(url) || build <= 0) { call.reject("Not an update address"); return; }
         if (busy) { call.reject("Already downloading"); return; }
@@ -148,8 +148,8 @@ public class UpdaterPlugin extends Plugin {
     @PluginMethod
     public void patchGame(PluginCall call) {
         final String url = call.getString("url");
-        final long expected = call.getLong("size", 0L);
-        final long build = call.getLong("build", 0L), from = call.getLong("from", 0L);
+        final long expected = num(call, "size");
+        final long build = num(call, "build"), from = num(call, "from");
         final String sha = call.getString("sha256", "");
         if (url == null || !isAllowed(url) || build <= 0 || from <= 0) { call.reject("Not an update address"); return; }
         if (busy) { call.reject("Already downloading"); return; }
@@ -267,7 +267,7 @@ public class UpdaterPlugin extends Plugin {
     @PluginMethod
     public void applyGame(PluginCall call) {
         final String path = call.getString("path");
-        final long build = call.getLong("build", 0L);
+        final long build = num(call, "build");
         final boolean now = Boolean.TRUE.equals(call.getBoolean("now", false));
         try {
             File dir = new File(path == null ? "" : path);
@@ -315,7 +315,7 @@ public class UpdaterPlugin extends Plugin {
     @PluginMethod
     public void download(PluginCall call) {
         final String url = call.getString("url");
-        final long expected = call.getLong("size", 0L);
+        final long expected = num(call, "size");
         if (url == null || !isAllowed(url)) { call.reject("Not an update address"); return; }
         if (busy) { call.reject("Already downloading"); return; }
         busy = true;
@@ -418,6 +418,16 @@ public class UpdaterPlugin extends Plugin {
         } catch (Exception e) {
             call.reject("Couldn't open the installer: " + e.getMessage());
         }
+    }
+
+    /** a number from the game's call. Capacitor's getLong() only accepts a Long, but small JSON numbers (a build like
+        189, a size under 2 GB) arrive as Integer, so getLong() quietly gave 0 and every game update was refused as
+        "Not an update address". This takes any number (or a numeric string). */
+    private static long num(PluginCall call, String name) {
+        Object v = call.getData().opt(name);
+        if (v instanceof Number) return ((Number) v).longValue();
+        if (v instanceof String) { try { return (long) Double.parseDouble((String) v); } catch (Exception e) { return 0L; } }
+        return 0L;
     }
 
     private boolean isAllowed(String url) {

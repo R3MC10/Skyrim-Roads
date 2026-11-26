@@ -227,7 +227,13 @@
       const cur = await this.current();
       if (this.gameOnly(cur, lat)) {
         try { return await this.quickUpdate(lat, true, onStep); }
-        catch (e) { lastFail = String(e?.message || e); throw new Error(`couldn't download it right now (${lastFail}). Nothing changed, and the game tries again by itself in a few minutes`); }
+        catch (e) {
+          lastFail = String(e?.message || e);
+          // apps up to build 189 misread the build number and refuse every game-only update with this message:
+          // install the newest app instead (that one has the fix), so nobody is stuck on an old build
+          if (!/Not an update address/i.test(lastFail)) throw new Error(`couldn't download it right now (${lastFail}). Nothing changed, and the game tries again by itself in a few minutes`);
+          onStep("This app needs a one-time reinstall to update. Getting the newest app…", 0);
+        }
       }
       if (!cur.canInstall) {
         waitingForPermission = true;
