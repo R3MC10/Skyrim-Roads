@@ -1,4 +1,5 @@
-/* Social: friends, private messages and trading with friends from anywhere (a courier carries the offer).
+/* Social: friends, private messages and trading with friends from anywhere (a courier carries the offer;
+   face to face in the same place it is the live trade window, tradewin.js).
    Friends live in your own save; each player also shares one small "friends" record (who they added) so the other
    side can see "added you". Private messages are records in "dms". Courier trades are ordinary trade offers
    (escrow + settle in MP) that can't be answered until the courier arrives. [OURS] */

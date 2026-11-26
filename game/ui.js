@@ -812,10 +812,12 @@
     }
     if (typeof INVITES !== "undefined") INVITES.mount({ list: inviteList, answer: answerInviteCard, toast, onNew: () => SOUND.fx("page"),   // Accept / Decline cards on top (invites.js)
       openSocial: () => { closeMenu(); tab = "social"; socTab = "party"; bump(); renderTabs(); renderPanel(true); } });
+    if (typeof TRADEWIN !== "undefined") TRADEWIN.mount({ S: () => S, persist, toast, sound: (n) => SOUND.fx(n), invRefresh,   // the live trade window, face to face (tradewin.js)
+      place: () => S.location || G.holdAt(livePos()), near: (uid) => { const c = cardOf(uid); return !!c && !MP.canTarget(S, c, livePos(), otherPos(c)); } });
     if (typeof DIFF !== "undefined") DIFF.mount({ party: () => party, cardOf });   // in a party the leader's difficulty counts (difficulty.js)
     if (typeof SAMEVER !== "undefined") SAMEVER.watch({ S: () => S, party: () => party, cardOf });   // party mates on a newer build: "Update to play together" (samever.js)
     if (typeof FRIENDJOIN !== "undefined") FRIENDJOIN.mount({ S: () => S, party: () => party, cardOf, Store, toast, invite: (c) => invite(c), invites: () => invites, acceptInvite: (pid) => acceptInvite(pid),   // friends: what they're doing + Ask to join (friendjoin.js)
-      fighting: () => (typeof TB !== "undefined" && TB.open) || !!S?.encounter, trading: () => tab === "town" && !!townShop && townShop !== "inn", publishCard: (f) => publishCard(f), refreshInvites: invRefresh,
+      fighting: () => (typeof TB !== "undefined" && TB.open) || !!S?.encounter, trading: () => (tab === "town" && !!townShop && townShop !== "inn") || (typeof TRADEWIN !== "undefined" && TRADEWIN.busy), publishCard: (f) => publishCard(f), refreshInvites: invRefresh,
       bump: () => { if (tab === "social") bump(); }, render: () => { if (tab === "social") renderPanel(true); } });
     if (typeof PARTYPLAY !== "undefined") {   // party play: the leader leads, ready checks, shared spoils (partyplay.js)
       ppUI = PARTYPLAY.ui({ S: () => S, party: () => party, others: () => others, cardOf, otherPos: (c) => otherPos(c), livePos: () => livePos(), Store, toast, esc,
@@ -2238,6 +2240,7 @@
   let stalls = [], stallPick = null;
   function onStalls(docs) {
     stalls = docs.filter((d) => d && d.row && d.seller);
+    for (const d of stalls) if (d.status === "sold") MARKET.noteSold(S, d);   // "last sold for about X" on the market board
     for (const d of stalls) if (d.seller === S.id && (d.status === "sold" || d.status === "withdrawn")) {
       Store.remove("stalls", d.id);
       const m = MARKET.settle(S, d); if (m) { persist(true); if (d.status === "sold") SOUND.fx("coin"); toast(m); }
@@ -2245,6 +2248,10 @@
     if (tab === "town") bump();
   }
   function marketHTML(l) {
+    if (typeof MKTBOARD !== "undefined" && MKTBOARD.view() !== "here") return MKTBOARD.head(S) + MKTBOARD.body(S, stalls, l, { esc, rarN });
+    return (typeof MKTBOARD !== "undefined" ? MKTBOARD.head(S) : "") + marketHere(l);
+  }
+  function marketHere(l) {
     const forSale = MARKET.inTown(stalls, l, S.id), own = MARKET.mine(stalls, S.id), hereOwn = own.filter((d) => d.town === l), house = (S.homes || {})[l] || MARKET.hallShop(S, l);
     const row = (d, btn) => `<div class="item${btn === "buy" ? tiCls(d.row.item) : ""}"><span class="mk-ico"${typeof RTIP !== "undefined" ? RTIP.attr(d.row.item, d.row.qty || 1) : ""}>${ICONART.item(d.row.item, 34, d.row)}</span><div class="t">${rarN(d.row.item, d.row, MARKET.itemName(d.row))}${d.row.qty > 1 ? ` ×${d.row.qty}` : ""}${btn === "buy" ? iqB(d.row.item, d.row) : ""}<span>${btn === "buy" ? `${d.hall ? ` ${esc(d.hallName || d.sellerName + "'s hall")}` : `${esc(d.sellerName)}'s stall`} · ${esc(G.itemStats(d.row.item))}` : d.hall ? "on your hall counter" : "on your stall"}</span></div><span class="num gold">${d.price}</span>${btn === "buy" ? `<button class="btn sm pri" data-act="mbuy" data-id="${esc(d.id)}" ${S.gold >= d.price ? "" : "disabled"}>Buy</button>` : `<button class="btn sm" data-act="mpull" data-id="${esc(d.id)}">Take back</button>`}${btn === "buy" ? tiBox(d.row.item) : ""}</div>`;
     let h = `<h3>For sale here</h3>${forSale.length ? forSale.map((d) => row(d, "buy")).join("") : `<p class="sub">No player stalls in ${esc(l)} right now.</p>`}`;
@@ -2793,7 +2800,7 @@
       body = `${inc.length ? inc.map((d) => `<div class="item on" style="flex-wrap:wrap"><div class="t">${d.courier ? " " : ""}${esc(d.fromName)} offers ${esc(MP.describe(d))}${(d.items || []).length ? `<span class="icorow">${d.items.slice(0, 4).map((x) => ICONART.item(x.item, 26, x)).join("")}</span>` : ""}<span>${d.ask ? `for ${d.ask} gold (you have ${S.gold})` : "as a gift"}</span></div><div class="fbtns"><button class="btn sm pri" data-act="tradeyes" data-id="${esc(d.id)}" ${S.gold >= d.ask ? "" : "disabled"}>Accept</button><button class="btn sm" data-act="tradeno" data-id="${esc(d.id)}">Decline</button></div></div>`).join("") : `<p class="sub">No offers waiting for you.</p>`}
         ${onWay.length ? `<h3 style="margin-top:10px">Couriers on the way to you</h3>${onWay.map((d) => `<div class="item"><div class="t"> From ${esc(d.fromName)}<span>arrives in ${cdSpan(d.arrive)}</span></div></div>`).join("")}` : ""}
         ${outC.length ? `<h3 style="margin-top:10px">Your offers</h3>${outC.map((d) => `<div class="item"><div class="t">${d.courier ? " " : ""}To ${esc(d.toName)}: ${esc(MP.describe(d))}<span>${d.ask ? `asking ${d.ask} gold` : "gift"} · ${d.courier && !SOCIAL.arrived(d) ? `courier arrives in ${cdSpan(d.arrive)}` : "waiting for an answer"}</span></div><button class="btn sm" data-act="tradecancel" data-id="${esc(d.id)}">Withdraw</button></div>`).join("")}` : ""}
-        <p class="sub" style="margin-top:10px">To send an offer, tap  Trade next to a friend. If they're not in the same place, a courier carries it (about an hour of game time). What you offer leaves your pack at once and comes back if they say no.</p>`;
+        <p class="sub" style="margin-top:10px">To send an offer, tap  Trade next to a friend. If you're in the same place, a trade window opens for you both; if not, a courier carries your offer (about an hour of game time). What you offer leaves your pack at once and comes back if they say no.</p>`;
     }
     return `<div class="panel"><h2> Friends & messages</h2>${chips}${off}${body}</div>`;
   }
@@ -3009,7 +3016,7 @@
     if (!S || typeof INVITES === "undefined" || !Store.online) return [];
     const t = G.now(), c = myClan();
     return INVITES.list(S, { parties: invites, runs: coopUI?.myInvites ? coopUI.myInvites() : [], clans: myClanInvites().filter((x) => x.id !== c?.id), inClan: !!c,
-      duels: duels.filter((d) => d.to === S.id && d.status === "open" && t - d.t < ARENA.OPEN_MIN * 60), trades: myIncoming().map((d) => ({ ...d, what: MP.describe(d) })), gold: S.gold, face: typeof AVATAR !== "undefined" ? (uid) => AVATAR.face(cardOf(uid), SOCIAL.friends(S)[uid]?.pic, 30) : null, joins: typeof FRIENDJOIN !== "undefined" ? FRIENDJOIN.cards() : [] });
+      duels: duels.filter((d) => d.to === S.id && d.status === "open" && t - d.t < ARENA.OPEN_MIN * 60), trades: myIncoming().map((d) => ({ ...d, what: MP.describe(d) })), gold: S.gold, face: typeof AVATAR !== "undefined" ? (uid) => AVATAR.face(cardOf(uid), SOCIAL.friends(S)[uid]?.pic, 30) : null, joins: typeof FRIENDJOIN !== "undefined" ? FRIENDJOIN.cards() : [], tradewins: typeof TRADEWIN !== "undefined" ? TRADEWIN.cards() : [] });
   }
   async function answerInviteCard(kind, id, yes) {
     if (kind === "party") await (yes ? acceptInvite(id) : declineInvite(id));
@@ -3017,6 +3024,7 @@
     else if (kind === "clan") yes ? clanJoin(id) : clanDecline(id);
     else if (kind === "duel") await answerDuel(id, yes);
     else if (kind === "trade") await answerTrade(id, yes);
+    else if (kind === "tradewin" && typeof TRADEWIN !== "undefined") await TRADEWIN.answer(id, yes);
     else if (kind === "join" && typeof FRIENDJOIN !== "undefined") await FRIENDJOIN.reply(id, yes);
     bump(); if (tab === "social" || tab === "town") renderPanel(true);
   }
@@ -3086,7 +3094,7 @@
     pack: ["Pack", "What you carry and wear", "Open your things to wear, use, compare or drop them. Use the search box to find an item by name. Heavy packs slow you down: sell things or store them at home."],
     town: ["Area", "Places in this town", "Places are grouped like a town: Inn, Market, Services & trainers, Work & jobs, Your home, and Events & fun. Tap one to open it; the ‹ button brings you back. Things ready for you show on top under Right now. Shops close at night (20:00–08:00)."],
     log: ["Journal", "Your quests", "Active quests sit on shelves: main story, Solstheim, Civil War, guilds, Daedric and side quests. Misc holds jobs, bounties, cures and treasure maps. ☆ Track a quest to steer the compass, the map and the What to do next card. Discoveries, Achievements and your Diary are in the strip on top; friends, party and clan are under Social."],
-    social: ["Social", "Friends, messages and trades", "Add players as friends, send them messages, and trade by courier from anywhere."],
+    social: ["Social", "Friends, messages and trades", "Add players as friends, send them messages, and trade face to face or by courier from anywhere."],
   };
   function screenHead() {
     const h = SCREEN_HELP[tab]; if (!h) return "";
@@ -3491,7 +3499,7 @@
       note = "Dig ore with a pickaxe, then smelt it into ingots at the forge.";
       body = mineHTML(l);
     } else if (townShop === "market") {
-      note = "Players sell their own things here. Buy, or run your own stall if you own a house in this town.";
+      note = "Players sell their own things here. Buy, browse every town on the Market board, or run your own stall if you own a house in this town.";
       body = marketHTML(l);
     } else if (townShop === "halls") {
       note = "Build your own hall here, or a guild hall for your clan. Staff are paid every in-game day.";
@@ -3621,7 +3629,7 @@
     const inParty = (id) => party?.members.some((m) => m.id === id);
     const shared = Store.online;
     const partyHtml = !shared ? "" : `<div class="panel"><h2>Party${party ? ` · ${party.members.length}/${typeof PARTYPLAY !== "undefined" ? PARTYPLAY.MAX_PARTY : 8}` : ""}</h2>${party ? `${typeof DIFF !== "undefined" ? DIFF.partyLine(S, party) : ""}<p class="sub">Led by ${esc(party.leaderName)}. The leader picks where to go and asks everyone "Ready?" before setting off; everyone with them follows at the slowest member's pace. The leader handles encounters on the road, members near them fight beside them, and the spoils are shared. Dungeons grow with the party.</p>
-        <div class="list">${party.members.map((m) => `<div class="item" data-tip-k="player:${esc(m.id)}"><div class="t">${esc(m.name)}${typeof AFFL !== "undefined" ? AFFL.badge(m.id === S.id ? AFFL.cardBits(S).affl : cardOf(m.id)?.affl) : ""}${m.id === party.leader ? " ⚑" : ""}${m.id === S.id ? " (you)" : ""}<span>${m.id === S.id ? "" : (() => { const c = cardOf(m.id); return c ? `${esc(G.holdAt(otherPos(c)))} · ${G.pxDist(otherPos(c), me) <= MP.NEAR_PX ? "with you" : "away"}` : "offline"; })()}</span></div></div>`).join("")}</div>
+        <div class="list">${party.members.map((m) => `<div class="item" data-tip-k="player:${esc(m.id)}"><div class="t">${esc(m.name)}${typeof AFFL !== "undefined" ? AFFL.badge(m.id === S.id ? AFFL.cardBits(S).affl : cardOf(m.id)?.affl) : ""}${m.id === party.leader ? " ⚑" : ""}${m.id === S.id ? " (you)" : ""}<span>${m.id === S.id ? "" : (() => { const c = cardOf(m.id); return c ? `${esc(G.holdAt(otherPos(c)))} · ${G.pxDist(otherPos(c), me) <= MP.NEAR_PX ? "with you" : "away"}` : "offline"; })()}</span></div>${m.id !== S.id && typeof TRADEWIN !== "undefined" && cardOf(m.id) && !MP.canTarget(S, cardOf(m.id), me, otherPos(cardOf(m.id))) ? `<button class="btn sm" data-act="ltrade" data-id="${esc(m.id)}">Trade</button>` : ""}</div>`).join("")}</div>
         <button class="btn" data-act="leaveparty" style="width:100%;margin-top:8px">${party.leader === S.id ? "Disband the party" : "Leave the party"}</button>` : '<p class="sub">You travel alone. Invite someone from the list below.</p>'}
       ${invites.map((p) => `<div class="item on" style="margin-top:8px"><div class="t">${esc(p.leaderName)} invites you to their party<span>${p.members.length}/${typeof PARTYPLAY !== "undefined" ? PARTYPLAY.MAX_PARTY : 8} heroes</span></div><button class="btn sm pri" data-act="accept" data-id="${esc(p.id)}">Accept</button><button class="btn sm" data-act="decline" data-id="${esc(p.id)}">Decline</button></div>`).join("")}
       ${chests.map((c) => { const sh = MP.shareOf(c, S.id); return `<div class="item on" style="margin-top:8px;flex-wrap:wrap"><div class="t">\uE112 Party chest from ${esc(c.place)}<span>${c.goldLeft} gold${c.itemsLeft.length ? ", " + c.itemsLeft.map((i) => esc(D.ITEMS[i].name)).join(", ") : ""} · your fair share: ${sh.gold} gold${sh.items.length ? " + " + sh.items.length + " item" + (sh.items.length > 1 ? "s" : "") : ""}</span></div>
@@ -3632,7 +3640,7 @@
           return `<div class="item" style="flex-wrap:wrap">${typeof AVATAR !== "undefined" ? AVATAR.portrait(o, 44) : HEROART.portrait(o, 38)}${os ? `<span class="sideico" title="${esc(SIDES.LIST[os].name)}">${SIDES.emblem(os, 16)}</span>` : ""}<div class="t">${esc(o.name)}${inParty(o.id) ? " ⚑" : ""}<span>Level ${o.level} ${esc(D.RACES[o.race]?.name || "")}${typeof LEVELUP !== "undefined" ? LEVELUP.cardText(o) : ""} · ${esc(o.loc || G.holdAt(o.pos))}${o.moving ? " · travelling" : ""}${o.dungeon ? " · in a dungeon" : ""}${o.bounty ? ` · wanted (${o.bounty})` : ""}</span></div>
           <span class="num sub">${near ? "here" : o.d < 60 ? "nearby" : "~" + fmtMin(o.d * 1.1 / G.speed(S)) + " away"}</span>
           <div style="display:flex;gap:6px;width:100%;flex-wrap:wrap">${SOCIAL.isFriend(S, o.id) ? "" : `<button class="btn sm" data-act="fadd" data-id="${esc(o.id)}">＋ Friend</button>`}${inParty(o.id) ? `<span class="inparty">In your party</span>` : `<button class="btn sm" data-act="invite" data-id="${esc(o.id)}">Invite</button>`}
-          ${near ? `<button class="btn sm" data-act="trade" data-id="${esc(o.id)}">Trade</button>` : ""}${near && !inParty(o.id) ? `<button class="btn sm" data-act="pick" data-id="${esc(o.id)}" ${MP.pickWait?.(S, o.id) ? `disabled title="Try again in ${Math.ceil(MP.pickWait(S, o.id) / 60)} min"` : ""}>Pickpocket</button>` : ""}${(near || war) && !inParty(o.id) ? `<button class="btn sm danger" data-act="attack" data-id="${esc(o.id)}">Attack</button>` : ""}</div></div>`; }).join("")}</div>
+          ${near ? `<button class="btn sm" data-act="ltrade" data-id="${esc(o.id)}">Trade</button>` : ""}${near && !inParty(o.id) ? `<button class="btn sm" data-act="pick" data-id="${esc(o.id)}" ${MP.pickWait?.(S, o.id) ? `disabled title="Try again in ${Math.ceil(MP.pickWait(S, o.id) / 60)} min"` : ""}>Pickpocket</button>` : ""}${(near || war) && !inParty(o.id) ? `<button class="btn sm danger" data-act="attack" data-id="${esc(o.id)}">Attack</button>` : ""}</div></div>`; }).join("")}</div>
           <p class="sub" style="margin-top:8px">To rob someone you must be in the same place. Soldiers of rival sides (level 20+) can attack each other anywhere in the same hold. Fights use their gear and stats. Killing someone in a town is always seen; out in the wilds, sometimes.</p>`
         : `<p class="sub">No one else ${Store.mode === "p2p" ? "online right now. Send friends the app and they" : "yet. Share this page and friends"} appear here and on the map.</p>`)
       : APP ? `<p class="sub">This is the offline game: just you. Other players live in the online world.</p>${onlineBtn()}` : '<p class="sub">Shared saving isn\'t available in this view, so you\'re playing alone in this browser.</p>'}
@@ -3803,6 +3811,7 @@
       const pv = $("#cfPrev"); if (pv) pv.innerHTML = craftPreview(); return;
     }
     if (e.target.id === "cfA" || e.target.id === "cfB") { if (e.target.id === "cfA") { craftDraft.a = e.target.value; craftDraft.am = 0; } else { craftDraft.b = e.target.value; craftDraft.bm = 0; } renderPanel(true); return; } if (e.target.id === "chatin") { chatDraft = e.target.value; return; } if (e.target.id === "dmin") { dmDraft = e.target.value; return; } if (e.target.id === "versein") { verseDraft = e.target.value; return; }
+    if (e.target.id === "mkbq" && typeof MKTBOARD !== "undefined") { MKTBOARD.setQ(e.target.value); const pos = e.target.selectionStart; renderPanel(true); const q = $("#mkbq"); if (q) { q.focus(); q.setSelectionRange(pos, pos); } return; }
     if (e.target.id === "socsearch") { socSearch = e.target.value; const pos = e.target.selectionStart; renderPanel(true); const q = $("#socsearch"); q.focus(); q.setSelectionRange(pos, pos); return; } if (e.target.id === "packsearch") { packSearch = e.target.value; const pos = e.target.selectionStart; renderPanel(true); const q = $("#packsearch"); if (q) { q.focus(); q.setSelectionRange(pos, pos); } return; } if (e.target.id === "search") { searchText = e.target.value; const pos = e.target.selectionStart; renderPanel(true); const s = $("#search"); s.focus(); s.setSelectionRange(pos, pos); } }
   function onPanelChange(e) {
     const id = e.target.id;
@@ -3817,6 +3826,7 @@
     const a = b.dataset.act, L = G.loadout(S);
     if (typeof UNLOCKS !== "undefined" && S) { const lk = UNLOCKS.act(S, a) || (a === "shop" && !UNLOCKS.section(S, b.dataset.id) ? UNLOCKS.sectionFeature(b.dataset.id) : null) || (a === "tabgo" && !UNLOCKS.tab(S, b.dataset.id) ? "x" : null); if (lk) { if (lk !== "x") toast(UNLOCKS.lockedLine(lk)); return; } }   // unlocks.js: a locked feature reached by an old button or link
     if (a.startsWith("coop") && coopUI) return void coopUI.act(b);
+    if (a.startsWith("mkb") && typeof MKTBOARD !== "undefined") return void MKTBOARD.act(b, { S, stalls: () => stalls, toast, persist, render: () => renderPanel(true), sound: (n) => SOUND.fx(n) });   // the market board + parcels (mktboard.js)
     if (a === "locview" && typeof LOCINTRO !== "undefined") { SOUND.fx("click"); return void LOCINTRO.view(S, locIntroCtx()); }   // Area tab: the place's picture again (never counts as arriving)
     if (/^loc(sheet|mode|leave)$/.test(a) && typeof LOCSCREEN !== "undefined") { SOUND.fx("click"); return void LOCSCREEN.act(b, { S, refresh: () => { townShop = ""; renderPanel(true); }, leave: () => { tab = "map"; bump(); renderTabs(); renderPanel(true); } }); }
     if ((a === "lvpick" || a === "lvsend") && lvUI) return void lvUI.act(b);
@@ -3852,6 +3862,7 @@
       case "gdo": guildWork(b.dataset.id); break;
       case "qjoin": { const m = QUESTS.join(S, b.dataset.id); persist(true); renderPanel(true); showMessage("A new path", m); break; }
       case "trade": { const c = cardOf(b.dataset.id); if (c) { tradeSel = []; openTrade(c); } break; }
+      case "ltrade": { const c = cardOf(b.dataset.id); if (!c) return toast("They're gone."); if (typeof TRADEWIN !== "undefined") TRADEWIN.start(c); else { tradeSel = []; openTrade(c); } break; }
       case "tradepick": { const id = +b.dataset.id; tradeSel = tradeSel.includes(id) ? tradeSel.filter((x) => x !== id) : [...tradeSel, id]; const c = cardOf(tradeTo) || (SOCIAL.isFriend(S, tradeTo) ? { id: tradeTo, name: SOCIAL.friends(S)[tradeTo].name } : null); if (c) openTrade(c); break; }
       case "tradesend": {
         const c = cardOf(tradeTo) || (SOCIAL.isFriend(S, tradeTo) ? { id: tradeTo, name: SOCIAL.friends(S)[tradeTo].name } : null); if (!c) { closeModal(); return toast("They're gone."); }
@@ -4122,7 +4133,7 @@
       case "fmsg": socTab = "msgs"; socWith = b.dataset.id; tab = "social"; renderTabs(); renderPanel(true); setTimeout(() => { const cl = $("#chatlog"); if (cl) cl.scrollTop = cl.scrollHeight; }, 20); break;
       case "dmback": socWith = null; renderPanel(true); break;
       case "dmsend": sendDM(); break;
-      case "ftrade": { const c = friendCard(b.dataset.id); if (c) { tradeSel = []; openTrade(c); } break; }
+      case "ftrade": { const c = friendCard(b.dataset.id), live = cardOf(b.dataset.id); if (live && typeof TRADEWIN !== "undefined" && !MP.canTarget(S, live, livePos(), otherPos(live))) { TRADEWIN.start(live); break; } if (c) { tradeSel = []; openTrade(c); } break; }
       case "craftgo": { const r = SPELLCRAFT.craft(S, craftChoices(), craftDraft.name); if (r.err) return toast(r.err); craftDraft = { a: "", am: 0, b: "", bm: 0, name: "" }; SOUND.fx("coin"); persist(true); say(r.text); renderPanel(true); break; }
       case "runetable": RUNECRAFT.open(S, { save: () => persist(true), say: (m) => toast(m), refresh: () => renderPanel(true) }); break;
       case "craftdel": say(SPELLCRAFT.forget(S, b.dataset.id)); persist(true); renderPanel(true); break;

@@ -1,4 +1,4 @@
-/* i18n_rows.js: Polish for build 358's front and back rows and foe roles (foefield.js, foeroles.js, the new lines in
+/* i18n_rows.js: Polish for build 361's front and back rows and foe roles (foefield.js, foeroles.js, the new lines in
    foekit.js, fightread.js and perkfx.js) and its patch note. Loaded before i18n.js; exact lines go in
    I18N_EXTRA.words (lines with {0} are filled in after translating), lines with numbers in I18N_EXTRA.pat.
    The role names themselves live in names.js (type "role"). */
@@ -51,7 +51,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Gdy przerwiesz skupiany czar wroga (uderzeniem tarczą, czarem prądu, ogłuszeniem albo zachwianiem), wróg też się zachwieje. [OURS]",
     "Your arrows and direct spells slip past a Shieldwarden's Cover: they always hit the foe you aim at. [OURS]":
       "Twoje strzały i bezpośrednie czary omijają Osłonę Tarczownika: zawsze trafiają wroga, w którego celujesz. [OURS]",
-    // the patch note (patchnotes.js b358-rows)
+    // the patch note (patchnotes.js b361-rows)
     "Front and back rows": "Przedni i tylny szereg",
     "Groups of foes now stand on the field together, in a front row and a back row. A strip over the fight shows both rows: tap a foe (or press [ and ] on PC) to aim at it.":
       "Grupy wrogów stoją teraz na polu razem, w przednim i tylnym szeregu. Pasek nad walką pokazuje oba szeregi: dotknij wroga (albo naciśnij [ i ] na PC), żeby w niego celować.",

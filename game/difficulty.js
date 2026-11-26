@@ -4,7 +4,7 @@
      Story  : foe health 85%, foe damage 70%, fight minigame sweet spots 140% wider, foes fight plainly
      Normal : everything as it was
      Hard   : foe health 110%, foe damage 125%, fight minigame sweet spots 80%, foes fight smarter, and they shrug off
-              part of every damage spell (ward; build 358: mages won far more Hard fights than any other build)
+              part of every damage spell (ward; build 361: mages won far more Hard fights than any other build)
    XP, gold and loot are the same on all three (skill practice from a fight is evened out below, so a longer or shorter
    fight doesn't teach more or less). Foes never cheat: "smarter" only means they use their kit more and go for the most
    hurt hero (and healers) more often.
