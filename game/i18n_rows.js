@@ -1,4 +1,4 @@
-/* i18n_rows.js: Polish for build 354's front and back rows and foe roles (foefield.js, foeroles.js, the new lines in
+/* i18n_rows.js: Polish for build 358's front and back rows and foe roles (foefield.js, foeroles.js, the new lines in
    foekit.js, fightread.js and perkfx.js) and its patch note. Loaded before i18n.js; exact lines go in
    I18N_EXTRA.words (lines with {0} are filled in after translating), lines with numbers in I18N_EXTRA.pat.
    The role names themselves live in names.js (type "role"). */
@@ -67,9 +67,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Im większa drużyna, tym więcej wrogów (2-3 dla dwóch graczy, do 5-6 dla ośmiu). Ich łączne zdrowie zostaje takie samo, tylko rozłożone na więcej wrogów.",
     "Four new perks: Line Breaker and Sweeping Reach (once a fight, a blade reaches the back row), Spellbreaker (breaking a channelled spell also staggers the caster) and Through the Gap (your arrows and spells slip past a Shieldwarden's cover).":
       "Cztery nowe atuty: Łamacz Szyku i Szeroki Zasięg (raz na walkę ostrze sięga tylnego szeregu), Łamacz Czarów (przerwanie skupianego czaru zachwiewa też rzucającym) i Przez Lukę (twoje strzały i czary omijają osłonę Tarczownika).",
-    "On Hard, foes shrug off a fifth of every damage spell: mages were winning far more Hard fights than anyone else.":
-      "Na Trudnym wrogowie odpierają jedną piątą każdego czaru zadającego obrażenia: magowie wygrywali dużo więcej trudnych walk niż ktokolwiek inny.",
-    "Auto no longer wastes Sun Fire on foes that aren't undead.": "Auto nie marnuje już Słonecznego Ognia na wrogów, którzy nie są nieumarli.",
+    "On Hard, foes shrug off a tenth of every damage spell: mages were winning far more Hard fights than anyone else.":
+      "Na Trudnym wrogowie odpierają jedną dziesiątą każdego czaru zadającego obrażenia: magowie wygrywali dużo więcej trudnych walk niż ktokolwiek inny.",
   });
   I18N_EXTRA.pat.push(
     [/^(.+) raises a shield$/, (m) => `${m[1]} unosi tarczę`],

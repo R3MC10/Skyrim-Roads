@@ -14,7 +14,7 @@
    3. Crafted spells are ordinary spells (D.SPELLS, kind damage / rune / cloak / dot / heal / regen / ward, custom: true)
       kept in the save (s.runeSpells) and re-registered on load: the Magic tab, tactics, the Smart AI, dual casting,
       both fight systems and the cost and fail rules all work as for bought spells. Fight.cast is wrapped to add the
-      modifiers: chain arcs again (and reaches the foes behind, like area spells), lingering leaves a burn (fire leaves
+      modifiers: chain arcs again (and reaches the other foes in that row, like area spells: foefield.js), lingering leaves a burn (fire leaves
       burning ground in turn-by-turn fights: reactions.js), slow numbs (frost adds a chill stack: Shatter), piercing
       ignores resistances and foe wards, quick never misses and may stagger. Poison is its own element: undead,
       machines and atronachs barely feel it.
@@ -73,9 +73,9 @@ const RUNECRAFT = (() => {
     touch: "A hit up close. Costs a little less magicka than a bolt.",
     rune: "A trap on the ground. Goes off when the foe moves onto it, before it can strike.",
     cloak: "Wraps around you and works every round.",
-    area: "A burst that also reaches the foes waiting behind.",
+    area: "A burst that also hits the other foes in that row (both rows at Master).",
     over: "Works every round for a few rounds.",
-    chain: "Arcs again for half, and jumps to the foes behind. Healing jumps to your allies.",
+    chain: "Arcs again for half, and jumps to the other foes in that row. Healing jumps to your allies.",
     lingering: "Leaves a burn for 3 rounds. Fire leaves burning ground. Healing leaves a glow, wards mend.",
     slow: "Numbs the foe so it acts later. Frost adds another chill (Shatter).",
     piercing: "Ignores resistances and the foe's own wards.",
@@ -273,7 +273,7 @@ const RUNECRAFT = (() => {
   function describe(c) {
     const E = ELEMENTS[c.el], a = R(c.amount), en = [], pl = [], el = E.name.toLowerCase(), pe = PLEL[c.el] || "";
     const add = (e, p) => { en.push(e); pl.push(p); };
-    if (c.kind === "damage") add(`${a} ${el} damage${c.dl === "area" ? ", also reaching the foes behind" : c.dl === "touch" ? " up close" : ""}`, `${a} obrażeń ${pe}${c.dl === "area" ? ", sięga też wrogów z tyłu" : c.dl === "touch" ? " z bliska" : ""}`);
+    if (c.kind === "damage") add(`${a} ${el} damage${c.dl === "area" ? ", also hitting the rest of its row" : c.dl === "touch" ? " up close" : ""}`, `${a} obrażeń ${pe}${c.dl === "area" ? ", trafia też resztę szeregu" : c.dl === "touch" ? " z bliska" : ""}`);
     else if (c.kind === "rune") add(`a rune trap: ${a} ${el} damage when the foe steps on it`, `runa-pułapka: ${a} obrażeń ${pe}, gdy wróg na nią wejdzie`);
     else if (c.kind === "cloak") add(`a cloak: ${a} ${el} damage every round for ${turnsTxt(c.turns)}`, `płaszcz: ${a} obrażeń ${pe} co rundę przez ${plTurns(c.turns)}`);
     else if (c.kind === "dot") add(`${a} ${el} damage every round for ${turnsTxt(c.turns)}`, `${a} obrażeń ${pe} co rundę przez ${plTurns(c.turns)}`);
@@ -287,7 +287,7 @@ const RUNECRAFT = (() => {
     return out;
   }
   const MODLINE = {
-    chain: (c) => (famOf(c.el) === "heal" ? ["the light jumps to your allies for half", "światło przeskakuje na sojuszników za połowę"] : ["arcs again for half and jumps to the foes behind", "przeskakuje drugi raz za połowę i sięga wrogów z tyłu"]),
+    chain: (c) => (famOf(c.el) === "heal" ? ["the light jumps to your allies for half", "światło przeskakuje na sojuszników za połowę"] : ["arcs again for half and jumps to the other foes in that row", "przeskakuje drugi raz za połowę i sięga innych wrogów w tym szeregu"]),
     lingering: (c) => (famOf(c.el) === "heal" ? ["leaves a healing glow", "zostawia leczącą poświatę"] : famOf(c.el) === "ward" ? ["the ward mends itself", "osłona sama się odnawia"] : c.el === "fire" ? ["leaves burning ground", "zostawia płonącą ziemię"] : ["leaves a lingering burn", "zostawia długo piekący ślad"]),
     slow: (c) => (c.el === "frost" ? ["numbs and chills deeper", "otępia i mrozi głębiej"] : ["numbs the foe", "otępia wroga"]),
     piercing: () => ["ignores resistances and wards", "omija odporności i osłony"],

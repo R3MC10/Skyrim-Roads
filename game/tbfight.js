@@ -563,7 +563,7 @@ const TB = (() => {
       const f = this.f; let best = null, bd = -1;
       try { if (this.canAfford("attack")) { best = "attack"; bd = typeof COMBATAI !== "undefined" && COMBATAI.swing ? COMBATAI.swing(f, false) : f.weaponDamage(); } } catch (e) { /* a plain blow it is */ }
       for (const id of f.s.spells || []) {
-        const sp = D.SPELLS[id]; if (!sp || sp.kind !== "damage" || (sp.element === "sun" && !(f.tags && f.tags.has("undead"))) || !this.canAfford("spell:" + id)) continue;   // Sun Fire only hurts the undead
+        const sp = D.SPELLS[id]; if (!sp || sp.kind !== "damage" || !this.canAfford("spell:" + id)) continue;
         let d = 0; try { d = G.spellDamage(f.s, sp); } catch (e) { d = sp.amount || 0; }
         if (d > bd) { bd = d; best = "spell:" + id; }
       }

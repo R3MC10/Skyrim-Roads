@@ -124,7 +124,7 @@ const FOEKIT = (() => {
 
   function setup(f) {
     if (!f || !f.e) return null;
-    const ids = typeof FOEROLES !== "undefined" ? FOEROLES.kit(f.e, kitFor(f.e)) : kitFor(f.e), pots = potsFor(f.e);   // [rows] a role adds its moves (foeroles.js)
+    const ids = typeof FOEROLES !== "undefined" ? FOEROLES.kit(f.e, kitFor(f.e), f) : kitFor(f.e), pots = potsFor(f.e);   // [rows] a role adds its moves (foeroles.js)
     if (pots && !ids.includes("potion")) ids.push("potion");
     f.kit = { ids, cd: {}, used: {}, pots, guard: 0, ward: 0, evade: 0, rage: 0, windup: null };
     return f.kit;

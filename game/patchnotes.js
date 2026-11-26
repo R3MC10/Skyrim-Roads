@@ -11,8 +11,7 @@ const PATCHNOTES = (() => {
       "Foes have roles you can read on their plates: Shieldwardens cover a friend once, Ravagers hit hard, Marksmen shoot from the back, Spellcasters channel a Fireball at a whole row (bash it, shock it, stun or stagger it to break it), Menders heal, Cutthroats slip round your front, Regrowers heal unless they burn, Warleaders rally the rest. Bosses change role as their fight goes on.",
       "A party meets more foes the bigger it is (2-3 for two players, up to 5-6 for eight). Their total health stays the same, just spread over more foes.",
       "Four new perks: Line Breaker and Sweeping Reach (once a fight, a blade reaches the back row), Spellbreaker (breaking a channelled spell also staggers the caster) and Through the Gap (your arrows and spells slip past a Shieldwarden's cover).",
-      "On Hard, foes shrug off a fifth of every damage spell: mages were winning far more Hard fights than anyone else.",
-      "Auto no longer wastes Sun Fire on foes that aren't undead.",
+      "On Hard, foes shrug off a tenth of every damage spell: mages were winning far more Hard fights than anyone else.",
     ] },
     { id: "b357-riglayers", build: 357, date: "26 Nov 2026", title: "Shields and weapons sit right in your hands", items: [
       "Painted fighters hold together better: a raised shield now sits in front of your hero, with the weapon arm behind it, instead of a hand and sword floating over the shield's face.",

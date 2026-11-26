@@ -4,7 +4,7 @@
      Story  : foe health 85%, foe damage 70%, fight minigame sweet spots 140% wider, foes fight plainly
      Normal : everything as it was
      Hard   : foe health 110%, foe damage 125%, fight minigame sweet spots 80%, foes fight smarter, and they shrug off
-              part of every damage spell (ward; build 354: mages won far more Hard fights than any other build)
+              part of every damage spell (ward; build 358: mages won far more Hard fights than any other build)
    XP, gold and loot are the same on all three (skill practice from a fight is evened out below, so a longer or shorter
    fight doesn't teach more or less). Foes never cheat: "smarter" only means they use their kit more and go for the most
    hurt hero (and healers) more often.
@@ -22,8 +22,8 @@ const DIFF = (() => {
       blurb: "Foes hit softer and fall sooner, and fight timing is easier. For enjoying the story." },
     normal: { id: "normal", name: "Normal", hp: 1, dmg: 1, win: 1, tac: "normal", kit: 1,
       blurb: "The game as it's meant to be played." },
-    hard: { id: "hard", name: "Hard", hp: 1.1, dmg: 1.25, win: 0.8, tac: "smart", kit: 1.2, ward: 0.2,
-      blurb: "Foes hit harder, fight smarter and go for whoever is hurt. Timing is tighter." },
+    hard: { id: "hard", name: "Hard", hp: 1.1, dmg: 1.25, win: 0.8, tac: "smart", kit: 1.2, ward: 0.1,
+      blurb: "Foes hit harder, fight smarter, go for whoever is hurt and shrug off a little spell damage. Timing is tighter." },
   };
   const IDS = ["story", "normal", "hard"];
   const SAME = "XP, gold and loot are the same on every difficulty.";

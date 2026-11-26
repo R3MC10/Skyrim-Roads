@@ -127,9 +127,11 @@ const FOEROLES = (() => {
     if (rg && !rg._rows) { const w0 = rg.when; rg.when = (f) => (!w0 || w0(f)) && !burning(f); rg._rows = true; }
   }
   if (typeof FOEKIT !== "undefined") addMoves(FOEKIT);
-  /* foekit.js setup(): the kit grows with the role */
-  function kit(e, out) {
+  /* foekit.js setup(): the kit grows with the role, in a group on the field only (a lone guard keeps its old kit, so
+     solo fights stay as they were balanced; bosses get theirs by phase in bossfight.js) */
+  function kit(e, out, f) {
     if (!e || e.player || e.ally || e.kind === "event" || (e.tags || []).includes("dragon") || e.teach) return out;
+    if (f !== undefined && !sessOf(f)) return out;
     const r = e.role; if (!r || !ROLES[r]) return out;
     for (const id of ROLES[r].moves) if (typeof FOEKIT !== "undefined" && FOEKIT.MOVES[id] && !out.includes(id)) out.push(id);
     return out;

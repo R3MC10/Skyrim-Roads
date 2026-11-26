@@ -7,7 +7,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Difficulty": "Poziom trudności", "Story": "Fabularny", "Hard": "Trudny",
     "Foes hit softer and fall sooner, and fight timing is easier. For enjoying the story.": "Wrogowie biją słabiej i padają szybciej, a wyczucie chwili w walce jest łatwiejsze. Dla tych, którzy chcą cieszyć się opowieścią.",
     "The game as it's meant to be played.": "Gra taka, jaka ma być.",
-    "Foes hit harder, fight smarter and go for whoever is hurt. Timing is tighter.": "Wrogowie biją mocniej, walczą sprytniej i celują w rannych. Wyczucie chwili jest trudniejsze.",
+    "Foes hit harder, fight smarter, go for whoever is hurt and shrug off a little spell damage. Timing is tighter.": "Wrogowie biją mocniej, walczą sprytniej, celują w rannych i odpierają trochę obrażeń od czarów. Wyczucie chwili jest trudniejsze.",
     "XP, gold and loot are the same on every difficulty.": "Doświadczenie, złoto i łupy są takie same na każdym poziomie trudności.",
     "You can change it any time in Settings.": "Możesz go zmienić w każdej chwili w Ustawieniach.",
     "In your party the leader's setting counts": "W twojej drużynie liczy się ustawienie przywódcy",
@@ -41,7 +41,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     const C = { "diff:Story": "Fabularny", "diff:Normal": "Normalny", "diff:Hard": "Trudny" };
     for (const k of ["Difficulty", "XP, gold and loot are the same on every difficulty.", "You can change it any time in Settings.",
       "Foes hit softer and fall sooner, and fight timing is easier. For enjoying the story.", "The game as it's meant to be played.",
-      "Foes hit harder, fight smarter and go for whoever is hurt. Timing is tighter."]) C[k] = W[k];
+      "Foes hit harder, fight smarter, go for whoever is hurt and shrug off a little spell damage. Timing is tighter."]) C[k] = W[k];
     for (const [k, v] of Object.entries(C)) if (!(k in I18N_CHARGEN)) I18N_CHARGEN[k] = v;
   }
 })();
