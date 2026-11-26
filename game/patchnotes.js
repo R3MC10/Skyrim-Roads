@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b347-names", build: 347, date: "26 Nov 2026", title: "One list of names", items: [
+      "Behind the scenes: the names of towns, holds, items and foes now come from one list. Nothing looks different today.",
+      "This lets us give places and things their own names later in one go, without breaking your saves, quests or bags.",
+    ] },
     { id: "b346-unlocks", build: 346, date: "26 Nov 2026", title: "New things open as you level up", items: [
       "A new hero no longer gets every system at once. The big ones open one by one as you level up: perks at level 2, gathering and cooking at 3, the forge at 4, followers and alchemy at 5, horses at 6, hard dungeons at 7, clans and houses at 8, and so on up to legendary hunts at 20.",
       "Your old characters keep everything they already used: if you have a horse, a house or a follower, they stay.",
