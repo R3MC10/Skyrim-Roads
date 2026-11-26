@@ -5802,7 +5802,7 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 
 /* [uiframes] painted Nordic 9-slice frame (ui-frame-panel: 3×3 grid of 160 px; corners stay, rails stretch) on title
    pages and pop-up windows. The picture is drawn wider than the border, over the padding, so the corners stay big. */
-:root.has-ui-frame-panel .title .page,:root.has-ui-frame-panel .modal .sheet:not(.hz-fs){border:4px solid transparent;border-image:var(--asset-frame-panel) 160 / 46px / 0 stretch;border-radius:0;box-shadow:0 20px 60px rgba(0,0,0,.6);background-clip:padding-box}
+:root.has-ui-frame-panel .title .page,:root.has-ui-frame-panel .modal .sheet:not(.hz-fs){border:4px solid transparent;border-image:var(--asset-frame-panel) 160 / 46px / 0 stretch;border-radius:0;box-shadow:none;filter:drop-shadow(0 14px 28px rgba(0,0,0,.55));background-clip:padding-box;-webkit-backdrop-filter:none;backdrop-filter:none}   /* the shadow follows the bronze, not the box: a box shadow left a pale strip outside the rail */
 :root.has-ui-frame-panel .title .page{padding:24px 16px 20px}
 :root.has-ui-frame-panel .modal .sheet:not(.hz-fs){padding:24px 18px}
 :root.has-ui-frame-panel .modal .sheet:not(.hz-fs)::before,:root.has-ui-frame-panel .modal .sheet:not(.hz-fs)::after{display:none}   /* the old drawn corner marks */
