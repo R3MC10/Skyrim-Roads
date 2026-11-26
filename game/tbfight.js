@@ -47,7 +47,7 @@ const TB = (() => {
     rounds: { normal: 4, tough: 6, boss: 7 },   // how long a fight should roughly last (build 350, 3 AP: sims give medians of about 4-5 / 6 / 10-11 rounds)
     est: { k: 0.7, pool: 1, mk: 0.85, mix: 0.25, sum: 0.8 },   // [post-combat2] share of the damage your stamina / magicka pays for in a round that foe health is sized for
     min: { normal: 1, tough: 1.2, boss: 1.3 }, max: { normal: 7, tough: 9, boss: 10 },   // bounds on the health boost
-    /* [partyboss] party fights (build 353): every teammate plays a full 3 AP turn on their own phone, so the foe is sized
+    /* [partyboss] party fights (build 354): every teammate plays a full 3 AP turn on their own phone, so the foe is sized
        for what each of them really deals a round (COOP.profile publishes it: dprOf), not one plain blow each. On top of
        that a party foe gets a little more health (a party also heals, shields and covers each other: hp) and 0.6 more
        moves a round per extra player (acts); tuned with tests/test_partyboss.js: bosses take about 8-12 rounds and

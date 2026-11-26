@@ -3,10 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b353-partyboss", build: 353, date: "26 Nov 2026", title: "Party fights last as long as solo ones", items: [
+    { id: "b354-partyboss", build: 354, date: "26 Nov 2026", title: "Party fights last as long as solo ones", items: [
       "In a party, the foe is now sized for what each teammate really deals on their turn (their own phone works it out from their gear, perks and spells), not for one plain blow each. Big parties no longer get bosses that drag on for 30-40 rounds, and a party of mages isn't counted as fist fighters any more.",
       "A boss takes about 8-12 rounds whether you're on your own or eight strong; tough fights about 5-8 rounds, normal ones 3-5.",
       "A party's foe gets a little more health, and acts a bit more often for every extra player, so a big party still has to watch its health: a party wins about as often as a lone hero does.",
+    ] },
+    { id: "b353-forgenames", build: 353, date: "26 Nov 2026", title: "Forge upgrades read +1 to +6", items: [
+      "Gear you improve at the forge now shows its level as a number after the name: Iron Sword +1, +2 ... up to +6. The old words (Fine, Superior, Exquisite, Flawless, Epic, Legendary) are gone, so they no longer get mixed up with item rarity.",
+      "Nothing about your gear changes: same bonuses, same upgrades, and everything you already improved keeps its level.",
     ] },
     { id: "b352-updfix", build: 352, date: "26 Nov 2026", title: "Phone updates work again", items: [
       "On phones, tapping Update now could do nothing and say \"Not an update address\". The app misread the build number, so it turned down every small update.",

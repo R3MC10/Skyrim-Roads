@@ -1,4 +1,4 @@
-// Party fight length (build 353, [partyboss]). A party foe is sized for what every teammate really deals: each real
+// Party fight length (build 354, [partyboss]). A party foe is sized for what every teammate really deals: each real
 // player plays a full 3 AP turn on their own phone, and their phone publishes that number (COOP.profile → dpr, from
 // TB.dprOf). Seeded party fights with 1-8 real players (each teammate's turn played by Auto on their own simulated
 // phone, sharedfight.js, the way a real party plays) must give:
@@ -107,7 +107,7 @@ ok(worstHit <= 0.45, `no one-shots: the biggest single turn on a boss took ${Mat
 
 // 3. the numbers and their Polish
 if (!process.env.SIMONLY) { ok(TB.T.party && TB.T.party.hp && TB.T.party.acts > 0, "the party tuning lives in TB.T.party");
-  const pn = fs.readFileSync(W + "patchnotes.js", "utf8"); ok(/b353-partyboss|partyboss/.test(pn), "patch note for party boss fights");
+  const pn = fs.readFileSync(W + "patchnotes.js", "utf8"); ok(/b354-partyboss|partyboss/.test(pn), "patch note for party boss fights");
   const pl = fs.readFileSync(W + "i18n_partyboss.js", "utf8"), html = fs.readFileSync(W + "index.html", "utf8");
   ok(pl.includes("Party fights last as long as solo ones"), "Polish for the patch note");
   ok(html.indexOf("i18n_partyboss.js") > 0 && html.indexOf("i18n_partyboss.js") < html.indexOf('src="i18n.js"'), "i18n_partyboss.js loads before i18n.js"); }

@@ -23,6 +23,7 @@ const TIP = (() => {
     POTFX: () => (typeof POTFX !== "undefined" ? POTFX : undefined),   // potionfx.js: potions work over a few rounds
     ITEMCMP: () => (typeof ITEMCMP !== "undefined" ? ITEMCMP : undefined),   // itemcmp.js: against what you wear (also the Items side panel)
     RARITY: () => (typeof RARITY !== "undefined" ? RARITY : undefined),   // rarity.js: an item's rarity
+    NAMES: () => (typeof NAMES !== "undefined" ? NAMES : undefined),   // names.js: "Iron Sword +2" for forge-improved gear
   };
   const g = (n) => { try { return MODS[n] ? MODS[n]() : undefined; } catch { return undefined; } };
   const has = (n) => g(n) !== undefined;
@@ -51,7 +52,7 @@ const TIP = (() => {
   function itemHTML(itemId, s, r = null) {
     const D_ = g("D"), G_ = g("G"); const it = D_?.ITEMS?.[itemId]; if (!it) return null;
     const RA = g("RARITY"), tier = RA ? RA.of(itemId, r) : "common";   // rarity.js: colour and word
-    const name = (r?.tq && g("TOWNS")?.QUALITY ? g("TOWNS").QUALITY[r.tq] + " " : "") + it.name + (r?.nm ? ` “${r.nm}”` : "");
+    const name = (g("NAMES")?.improved ? g("NAMES").improved(it.name, r) : it.name) + (r?.nm ? ` “${r.nm}”` : "");
     const hd = it.hands === 2 ? "Two-handed" : "One-handed";   // the skill only when it says something new ("One-handed weapon", not "· One-Handed" again)
     const kind = it.slot === "weapon" ? `${hd} ${it.skill === "Archery" ? "bow" : "weapon"}${it.skill && String(it.skill).toLowerCase() !== hd.toLowerCase() ? ` · ${it.skill}` : ""}`
       : (G_?.ARMOR_SLOTS || []).includes(it.slot) ? `${it.type ? it.type[0].toUpperCase() + it.type.slice(1) + " " : ""}${it.slot === "chest" ? "body armor" : it.slot}`
