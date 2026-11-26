@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b359-wrists", build: 359, date: "26 Nov 2026", title: "Wrists that bend like wrists", items: [
+      "Painted fighters' wrists look right: the glove or sleeve cuff now follows the forearm and bends smoothly into the hand, instead of a corner of the cuff sticking out past the sleeve.",
+      "Hands no longer bend further than a real wrist can, and a hand never snaps from one side to the other between frames.",
+      "An open hand (casting a spell, lying knocked down) now lies straight along the arm instead of twisting toward a weapon it isn't holding.",
+      "A bow or staff at rest eases into its swing instead of jumping when the attack starts.",
+    ] },
     { id: "b357-riglayers", build: 357, date: "26 Nov 2026", title: "Shields and weapons sit right in your hands", items: [
       "Painted fighters hold together better: a raised shield now sits in front of your hero, with the weapon arm behind it, instead of a hand and sword floating over the shield's face.",
       "When you swing, get hit or walk the map, the shield drops down behind your body, under the arm that holds it, and comes back up in front when you guard again.",
