@@ -18,7 +18,7 @@ async def main():
             await pg.wait_for_timeout(1500); await clear(pg)
             return pg
         async def arena(pg):
-            await clear(pg); await pg.click("[data-tab=map]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200); await pg.click("[data-id=arena]"); await pg.wait_for_timeout(300)
+            await clear(pg); await pg.click("[data-tab=world]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200); await pg.click("[data-id=arena]"); await pg.wait_for_timeout(300)
         A = await phone("aa", "Alfa"); B = await phone("ab", "Beta")
         await A.evaluate("()=>{}"); await A.wait_for_timeout(32000)   # cards refresh every 30 s
         await arena(A)

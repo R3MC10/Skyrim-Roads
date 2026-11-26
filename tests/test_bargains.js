@@ -8,6 +8,7 @@ const fs = require("fs"), vm = require("vm");
 const RUNS = +(process.env.RUNS || 24);
 const c = { console, Math: Object.create(Math), Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, WeakMap, Proxy, Number, String, structuredClone, RUNS, process: { env: {} } };
 let seed = 4242; c.Math.random = () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+c.__reseed = (v) => { seed = v; };   // the balance sims restart the dice for each setup
 vm.createContext(c);
 const FILES = ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "foecap.js", "stacks.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "daedric.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "beastpaths.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "priests.js", "potionfx.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "foeintent.js", "initiative.js", "tbfight.js", "i18n_afflictions.js", "afflictions.js", "i18n_bargains.js", "bargains.js"];
 for (const f of FILES.filter((f) => fs.existsSync(W + f))) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c, { filename: f });
@@ -222,6 +223,7 @@ const POOL = ["Bandit outlaw", "Black bear", "Sabre cat", "Draugr", "Forsworn am
 var simT = G.now();
 const STRONG = new Set(["Frost troll", "Vampire", "Thalmor patrol"]);
 function sim(build, L, opts, tb) {
+  __reseed(4242);   // same dice for every setup (common random numbers): the comparisons below measure the gear, not luck or which checks ran before
   let won = 0, rounds = 0, k = 0, one = 0, ss_r = 99;
   for (let i = 0; i < RUNS; i++) for (const nm of POOL) {
     const s = make(build, L, opts), e = enc(nm, L); if (!e) continue;

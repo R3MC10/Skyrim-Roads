@@ -19,7 +19,7 @@ async def main():
             # a blizzard in the wilds near Winterhold, no warm clothes: the cold meter shows on Travel
             await pg.evaluate(FORCE, "blizzard")
             await pg.evaluate("""()=>{const S=window.__dbg.save(); S.location=null; const w=WORLD.places.Winterhold; S.x=w[0]+0.01; S.y=w[1]+0.01; for (const sl of ['chest','head','hands','feet']) G.unequip(S, sl); S.coldV=82; S.coldT=G.now();}""")
-            await tab("log"); await tab("map")
+            await tab("log"); await tab("world")
             cold = await pg.evaluate("document.querySelector('.wxcold')?.innerText || ''")
             ok("Freezing" in cold, f"cold meter on Travel: {cold!r}")
             top = await pg.evaluate("document.querySelector('#clock')?.innerText || document.querySelector('#clock')?.title || ''")

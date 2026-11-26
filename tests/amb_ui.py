@@ -46,7 +46,7 @@ async def main():
         await pg.evaluate("async()=>{ for (const s of ['dungeon','inn','wild','forge','town','dungeon','wild','inn']) { SOUND.ambience({scene:s,dwemer:true,weather:'storm',tod:'night',moving:true,speed:1.2}); await new Promise(r=>setTimeout(r,60)); } }")
         st = await state(300); check("thrash bounded", len(st["beds"]) <= 12 and st["ambVoices"] <= 16, st)
         # trip with footsteps, then riding
-        await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())"); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(300)
+        await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())"); await pg.click("[data-tab=world]"); await pg.wait_for_timeout(300)
         await pg.click("[data-act=go] >> nth=0"); await pg.wait_for_timeout(800)
         await closeModals()
         st = await state(2500)

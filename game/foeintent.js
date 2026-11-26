@@ -30,12 +30,22 @@ const FOEINTENT = (() => {
   const liveAllies = (f) => (f.allies || []).filter((a) => a && !a.down && !(a.hp != null && a.hp <= 0));
   const findAlly = (f, k) => (k === HOST ? null : liveAllies(f).find((a) => keyOf(a) === k) || undefined);
 
+  /* Hard foes (difficulty.js): the most hurt one standing, when someone is below 60% (null = you, undefined = nobody) */
+  function weakest(f) {
+    const frac = (v, m) => (m > 0 ? Math.max(0, v) / m : 1);
+    let best, bf = 0.6;
+    try { const me = frac(f.hp, G.maxHealth(f.s)); if (me < bf) { best = null; bf = me; } } catch (e) { /* no hero numbers */ }
+    for (const a of liveAllies(f)) { const m = a.hp0 || a.maxHp || 0, v = frac(a.hp, m); if (m && v < bf) { best = a; bf = v; } }
+    return best;
+  }
   /* the engine's odds, rolled now: null = you, or the ally it goes for */
   function roll(f, rnd = Math.random) {
     const all = f.allies || [];
     if (!all.length) return null;
     let al = null;
-    const healer = all.find((a) => !a.down && a.player && (a.role === "healer" || a.heals > 0));   // party fights: healers first (tbfight.js foeAct)
+    const tac = typeof DIFF !== "undefined" ? DIFF.tactics(f) : "normal";   // Story: plain targets; Hard: the most hurt hero first (difficulty.js)
+    if (tac === "smart") { const w = weakest(f); if (w !== undefined && rnd() < 0.35) return w; }
+    const healer = tac === "basic" ? null : all.find((a) => !a.down && a.player && (a.role === "healer" || a.heals > 0));   // party fights: healers first (tbfight.js foeAct)
     if (healer && rnd() < 0.5) al = healer;
     else {
       const aw = typeof FAI !== "undefined" ? FAI.aggro(f) : all.length;

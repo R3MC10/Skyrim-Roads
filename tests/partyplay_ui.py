@@ -57,7 +57,7 @@ async def main():
             await tap(A, "go", "b.dataset.place = 'Riverwood';"); await A.wait_for_timeout(1500)
             st = await A.evaluate("() => ({ trip: !!window.__dbg.save().trip, rc: !!window.__dbg.party()?.ready })")
             check(f"[{style}] leader's Travel starts a ready check, not the trip", st["rc"] and not st["trip"], str(st))
-            await clean(A); await A.evaluate("() => document.querySelector('.tabs [data-tab=map], [data-tab=map]')?.click()"); await A.wait_for_timeout(600)
+            await clean(A); await A.evaluate("() => document.querySelector('.tabs [data-tab=world], [data-tab=world]')?.click()"); await A.wait_for_timeout(600)
             card = await A.query_selector(".ppcard")
             if card: await safe_shot(card, f"{SHOT}{style}_leader_check.png")
             check(f"[{style}] leader sees the ready card", card is not None)
@@ -91,7 +91,7 @@ async def main():
                 fol = {"b": await B.evaluate(f"() => window.__dbg.save().trip?.follow === '{ida}'"), "c": await C.evaluate(f"() => window.__dbg.save().trip?.follow === '{ida}'")}
                 if fol["b"] and fol["c"]: break
             check(f"[{style}] Beta and Ceta follow the leader", fol.get("b") and fol.get("c"), str(fol))
-            await clean(B); await B.click("[data-tab=map]"); await B.wait_for_timeout(800)
+            await clean(B); await B.click("[data-tab=world]"); await B.wait_for_timeout(800)
             c2 = await B.query_selector(".ppcard")
             if c2: await safe_shot(c2, f"{SHOT}{style}_following.png")
             # a follower trying to change course is refused
@@ -115,7 +115,7 @@ async def main():
             for pg in (B, C): await pg.evaluate(f"() => {{ const S = window.__dbg.save(); S.x = {posA[0]}; S.y = {posA[1]}; window.__dbg.publish(); }}")
             await A.wait_for_timeout(1500)
             g0 = await B.evaluate("window.__dbg.save().gold")
-            await clean(A); await A.evaluate("() => document.querySelector('.tabs [data-tab=map], [data-tab=map]')?.click()"); await A.wait_for_timeout(300)
+            await clean(A); await A.evaluate("() => document.querySelector('.tabs [data-tab=world], [data-tab=world]')?.click()"); await A.wait_for_timeout(300)
             await A.evaluate("() => document.querySelectorAll('#modal').forEach(m => m.remove())"); await A.evaluate("() => document.querySelector('[data-act=openenc]')?.click()")
             await A.wait_for_timeout(300)
             await A.evaluate("() => document.querySelector('[data-act=enc][data-a=fight]')?.click()"); await A.wait_for_timeout(1500)
@@ -258,7 +258,7 @@ async def main():
                   look: { r: ['nord','redguard','dunmer','imperial','orc','breton','khajiit'][i], id: 'm' + i, eq: { weapon: eq[0], chest: eq[1], head: eq[2], shield: eq[3] }, gl: {} } })));
                 document.querySelector('#dun')?.remove(); G.startTrip(S, 'Riverwood', WORLD.places.Riverwood.slice(0, 2)); const base = D.ENCOUNTERS.find(e => e.name === 'Bandit outlaw') || D.ENCOUNTERS[0];
                 S.trip.status = 'encounter'; S.trip.encounter = { ...G.scaleEnemy(base, S.level), hold: 'Whiterun', danger: base.danger }; }""")
-            await clean(A); await A.evaluate("() => document.querySelector('#dun')?.remove()"); await A.evaluate("() => document.querySelector('.tabs [data-tab=map], [data-tab=map]')?.click()"); await A.wait_for_timeout(300)
+            await clean(A); await A.evaluate("() => document.querySelector('#dun')?.remove()"); await A.evaluate("() => document.querySelector('.tabs [data-tab=world], [data-tab=world]')?.click()"); await A.wait_for_timeout(300)
             await A.bring_to_front()   # background tabs only tick now and then on some machines
             for _ in range(20):   # the road bar redraws on the next tick
                 if await A.evaluate("() => !!document.querySelector('[data-act=openenc]')"): break

@@ -436,7 +436,7 @@ const EVENTART = (() => {
     if (/home of your own/i.test(t)) return "house";
     if (/^The guard/i.test(t)) return "guard";
     if (/Quest|A new path/i.test(t)) {
-      if (typeof QUESTS !== "undefined") { const id = Object.keys(QUESTS.L).find((k) => x.includes(QUESTS.L[k].name + ":") || x.includes(QUESTS.L[k].name + " complete")); if (QUESTS.L[id]?.daedric) return "daedra"; if (/^cw_/.test(id || "")) return "battle"; if (id === "cure_vamp") return /complete/i.test(x) ? "dawn" : "blood"; if (id === "cure_wolf") return /complete/i.test(x) ? "dawn" : "wolf"; }   // the cure quests (curses.js)   // Daedric quests and the Civil War
+      if (typeof QUESTS !== "undefined") { const id = Object.keys(QUESTS.L).find((k) => x.includes(QUESTS.L[k].name + ":") || x.includes(QUESTS.L[k].name + " complete")); if (QUESTS.L[id]?.story) return QUESTS.L[id].story; if (QUESTS.L[id]?.daedric) return "daedra"; if (/^cw_/.test(id || "")) return "battle"; if (id === "cure_vamp") return /complete/i.test(x) ? "dawn" : "blood"; if (id === "cure_wolf") return /complete/i.test(x) ? "dawn" : "wolf"; }   // the cure quests (curses.js)   // Daedric quests and the Civil War
       if (/Bleak Falls|Golden Claw|Dragonstone/i.test(x)) return "claw";
       if (/Way of the Voice|Greybeard|High Hrothgar/i.test(x)) return "mountainSteps";
       if (/Horn of Jurgen|Ustengrav/i.test(x)) return "horn";

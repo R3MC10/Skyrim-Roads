@@ -1,9 +1,9 @@
 """Nothing covers a button (nocover.js, hud2.js, notify.js, harvestgame.js prompt, chargenrig.js).
 Visits the map, the Area board, the Forge, Items (+ an item's details), the perk tree, Company, a dungeon room, a fight
 with a message showing and character creation at 360x800, 390x844, 412x915 and 1920x1080. Fails when the message-history
-button (#nfhbtn), the gather prompt (#gnear), the compass button (#twBtn) or a big banner (#pbanners) sits on a visible
-button, tab or dungeon node, when the history or compass button sits on a screen title, when the Journal's chosen tab has
-contrast under 4.5 or the Character sub-tab strip hides tabs without a fade, or when the character creator's canvas has ink in its top 2% of rows (a cut-off sword).
+button (#nfhbtn), the gather prompt (#gnear) or a big banner (#pbanners) sits on a visible
+button, tab or dungeon node, when the history button sits on a screen title, when the Journal's chosen tab has
+contrast under 4.5 or the Hero sub-tab strip hides tabs without a fade, or when the character creator's canvas has ink in its top 2% of rows (a cut-off sword).
 Run:  node tests/serve.js 9161   then   py tests/overlap_ui.py 9161 [outdir]"""
 import asyncio, os, sys, tempfile
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -17,8 +17,8 @@ CLR = "document.querySelectorAll('#modal,#obtip').forEach(m=>m.remove())"
 
 # every floating thing that must keep off the controls, against every control that is really painted on screen
 CHECK = r"""([where, end])=>{
-  const COVER = ['#nfhbtn', '#gnear .gnear', '#twBtn', '#pbanners .pban'];
-  const FLOAT = '#hudlane,#pbanners,#gnear,#twBtn';
+  const COVER = ['#nfhbtn', '#gnear .gnear', '#pbanners .pban'];
+  const FLOAT = '#hudlane,#pbanners,#gnear';
   const shown = (e) => { if (!e || !e.isConnected) return false; const r = e.getBoundingClientRect(); if (r.width < 2 || r.height < 2) return false;
     for (let a = e; a && a.nodeType === 1; a = a.parentElement) { const c = getComputedStyle(a); if (c.display === 'none' || c.visibility === 'hidden' || +c.opacity < 0.05) return false; }
     return r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth; };
@@ -30,10 +30,10 @@ CHECK = r"""([where, end])=>{
     const r = c.getBoundingClientRect();
     for (const t of targets) {
       if (c.contains(t) || t.contains(c)) continue;
-      // the Gather strip (docked on the bottom bar like a second bar) and the compass button float over a page that scrolls
+      // the Gather strip (docked on the bottom bar like a second bar) float over a page that scrolls
       // under them: mid-page they must keep off the things that don't scroll; at the page's end (the "_end" screens, where
       // the page has room for them) off everything
-      if (!end && (sel === '#gnear .gnear' || sel === '#twBtn') && !fixedish(t)) continue;
+      if (!end && sel === '#gnear .gnear' && !fixedish(t)) continue;
       const q = t.getBoundingClientRect();
       const x0 = Math.max(r.left, q.left), x1 = Math.min(r.right, q.right), y0 = Math.max(r.top, q.top), y1 = Math.min(r.bottom, q.bottom);
       if (x1 - x0 <= 3 || y1 - y0 <= 3) continue;
@@ -59,7 +59,7 @@ HEADCHK = r"""([where, heads])=>{
     for (let a = e; a && a.nodeType === 1; a = a.parentElement) { const c = getComputedStyle(a); if (c.display === 'none' || c.visibility === 'hidden' || +c.opacity < 0.05) return false; }
     return r.bottom > 0 && r.top < innerHeight; };
   const bad = [];
-  for (const sel of ['#nfhbtn', '#twBtn']) for (const c of document.querySelectorAll(sel)) {
+  for (const sel of ['#nfhbtn']) for (const c of document.querySelectorAll(sel)) {
     if (!shown(c)) continue;
     const r = c.getBoundingClientRect();
     for (const h of document.querySelectorAll(heads)) {
@@ -69,7 +69,7 @@ HEADCHK = r"""([where, heads])=>{
         const x0 = Math.max(r.left, q.left), x1 = Math.min(r.right, q.right), y0 = Math.max(r.top, q.top), y1 = Math.min(r.bottom, q.bottom);
         if (x1 - x0 <= 2 || y1 - y0 <= 2) continue;
         // only when the title is really painted there (not under a window)
-        const top = document.elementsFromPoint((x0 + x1) / 2, (y0 + y1) / 2).find((e) => !e.closest('#hudlane,#pbanners,#twBtn'));
+        const top = document.elementsFromPoint((x0 + x1) / 2, (y0 + y1) / 2).find((e) => !e.closest('#hudlane,#pbanners'));
         if (top && (top === h || h.contains(top))) { bad.push(`${where}: ${sel} sits on the title "${h.textContent.trim().slice(0, 24)}"`); break; }
       }
     }
@@ -181,7 +181,7 @@ async def run(b, w, h, fails):
 
     # the map, with a patch in reach and a banner
     await pg.evaluate(GNEAR)
-    await clr(); await pg.evaluate("document.querySelector('[data-tab=map]')?.click()"); await pg.wait_for_timeout(1800); await clr()
+    await clr(); await pg.evaluate("document.querySelector('[data-tab=world]')?.click()"); await pg.wait_for_timeout(1800); await clr()
     await check("map")
     await pg.evaluate("NOTIFY.banner('ach','Achievement','First Steps')"); await pg.wait_for_timeout(700)
     await check("map_banner", 200); await to_end("map")
@@ -237,7 +237,7 @@ async def run(b, w, h, fails):
 
     # a dungeon room, with a banner
     await pg.evaluate(DUN, "Bleak Falls Barrow"); await pg.wait_for_timeout(300); await clr()
-    await pg.evaluate("document.querySelector('[data-tab=map]')?.click()"); await pg.wait_for_timeout(500); await clr()
+    await pg.evaluate("document.querySelector('[data-tab=world]')?.click()"); await pg.wait_for_timeout(500); await clr()
     await pg.evaluate("document.querySelector('#dun') || document.querySelector('#side [data-act=enter], [data-act=enter]')?.click()"); await pg.wait_for_timeout(900); await clr()
     nodes = await pg.query_selector_all("#dun .dnode")
     if nodes: await nodes[0].evaluate("e=>e.click()"); await pg.wait_for_timeout(1300); await clr()

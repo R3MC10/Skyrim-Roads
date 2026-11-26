@@ -4,8 +4,8 @@
    - The tracked quest's objective is a thin line under the compass; a new objective flashes there
      instead of a big banner over the middle of the map.
    - Big banners (skill up, level up, quest started) sit centred on the map, below the lane.
-   - The ★ favourites button docks in the top bar next to Search and Menu. The compass button is the only
-     floating one left, and it steps up out of the way when a button would be under it.
+   - The ★ favourites button docks in the top bar next to Search and Menu. No other button floats over the map
+     (the compass button went with the five tabs: the back button or Tab opens the compass).
    - Bottom-bar names shrink to fit, so long Polish names never spill.
    The rect maths are plain functions so node tests can check them (tests/test_hud2.js). [OURS] */
 const HUD2 = (() => {
@@ -16,15 +16,6 @@ const HUD2 = (() => {
   // ------------------------------------------------------------ rect maths (pure)
   /* do two boxes ({left, top, right, bottom}) touch, with pad pixels to spare? */
   const hit = (a, b, pad = 0) => !!a && !!b && a.left < b.right + pad && b.left < a.right + pad && a.top < b.bottom + pad && b.top < a.bottom + pad;
-  /* which step up from the base spot (0, 1, 2…) leaves a size×size box clear of every blocker; 0 if none is */
-  function freeSlot(base, size, step, tries, blockers, minTop = 0) {
-    for (let i = 0; i < tries; i++) {
-      const top = base.top - i * step; if (top < minTop) break;
-      const r = { left: base.left, right: base.left + size, top, bottom: top + size };
-      if (!blockers.some((b) => hit(r, b, 4))) return i;
-    }
-    return 0;
-  }
   /* the objective line from the tracked quest: {title, where} or null */
   function objLine(q) {
     if (!q || !q.title) return null;
@@ -177,49 +168,7 @@ const HUD2 = (() => {
         pb.style.left = Math.round(m.left) + "px"; pb.style.right = "auto"; pb.style.width = Math.round(m.width) + "px"; pb.style.top = Math.round(Math.max(st + 8, t)) + "px";
       } else { pb.style.left = "0px"; pb.style.right = "0px"; pb.style.width = "auto"; pb.style.top = ""; }
     }
-    dodge();
   }
-  /* the compass button: in the empty margin on wide screens; on phones it steps up when a button is under it */
-  let dodgeAt = 0;
-  function dodge() {
-    const b = document.getElementById("twBtn");
-    if (!b || getComputedStyle(b).display === "none") return;
-    const tabs = $("#tabs"), size = b.offsetWidth || 46, side = $("#side"), lefty = document.documentElement.classList.contains("a11y-1h-left");
-    const tabsOn = shown(tabs), tr = tabsOn ? tabs.getBoundingClientRect() : null, tabTop = tr ? tr.top : innerHeight;
-    b.classList.remove("indock");
-    // very wide screens: the bottom bar has empty room at its right end, so the button sits there, over nothing
-    const padR = tabsOn ? parseFloat(getComputedStyle(tabs).paddingRight) || 0 : 0;
-    if (!lefty && padR >= size + 24) {
-      b.classList.add("indock");
-      b.style.right = Math.round((padR - size) / 2) + "px"; b.style.bottom = Math.round(innerHeight - tr.bottom + (tr.height - size) / 2) + "px";
-      return;
-    }
-    let right = 12;
-    if (innerWidth >= 900 && side) { const gut = innerWidth - side.getBoundingClientRect().right; if (gut >= size + 4) right = Math.round((gut - size) / 2); }
-    const baseBottom = innerHeight - tabTop + 12;
-    if (!lefty) b.style.right = right + "px";
-    if (now() - dodgeAt < 250) return; dodgeAt = now();
-    if (document.body.classList.contains("fab-away")) return;   // wait until the page stops moving
-    const x = lefty ? 12 : innerWidth - right - size, base = { left: x, top: tabTop - 12 - size };
-    const blockers = [];
-    const seen = new Set(), minTop = safeTop() + 60;
-    /* [perf] one slot at a time, lowest first, stopping at the first free one: the usual case (nothing under the button)
-       costs 5 hit tests instead of 25 */
-    let i = 0;
-    for (let j = 0; j < 5; j++) {
-      const top = base.top - j * 58; if (top < minTop) break;
-      for (const [px, py] of [[0.5, 0.5], [0.12, 0.12], [0.88, 0.12], [0.12, 0.88], [0.88, 0.88]]) {
-        for (const e of document.elementsFromPoint(x + size * px, top + size * py)) {
-          if (e === b || b.contains(e)) continue;
-          const t = e.closest?.("button, a[href], [data-act], input, select, textarea, [role=button], .chip");
-          if (t && !seen.has(t) && !t.closest("#twBtn, #hudlane, #pbanners, #tabs")) { seen.add(t); blockers.push(t.getBoundingClientRect()); }
-        }
-      }
-      if (!blockers.some((r) => hit({ left: base.left, right: base.left + size, top, bottom: top + size }, r, 4))) { i = j; break; }
-    }
-    b.style.bottom = Math.round(baseBottom + i * 58) + "px";
-  }
-
   // ------------------------------------------------------------ ★ favourites docks in the top bar
   const STAR = '<svg class="hico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6l2.5 5.4 5.9.7-4.4 4 1.2 5.8L12 16.6l-5.2 2.9 1.2-5.8-4.4-4 5.9-.7z"/></svg>';
   function dockFav() {
@@ -277,5 +226,5 @@ const HUD2 = (() => {
   }
   if (live) { if (document.body) start(); else addEventListener("DOMContentLoaded", start); }
 
-  return { hit, freeSlot, objLine, fitSize, short, lane, logHost, objective, objFlash, place, dodge, dockFav, fitTabs, PL, get held() { return held.length; } };
+  return { hit, objLine, fitSize, short, lane, logHost, objective, objFlash, place, dockFav, fitTabs, PL, get held() { return held.length; } };
 })();

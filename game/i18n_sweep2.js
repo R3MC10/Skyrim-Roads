@@ -21,7 +21,7 @@ const I18N_SWEEP2 = (() => {
     "Tidied the patch notes: a few empty repeats of old entries are gone.": "Uporządkowano informacje o zmianach: zniknęło kilka pustych powtórek starych wpisów.",
     // the trip line and the road
     "the wilds": "dzicz", "Out in the wilds": "Na pustkowiu", "fast going": "szybko", steady: "równym krokiem", "slow going": "wolno", "very slow going": "bardzo wolno",
-    "on foot": "pieszo", "too heavy to run": "za ciężko, by biec", "The trip keeps going while the page is closed.": "Podróż trwa, nawet gdy strona jest zamknięta.",
+    "on foot": "pieszo", "too heavy to run": "za ciężko, by biec",
     "You keep travelling even with the app closed.": "Podróżujesz dalej, nawet gdy aplikacja jest zamknięta.", "Something by the road": "Coś przy drodze",
     "Tap to take a look": "Dotknij, żeby zobaczyć", "On the road": "W drodze", Stop: "Zatrzymaj się", "Standing stone": "Kamień przeznaczenia", Skill: "Umiejętność",
     // ground kinds (terrain.js NAMES)
@@ -69,7 +69,7 @@ const I18N_SWEEP2 = (() => {
     "The College of Winterhold": "Kolegium Zimowej Twierdzy", "First Lessons": "Pierwsze lekcje", "Under Saarthal": "Pod Saarthal", "Good Intentions": "Dobre intencje", "The Eye of Magnus": "Oko Magnusa",
     "The Whispering Door": "Szepczące drzwi", "Barbas the dog": "pies Barbas", "north of Winterhold": "na północ od Winterhold", "Castle Dour": "Zamek Dour", "Blue Palace": "Błękitny Pałac",
     // the Social page
-    "You're playing offline. Go online (Map tab) to see friends and messages.": "Grasz offline. Połącz się (karta Mapa), żeby zobaczyć przyjaciół i wiadomości.",
+    "You're playing offline. Go online (World tab) to see friends and messages.": "Grasz offline. Połącz się (karta Świat), żeby zobaczyć przyjaciół i wiadomości.",
     "No friends yet. Add people from Social → Party (travellers near you), or search below.": "Nie masz jeszcze przyjaciół. Dodaj kogoś w Społeczność → Drużyna (podróżni w pobliżu) albo wyszukaj poniżej.",
     // the Items doll
     "Show your pack as a plain list": "Pokaż plecak jako zwykłą listę",
@@ -132,7 +132,7 @@ const I18N_SWEEP2 = (() => {
     // dragon raids (ui.js raid card, hud.js)
     [/^A (.+?) is circling (.+?)(!?)$/, (m) => `${cap(dragon(m[1]))} krąży nad: ${m[2]}${m[3]}`], [/^A (.+?) is attacking (.+)$/, (m) => `${cap(dragon(m[1]))} atakuje: ${m[2]}`],
     [/^The (.+?) over (.+) is dead$/, (m) => `${cap(dragon(m[1]))} nad: ${m[2]} nie żyje`], [/^Dragon at (.+?)(!?)$/, (m) => `Smok: ${m[1]}${m[2]}`],
-    [/^(.+) has begun! See Map → World news\.$/, (m) => `Zaczyna się: ${T(m[1])}! Zobacz Mapa → Wieści ze świata.`],
+    [/^(.+) has begun! See World → World news\.$/, (m) => `Zaczyna się: ${T(m[1])}! Zobacz Świat → Wieści ze świata.`],
     [/^(.+): (Defeat 10 undead|Finish 8 trips while the blizzards last|Collect the innkeepers' gift on 3 days|Fight 3 Arena duels)$/, (m) => `${T(m[1])}: ${T(m[2])}`],
     // the Hero page
     [/^Level (\d+) (Nord|Imperial|Breton|Redguard|High Elf|Wood Elf|Dark Elf|Orc|Khajiit|Argonian)$/, (m) => `${T(m[2])}, poziom ${m[1]}`],

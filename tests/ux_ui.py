@@ -22,7 +22,7 @@ async def main():
         pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
         await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&p=uxt1"); await pg.wait_for_timeout(1500)
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Remi"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
-        await clear(pg); await tab(pg, "map")
+        await clear(pg); await tab(pg, "world")
         card = await pg.evaluate("document.querySelector('.nextcard')?.innerText || ''")
         check("What to do next" in card.title() or "WHAT TO DO NEXT" in card.upper(), "next-step card on Travel")
         check("Before the Storm" in card, "card shows the current quest goal")
@@ -39,7 +39,7 @@ async def main():
         check(trip == "Whiterun", f"pressing Go starts the trip ({trip})")
         # arrive, then Town groups and a shop
         await pg.evaluate("()=>{const S=window.__dbg.save(); S.trip=null; S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; S.gold=500;}")
-        await pg.wait_for_timeout(300); await tab(pg, "map"); await tab(pg, "town")
+        await pg.wait_for_timeout(300); await tab(pg, "world"); await tab(pg, "town")
         heads = await pg.evaluate("[...document.querySelectorAll('.au-g .au-gh')].map(e=>e.textContent)")
         check({"Inn", "Market", "Services & trainers"} <= set(heads), f"town groups {heads}")
         await js(pg, "document.querySelector('.au-tile[data-act=shop][data-id=general]').click()")
@@ -64,7 +64,7 @@ async def main():
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Mira"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
         await pg.evaluate("""()=>{const S=window.__dbg.save(); S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; S.level=22; S.gold=4000;
             G.give(S,'gem_ruby',3); G.give(S,'steel_sword'); G.give(S,'mat_iron',6); G.give(S,'potion_health',4);}""")
-        await pg.wait_for_timeout(300); await tab(pg, "pack"); await pg.wait_for_timeout(300)
+        await pg.wait_for_timeout(300); await pg.evaluate("__ui.go('items')"); await pg.wait_for_timeout(300)
         check(await pg.query_selector("#skysearch") is not None, "Pack has a search box")
         await pg.fill("#skysearch", "steel"); await pg.wait_for_timeout(300)
         names = await pg.evaluate("[...document.querySelectorAll('#sky .sky-row .nm')].map(e=>e.textContent)")

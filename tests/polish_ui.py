@@ -15,7 +15,7 @@ async def main():
         await pg.evaluate(clear)
         for style in ["ink"]:
             await pg.evaluate(f"()=>{{ POLISH.texture(); }}")
-            for t in ["map", "hero", "follower", "town", "log"]:
+            for t in ["world", "hero", "follower", "town", "log"]:
                 await pg.evaluate(clear)
                 await pg.click("[data-tab=hero]" if t == "follower" else f"[data-tab={t}]")
                 if t == "follower": await pg.wait_for_timeout(250); await pg.click("[data-act=tabgo][data-id=follower]")   # Character -> Follower (the Tactics page is gone)

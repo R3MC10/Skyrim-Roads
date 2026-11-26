@@ -95,7 +95,7 @@ async def main():
             members = await A.evaluate("() => window.__dbg.party()?.members.length")
             check(members == 2, style + " followers are not party members: " + str(members))
             for pg, nm, want in ((A, "a", "Jenassa"), (B, "b", "Lydia")):
-                await tap(pg, "[data-tab=map]"); await pg.wait_for_timeout(1500)
+                await tap(pg, "[data-tab=world]"); await pg.wait_for_timeout(1500)
                 comp = await pg.evaluate("() => { const S = window.__dbg.save(); return PARTY.companions(S, window.__dbg.party(), window.__dbg.others(), [S.x, S.y], (o) => [o.x, o.y], MP.NEAR_PX).map(m => m.name) }")
                 check(want in comp, style + " " + nm + " sees " + want + " walking along: " + str(comp))
                 got = await snap(pg, "#fpt .fpt-view canvas", f"{SHOT}{style}_travel_{nm}.png")
@@ -107,7 +107,7 @@ async def main():
             await A.evaluate("""() => { const S = window.__dbg.save(); const base = D.ENCOUNTERS.find(e => e.name === 'Bandit outlaw') || D.ENCOUNTERS[0];
                 S.trip.status = 'encounter'; S.trip.encounter = { ...G.scaleEnemy(base, S.level), hold: 'Whiterun', danger: base.danger }; window.__dbg.publish(); }""")
             await A.wait_for_timeout(1800)
-            await tap(A, "[data-tab=map]"); await A.wait_for_timeout(400)
+            await tap(A, "[data-tab=world]"); await A.wait_for_timeout(400)
             if await A.query_selector("[data-act=openenc]"): await A.click("[data-act=openenc]")
             await A.wait_for_timeout(400)
             await A.click("[data-act=enc][data-a=fight]"); await A.wait_for_timeout(1800)

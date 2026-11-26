@@ -52,8 +52,10 @@ const SHAREDFIGHT = (() => {
       const f = this.f, me = this.me;
       if (!d || this.done) return;
       if (typeof PARTYSPELLS !== "undefined") PARTYSPELLS.learn(d.spells, f.s);   // the crafted spells cast in this fight (partyspells.js)
+      if (typeof CHANNEL !== "undefined") CHANNEL.fromHost(this, d);   // [channel] teammates preparing a move: their bars and poses, results from the leader's phone
       if (d.t !== this.lastT) { this.lastT = d.t; this.heard = Date.now(); }
       this.host = d.owner; this.hostName = d.ownerName || "Your leader";
+      if (d.diff && typeof DIFF !== "undefined") DIFF.adopt(f, d.diff);   // the leader's difficulty snapshot (difficulty.js)
       const myName = f.s.name || "You";
       // the events since last time, as you see them
       for (const e of d.evs || []) {
@@ -83,7 +85,7 @@ const SHAREDFIGHT = (() => {
         this.order = (d.order || []).map((o) => { const p = was.get(o.uid) || {}, now = Date.now();
           return { ...o, id: o.pid === me ? "me" : o.id === "me" ? "host" : o.id, name: o.pid === me ? myName : o.name, skipAt: o.skip && o.done ? p.skipAt || now : undefined, outAt: o.out ? p.outAt || now : undefined }; });   // the shared turns, skips and slots come along (initiative.js)
         this.idx = d.idx || 0; this.gnow = d.gnow || 0; this.next = d.next || [];
-        if (fresh) { this.t0.ehp = f.ehp; this.t0.hitters = this.hitters; this.t0.snap = this.snap(); this.t0.fs = this.foeSnap(); return d.done ? this.end(d.won ? (d.escaped ? "escaped" : "won") : "lost") : undefined; }
+        if (fresh && this.t0) { this.t0.ehp = f.ehp; this.t0.hitters = this.hitters; this.t0.snap = this.snap(); this.t0.fs = this.foeSnap(); return d.done ? this.end(d.won ? (d.escaped ? "escaped" : "won") : "lost") : undefined; }
         const c = d.cur;
         this.cur = c ? { id: c.pid === me ? "me-wait" : c.id === "me" ? "host" : c.id, name: c.pid === me ? myName : c.name } : null;
         // the leader's clock may differ from yours: count from when the record was written
@@ -123,11 +125,11 @@ const SHAREDFIGHT = (() => {
     startTurn(t) {
       const f = this.f;
       this.myTurn = { tid: t.tid, until: t.until }; this.until = t.until ? t.until - EARLY : 0; this.waitOn = null;
-      this.beatN = 0; this.beat();   // tell the leader's phone you're here
       this.cur = { id: "me", name: f.s.name || "You" };
       this.beginTurn();   // no action points any more: moves cost stamina, magicka or health (tbfight.js)
       f.summonTurns = 0; f.tbGuard = 0;
       this.t0 = { ehp: f.ehp, hp: f.hp, ev: this.ev.length, hitters: this.hitters, ward: f.ward || 0, armor: f.armorSpell || 0, snap: this.snap(), fs: this.foeSnap() };
+      this.beatN = 0; this.beat();   // tell the leader's phone you're here (after t0: a store that answers at once runs apply again)
     }
     /* everyone's health and buffs, and what's on the foe, when your turn started (the reply sends only what you changed) */
     snap() { const f = this.f, m = new Map(); for (const [k, a] of this.byKey) m.set(k, { hp: a.hp, down: !!a.down || !f.allies.includes(a), b: TB.BUFF_KEYS.map((x) => a[x] ?? null) }); return m; }

@@ -1,15 +1,16 @@
 /* A clearer first hour (onboard.js). [OURS]
-   Builds on the guided first trip, the tab tips and the newbie guide (guide.js):
+   Builds on the opening quest line (first30.js) and the newbie guide (guide.js):
    - ideas(s, ctx): 1-3 "what to do next" ideas picked from the player's real state (road fights near Whiterun while low
      level, a dungeon, the main quest, a horse when rich, a party, rumours, homesteads and world events once they matter).
-     They show as rows in the Travel tab's "What to do next" card; each can be hidden (✕), all can be switched off
+     They show as rows in the World tab's "What to do next" card; each can be hidden (✕), all can be switched off
      (Settings → Help & tips), and they stop for veterans (level 15+).
    - first-time tips: a small card at the top of the screen the first time something happens (over-encumbered, level-up,
-     a dungeon, a party invite, a rumour). One at a time, never blocks a tap elsewhere, with "Don't show tips". A tip
+     a dungeon, a party invite, a rumour; no level-up tip while the opening quest walks you through it). One at a time, never blocks a tap elsewhere, with "Don't show tips". A tip
      waits while a window or a result is open (overlays.js ranks them). Seen tips live in the save (s.onb.seen); the two
      switches live in this phone's prefs.
-   - the first turn-by-turn fight: no wall of text, but one-line hints pinned to the control they explain (turn order,
-     your moves, End turn). Each goes away once you use that control (or tap it), all of them at the result card.
+   - the first turn-by-turn fights: no wall of text, but one line at a time pinned to the control it explains, at the
+     moment it matters: Attack first, then what the foe does next, then End turn; "guard!" the first time a foe winds
+     up a huge blow. Each goes away once you use that control (or tap it), all of them at the result card.
    ui.js calls ONBOARD.mount({...}) once, ONBOARD.rows() inside nextCard(), ONBOARD.settingsHTML()/pref() in Settings. */
 const ONBOARD = (() => {
   const VETERAN = 15;            // from this level on: no ideas, no tips (the fight hints still show: turn-by-turn is new for everyone)
@@ -24,7 +25,10 @@ const ONBOARD = (() => {
   const veteran = (s) => (s.level || 1) >= VETERAN;
   const cleared = (s) => Object.keys(s.cleared || {}).length;
   const foesBeaten = (s) => (s.lt && s.lt.foes) || 0;
-  const inTutorial = (s) => !!(s.tut && !s.tut.off && s.tut.step > 0);
+  const UL = (s, id) => typeof UNLOCKS === "undefined" || UNLOCKS.open(s, id);   // unlocks.js: no ideas for features that open later
+  /* a new hero on an account that already played past a tip skips it (S.acctLv, unlocks.js): the level each tip belongs to */
+  const TIP_LV = { level: 2, heavy: 3, dungeon: 3, invite: 3, rumour: 4 };
+  const inTutorial = (s) => typeof FIRST30 !== "undefined" && FIRST30.active(s);   // the opening quest line has its own goal card
 
   // ------------------------------------------------------------------ ideas: what to do next
   /* nearest known place matching test(name), not where you are */
@@ -56,12 +60,12 @@ const ONBOARD = (() => {
     }
     // a dungeon, once you've a level or two
     if (lv >= 3 && !cleared(s) && !s.dungeon && !moving && (typeof DUNGEONS !== "undefined")) {
-      const n = nearest(s, ctx, (x) => DUNGEONS.enterable(x) && !(DUNGEONS.refillLeft && DUNGEONS.refillLeft(s, x)));
+      const n = nearest(s, ctx, (x) => DUNGEONS.enterable(x) && !(DUNGEONS.refillLeft && DUNGEONS.refillLeft(s, x)) && (typeof UNLOCKS === "undefined" || UNLOCKS.dungeon(s, x).ok));   // unlocks.js: only dungeons open at this level
       if (n) add({ id: "dungeon", pri: 65, ico: "", title: "Try a dungeon", sub: `Dungeons hold the best loot. ${esc(n)} is ~${eta(n)} away. Go room by room; you can leave between rooms.`, btn: go(n) });
     }
     // a horse once you can afford one with change to spare
     const hp = D.HORSE_PRICE || 1000;
-    if (!s.horse && gold >= hp + 150 && lv < VETERAN && (typeof HORSES !== "undefined")) {
+    if (!s.horse && gold >= hp + 150 && lv < VETERAN && (typeof HORSES !== "undefined") && UL(s, "horses")) {
       const n = HORSES.nearestStables([s.x, s.y]);
       add({ id: "horse", pri: 55, ico: "", title: "Buy a horse", sub: `You have the ${hp} gold. Riding is much faster and the horse carries things for you. Stables are outside the big cities; ${esc(n)} is closest.`, btn: s.location === n ? tabBtn("town", "Area") : go(n) });
     }
@@ -71,18 +75,18 @@ const ONBOARD = (() => {
     if (lv >= 4 && (typeof RUMOURS !== "undefined") && !(s.rw && s.rw.seen) && !RUMOURS.leads(s).length && s.location && TOWNS.INNS && TOWNS.INNS[s.location] && !moving)
       add({ id: "rumour", pri: 40, ico: "", title: "Listen for rumours", sub: "Buy a round at the inn (Area tab) and the locals point you at treasure, trouble or a hidden place. Some of it is just gossip.", btn: tabBtn("town", "Area") });
     // world events, once you can survive them
-    if (lv >= 8 && (typeof WORLDEV !== "undefined")) {
+    if (lv >= 8 && (typeof WORLDEV !== "undefined") && UL(s, "worldevents")) {
       const ev = WORLDEV.active()[0];
       if (ev) add({ id: "wev-" + ev.kind, pri: 35, ico: ev.icon || "✶", title: `Join in: ${esc(ev.name)}`, sub: "Everyone in the world works on this together for a while. See the Journal → Misc for what to do.", btn: tabBtn("log", "Journal") });
     }
     // a homestead when you're rich and settled
-    if ((typeof HOMESTEAD !== "undefined") && !HOMESTEAD.owned(s).length && (gold >= 4000 || lv >= 12))
+    if ((typeof HOMESTEAD !== "undefined") && !HOMESTEAD.owned(s).length && (gold >= 4000 || lv >= 12) && UL(s, "housing"))
       add({ id: "homestead", pri: 30, ico: "", title: "Build your own house", sub: "Buy land near Falkreath, Morthal or Dawnstar from the Jarl's steward and build a home stage by stage. A deed costs about 5000 gold.", btn: s.location !== "Falkreath" ? go("Falkreath") : tabBtn("town", "Area") });
     // the next guide step as a fallback
-    if ((typeof GUIDE !== "undefined")) { const g = GUIDE.STEPS.find((x) => !x[3](s)); if (g) add({ id: "guide-" + g[0], pri: 20, ico: "", title: `Next step: ${esc(g[1])}`, sub: esc(g[2]), btn: { label: "Show me", act: "guidego", attrs: `data-id="${g[0]}"` } }); }
+    if ((typeof GUIDE !== "undefined")) { const g = (GUIDE.avail ? GUIDE.avail(s) : GUIDE.STEPS).find((x) => !x[3](s)); if (g) add({ id: "guide-" + g[0], pri: 20, ico: "", title: `Next step: ${esc(g[1])}`, sub: esc(g[2]), btn: { label: "Show me", act: "guidego", attrs: `data-id="${g[0]}"` } }); }
     return out.sort((a, b) => b.pri - a.pri);
   }
-  /* 1-3 ideas, or [] when switched off / for veterans / during the guided first trip */
+  /* 1-3 ideas, or [] when switched off / for veterans / during the opening quest line */
   function ideas(s, ctx = {}) {
     if (!s || !ideasOn() || veteran(s) || inTutorial(s) || s.dungeon) return [];
     const hid = st(s).hid;
@@ -97,8 +101,7 @@ const ONBOARD = (() => {
   // ------------------------------------------------------------------ first-time tips
   /* id, applies(s, ctx), title, text (may depend on ctx) */
   const TIPS = [
-    ["welcome", (s, c) => !c.fightOpen && s.tut && !s.tut.off && s.tut.step === 1 && !s.trip, "Welcome to Skyrim", (s) => `The gold card under the map (<b>Your first trip</b>) shows you what to do, one step at a time. Tips like this one pop up the first time something new happens.`, { btn: ["@tut", "Show me"] }],
-    ["level", (s) => s.pendingLevels > 0 && (s.level || 1) <= 4, "Level up!", () => "Open <b>Character</b>: pick Health, Magicka or Stamina, then spend your perk point on a skill you use. Skills rise by using them.", { btn: ["hero", "Open Character"] }],
+    ["level", (s) => s.pendingLevels > 0 && (s.level || 1) <= 4 && !inTutorial(s), "Level up!", () => "Open <b>Hero</b>: pick Health, Magicka or Stamina, then spend your perk point on a skill you use. Skills rise by using them.", { btn: ["hero", "Open Hero"] }],
     ["heavy", (s) => typeof G.overweight === "function" && G.overweight(s), "Too heavy", () => "You're carrying more than you can, so you walk slowly. Sell loot in a town, keep things in a house chest, or let a horse or follower carry them."],
     ["dungeon", (s) => !!s.dungeon && !cleared(s), "Your first dungeon", () => "Go room by room. Each room may hold foes, a trap or loot; you can leave between rooms and come back later. The boss and the best chest wait at the end."],
     ["invite", (s, c) => c.invites > 0, "A party invite", () => (typeof INVITES !== "undefined" ? "Someone wants you in their party. Tap Accept on the card at the top to join, or Decline. The leader picks where to go and you travel together; gold is split evenly." : "Someone wants you in their party. Open \uE106 <b>Friends → Party</b> to join. The leader picks where to go and you travel together; gold is split evenly."), { btn: ["social", "Friends"] }],
@@ -114,7 +117,7 @@ const ONBOARD = (() => {
     if (!s || !tipsOn()) return null;
     const seen = st(s).seen;
     for (const [id, ok, title, text, o = {}] of TIPS) {
-      if (seen[id] || (veteran(s) && !o.any)) continue;
+      if (seen[id] || (veteran(s) && !o.any) || ((s.acctLv || 0) > (TIP_LV[id] || 99) && !o.any)) continue;
       if (c.fightOpen) continue;                                 // nothing over a fight (its hints are pinned to the controls)
       try { if (ok(s, c)) return { id, title, text: text(s, c), btn: o.btn || null }; } catch { /* a module isn't loaded */ }
     }
@@ -162,8 +165,7 @@ const ONBOARD = (() => {
     const k = b.dataset.obt;
     if (shown) markSeen(s, shown);
     if (k === "off") { setPrefRaw("obTips", false); bound.toast?.("Tips are off. Switch them back on in  Settings → Help & tips."); }
-    if (k === "go" && b.dataset.id === "@tut") { const t = document.querySelector("#side .tut"); if (t) t.scrollIntoView({ behavior: "smooth", block: "center" }); }
-    else if (k === "go" && bound.click) { const x = document.createElement("button"); x.dataset.act = "uxtab"; x.dataset.id = b.dataset.id; try { bound.click({ target: x }); } catch { /* ignore */ } }
+    if (k === "go" && bound.click) { const x = document.createElement("button"); x.dataset.act = "uxtab"; x.dataset.id = b.dataset.id; try { bound.click({ target: x }); } catch { /* ignore */ } }
     bound.persist?.();
     render(null);
   }
@@ -186,22 +188,26 @@ const ONBOARD = (() => {
   }
 
   // ------------------------------------------------------------------ fight hints: one line pinned to the control it explains
-  /* id, the control, the side of it, the line. Shown in the first turn-by-turn fights until each control is used. */
+  /* id, the control (first one on screen), the side of it, the line. One at a time, in the first turn-by-turn fights,
+     until each is learnt: Attack, what the foe does next, End turn, and guard when a foe first winds up a big blow. */
   const HINTS = [
-    ["order", "#tbf .tbtop .tbord|#tbf .tbtop", "below", "Turn order: the highest number acts first. Heroes side by side act together, and a fast foe has two turns (① ②). Tap + for the whole order."],
-    ["moves", "#tbf .tbap", "above", "Up to 4 moves a turn. Blows cost stamina, spells magicka."],
+    ["attack", '#tbf [data-tba="attack"]|#tbf [data-tba="end"]', "above", "Tap Attack to hit. You get a few moves each turn."],
+    ["intent", "#tbf .tbints|#tbf .tbu.foe", "below", "This is what your foe does next. Plan around it."],
+    ["guard", '#tbf [data-tba="bash"]|#tbf [data-tba="block"]|#tbf [data-tba="end"]', "above", "A huge blow is coming! Bash or guard now, or end your turn: unused moves guard."],
     ["end", '#tbf [data-tba="end"]', "above", "Done? End turn. Moves you don't make become guard."],
   ];
   const HKEY = (id) => "tbf-" + id;
-  let hmem = { turns: 0, wasMine: false, endShown: false };
-  /* pure: which hints show now. seen = s.onb.seen; f = {open, done, mine, acts, result} */
+  let hmem = { turns: 0, wasMine: false, endShown: false, intShown: false, guardShown: false };
+  /* pure: which hint shows now (one at most). seen = s.onb.seen; f = {open, done, mine, acts, result, windup, ints} */
   function hintsFor(seen, f) {
     if (!f || !f.open || f.done || f.result || seen.tbfight) return [];   // seen.tbfight: the old big fight tip, or every hint, was read already
     if (!f.mine) return [];
-    const out = [];
-    if (f.acts === 0) { if (!seen[HKEY("order")]) out.push("order"); if (!seen[HKEY("moves")]) out.push("moves"); }
-    else if (!seen[HKEY("end")]) out.push("end");
-    return out;
+    const need = (id) => !seen[HKEY(id)];
+    if (f.windup && need("guard") && (f.acts > 0 || !need("attack"))) return ["guard"];   // the moment it matters most (after the very first Attack)
+    if (f.acts === 0 && need("attack")) return ["attack"];
+    if (f.acts > 0 && f.ints !== false && need("intent")) return ["intent"];
+    if (f.acts > 0 && !need("attack") && !need("intent") && need("end")) return ["end"];
+    return [];
   }
   /* mark one hint used; all of them used = the fight lesson is learnt */
   function useHint(s, id) {
@@ -212,20 +218,23 @@ const ONBOARD = (() => {
   }
   function hintState() {
     const B = typeof TB !== "undefined" ? TB : null, sess = B && B.open ? B.session : null, o = OV();
+    const k = sess && sess.f && sess.f.kit;
     return { open: !!sess, done: !!(sess && sess.done), mine: !!document.querySelector('#tbf [data-tba="end"]'), acts: sess ? sess.myActs || 0 : 0,
-      result: !!(o && o.level() >= o.LEVEL.result) || !!document.querySelector("#tbf .tbdone") };
+      result: !!(o && o.level() >= o.LEVEL.result) || !!document.querySelector("#tbf .tbdone"),
+      windup: !!(k && (k.windup || (k.plan || []).some((p) => p.id === "land"))), ints: !!document.querySelector("#tbf .tbints") };
   }
   function hintTick(s) {
     if (!DOM) return;
     const f = hintState();
     let ch = false;
-    if (f.open && f.mine && f.acts > 0)                            // a move made: the turn order and moves lines did their job
-      for (const id of ["order", "moves"]) if (document.querySelector(`#fhints [data-h="${id}"]`)) ch = useHint(s, id) || ch;
-    if (f.open && f.mine !== hmem.wasMine) {                       // a turn of yours ended with the End turn line up: after two turns it's learnt
+    if (f.open && f.mine && f.acts > 0 && document.querySelector('#fhints [data-h="attack"]')) ch = useHint(s, "attack") || ch;   // a move made: Attack is learnt
+    if (hmem.guardShown && !f.windup) { hmem.guardShown = false; ch = useHint(s, "guard") || ch; }   // the big blow came (or was broken)
+    if (f.open && f.mine !== hmem.wasMine) {                       // a turn of yours ended with a line up
+      if (!f.mine && hmem.intShown) { hmem.intShown = false; ch = useHint(s, "intent") || ch; }
       if (!f.mine && hmem.endShown) { hmem.turns++; hmem.endShown = false; if (hmem.turns >= 2) ch = useHint(s, "end") || ch; }
       hmem.wasMine = f.mine;
     }
-    if (!f.open) hmem = { turns: 0, wasMine: false, endShown: false };
+    if (!f.open) hmem = { turns: 0, wasMine: false, endShown: false, intShown: false, guardShown: false };
     if (ch) bound.persist?.();
     drawHints(tipsOn() ? hintsFor(st(s).seen, f) : []);
   }
@@ -243,6 +252,8 @@ const ONBOARD = (() => {
     placeHints();
     if (changed && FZ()) { FZ().relayout(); placeHints(); }   // [fightscreen] the fight screen keeps a band for them (fightzones.js)
     if (ids.includes("end")) hmem.endShown = true;
+    if (ids.includes("intent")) hmem.intShown = true;
+    if (ids.includes("guard")) hmem.guardShown = true;
   }
   /* pure: slide a w×h box from y (up for "above", down for "below") until it touches none of the blockers */
   function freeY(x, y, w, h, dir, blockers, minY = 4, maxY = 1e5) {
@@ -276,7 +287,10 @@ const ONBOARD = (() => {
       let y;
       if (ZB && h[2] === "below") { y = zTop + 4; zTop += eh + 8; }
       else if (ZB) { zBot -= eh + 8; y = zBot; }
-      else y = h[2] === "below" ? freeY(left, r.bottom + 8, ew, eh, "below", blockers, 4, dockTop - 4)
+      // [first30] a band spot that lands on a card (the PC foe card top-right, your health ring bottom-left) slides clear of it
+      if (ZB && blockers.some((b) => left < b.right && b.left < left + ew && y < b.bottom && b.top < y + eh))
+        y = freeY(left, y, ew, eh, h[2], blockers, 4, h[2] === "below" ? dockTop - 4 : H);
+      if (!ZB) y = h[2] === "below" ? freeY(left, r.bottom + 8, ew, eh, "below", blockers, 4, dockTop - 4)
         : freeY(left, Math.min(r.top, dockTop) - 8 - eh, ew, eh, "above", blockers, 4, H);
       el.style.left = Math.round(left) + "px"; el.style.top = Math.round(y) + "px"; el.style.bottom = "auto";
       el.style.setProperty("--ax", Math.round(Math.max(14, Math.min(ew - 14, cx - left))) + "px");

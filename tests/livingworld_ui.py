@@ -94,11 +94,11 @@ async def main():
                 await close_modals(pg)
                 # ---- a whisper comes true: map mark, card, the fight
                 place = await pg.evaluate("""()=>{ const S=window.__dbg.save(); const x=LIVING.st(S).wh[0]; x.real=true; x.due=G.now()-1; LIVING.advance(S); return x.place; }""")
-                await pg.click("[data-tab=map]"); await pg.wait_for_timeout(900); await close_modals(pg)
+                await pg.click("[data-tab=world]"); await pg.wait_for_timeout(900); await close_modals(pg)
                 res.append((f"{tag} whisper on the map", await pg.evaluate("RUMOURS.marks(window.__dbg.save()).some(m=>m.label.includes(%r))" % place)))
                 await pg.screenshot(path=f"{OUT}{tag}_map.png")
                 await pg.evaluate("""(pl)=>{ const S=window.__dbg.save(); S.location=pl; [S.x,S.y]=WORLD.places[pl]; S.trip=null; }""", place)
-                await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(700); await close_modals(pg)
+                await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200); await pg.click("[data-tab=world]"); await pg.wait_for_timeout(700); await close_modals(pg)
                 card = await pg.query_selector(".lw-card")
                 res.append((f"{tag} card at {place}", bool(card)))
                 if card:

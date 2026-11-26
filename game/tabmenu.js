@@ -1,5 +1,6 @@
 /* The Tab menu, like Skyrim's: a four-way compass over a blurred view of where you are. Swipe or tap a direction:
-   left = Magic, right = Items, up = Skills (constellations, character sheet, perks, stats), down = Map.
+   left = Magic, right = Items, up = Skills (constellations, hero sheet, perks, stats), down = World (the map).
+   [tabs5] It opens with the phone's back button on the World screen, or Tab on a PC; the World screen is home.
    Along the bottom: level progress, gold, carry weight and what you're doing right now.
    Inside a menu a sideways swipe flips through its tabs; past the last tab it moves on to the next menu round the
    compass, and a swipe down on the header goes back to the compass. Only reads the save and routes to the game's own
@@ -9,8 +10,8 @@ const TABMENU = (() => {
   const esc = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const RING = ["char", "items", "map", "magic"];                 // clockwise from the top
   const DIR = { up: "char", right: "items", down: "map", left: "magic" };
-  const NAME = { char: "Skills", items: "Items", map: "Map", magic: "Magic" };
-  const SUBT = { char: "Character · perks · stats", items: "Weapons · apparel · potions", map: "Travel the world", magic: "Spells · powers · shouts" };
+  const NAME = { char: "Skills", items: "Items", map: "World", magic: "Magic" };
+  const SUBT = { char: "Hero · perks · stats", items: "Weapons · apparel · potions", map: "Map and travel", magic: "Spells · powers · shouts" };
   const CHAR_TABS = [["stars", "Skills"], ["hero", "Character"], ["perks", "Perks"], ["stats", "Stats"], ["diary", "Diary"]];
   const charTabs = () => typeof MENUS !== "undefined" ? MENUS.charTabs() : CHAR_TABS;   // menus.js owns the Character sub-tabs
   const MIN = 40, RATIO = 1.4;
@@ -44,7 +45,7 @@ const TABMENU = (() => {
     const need = (S.level + 3) * 25, xp = Math.max(0, Math.round(S.charXp || 0));
     const w = G.carried(S), cap = G.capacity(S);
     return { level: S.level, xp, need, pct: Math.max(0, Math.min(100, Math.round(xp / need * 100))), gold: S.gold, w: Math.round(w), cap: Math.round(cap), over: w > cap,
-      perks: (typeof PERKS !== "undefined" ? PERKS.pointsLeft(S) : 0) + (S.pendingLevels || 0), ready: (S.pendingLevels || 0) > 0, task: task(S) };
+      perks: (typeof PERKS !== "undefined" ? PERKS.pointsLeft(S) : 0) + (S.pendingLevels || 0), ready: (S.pendingLevels || 0) > 0, task: task(S), next: typeof REWARDS !== "undefined" ? REWARDS.nextText(S) : "" };   // [rewards] "Level 5 brings: …"
   }
   function task(S) {
     if (S.dungeon) return { k: "dun", icon: "", text: `Inside ${S.dungeon.place}`, sub: "Tap to go back in", hot: !!S.dungeon.room?.enemy };
@@ -128,7 +129,7 @@ const TABMENU = (() => {
       : `<p class="sub">${pts > 0 ? "No perk is open yet. Raise a skill to reach the next star." : "No perk points to spend. You get one each level."}</p>`;
     const hadHtml = Object.keys(had).length ? Object.entries(had).map(([sk, l]) => `<h3 style="margin-top:12px">${ic(sk, 20)} ${esc(sk)} <button class="linkbtn" data-twa="starsof" data-id="${esc(sk)}">stars</button></h3><div class="list">${l.map(([id, name, rk, ranks]) => `<div class="item on"><div class="t">${esc(name)}${ranks > 1 ? ` <span class="num">${rk}/${ranks}</span>` : " ✓"}<span>${desc(id)}</span></div></div>`).join("")}</div>`).join("")
       : `<p class="sub">You haven't taken any perks yet.</p>`;
-    return `<div class="panel"><h2>Perks ${pts > 0 ? `<span class="gold">· ${pts} to spend</span>` : ""}</h2><h3>Ready to take</h3><div class="list">${canHtml}</div></div><div class="panel"><h2>Your perks</h2>${hadHtml}</div>`;
+    return `<div class="panel"><h2>Perks ${pts > 0 ? `<span class="gold">· ${pts} to spend</span>` : ""}</h2><h3>Ready to take</h3><div class="list">${canHtml}</div></div><div class="panel"><h2>Your perks</h2>${hadHtml}</div>${typeof PERKRESET !== "undefined" ? PERKRESET.hint(S) : ""}`;   // perkreset.js: where to take them back
   }
 
   // ------------------------------------------------------------ the compass (browser only)
@@ -210,7 +211,7 @@ const TABMENU = (() => {
   function barHTML(b) {
     const t = b.task;
     return `<button class="tw-task ${t.hot ? "hot" : ""}" data-twa="task" data-k="${t.k}"><span class="tw-ti">${t.icon}</span><span class="tw-tt"><b>${esc(t.text)}</b><small>${esc(t.sub)}</small></span>${t.progress != null ? `<i class="tw-tp"><i style="width:${t.progress}%"></i></i>` : ""}</button>
-      <div class="tw-stats"><div class="tw-lv${b.ready ? " tw-lvgo" : ""}"><span class="tw-lvn num" aria-label="Level ${b.level}"><span>${b.level}</span></span><span class="tw-xp"><small>Level ${b.level}${b.ready ? ` <em class="tw-lvup">· Level up!</em>` : b.perks ? ` <em class="gold">· ${b.perks} to spend</em>` : ""}<span class="num">${b.xp}/${b.need}</span></small><i class="tw-xpb"><i style="width:${b.pct}%"></i></i></span></div>
+      <div class="tw-stats"><div class="tw-lv${b.ready ? " tw-lvgo" : ""}"><span class="tw-lvn num" aria-label="Level ${b.level}"><span>${b.level}</span></span><span class="tw-xp"><small>Level ${b.level}${b.ready ? ` <em class="tw-lvup">· Level up!</em>` : b.perks ? ` <em class="gold">· ${b.perks} to spend</em>` : ""}<span class="num">${b.xp}/${b.need}</span></small><i class="tw-xpb"><i style="width:${b.pct}%"></i></i>${b.next ? `<small class="tw-next">${esc(b.next)}</small>` : ""}</span></div>
       <div class="tw-st gold">${ico("gold")}<b class="num">${b.gold}</b></div><div class="tw-st ${b.over ? "over" : ""}">${ico("weight")}<b class="num">${b.w}/${b.cap}</b></div></div>`;
   }
   function hubHTML(S) {
@@ -497,15 +498,11 @@ const TABMENU = (() => {
   let timer = null;
   function mount() {
     if (!live) return;
-    if (!$("#twBtn")) {
-      const b = document.createElement("button"); b.id = "twBtn"; b.className = "twbtn"; b.setAttribute("aria-label", "Open the menu compass");
-      b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 3.5l2.2 8.5L12 20.5 9.8 12z" class="f"/><path d="M3.5 12h17"/></svg>`;
-      b.onclick = () => openHub();
-      document.body.appendChild(b);
-    }
+    // [tabs5] the World screen is home now: no floating compass button over the map and no compass at start.
+    // The compass still opens with the phone's back button on the World screen and with Tab on a PC (desktop.js).
+    $("#twBtn")?.remove();
     clearInterval(timer); timer = setInterval(() => { if (hubOpen && $("#tw")) refreshHub(); else if (hubOpen) { hubOpen = false; document.body.classList.remove("tw-on"); } }, 1000);
-    const force = /[?&]hub=1\b/.test(location.search), skip = /[?&]hub=0\b/.test(location.search);
-    if (!skip && (force || !navigator.webdriver)) setTimeout(openHub, 60);
+    if (/[?&]hub=1\b/.test(location.search)) setTimeout(openHub, 60);   // tests can still start on it
   }
   return { RING, DIR, CHAR_TABS, swipeDir, ring, step, bar, task, mini, stars, perks, mount, openHub, closeHub, go, back, afterPanel, menuClosed, fromBar, swiped,
     get open() { return hubOpen; }, set maxMs(v) { MAXMS = v; }, get charMode() { return charMode; }, get starSkill() { return starSkill; }, set starSkill(v) { starSkill = v; starPick = null; typeof SKYUI !== "undefined" && SKYUI.refocus?.(); } };

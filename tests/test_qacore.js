@@ -2,10 +2,10 @@ const __GAME = process.env.W || require("path").join(__dirname, "../game/");
 /* Core-loop QA sweep (qa-core): regressions for bugs found by playing the real game.
    1. The phone's back button: the barber/mirror screen, mini-games and the rune table close first, and inside a shop
       back steps to the town's board before the compass (ui.js __ui.back).
-   2. The guided first trip and the first-time tips are Polish in Polish mode, and step 3 names the Area tab.
+   2. The first-time tips are Polish in Polish mode (the old guided first trip is gone: first30.js and i18n_first30.js took over).
    3. The "set off" and "arrived" toasts have Polish patterns.
    4. Every perk description has Polish with the same numbers, rank text says "Następna ranga", hireling lines,
-      title/settings lines and patch-note dates are Polish, and the level-up tip names the Character tab.
+      title/settings lines and patch-note dates are Polish, and the level-up tip names the Hero tab.
    5. Crafting, riding and road-event messages are Polish, the ride button re-syncs on refresh, and only painted icons are requested.
    W=/path/to/game/ node test_qacore.js — prints "qacore ok". */
 const fs = require("fs"), vm = require("vm");
@@ -31,12 +31,7 @@ vm.createContext(c);
 ok(html.indexOf('src="i18n_qacore.js"') > 0 && html.indexOf('src="i18n_qacore.js"') < html.indexOf('src="i18n.js"'), "i18n_qacore.js loads before i18n.js");
 for (const f of ["i18n_qacore.js", "i18n.js"]) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 vm.runInContext("I18N.add(I18N_QACORE.tpl)", c);
-const tutStart = ui.indexOf("const TUT = ["), tut = ui.slice(tutStart, ui.indexOf("];", tutStart));
-const lts = [...tut.matchAll(/LT\("((?:[^"\\]|\\.)*)"/g)].map((m) => m[1]);
-ok(lts.length >= 8, "tutorial lines go through LT: " + lts.length);
-for (const en of lts) ok(c.I18N_QACORE.tpl[en], "Polish for tutorial line: " + en.slice(0, 50));
-ok(!/the <b>Town<\/b> tab/.test(tut) && tut.includes("<b>Area</b>"), "step 3 names the Area tab");
-ok(vm.runInContext(`I18N.t("Welcome to Skyrim, {name}. Everything happens in real time. Tap <b>Whiterun</b> on the map and press <b>Travel</b>, or press <b>Go</b> next to it in the list below.", { name: "Remi" })`, c).startsWith("Witaj w Skyrim, Remi."), "I18N.t fills the name");
+ok(!ui.includes("const TUT = [") && !ui.includes("TAB_TIPS"), "the old first-trip card and tab tips are gone (first30.js took over)");
 const ob = src("onboard.js"), tipsAt = ob.indexOf("const TIPS = ["), tips = ob.slice(tipsAt, ob.indexOf("];", tipsAt));
 for (const m of tips.matchAll(/=> "((?:[^"\\]|\\.)*)"/g)) if (!m[1].includes("\\u")) ok(c.I18N_QACORE.tpl[m[1]], "Polish for tip: " + m[1].slice(0, 50));
 ok(/I18N\.t\(tip\.text\)/.test(ob), "onboard tips go through I18N.t");
@@ -64,14 +59,14 @@ vm.runInContext("I18N.add(I18N_QACORE.tpl)", c);
 const T = (s) => vm.runInContext(`I18N.tr(${JSON.stringify(s)})`, c);
 ok(T("Build 242 · 25 Nov 2026") === "Wersja 242 · 25 lis 2026", "patch-note date in Polish: " + T("Build 242 · 25 Nov 2026"));
 ok(T("needs One-Handed 40") === "wymaga: Broń jednoręczna 40" || /^wymaga: .+ 40$/.test(T("needs One-Handed 40")), "perk requirement in Polish: " + T("needs One-Handed 40"));
-for (const en of ["A shared journey across Skyrim", "New Character", "Start over?", "Controls", "What's new", "Update now", "Keep my build"]) ok(T(en) && T(en) !== en, "Polish for title/settings line: " + en);
+for (const en of ["A shared journey across Skyrim", "New Character", "Start over?", "Controls", "What's new", "Update now"]) ok(T(en) && T(en) !== en, "Polish for title/settings line: " + en);
 const tw = src("towns.js"), fAt = tw.indexOf("const FOLLOWERS = {"), fBlock = tw.slice(fAt, tw.indexOf("\n  };", fAt));
 ok(fAt > 0, "towns.js still has FOLLOWERS");
 const descs = [...fBlock.matchAll(/^\s+\w+: \[.*"((?:[^"\\]|\\.){25,})"\],?$/gm)].map((m) => m[1]);
 ok(descs.length >= 7, "hireling lines found: " + descs.length);
 for (const d of descs) ok(T(d) && T(d) !== d, "Polish for hireling line: " + d.slice(0, 50));
-ok(/"Open <b>Character<\/b>/.test(ob) && /\["hero", "Open Character"\]/.test(ob) && !/Open <b>Hero<\/b>/.test(ob), "the level-up tip names the Character tab");
-ok(!/from the Hero tab/.test(src("dawnguard.js")), "Dawnguard names the Character tab");
+ok(ob.includes('"Open <b>Hero</b>') && ob.includes('["hero", "Open Hero"]') && !ob.includes("Open <b>Character</b>"), "the level-up tip names the Hero tab (tabs5)");
+ok(/from the Hero tab/.test(src("dawnguard.js")) && !/the Character tab/.test(src("dawnguard.js")), "Dawnguard names the Hero tab (tabs5)");
 // 5. batch 3: crafting, riding, road events and missing pictures
 {
   const files = [...html.matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]);

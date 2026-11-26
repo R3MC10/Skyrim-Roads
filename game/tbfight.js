@@ -16,7 +16,7 @@
    re-run from a snapshot with the same dice up to the fight, which now "finishes" instantly with the played result.
    So loot, death, quests and XP all go through the exact same code as before.
 
-   Turn order (initiative.js, since build 333): everyone rolls 1d4 + speed once a fight; stuns, freezes, staggers, haste
+   Turn order (initiative.js, since build 347): everyone rolls 1d4 + speed once a fight; stuns, freezes, staggers, haste
    and slow move people in the order as the fight goes; heroes next to each other in the order act together (a shared
    turn). You pay stamina, magicka or health for moves (weapon blows, power attacks, guard, spells, shouts, potions,
    flee); moves you don't make become guard. Followers, summons, thralls and party members act in their own slots; real
@@ -192,7 +192,7 @@ const TB = (() => {
       this.waves = this.players > 0 && !f.e.boss && !f.e.pool ? Math.min(MAX_FOES, 1 + this.players) : grp.n; this.wave = 1;
       // another player fights with their real health; a raid dragon's health is shared by everyone fighting it (wevents.js)
       const k = f.e.player || f.e.pool ? 1 : this.players > 0 ? kk * (1 + PARTY_HP * this.players) / this.waves : kk;   // another player fights with their real health, no monster boost
-      this.ehpBase = f.ehp * k;
+      this.ehpBase = f.ehp * k * (f.diffHp = typeof DIFF !== "undefined" ? DIFF.hp(f) : 1);   // Story / Normal / Hard foe health, from the fight's snapshot (difficulty.js)
       f.ehp = Math.round(this.ehpBase * (grp.hpMul[0] || 1)); f.ehp0 = f.ehp; this.ehpMax = f.ehp;
       f.e.tbHp = this.ehpMax;
       f.regenMp *= MP_REGEN; f.regenSp *= SP_REGEN;   // several actions a round need a bit more breath and magicka per round
@@ -385,6 +385,7 @@ const TB = (() => {
       const w = typeof STACKS !== "undefined" ? STACKS.beginTurn(this.f) : "";   // Winded / Drained stacks bite (stacks.js)
       if (w) this.emit("tick", w.replace(/^ · /, ""), "tick");
       if (typeof REACT !== "undefined") REACT.beginTurn(this.f);   // Cover allies drops when your turn comes back
+      if (this.f.kit) this.f.kit.myTurns = (this.f.kit.myTurns || 0) + 1;   // [first30] a teaching foe waits for your answer to its wind-up (foekit.js)
     }
     /* why you can't do a move now ("" = you can) */
     why(a) {
@@ -956,8 +957,9 @@ const TB = (() => {
     }
     if (R && newEv.length) { const k = Math.max(0, newEv.length - 3); newEv.slice(k).forEach((e, i) => R.play(R.cue(e, vis[vis.indexOf(e) - 1]), i * 0.25)); }
     if (typeof INITUI !== "undefined") INITUI.before(el);   // where the portraits are now, so a reorder slides
+    const keepGame = ui.timing ? el.querySelector(":scope > .tbtime:not(.hit)") : null;   // [channel] an update from the party mid-minigame must not wipe your game
     el.innerHTML = `<div class="tbin">
-      <div class="tbtop"><b>Round ${sess.round}</b><span class="tbord">${order}</span><button class="tbff" data-tbx="log" aria-label="Full fight log"></button>${typeof TBRADIAL !== "undefined" ? `<button class="tbff ${TBRADIAL.on() ? "on" : ""}" data-tbx="wheel" aria-label="Combat wheel and timing ring" data-tip="${typeof FIGHTCTL !== "undefined" && FIGHTCTL.on() ? "Timing ring: after a strike or a damage spell, tap when the needle is in the bright zone (Perfect +25%, a miss −20%). Tap to switch it on or off." : "Combat wheel: your moves in a ring, and a timing ring for strikes and spells (Perfect +25%, a miss −20%). Tap to switch to cards."}"></button>` : ""}</div>
+      <div class="tbtop"><b>Round ${sess.round}</b>${typeof DIFF !== "undefined" ? DIFF.chip(f) : ""}<span class="tbord">${order}</span><button class="tbff" data-tbx="log" aria-label="Full fight log"></button>${typeof TBRADIAL !== "undefined" ? `<button class="tbff ${TBRADIAL.on() ? "on" : ""}" data-tbx="wheel" aria-label="Combat wheel and timing ring" data-tip="${typeof FIGHTCTL !== "undefined" && FIGHTCTL.on() ? "Timing ring: after a strike or a damage spell, tap when the needle is in the bright zone (Perfect +25%, a miss −20%). Tap to switch it on or off." : "Combat wheel: your moves in a ring, and a timing ring for strikes and spells (Perfect +25%, a miss −20%). Tap to switch to cards."}"></button>` : ""}</div>
       <div class="tbstage" data-tbzone="foe"><div class="tbscene" id="tbscene">${scene || (keepScene ? "" : ui.lastScene || "")}</div>${banner}${rd ? rd.bubble : ""}<div class="tbhint" aria-hidden="true"></div></div>
       <div class="tbvit"><div class="tbu me" data-tbzone="self"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.me(f, sess.st))}"` : ""}><small class="nm">\uE102 ${esc(s.name || "You")}</small>${uBar(hpNow, prev.hp, hpMax, "hp", rd ? rd.meMarks(hpNow, hpMax) : "")}${rd ? rd.meLine : ""}<div class="tbsub">${rBar(mpNow, prev.mp, mpMax, "mp", "MP")}${rBar(spNow, prev.sp, spMax, "sp", "SP")}${typeof CHARGE !== "undefined" ? CHARGE.fightBar(f) : ""}</div>${f.ward > 0 ? `<div class="tbward" title="Ward: soaks magic until it breaks. Cast it again to refill it."><i style="width:${pc(f.ward, f.wardMax || f.ward)}%"></i><span>\uE102 Ward ${Math.round(f.ward)} / ${Math.round(f.wardMax || f.ward)}</span></div>` : ""}${R ? R.myChips(f) : ""}${typeof SPELLFX !== "undefined" ? SPELLFX.meHTML(f) : ""}</div>
         <div class="tbu foe" data-tbzone="foe"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.foe(f, sess.ehpMax))}"` : ""}><small class="nm">${f.e.player ? "\uE101" : "\uE12E"} ${esc(f.e.name)}${f.e.archLabel && !String(f.e.name).toLowerCase().includes(f.e.archLabel) ? ` <span class="arch">${esc(f.e.archLabel)}</span>` : ""}${sess.waves > 1 ? ` <span class="arch">${sess.wave}/${sess.waves}</span>` : ""}</small>${uBar(ehpNow, prev.ehp, sess.ehpMax, "hp foe", rd ? rd.foeMarks(ehpNow, sess.ehpMax) : "")}${rd ? rd.foeLine : ""}${statusChips(f)}${rd ? rd.intents : ""}</div></div>
@@ -974,6 +976,7 @@ const TB = (() => {
     </div>`;
     if (scene) ui.lastScene = scene;
     if (typeof INITUI !== "undefined") { try { INITUI.after(el, sess); } catch (e) { console.warn("roster", e); } }   // reordered portraits slide, the cause flashes (initroster.js)
+    if (keepGame) el.appendChild(keepGame);
     if (keepScene) { const box = el.querySelector("#tbscene"); if (box) box.prepend(keepScene); }
     if (typeof COMBAT2 !== "undefined") { try { COMBAT2.layout(el, sess, { playing, mine, pops, big: prev.hp - hpNow > hpMax * 0.15 }); } catch (e) { console.warn("combat2", e); } }   // combat2.js: the cards go into the scene
     if (typeof TBUI !== "undefined") TBUI.after(el, { hurt: hpNow < prev.hp, hit: ehpNow < prev.ehp, big: prev.hp - hpNow > hpMax * 0.15, mine, pops });
@@ -1092,6 +1095,7 @@ const TB = (() => {
       const live = document.querySelector("#tbf .tbtime:not(.hit)");
       if (live && Date.now() - (ui.timingAt || 0) < 12000) return;
       ui.timing = false; ui.timingTok = (ui.timingTok || 0) + 1; live?.remove();   // the old game's result is dropped
+      if (typeof CHANNEL !== "undefined") CHANNEL.cancelMine(ui.sess, "stuck");   // [channel] its bar on everyone's screen fades
     }
     const b = ev.target.closest("button"); if (!b || b.disabled) return;
     const sess = ui.sess;
@@ -1111,8 +1115,9 @@ const TB = (() => {
       ui.menu = null;
       const root = document.getElementById("tbf"), tgt = root?.dataset.tbt; if (root) delete root.dataset.tbt;
       const a = b.dataset.tba, f = sess.f;
-      const go = (g) => {
+      const go = (g, mv) => {   // mv: [channel] a move that ran out of time becomes a guard
         if (!ui || ui.sess !== sess) return;
+        const a = mv || b.dataset.tba;
         const was = { sp: f.sp, mp: f.mp, hp: f.hp };
         let r;
         try { r = sess.act(a, tgt, g ? g.mult : 1, g); }
@@ -1130,11 +1135,19 @@ const TB = (() => {
         ui.timing = true; ui.timingAt = Date.now();
         let game;
         const g0 = MINIGAME.kindFor(f, a);
-        try { game = MINIGAME.play(root, f, a, { icon: iconOf(f, a), label: g0 && g0.label ? g0.label : sp ? sp.name : a === "power_attack" ? "Power attack" : a === "bash" ? "Shield bash" : a === "block" ? "Guard" : f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack" }); }
+        const CH = typeof CHANNEL !== "undefined" ? CHANNEL : null, ch = CH ? CH.begin(sess, a, tgt, iconOf(f, a)) : null;   // [channel] everyone sees you prepare it
+        try { game = MINIGAME.play(root, f, a, { icon: iconOf(f, a), label: g0 && g0.label ? g0.label : sp ? sp.name : a === "power_attack" ? "Power attack" : a === "bash" ? "Shield bash" : a === "block" ? "Guard" : f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack", onProgress: ch ? (p) => CH.progress(sess, ch, p) : null }); }
         catch (e) { console.error("minigame", a, e); game = null; }   // a broken minigame must not lock the fight: the move goes in as a normal hit
-        if (!game || typeof game.then !== "function") { ui.timing = false; return go(null); }
+        if (!game || typeof game.then !== "function") { ui.timing = false; if (ch) CH.done(sess, ch, null); return go(null); }
         const tok = ui.timingTok;
-        return game.then((g) => { if (!ui || ui.timingTok !== tok) return; ui.timing = false; go(g); }, () => { if (!ui || ui.timingTok !== tok) return; ui.timing = false; go(null); });
+        if (ch) game = CH.race(ch, game);   // [channel] a hard deadline: on timeout the move is cancelled and you guard
+        return game.then((g) => {
+          if (!ui || ui.timingTok !== tok) return;
+          ui.timing = false;
+          if (ch && g === CH.TIMEOUT) { document.querySelector("#tbf .tbtime:not(.hit)")?.remove(); CH.cancel(sess, ch, "timeout"); return go(null, sess.canAfford("block") ? "block" : "end"); }
+          if (ch) CH.done(sess, ch, g);
+          go(g);
+        }, () => { if (!ui || ui.timingTok !== tok) return; ui.timing = false; if (ch) CH.done(sess, ch, null); go(null); });
       }
       // the old timing ring (wheel only, when the minigames are off)
       if (typeof TBRADIAL !== "undefined" && TBRADIAL.on() && !fast() && TBRADIAL.timed(a, zoneOf(a)) && sess.canAfford(a) && typeof MINIGAME === "undefined") {
@@ -1205,7 +1218,7 @@ const TB = (() => {
       allies: f.allies.filter((a) => !a.summon).slice(0, 9).map((a) => ({ name: a.name, pid: a.pid || null, hp: Math.max(0, Math.round(a.hp ?? 0)), hpMax: Math.round(a.hp0 || a.maxHp || a.hp || 1), down: !!a.down })),
       turn: w ? tw(w) : null, turns: ws.map(tw),
       log: sess.ev.filter((e) => e.kind !== "round").slice(-6).map((e) => e.text),
-      done: !!sess.done, won: sess.done ? !!f.won : null, t: Date.now() / 1000, ...shared(sess) };
+      done: !!sess.done, won: sess.done ? !!f.won : null, t: Date.now() / 1000, diff: f.diff ? f.diff.id : null, ...shared(sess) };
   }
   /* v2: everything a teammate's phone needs to show the same fight on its full fight screen and play real turns in it
      (sharedfight.js). Older phones read only the fields above and keep the small "Fighting beside" box. */
@@ -1239,7 +1252,8 @@ const TB = (() => {
         return x; }), idx: sess.idx, gnow: sess.gr ? sess.order[sess.gr.start]?.grp || 0 : 0,
       next: typeof INIT !== "undefined" && sess.ini ? INIT.predict(sess).map((o) => ({ id: o.id, name: o.name, init: o.init, side: o.side, slot: o.slot, pid: o.al?.pid || null, fid: o.al?.fid || null, uid: o.uid })) : [],
       cur: sess.cur ? { id: sess.cur.id, name: sess.cur.name, pid: sess.cur.al?.pid || null } : null, evs,
-      escaped: sess.done ? !!f.escaped : null, ...(typeof PARTYSPELLS !== "undefined" ? PARTYSPELLS.forRecord(sess) : {}) };   // crafted spells cast in this fight (partyspells.js)
+      escaped: sess.done ? !!f.escaped : null, ...(typeof PARTYSPELLS !== "undefined" ? PARTYSPELLS.forRecord(sess) : {}),
+      ...(typeof CHANNEL !== "undefined" ? CHANNEL.forRecord(sess) : {}) };   // [channel] the moves being prepared right now (also restores them after a reconnect)   // crafted spells cast in this fight (partyspells.js)
   }
   function remoteFor(store, myId, cards) {
     if (!store || typeof store.put !== "function") return null;
@@ -1277,6 +1291,7 @@ const TB = (() => {
       live: () => !!store.online,
       /* is this player online? true / false, or null when we can't tell (social.js cards) */
       online: (pid) => { try { if (typeof SOCIAL === "undefined" || !cards) return null; const c = (cards() || []).find((x) => x.id === pid); return c ? !!SOCIAL.status(c).online : null; } catch (e) { return null; } },
+      fid: () => fid,   // [channel] the fight record's id (channel.js reads teammates' tbf/<fid>~ch~<pid>)
       end() {
         clearTimeout(timer); clearInterval(beat); beat = null;
         if (cur && fid) { push(true); const id = fid, ps = [...pidsSeen]; setTimeout(() => { store.remove?.("tbf", id); ps.forEach((p) => { store.remove?.("tbf", `${id}~${p}`); store.remove?.("tbf", `${id}~${p}~b`); }); }, 12000); }   // members see the ending, then it's tidied away

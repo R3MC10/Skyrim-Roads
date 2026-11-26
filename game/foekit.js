@@ -11,6 +11,7 @@
 const FOEKIT = (() => {
   const h01 = (str) => { let h = 2166136261; for (const c of String(str)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return ((h >>> 0) % 100000) / 100000; };
   const USE = 0.5;            // chance a turn goes to a kit move when one is ready
+  const useOf = (f) => USE * (typeof DIFF !== "undefined" ? DIFF.kitUse(f) : 1);   // Story foes use their kit less, Hard foes more (difficulty.js)
   const NEW_W = 2.2;          // moves not used yet this fight weigh this much more
   const MELEE = new Set(["attack", "power_attack", "bash"]);
   const isSpellA = (a) => /^(spell|dual|scroll|staff):/.test(a || "");
@@ -50,7 +51,7 @@ const FOEKIT = (() => {
     shield_bash: { label: "Shield bash", cd: 3, w: 3, run(f, et, n) { const r = hit(f, et, 0.7); if (r.loss > 0) { const b = f.sp; f.sp = Math.max(0, f.sp - G.maxStamina(f.s) * 0.1); wind(f, 1); return `${n} slams you with a shield: ${r.t} (−${Math.round(b - f.sp)} stamina, winded)`; } return `${n} swings a shield at you: ${r.t}`; } },
     raise_shield: { label: "Raise shield", cd: 4, w: 2, buff: true, run(f, et, n) { f.kit.guard = 0.5; return `${n} raises a shield and braces (your next melee blow does half)`; } },
     // brutes: big two-handers
-    wind_up: { label: "Wind up", cd: 4, w: 3, tele: true, run(f, et, n) { f.kit.windup = "smash"; return `${n} lifts the weapon high, winding up a huge blow. Guard or hit them hard!`; } },
+    wind_up: { label: "Wind up", cd: 4, w: 3, tele: true, run(f, et, n) { f.kit.windup = "smash"; f.kit.windTurn = f.kit.myTurns || 0; return `${n} lifts the weapon high, winding up a huge blow. Guard or hit them hard!`; } },
     war_cry: { label: "War cry", cd: 5, w: 2, buff: true, run(f, et, n) { f.kit.rage = 3; return `${n} roars a war cry (hits 25% harder for 3 turns)`; } },
     // archers
     take_aim: { label: "Take aim", cd: 4, w: 3, tele: true, run(f, et, n) { f.kit.windup = "aimed"; return `${n} draws and takes careful aim at you...`; } },
@@ -96,6 +97,7 @@ const FOEKIT = (() => {
     const n = String(e.name || ""), tags = new Set(e.tags || []), out = [];
     const add = (...ids) => ids.forEach((id) => { if (!out.includes(id)) out.push(id); });
     if (tags.has("dragon")) return [];   // dragons have their own moves (dragons.js)
+    if (e.teach === "windup") return ["wind_up"];   // [first30] the first fight: one move to learn (first30.js)
     const arch = e.arch;
     if (arch === "warrior") add("shield_bash", "raise_shield");
     else if (arch === "brute") add("wind_up", "war_cry");
@@ -153,13 +155,15 @@ const FOEKIT = (() => {
     if (k.rage > 0) k.rage--;
     const pl = k.plan && k.plan.length ? k.plan.shift() : null;   // what its intent said it would do (plan below)
     if (f.calmTurns > 0 || f.eParalyzed > 0 || f.stagger || f.fearTurns > 0 || f.unseen > 0) { if (k.windup) { k.windup = null; return pre + enemyTurn() + " (the wind-up is lost)"; } return pre + enemyTurn(); }
+    // [first30] a teaching foe keeps the blow raised until you've had a turn to answer it (first30.js)
+    if (k.windup && f.e.teach && k.windTurn === (k.myTurns || 0)) { const r = hit(f, enemyTurn, 1, { keepName: true }); return pre + r.t; }
     if (k.windup) {
       const w = WIND[k.windup]; k.windup = null;
       const r = hit(f, enemyTurn, w.mul);
       return pre + w.text(n, r.t);
     }
     if (pl && (pl.id === "blow" || pl.id === "land")) { const r = hit(f, enemyTurn, 1, { keepName: true }); return pre + r.t; }
-    if (!pl && (!k.ids.length || rnd() >= USE)) { const r = hit(f, enemyTurn, 1, { keepName: true }); return pre + r.t; }
+    if (!pl && (!k.ids.length || rnd() >= useOf(f))) { const r = hit(f, enemyTurn, 1, { keepName: true }); return pre + r.t; }
     const id = pl && ready(f).includes(pl.id) ? pl.id : pick(f, rnd);
     if (!id) { const r = hit(f, enemyTurn, 1, { keepName: true }); return pre + r.t; }
     const m = MOVES[id]; k.cd[id] = m.cd; k.used[id] = (k.used[id] || 0) + 1; f.kitLast = id;
@@ -172,12 +176,15 @@ const FOEKIT = (() => {
     if (!f || !f.kit) return [];
     const k = f.kit, sim = { ...k, cd: { ...k.cd }, used: { ...k.used } }, out = [];
     let wind = k.windup;
+    // [first30] a teaching foe winds up for sure as its last move of its 2nd round, so the guard hint has its moment (first30.js)
+    const teach = f.e && f.e.teach === "windup" && !k.used.wind_up && !wind && (k.plans = (k.plans || 0) + 1) >= 2;
     f.kit = sim;
     try {
       for (let i = 0; i < n; i++) {
         for (const id in sim.cd) if (sim.cd[id] > 0) sim.cd[id]--;
         if (wind) { out.push({ id: "land", wind }); wind = null; continue; }
-        if (!sim.ids.length || rnd() >= USE) { out.push({ id: "blow" }); continue; }
+        if (teach && i === n - 1 && !(sim.cd.wind_up > 0)) { sim.cd.wind_up = MOVES.wind_up.cd; sim.used.wind_up = 1; wind = "smash"; out.push({ id: "wind_up" }); continue; }
+        if (!sim.ids.length || rnd() >= useOf(f)) { out.push({ id: "blow" }); continue; }
         const id = pick(f, rnd);
         if (!id) { out.push({ id: "blow" }); continue; }
         sim.cd[id] = MOVES[id].cd; sim.used[id] = (sim.used[id] || 0) + 1;

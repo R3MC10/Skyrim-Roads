@@ -52,7 +52,7 @@ async def main():
                     else: await pg.screenshot(path=path)
                     shots.append(path)
                 async def to_map():
-                    await clear(); await pg.evaluate("(() => { const l = [...document.querySelectorAll('[data-tab=map]')]; (l.find((e) => e.tagName === 'BUTTON') || l[0])?.click(); })()"); await pg.wait_for_timeout(900); await clear()
+                    await clear(); await pg.evaluate("(() => { const l = [...document.querySelectorAll('[data-tab=world]')]; (l.find((e) => e.tagName === 'BUTTON') || l[0])?.click(); })()"); await pg.wait_for_timeout(900); await clear()
                 async def sheet():
                     await clear(); await pg.evaluate("(() => { const l = [...document.querySelectorAll('[data-tab=town]')]; (l.find((e) => e.tagName === 'BUTTON') || l[0])?.click(); })()"); await pg.wait_for_timeout(900); await clear()
                     await pg.evaluate("document.querySelector('.cr-town')?.scrollIntoView({block:'center'})")

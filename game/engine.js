@@ -148,6 +148,7 @@ const G = (() => {
     // (no Dragonstone needed), and a missing quest item a stage needs comes back (questitems.js)
     if (typeof QUESTS !== "undefined") { QUESTS.ensure(s); QUESTS.check(s); }
     if (typeof LEVELUP !== "undefined") { const m = LEVELUP.migrate(s); if (m) note(s, m); }   // levelup.js: keeps your level, tidies odd numbers
+    if (typeof UNLOCKS !== "undefined") UNLOCKS.migrate(s);   // unlocks.js: features open by level; anything this hero already used stays open
     return s;
   }
   function note(s, text) { s.journal.unshift({ t: now(), text }); s.journal = s.journal.slice(0, 60); }
@@ -183,7 +184,9 @@ const G = (() => {
 
   function useSkill(s, name, baseXp) {
     const sk = s.skills[name];
-    sk.xp += F.skillXpGained(name, baseXp) * (rested(s) && !s.werewolf ? 1 + (s.restBonus || 0.05) : 1) * (typeof POWERS !== "undefined" ? POWERS.xpMult(s, name) : 1) * (typeof HALLS !== "undefined" ? HALLS.xpMult(s, name) : 1);   // Rested; standing stones   // [Skyrim] Rested: skills improve 10% faster
+    const gain = F.skillXpGained(name, baseXp) * (rested(s) && !s.werewolf ? 1 + (s.restBonus || 0.05) : 1) * (typeof POWERS !== "undefined" ? POWERS.xpMult(s, name) : 1) * (typeof HALLS !== "undefined" ? HALLS.xpMult(s, name) : 1);   // Rested; standing stones   // [Skyrim] Rested: skills improve 10% faster
+    sk.xp += gain;
+    if (typeof LEVELUP !== "undefined" && gain > 0) LEVELUP.emit("xp", { s, skill: name, xp: gain });   // rewards.js: "+15 One-Handed" on the quiet reward line
     const msgs = [];
     while (sk.lvl < 100 && sk.xp >= F.skillXpNeeded(name, sk.lvl)) {
       sk.xp -= F.skillXpNeeded(name, sk.lvl);
@@ -512,6 +515,7 @@ const G = (() => {
       this.eq = equipment(s);
       this.hp = curHealth(s, t); this.mp = maxMagicka(s); this.sp = maxStamina(s);
       this.ehp = enemy.hp ?? enemy.health;
+      if (typeof DIFF !== "undefined") DIFF.apply(this);   // Story / Normal / Hard: snapshot taken now, foe damage set (difficulty.js)
       this.wx = typeof WFX !== "undefined" ? WFX.fight(s, t) : null;   // [OURS] weather that matters (weatherfx.js)
       if (this.wx && this.wx.stam < 1) this.sp = Math.round(this.sp * this.wx.stam);
       this.hp0 = this.hp; this.ehp0 = this.ehp;   // start health, for the fight scene's health bars
@@ -1088,7 +1092,7 @@ const G = (() => {
       for (const [id, c] of Object.entries(this.charges)) { const r = invRow(this.s, +id); if (r) r.charge = c; }
       const msgs = typeof MAGIC !== "undefined" ? MAGIC.after(this) : [];
       if (this.mount && typeof HORSEBACK !== "undefined") msgs.push(...HORSEBACK.after(this, t));
-      if (!this.e.guard) for (const [k, v] of Object.entries(this.xp)) msgs.push(...useSkill(this.s, k, v));   // [OURS] fighting guards teaches you nothing
+      if (!this.e.guard) for (const [k, v] of Object.entries(this.xp)) msgs.push(...useSkill(this.s, k, v * (typeof DIFF !== "undefined" ? DIFF.xp(this, k) : 1)));   // [OURS] fighting guards teaches you nothing
       return [...(this.followerDown ? [`${this.followerDown} gets back up after the fight, badly hurt.`] : []), ...extraMsgs, ...daeMsgs, ...msgs];
     }
   }
@@ -1512,7 +1516,7 @@ const G = (() => {
   }
 
   return {
-    MAP_W, MAP_H, STEP_SECONDS, SLOTS, ARMOR_SLOTS, JEWEL_SLOTS, wornSlot, GAME_SPEED, now, pxDist, holdAt, clock, isNight, shopsOpen, clockText,
+    MAP_W, MAP_H, BASE_WALK, STEP_SECONDS, SLOTS, ARMOR_SLOTS, JEWEL_SLOTS, wornSlot, GAME_SPEED, now, pxDist, holdAt, clock, isNight, shopsOpen, clockText,
     P, wtype, fxSum, lockChance, lockRoll, setAllyProvider, hiddenChance, rested, haggle, SPELL_TIER, newSave, maxHealth, maxMagicka, maxStamina, curHealth, setHealth, skill, useSkill, skillRose, raiseSkill, levelUp, fightLevel,
     riding, withHorse, STACKABLE, give, take, invRow, wornCount, freeQty, handable, carried, capacity, overweight, equipment, equip, unequip, equipOff, canOffhand, countRestore, itemStats,
     loadout: lo, addRule, ruleSlot, deadRules, fixTactics, oneLoadout, spellCost, describeRule, describeAction, Fight, scaleEnemy, scaleQuestFoe, questLevel, rollLoot,

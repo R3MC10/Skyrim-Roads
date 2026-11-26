@@ -38,7 +38,7 @@ async def main():
         errs = []
         pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
         await pg.goto(f"http://127.0.0.1:{PORT}/index.html?net=bc&notut&fightanim&assets&p=h2"); await pg.wait_for_timeout(1500)
-        await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Torvald"); await pg.click("[data-race=nord]"); await pg.fill("#nm", "Torvald"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
+        await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Torvald"); await pg.click(".rpick[data-race=nord]"); await pg.fill("#nm", "Torvald"); await pg.click("#begin"); await pg.wait_for_function("!!(window.__dbg && window.__dbg.save())", timeout=15000)
         await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
         await pg.evaluate("()=>{" + LOOKS + "}"); await pg.evaluate("()=>{" + FIGHT_JS + "}")
         files = []
@@ -52,7 +52,7 @@ async def main():
             # hero tab with real gear on the save
             await pg.evaluate("()=>{const S=window.__dbg.save(); const lo=G.loadout(S); lo.equipment={}; for(const id of ['steel_armor','steel_helmet','steel_gauntlets','steel_boots','steel_shield','ench|steel_sword|fire|20|800']){ const r=G.give(S,id); G.equip(S,r);} }")
             await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
-            await pg.click("[data-tab=map]"); await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(250)
+            await pg.click("[data-tab=world]"); await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(250)
             el = await pg.query_selector(".herobox")
             if not el:   # the hero panel content, if the tab is behind a menu on this screen size
                 await pg.evaluate("()=>{ const d=document.createElement('div'); d.className='herobox'; d.id='hb2'; d.style.cssText='position:fixed;left:0;top:0;z-index:99999;width:160px;background:#222'; d.innerHTML=HEROART.figure(window.__dbg.save(),160,220); document.body.appendChild(d); }")

@@ -11,6 +11,8 @@ const W = process.env.W || path.join(__dirname, "../game/");
 const c = { setTimeout: () => 0, clearTimeout: () => {}, setInterval: () => 0, clearInterval: () => {}, console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Uint8ClampedArray, Int32Array, Uint16Array, Int16Array, Uint32Array,
   Object, Array, Set, Map, WeakMap, Proxy, Number, String, structuredClone, performance: { now: () => 0 },
   navigator: { language: "pl-PL" }, localStorage: { getItem: () => JSON.stringify({ lang: "pl" }), setItem() {}, removeItem() {} } };
+// fixed dice (mulberry32): the "reaches the foes waiting behind" checks roll hits and resists, so a bad run failed now and then
+let seed = 1337; c.Math = Object.create(Math); c.Math.random = () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 vm.createContext(c);
 const html = fs.readFileSync(W + "index.html", "utf8");
 const scripts = [...html.matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]).filter((f) => !/^(ui|store|p2pnet)\.js$/.test(f));

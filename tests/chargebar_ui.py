@@ -107,7 +107,7 @@ async def main():
                 await shot("doll_picker")
                 await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove()); __ui.closeMenu()"); await pg.wait_for_timeout(200)
                 # 4. shop: sell list (and the wizard's staffs on the buy side)
-                await pg.evaluate("document.querySelectorAll('#modal,#sky').forEach(m=>m.remove()); document.querySelector('[data-tab=map]')?.click(); document.querySelector('[data-tab=town]')?.click()"); await pg.wait_for_timeout(400)
+                await pg.evaluate("document.querySelectorAll('#modal,#sky').forEach(m=>m.remove()); document.querySelector('[data-tab=world]')?.click(); document.querySelector('[data-tab=town]')?.click()"); await pg.wait_for_timeout(400)
                 await pg.evaluate("document.querySelector('[data-act=shop][data-id=general]')?.click()"); await pg.wait_for_timeout(300)
                 await pg.evaluate("document.querySelector('[data-act=smode][data-id=sell]')?.click()"); await pg.wait_for_timeout(300)
                 ok(await pg.evaluate("document.querySelectorAll('#side .item .cb-ico .cbar').length >= 2"), f"{tag}: shop sell list icons have bars")

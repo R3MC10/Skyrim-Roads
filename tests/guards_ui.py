@@ -23,7 +23,7 @@ async def main():
           const want=GUARDS.STOP+b.secs*0.5; window.__gt=t-off+want; const real=GUARDS.visible; GUARDS.visible=(s)=>real(s, window.__gt);
           const S=window.__dbg.save(); for (const n of ['Whiterun','Riverwood','Rorikstead']) if(!S.discovered.includes(n)) S.discovered.push(n);
           const pp=GUARDS.patrols(window.__gt).find(p=>p.hold==='Whiterun'); S.location='Riverwood'; [S.x,S.y]=WORLD.places.Riverwood; window.__pp=pp; }""")
-        await pg.click("[data-tab=map]"); await pg.wait_for_timeout(800)
+        await pg.click("[data-tab=world]"); await pg.wait_for_timeout(800)
         vis = await pg.evaluate("GUARDS.visible(window.__dbg.save()).filter(p=>p.visible).map(p=>p.hold).join(',')")
         ok("Whiterun" in vis, "Whiterun's patrol is on the map: " + vis)
         box = await (await pg.query_selector("#mapwrap canvas, #map canvas, canvas")).bounding_box()

@@ -9,12 +9,13 @@
    - Keyboard: arrows or WASD walk between signposts, Enter opens one, Esc closes an open card, then leaves to the map.
    - Phones (or a short window): the signposts turn into a readable list over the lower half of the picture.
    - "List" switches back to the old Area board (remembered per player); the board has a "Scene" button back.
+   - The landscape button next to the name opens the place's arrival picture again (locintro.js).
    - Signpost positions are data: POS[place] (percent of the 16:9 painting) wins over KIND_POS[kind], and anything
      left over takes the next free SLOT. Drop a painted scene for a place in later and give it its own POS row.
    ui.js decides when the scene is up (Area tab, standing at a place, no shop open) and hands in what's there;
    this file only lays it out. Nothing here changes game rules. Tested in tests/test_locscreen.js. */
 const LOCSCREEN = (() => {
-  const live = typeof document !== "undefined" && typeof document.addEventListener === "function";
+  const live = typeof document !== "undefined" && typeof document.addEventListener === "function" && typeof window !== "undefined";   // (node tests stub a bare document)
   const esc = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const safe = (fn, d) => { try { return fn(); } catch { return d; } };
   const AU = () => (typeof AREAUI !== "undefined" ? AREAUI : null);
@@ -79,7 +80,7 @@ const LOCSCREEN = (() => {
     home: [13, 28], homes: [25, 28], halls: [75, 28], mine: [87, 28],
     homestead: [13, 39], train: [25, 39], wizard: [38, 39], hire: [50, 39], hall: [62, 39], enchanter: [75, 39], alchemy: [87, 39],
     blacksmith: [13, 50], forge: [25, 50], market: [38, 50], notice: [50, 50], jobs: [62, 50], inn: [75, 50], cook: [87, 50],
-    stables: [13, 61], general: [25, 61], news: [50, 61], streets: [62, 61], fish: [87, 61],
+    stables: [13, 61], general: [25, 61], temple: [38, 61], news: [50, 61], streets: [62, 61], fish: [87, 61],
     carriage: [13, 72], gather: [25, 72], caravans: [87, 72] };
   const SITE_POS = { main: [50, 50], gather: [25, 72], camp: [75, 72], hunt: [87, 50], news: [50, 72] };
   const KIND_POS = { city: TOWN_POS, town: TOWN_POS, farm: SITE_POS, dungeon: SITE_POS, camp: SITE_POS, fort: SITE_POS, lair: SITE_POS, stone: SITE_POS, shrine: SITE_POS, landmark: SITE_POS };
@@ -190,7 +191,7 @@ const LOCSCREEN = (() => {
     return `<div class="ls ls-${esc(kind)} tod-${sk.tod} wx-${esc(sk.wx)}${indoor ? " indoor" : ""}${sheetOpen ? " sheet-on" : ""}" data-place="${esc(l)}" role="region" aria-label="${esc(l)}">
       <div class="ls-stage"><div class="ls-bg" style='background-image:${bg}'></div><div class="ls-tint"></div><div class="ls-wx" aria-hidden="true"></div></div>
       <ul class="ls-spots" role="list">${pins}</ul>
-      <header class="ls-head"><div class="ls-tt"><small class="ls-hold"><span>${esc(KIND_NAME[kind] || "")}</span> · <span>${esc(hold)}</span></small><h1 class="ls-name">${esc(l)}</h1><p class="ls-flav">${esc(flav)}</p>${o.wanted ? `<div class="ls-wanted">${o.wanted}</div>` : ""}</div>
+      <header class="ls-head"><div class="ls-tt"><small class="ls-hold"><span>${esc(KIND_NAME[kind] || "")}</span> · <span>${esc(hold)}</span></small><div class="ls-nrow"><i aria-hidden="true"></i><h1 class="ls-name">${esc(l)}</h1>${typeof LOCINTRO !== "undefined" ? LOCINTRO.viewBtn() : ""}</div><p class="ls-flav">${esc(flav)}</p>${o.wanted ? `<div class="ls-wanted">${o.wanted}</div>` : ""}</div>
         <div class="ls-meta"><span class="ls-clock">${esc(sk.clock)}</span>${sk.wxName ? `<span class="ls-wxn">${esc(sk.wxName)}</span>` : ""}${S ? `<span class="ls-gold"><b class="gold">${S.gold}</b> gold</span>` : ""}</div>
         <div class="ls-btns"><button class="btn ls-list" data-act="locmode" data-id="list" aria-label="Show as a list"><span>List</span></button><button class="btn pri ls-leave" data-act="locleave"><span>Leave</span></button></div></header>
       ${ppl ? `<footer class="ls-people" aria-label="People here">${ppl}</footer>` : ""}
@@ -293,7 +294,7 @@ const LOCSCREEN = (() => {
     if (typeof window !== "undefined") window.addEventListener("resize", () => { if (isOpen()) fitBottom(); });
   }
 
-  return { PLACE_PICS, KIND_PIC, THEME_PIC, KIND_POS, TOWN_POS, SITE_POS, POS, COLS, ROWS, SLOTS, near, FLAVOUR, KIND_LINE, MAIN, SHEET, kindOf, backdrop, layout, spots, people, mode, setMode, placeOf, tod, sky, html, sceneBtn,
+  return { PLACE_PICS, KIND_PIC, THEME_PIC, KIND_POS, TOWN_POS, SITE_POS, POS, COLS, ROWS, SLOTS, near, FLAVOUR, KIND_LINE, KIND_NAME, MAIN, SHEET, kindOf, backdrop, layout, spots, people, mode, setMode, placeOf, tod, sky, html, sceneBtn,
     show, isOpen, closeSheet, openSheet, act, pick, get sheet() { return sheetOpen; } };
 })();
 if (typeof module !== "undefined") module.exports = LOCSCREEN;

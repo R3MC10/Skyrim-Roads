@@ -8,7 +8,8 @@
    - a big "LEVEL UP" moment with the new level, the bar fills and starts again;
    - the three pillars (Health / Magicka / Stamina) to spend a banked level-up, opened from the Skills screen
      or from the compass (the Skills direction says "Level up" while one is waiting);
-   - a hook other systems can listen to: LEVELUP.on("level", ({ s, level }) => ...) (also "skill" and "choice"),
+   - a hook other systems can listen to: LEVELUP.on("level", ({ s, level }) => ...) (also "skill", "choice" and "xp",
+     every bit of skill XP from engine.js useSkill: rewards.js turns it into the quiet "+15 One-Handed" line),
      and a window "levelup" event in the browser with { detail: { level } } for the player's own hero.
    Followers level on their own (followers2.js) and are not touched here. */
 const LEVELUP = (() => {
@@ -96,7 +97,8 @@ const LEVELUP = (() => {
   }
   function onLevel({ s, level }) {
     if (!mine(s)) return;
-    queue.push({ kind: "level", level, to: progress(s) });
+    const big = typeof REWARDS !== "undefined" && REWARDS.onLevel(s, level);   // [rewards] a level that opens something is a full scene instead
+    if (!big) queue.push({ kind: "level", level, to: progress(s) });
     try { window.dispatchEvent(new CustomEvent("levelup", { detail: { level } })); } catch { /* old browsers */ }
     try { api.publishCard && api.publishCard(); } catch { /* sync on the next tick */ }
     pump();
@@ -120,7 +122,8 @@ const LEVELUP = (() => {
       life = queue.length > 3 ? 1300 : 2300;
     } else {
       node.className = "lvn lvn-level";
-      node.innerHTML = `<p class="lvn-big">Level up</p><p class="lvn-n num">${it.level}</p>${lvBar(it.level - 1, 100, 100)}`;
+      const nx = typeof REWARDS !== "undefined" ? REWARDS.nextText(S) : "";   // [rewards] what the next level brings
+      node.innerHTML = `<p class="lvn-big">Level up</p><p class="lvn-n num">${it.level}</p>${lvBar(it.level - 1, 100, 100)}${nx ? `<p class="lvn-next">${esc(nx)}</p>` : ""}`;
       life = 3400;
       try { SOUND.fx("levelup"); } catch { /* sound never breaks the game */ }
       try { if (typeof POLISH !== "undefined" && POLISH.burst) POLISH.burst(); } catch { /* decoration */ }
@@ -147,7 +150,7 @@ const LEVELUP = (() => {
       <p class="lvk-k">Level ${S.level}</p><h2 class="lvk-h">Choose what grows</h2>
       <p class="lvk-s">${n > 1 ? `<span>${n} level-ups to spend</span> · ` : ""}<span>Each gives +${PER()} to one of these</span>${pts > 0 ? ` · <span>${pts} perk point${pts === 1 ? "" : "s"} to spend</span>` : ""}</p>
       <div class="lvk-cols">${choices(S).map((c) => `<button class="lvk-p lvk-${c.attr}" data-lvk="${c.attr}"><span class="lvk-cap" aria-hidden="true"></span>${ic(c.attr)}<b>${c.name}</b><span class="lvk-v num">${c.now} <i>→</i> <em>${c.next}</em></span>${c.extra ? `<small>${esc(c.extra)}</small>` : "<small>&nbsp;</small>"}<span class="lvk-base" aria-hidden="true"></span></button>`).join("")}</div>
-      <button class="btn ghost lvk-later" data-lvk="later">Decide later</button></div>`;
+      ${typeof REWARDS !== "undefined" ? `<p class="lvk-next">${esc(REWARDS.nextText(S))}</p>` : ""}<button class="btn ghost lvk-later" data-lvk="later">Decide later</button></div>`;
   }
   function open(then) {
     const S = api && api.S(); if (!DOM || !S || !pending(S)) { if (then) then(); return false; }

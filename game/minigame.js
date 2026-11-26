@@ -14,7 +14,9 @@
    its spell's rune, an oil flask is thrown (strike bar: a Perfect soaks the foe a round longer, a Miss a round shorter).
    Potions, poisons (poisonfight.js), food and fleeing have no game.
    Auto and the AI never play it (normal damage). Settings → Fights → Minigames turns it off.
-   In a party fight each player plays it on their own phone in their own turn (sharedfight.js uses the same screen). */
+   In a party fight each player plays it on their own phone in their own turn (sharedfight.js uses the same screen).
+   [channel] o.onProgress(0..1) reports how far a game that can measure it got (the rune's points, the bow's draw):
+   channel.js fills the bar teammates see over your hero. Nothing else of the game ever leaves your phone. */
 const MINIGAME = (() => {
   const DOM = typeof document !== "undefined";
   const prefs = () => { try { return JSON.parse(localStorage.getItem("rotn_prefs") || "{}"); } catch { return {}; } };
@@ -66,7 +68,7 @@ const MINIGAME = (() => {
     const s = f.s, sk = (n) => { try { const v = typeof G !== "undefined" && G.skill && s ? G.skill(s, n) : 15; return Number.isFinite(v) ? v : 15; } catch (e) { return 15; } };   // an unknown skill name must never break the game (hotfix: "Block" used to throw, so guards and shield bashes never got one)
     const skill = g.kind === "rune" ? sk(g.school) : a === "block" || a === "bash" ? sk("Blocking") : a === "rx:oil" ? sk("Archery") : sk(f.weapon?.skill || (isBow(f) ? "Archery" : "One-Handed"));
     const perk = typeof PFX !== "undefined" && s ? PFX.num(s, "timing") : 0;
-    return Math.min(1.9, (1 + Math.max(0, skill - 15) / 100) * (1 + (perk || 0)));
+    return Math.min(1.9, (1 + Math.max(0, skill - 15) / 100) * (1 + (perk || 0))) * (typeof DIFF !== "undefined" ? DIFF.window(f) : 1);   // Story wider, Hard tighter (difficulty.js)
   }
   /* turn a score (0..1, 1 = dead centre) into a grade */
   function grade(score, g) {
@@ -186,6 +188,7 @@ const MINIGAME = (() => {
         if (!held && now() - start0 > 3500) return finish(el, grade(0, g), done, stop);
         if (held && now() - t0 > draw * 2.4) return finish(el, grade(0, g), done, stop);
         ret.setAttribute("r", radius().toFixed(2));
+        if (held && o.onProgress) o.onProgress(Math.min(1, (now() - t0) / draw));   // [channel] the draw, for teammates' bars
         raf = requestAnimationFrame(frame);
       };
       raf = requestAnimationFrame(frame);
@@ -219,7 +222,7 @@ const MINIGAME = (() => {
         if (el._fin) return;
         let best = -1, bd = 1e9; pts.forEach(([px, py], i) => { const d = Math.hypot(px - x, py - y); if (d < bd) { bd = d; best = i; } });
         if (bd > 13) { if (strict) errs++; return; }
-        if (best === next) { next++; dots[best].classList.add("pop"); mark(); if (next >= n) end(); }
+        if (best === next) { next++; dots[best].classList.add("pop"); mark(); if (o.onProgress) o.onProgress(next / n); if (next >= n) end(); }   // [channel] how far the rune got, for teammates' bars
         else if (best > next && strict) errs++;
       };
       const frame = () => {

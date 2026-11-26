@@ -40,7 +40,7 @@ async def main():
             print(style, "party seen:", pa, pb)
             ok = ok and pa and pb
             for pg, nm in ((A, "a"), (B, "b")):
-                await clean(pg); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(1500)
+                await clean(pg); await pg.click("[data-tab=world]"); await pg.wait_for_timeout(1500)
                 v = await pg.query_selector("#fpt .fpt-view canvas")
                 if v: await v.screenshot(path=f"{SHOT}{style}_travel_{nm}.png")
                 else: print(style, nm, "no travel picture"); ok = False
@@ -54,7 +54,7 @@ async def main():
             near = await A.evaluate("() => { const S = window.__dbg.save(); const o = window.__dbg.others().find(o => o.name === 'Beta'); return o ? G.pxDist([o.x, o.y], [S.x, S.y]) : -1 }")
             print(style, "Beta distance:", near)
             gold0 = await B.evaluate("window.__dbg.save().gold")
-            await clean(A); await A.click("[data-tab=map]"); await A.wait_for_timeout(400)
+            await clean(A); await A.click("[data-tab=world]"); await A.wait_for_timeout(400)
             if await A.query_selector("[data-act=openenc]"): await A.click("[data-act=openenc]")
             await A.wait_for_timeout(400)
             await A.click("[data-act=enc][data-a=fight]"); await A.wait_for_timeout(1600)

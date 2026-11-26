@@ -3,7 +3,7 @@
    picked to fit what it is, and it comes back on a timer so the place stays worth a visit:
    - Farm stall: a few fresh things for sale (a little stock each day).        - Chores: an hour's work for a few coins and some produce (daily).
    - Local job: the farmer/innkeeper wants a nearby dungeon cleared or a bag carried (the town job list, s.jobs).
-   - Shrine blessing: heals you and gives one blessing at a time (daily).      - Hidden stash: a strongbox to pick (lockpicking mini-game; every 3 days).
+   - Shrine blessing: heals you and gives one blessing at a time (daily); shrines also reset your perks (perkreset.js). - Hidden stash: a strongbox to pick (lockpicking mini-game; every 3 days).
    - Search the ruins: a few coins, often a lore book or a scroll (every 3 days). - Herb spot: rare ingredients (every 2 days, like plant patches).
    - Ore: Raven Rock Mine joins the  mines.
    Every place without anything else falls back to an offer by its kind, so new places are never empty (tests/test_fullmap.js).
@@ -291,6 +291,7 @@ const PLACESTUFF = (() => {
           + items.map((x) => `<div class="item pstuff-buy">${typeof ICONART !== "undefined" ? ICONART.item(x.id, 30) : ""}<div class="t">${esc(D.ITEMS[x.id].name)}<span>${x.left ? `${x.left} left today` : "sold out"}</span></div><span class="num gold">${x.price}</span>${x.left && s.gold >= x.price ? `<button class="btn sm" data-act="pstuff" data-id="buy" data-item="${esc(x.id)}">Buy</button>` : `<button class="btn sm" disabled>Buy</button>`}</div>`).join(""));
       }
     }
+    if (typeof PERKRESET !== "undefined") { const r = PERKRESET.row(s); if (r) rows.push(r); }   // shrines: reset your perks (perkreset.js)
     return `<div class="panel pstuff"><h2>What's here</h2><div class="list">${rows.join("")}</div></div>`;
   }
 

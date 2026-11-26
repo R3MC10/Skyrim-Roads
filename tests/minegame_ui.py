@@ -19,7 +19,7 @@ async def main():
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Miner"); await pg.click("#begin"); await pg.wait_for_timeout(2500)
         await pg.evaluate("""()=>{ const S=window.__dbg.save(); const l='Embershard Mine'; S.location=l; [S.x,S.y]=WORLD.places[l]; S.mined={}; S.trip=null;
           if(!SMITH.count(S,'pickaxe')) G.give(S,'pickaxe'); if(!S.discovered.includes(l)) S.discovered.push(l); }""")
-        for t in ["map", "town"]:
+        for t in ["world", "town"]:
             await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())"); await pg.evaluate(f"document.querySelector('[data-tab={t}]').click()"); await pg.wait_for_timeout(400)
         for _ in range(4):
             await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove()); document.querySelectorAll('.toast,#toast').forEach(m=>m.remove())"); await pg.wait_for_timeout(300)

@@ -5,7 +5,7 @@
    with Back/Next, Randomise and Undo. The Race tab also has the portrait picker ([avatars], avatar.js). A Male / Female switch sits above the tabs ([chargensex]). The look is plain data (appear.js) saved in s.app and sent on your player card,
    so everyone sees the same face. Race abilities: racefx.js.
    The same screen without the Race and Start tabs is the barber at an inn (small fee) and the mirror in your house (free).
-     CHARGEN.create(host, { onBegin({ name, race, app, stone }), onBack(), startExtra(), afterRender(root), toast(text) })
+     CHARGEN.create(host, { onBegin({ name, race, app, stone, avatar, diff }), onBack(), startExtra(), afterRender(root), toast(text) })
      CHARGEN.open({ mode: "barber" | "mirror", save, cost, onDone(app), onCancel(), toast(text) })
      CHARGEN.open({ mode: "remake", save, onDone({ name, race, app }), onKeep(), toast(text) }): [remake] "Make your hero anew" (remake.js):
        Race + every look tab, your name (editable), "Keep as is" / "Done"; no Cancel, no Escape: it's shown once per hero
@@ -35,7 +35,7 @@ const CHARGEN = (() => {
     const save = o.save || null, race = save ? save.race : o.race || "nord";
     const app = save ? APPEAR.norm(save.app || APPEAR.fromSeed(save.id || save.name || "x", race, save.sex === "f"), race) : APPEAR.fromSeed("cg-" + race, race, false);
     const avatar = save && typeof AVATAR !== "undefined" ? AVATAR.chosen(save) : "";   // [avatars] "" = Automatic
-    return { mode, o, save, race, app, app0: JSON.stringify(app), stone: "", avatar, avAll: false, tab: mode === "create" || mode === "remake" ? "race" : "body", name: mode === "remake" && save ? save.name || "" : "", undo: [], touched: false,
+    return { mode, o, save, race, app, app0: JSON.stringify(app), stone: "", diff: "normal", avatar, avAll: false, tab: mode === "create" || mode === "remake" ? "race" : "body", name: mode === "remake" && save ? save.name || "" : "", undo: [], touched: false,
       angle: 0, angleTo: 0, zoom: 0, pose: "idle", gear: true, root: null, can: null, buf: null, raf: 0, ver: 1, drawn: "", prevLook: null, drag: null };
   }
   const tabs = () => (st.mode === "create" ? TABS : st.mode === "remake" ? TABS.filter(([id]) => id !== "start") : TABS.filter(([id]) => id !== "race" && id !== "start"));
@@ -150,6 +150,7 @@ const CHARGEN = (() => {
       <h4>${esc(L("Standing stone"))}</h4><p class="sub">${esc(L("A Guardian Stone's blessing: those skills improve 20% faster. You can change it later at the Guardian Stones."))}</p>
       <div class="cgstones" role="radiogroup" aria-label="${esc(L("Standing stone"))}">${STONE_CHOICES.map((id) => `<button class="cgstone ${st.stone === id ? "on" : ""}" data-stone="${id}" role="radio" aria-checked="${st.stone === id}">
         ${id && typeof UIART !== "undefined" ? UIART.stone(id, 40) : `<span class="cgnone" aria-hidden="true">·</span>`}<b>${esc(L(id ? S0[id][0] : "No stone yet"))}</b><span>${esc(L(id ? S0[id][1] : "Choose one later on the road."))}</span></button>`).join("")}</div>
+      ${typeof DIFF !== "undefined" && st.mode === "create" ? DIFF.chooserHTML(st.diff, (t, w) => L(t, null, w)) : ""}
       <h4>${esc(L("Where you begin"))}</h4>
       <p>${esc(L("You begin in Riverwood, a quiet village on the road south of Whiterun."))}</p>
       <ul class="cgsum"><li><b>${esc(raceName(st.race))}</b> · ${esc(L(ab.name))} · ${esc(D.RACES[st.race].power)}</li><li>${APPEAR.describe(st.app, st.race).map(([w, x]) => esc(L(x, null, w))).join(" · ")}</li>${st.stone ? `<li>${esc(L(S0[st.stone][0]))}</li>` : ""}</ul>
@@ -159,7 +160,7 @@ const CHARGEN = (() => {
   /* [chargensex] the Male / Female switch at the top of the screen, above the tabs (two big segmented buttons) */
   function sexBar() {
     const f = st.app.sx === "f";
-    return `<span class="cgsexl" id="cgl-sex">${esc(L("Sex"))}</span>${[["m", "♂", "Male"], ["f", "♀", "Female"]].map(([v, ic, t]) => { const on = (v === "f") === f;
+    return `<span class="cgsexl" id="cgl-sex">${esc(L("Sex"))}</span>${[["m", "\u2642\uFE0E", "Male"], ["f", "\u2640\uFE0E", "Female"]].map(([v, ic, t]) => { const on = (v === "f") === f;
       return `<button class="cgsexb ${on ? "on" : ""}" data-cg="sex" data-v="${v}" role="radio" aria-checked="${on}" tabindex="${on ? 0 : -1}"><span class="cgsexi" aria-hidden="true">${ic}</span> ${esc(L(t))}</button>`; }).join("")}`;
   }
   const namePh = () => (st.app.sx === "f" ? "Your name, e.g. Brynja" : "Your name, e.g. Remigiusz");
@@ -316,6 +317,7 @@ const CHARGEN = (() => {
     const b = e.target.closest("button"); if (!b || b.disabled || !st) return;
     if (b.dataset.race) return setRace(b.dataset.race);
     if (b.dataset.stone !== undefined && b.classList.contains("cgstone")) return change(() => { st.stone = b.dataset.stone; });
+    if (b.dataset.diff && b.classList.contains("cgdiff")) { st.diff = b.dataset.diff; return update(); }   // Story / Normal / Hard (difficulty.js)
     if (b.dataset.av !== undefined) return change(() => { st.avatar = AVATAR.valid(b.dataset.av) ? b.dataset.av : ""; });   // [avatars]
     if (b.dataset.avAll) { st.avAll = true; return update(); }
     switch (b.dataset.cg) {
@@ -400,7 +402,7 @@ const CHARGEN = (() => {
       st.o.toast?.(L(bad)); const f = st.root.querySelector("#nm"); if (f) { f.classList.add("nm-bad"); f.focus(); }
       return;
     }
-    const out = { name, race: st.race, app: APPEAR.norm(st.app, st.race), stone: st.stone || null, avatar: st.avatar || "" };
+    const out = { name, race: st.race, app: APPEAR.norm(st.app, st.race), stone: st.stone || null, avatar: st.avatar || "", diff: st.diff || "normal" };
     stop(); st.o.onBegin?.(out);
   }
   /* the barber or the mirror: a full-screen layer over the game */

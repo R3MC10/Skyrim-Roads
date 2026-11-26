@@ -753,7 +753,7 @@ const CRISES = (() => {
       const line = key === 1 ? T("{name} grips {hold}: {what}", { name: T(ch.name), hold: cr.hold, what: T(ch.stages[0][1], { hold: cr.hold }) }) : T("The Jarl of {hold} posts contracts against {name}.", { hold: cr.hold, name: T(ch.name) });
       G.note(S, line);
       let inHold = false; try { inHold = G.holdAt([S.x, S.y]) === cr.hold; } catch (e) { /* ignore */ }
-      if (inHold && (S.level || 1) >= 3 && typeof POLISH !== "undefined") POLISH.banner("quest", T("Hold crisis"), T(ch.name));
+      if (inHold && (S.level || 1) >= 3 && (typeof UNLOCKS === "undefined" || UNLOCKS.open(S, "worldevents")) && typeof POLISH !== "undefined") POLISH.banner("quest", T("Hold crisis"), T(ch.name));
     }
   }
   function loop() {
