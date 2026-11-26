@@ -85,7 +85,6 @@ const I18N_SWEEP2 = (() => {
     "Hall-warden": "Strażnik hali", Greybeard: "Siwobrody", "Mine foreman": "Brygadzista kopalni", Fisher: "Rybak", "Market steward": "Zarządca targu",
     // the market
     "Things other players are selling.": "Rzeczy, które sprzedają inni gracze.", "For sale here": "Na sprzedaż",
-    "Players sell their own things here. Buy, or run your own stall if you own a house in this town.": "Tu gracze sprzedają swoje rzeczy. Kupuj albo prowadź własny stragan, jeśli masz dom w tym mieście.",
     // fights
     Fight: "Walcz", "[AI] = Smart AI's move": "[AI] = ruch Smart AI", "[n] is the tactic rule that fired": "[n] to reguła taktyki, która zadziałała",
     "[n] = your rule fired · [AI] = Smart AI": "[n] = zadziałała twoja reguła · [AI] = Smart AI",

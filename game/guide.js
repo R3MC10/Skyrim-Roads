@@ -11,8 +11,8 @@ const GUIDE = (() => {
     ["level", "Level up and pick a perk", "Skills grow as you use them. When you level up, a dot appears on Hero: choose Health, Magicka or Stamina, then spend your perk point.", (s) => s.level >= 2 && Object.keys(s.perks || {}).length > 0, { tab: "hero" }],
     ["smith", "Mine, smelt and smith", "Buy a pickaxe, mine ore (Area →  Mine in mining towns), smelt it at the Forge, then make or improve your gear.", (s) => flag(s, "smith") || Object.keys(s.mined || {}).length > 0, { tab: "town", shop: "forge" }, "smithing"],
     ["cook", "Cook or fish", "In towns with an inn, use the  Cooking pot for food that heals and buffs. Near water, try  Fishing.", (s) => flag(s, "cook") || flag(s, "fish"), { tab: "town", shop: "cook" }, "cooking"],
-    ["friends", "Make a friend", "Tap  at the top. Add other players, send private messages, and trade with friends from anywhere by courier.", (s) => Object.keys(s.friends || {}).length > 0, { tab: "social" }],
-    ["home", "Buy a house", "Every city has a house for sale (Area → Buy …). Your chest keeps things safe when you die, and you can run a  market stall in that town.", (s) => Object.keys(s.homes || {}).length > 0, { tab: "town", shop: "home" }, "housing"],
+    ["friends", "Make a friend", "Tap  at the top. Add other players, send private messages, and trade: face to face in a trade window when you're in the same place, by courier from anywhere.", (s) => Object.keys(s.friends || {}).length > 0, { tab: "social" }],
+    ["home", "Buy a house", "Every city has a house for sale (Area → Buy …). Your chest keeps things safe when you die, and you can run a  market stall in that town. The Market board shows every town's stalls.", (s) => Object.keys(s.homes || {}).length > 0, { tab: "town", shop: "home" }, "housing"],
     ["arena", "Fight in the Arena", "In Windhelm, challenge another player to a bout (Area →  The Arena). Nobody dies; the winner takes the stake.", (s) => !!s.arena && (s.arena.w || 0) + (s.arena.l || 0) > 0, { tab: "town", shop: "arena" }],
   ];
   const FAQ = [
