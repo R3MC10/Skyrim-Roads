@@ -556,7 +556,7 @@
       }
       cx.globalAlpha = 1;
       cx.fillStyle = "rgba(235,240,245,.55)";
-      for (const f of flakes) {
+      if (!$("#tanim")?.dataset.rest) for (const f of flakes) {   // the title video has its own snow
         if (!reduceMotion) { f.y += f.v * dt; f.x += Math.sin(ts / 1000 + f.w) * 8 * dt; if (f.y > H()) { f.y = -4; f.x = Math.random() * W(); } }
         cx.beginPath(); cx.arc(f.x, f.y, f.s, 0, 7); cx.fill();
       }

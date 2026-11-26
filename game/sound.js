@@ -471,7 +471,7 @@ const SOUND = (() => {
   /* which loops suit the moment, best first */
   function wantedTracks() {
     const m = wantMood, sc = ambWant?.scene;
-    if (m === "title") return typeof TITLEVIDEO !== "undefined" && TITLEVIDEO.phone() ? ["titlevid", "title"] : ["title"];   // phones: the title video's own music and wind
+    if (m === "title") return ["title"];
     if (m === "combat") return [saveNow()?.dungeon?.room?.enemy?.boss ? "boss" : null, "combat"];
     if (m === "dungeon") return ["dungeon"];
     if (sc === "town" || sc === "forge") return ["town"];

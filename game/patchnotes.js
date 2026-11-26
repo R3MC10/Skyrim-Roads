@@ -5,7 +5,7 @@ const PATCHNOTES = (() => {
   const LIST = [
     { id: "b362-titlevideo", build: 362, date: "26 Nov 2026", title: "A living main menu", items: [
       "On phones, the main menu is now a moving painting: northern lights ripple over the valley, snow drifts down and the hero's cloak stirs in the wind.",
-      "It comes with its own quiet music and the sound of the wind.",
+      "The usual title music plays over it, and the old drawn snowflakes step aside since the painting has its own snow.",
     ] },
     { id: "b361-rows", build: 361, date: "26 Nov 2026", title: "Front and back rows", items: [
       "Groups of foes now stand on the field together, in a front row and a back row. A strip over the fight shows both rows: tap a foe (or press [ and ] on PC) to aim at it.",

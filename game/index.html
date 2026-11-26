@@ -5798,6 +5798,7 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 /* phones held upright: the title background is a looping painted video (titlevideo.js), over the drawn panorama */
 .title video.tvid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:32% 50%;pointer-events:none;opacity:0;transition:opacity 1.2s ease;-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.55) 0%,#000 40%);mask-image:linear-gradient(to bottom,rgba(0,0,0,.55) 0%,#000 40%)}
 .title video.tvid.on{opacity:.9}
+.title:has(video.tvid.on) .mo-amb .emb{display:none}   /* the video has its own snow */
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
