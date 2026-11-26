@@ -5,7 +5,7 @@
 const VISITS = (() => {
   const SHOW_MAX = 3, NOTE_MAX = 80, MOTTO_MAX = 60, GOLD_MAX = 100000;
   const clean = (t, n) => String(t || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
-  const itemName = (r) => (r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name + (r.nm ? ` “${r.nm}”` : "");
+  const itemName = (r) => (typeof NAMES !== "undefined" ? NAMES.improved : String)(D.ITEMS[r.item].name, r) + (r.nm ? ` “${r.nm}”` : "");
 
   /* what other players see about you */
   function record(s) {

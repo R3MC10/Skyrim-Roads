@@ -4,7 +4,7 @@
    English, like everywhere else in the game. */
 var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 (() => {
-  const Q = { Fine: "Dobra", Superior: "Przednia", Exquisite: "Wyśmienita", Flawless: "Bez skazy", Epic: "Epicka", Legendary: "Legendarna", plain: "zwykła", better: "lepsza" };
+  const Q = { plain: "zwykła", better: "lepsza" };   // forge levels are "+1".."+6" (towns.js QUALITY) and stay as they are
   const q = (x) => Q[x] || x;
   const dmg = (k) => (k === "damage" ? "obrażeń" : "pancerza");
   Object.assign(I18N_EXTRA.words, {
@@ -54,15 +54,15 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     [/^Missing: (.+)$/, (m) => `Brakuje: ${m[1]}`],
     [/^Can make (\d+)(?: \((\d+) in all\))?$/, (m) => `Możesz zrobić ${m[1]}${m[2] ? ` (razem ${m[2]})` : ""}`],
     [/^(\d+) of (\d+) ready( · ★ pinned first)?$/, (m) => `Gotowe: ${m[1]} z ${m[2]}${m[3] ? " · ★ przypięte na górze" : ""}`],
-    [/^→ (\w+) \(\+(\d+) (damage|armor)\) · uses 1 (.+) \(you have (\d+)\)$/, (m) => `→ ${q(m[1])} (+${m[2]} ${dmg(m[3])}) · zużywa 1 ${m[4]} (masz ${m[5]})`],
+    [/^→ (\+\d) \(\+(\d+) (damage|armor)\) · uses 1 (.+) \(you have (\d+)\)$/, (m) => `→ ${q(m[1])} (+${m[2]} ${dmg(m[3])}) · zużywa 1 ${m[4]} (masz ${m[5]})`],
     [/^Needs 1 (.+) \((blacksmiths sell it|found in dungeons and on tough foes)\)\.$/, (m) => `Wymaga 1 ${m[1]} (${m[2] === "blacksmiths sell it" ? "sprzedają go kowale" : "znajdziesz go w lochach i przy groźnych wrogach"}).`],
-    [/^Your Smithing \((\d+)\) can't improve it past (\w+)\.$/, (m) => `Twoje Kowalstwo (${m[1]}) nie ulepszy tego ponad poziom: ${q(m[2])}.`],
-    [/^Each improvement uses one piece of the item's material \(ingots, leather, firewood, moonstone or dwarven metal\)\. Blacksmiths sell the common ones; dungeons hide the rest\. Your Smithing \((\d+)\) sets how far: every 20 points allows one more quality level\.$/,
-      (m) => `Każde ulepszenie zużywa jedną sztukę materiału przedmiotu (sztabki, skórę, drewno opałowe, kamień księżycowy albo krasnoludzki metal). Kowale sprzedają te zwykłe, resztę skrywają lochy. Twoje Kowalstwo (${m[1]}) wyznacza, jak daleko zajdziesz: co 20 punktów jeden poziom jakości więcej.`],
+    [/^Your Smithing \((\d+)\) can't improve it past (\+\d|plain)\.$/, (m) => `Twoje Kowalstwo (${m[1]}) nie ulepszy tego ponad poziom: ${q(m[2])}.`],
+    [/^Each improvement uses one piece of the item's material \(ingots, leather, firewood, moonstone or dwarven metal\)\. Blacksmiths sell the common ones; dungeons hide the rest\. Your Smithing \((\d+)\) sets how far: every 20 points lets you go one step further, up to \+6\.$/,
+      (m) => `Każde ulepszenie zużywa jedną sztukę materiału przedmiotu (sztabki, skórę, drewno opałowe, kamień księżycowy albo krasnoludzki metal). Kowale sprzedają te zwykłe, resztę skrywają lochy. Twoje Kowalstwo (${m[1]}) wyznacza, jak daleko zajdziesz: co 20 punktów o jeden stopień dalej, aż do +6.`],
     // long notes fold into "first sentence + More", so the two halves are translated on their own too
     [/^Each improvement uses one piece of the item's material \(ingots, leather, firewood, moonstone or dwarven metal\)\.$/, () => "Każde ulepszenie zużywa jedną sztukę materiału przedmiotu (sztabki, skórę, drewno opałowe, kamień księżycowy albo krasnoludzki metal)."],
-    [/^Blacksmiths sell the common ones; dungeons hide the rest\. Your Smithing \((\d+)\) sets how far: every 20 points allows one more quality level\.$/,
-      (m) => `Kowale sprzedają te zwykłe, resztę skrywają lochy. Twoje Kowalstwo (${m[1]}) wyznacza, jak daleko zajdziesz: co 20 punktów jeden poziom jakości więcej.`],
+    [/^Blacksmiths sell the common ones; dungeons hide the rest\. Your Smithing \((\d+)\) sets how far: every 20 points lets you go one step further, up to \+6\.$/,
+      (m) => `Kowale sprzedają te zwykłe, resztę skrywają lochy. Twoje Kowalstwo (${m[1]}) wyznacza, jak daleko zajdziesz: co 20 punktów o jeden stopień dalej, aż do +6.`],
     [/^Make (\d+) × (.+)\?$/, (m) => `Zrobić ${m[1]} × ${m[2]}?`], [/^Improve (.+) (\d+) steps?\?$/, (m) => `Ulepszyć ${m[1]} o ${m[2]}?`],
     [/^(Make|Improve|Cook|Brew) (\d+)$/, (m) => `${{ Make: "Zrób", Improve: "Ulepsz", Cook: "Ugotuj", Brew: "Uwarz" }[m[1]]} ${m[2]}`],
   );
@@ -115,6 +115,6 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
   }
   // "1 more Leather Strips" inside "Missing ..."
   I18N_EXTRA.pat.push([/^(\d+) more (.+)$/, (m) => `jeszcze ${m[1]} ${m[2]}`]);
-  // "Iron Sword is now Fine" (batch improve) and "→ Fine" chips
-  I18N_EXTRA.pat.push([/^(.+) is now (Fine|Superior|Exquisite|Flawless|Epic|Legendary|better)$/, (m) => `${m[1]}: teraz ${q(m[2])}`]);
+  // "Iron Sword is now +2" (batch improve) and "→ +2" chips
+  I18N_EXTRA.pat.push([/^(.+) is now (\+\d|better)$/, (m) => `${m[1]}: teraz ${q(m[2])}`]);
 })();
