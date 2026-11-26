@@ -58,7 +58,6 @@ S.add(f, "foe", "vuln", 10); S.add(f, "foe", "sunder", 10); S.add(f, "me", "migh
 ok(S.hitBonus(f, "attack") <= 0.45, "the stack bonus to a hit is capped at +45% (no one-shots)");
 f = foe(); S.add(f, "foe", "chill", 3); S.add(f, "foe", "weak", 2);
 ok(S.foeSoften(f) > 0 && S.foeSoften(f) <= 0.3, "Chill and Weak soften the foe's blows (capped at 30%)");
-ok(S.foeInit(f) === 3, "Chill slows the foe's initiative");
 
 // 5. hard control: Resolve, and bosses stay capped
 f = foe();

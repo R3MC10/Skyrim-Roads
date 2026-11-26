@@ -2,7 +2,7 @@
 // The other player shows up in the fight scene as themselves (their look), not as a bandit.
 const fs = require("fs"), vm = require("vm"), path = require("path");
 const W = process.env.W || path.join(__dirname, "../game/");
-const FILES = ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "market.js", "curses.js", "ammo.js", "magic.js", "mp.js", "pvpdeath.js", "perkfx.js", "shieldfx.js", "tbfight.js", "art.js", "heroart.js", "gearlook.js", "fightart.js"];
+const FILES = ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "market.js", "curses.js", "ammo.js", "magic.js", "mp.js", "pvpdeath.js", "perkfx.js", "shieldfx.js", "initiative.js", "tbfight.js", "art.js", "heroart.js", "gearlook.js", "fightart.js"];
 const c = vm.createContext({ console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, WeakMap, Proxy, Number, String, performance: { now: () => 0 } });
 for (const f of FILES) if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 let fails = 0;

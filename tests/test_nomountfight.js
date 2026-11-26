@@ -8,7 +8,7 @@ const fs = require("fs"), vm = require("vm");
 const W = process.env.W || require("path").join(__dirname, "../game/");
 const c = { process: { env: process.env }, console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String, structuredClone };
 vm.createContext(c);
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "mountcombat.js", "engine.js", "foecap.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "horsetravel.js", "magic.js", "coop.js", "party.js", "combatai.js", "foeintent.js", "foekit.js", "tbfight.js", "fightctl.js", "sharedfight.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "mountcombat.js", "engine.js", "foecap.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "horsetravel.js", "magic.js", "coop.js", "party.js", "combatai.js", "foeintent.js", "foekit.js", "initiative.js", "tbfight.js", "fightctl.js", "sharedfight.js"])
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 let fails = 0, checks = 0; const ok = (v, m) => { checks++; if (!v) { fails++; console.log("FAIL", m); } };
 // the mounted modules are gone and nothing loads them

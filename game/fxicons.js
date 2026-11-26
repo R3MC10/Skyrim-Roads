@@ -68,10 +68,10 @@ const FXICONS = (() => {
     vampire: ["", "Vampirism", false, (v) => `Vampire (hunger ${v.n}/4): fire hurts you ${r0(25 * v.n)}% more, frost ${r0(Math.min(75, 25 * v.n))}% less, poison half.`],
     sanguinare: ["", "Sanguinare Vampiris", false, () => "You caught vampirism. Cure it at a shrine or with a Cure Disease potion before it takes hold."],
     // --- on the foe
-    paralyzed: ["", "Paralyzed", false, (v) => `Paralyzed: can't act for ${v.n} more turn${v.n === 1 ? "" : "s"}.`],
+    paralyzed: ["", "Paralyzed", false, () => "Paralyzed: loses its next turn, then thaws."],
     stunned: ["", "Stunned", false, () => "Stunned by your shield: loses its next turn."],
-    staggered: ["", "Staggered", false, () => "Staggered: loses its next move."],
-    slowed: ["", "Slowed", false, (v) => `Slowed: its blows do half damage, ${v.n} more turn${v.n === 1 ? "" : "s"}.`],
+    staggered: ["", "Staggered", false, () => "Staggered: its next turn moves back 2 places."],
+    slowed: ["", "Slowed", false, (v) => `Slowed: its blows do half damage and it acts later, ${v.n} more turn${v.n === 1 ? "" : "s"}.`],
     calm: ["", "Won't fight", false, (v) => `Out of the fight: calmed or running scared, it does nothing for ${v.n} more turn${v.n === 1 ? "" : "s"}.`],
     fear: ["", "Afraid", false, (v) => `Afraid: it cowers instead of fighting, ${v.n} more turn${v.n === 1 ? "" : "s"}.`],
     rattled: ["", "Rattled", false, (v) => `Rattled: shook off the fear but still hits 20% softer, ${v.n} more turn${v.n === 1 ? "" : "s"}.`],

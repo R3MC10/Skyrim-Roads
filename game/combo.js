@@ -2,7 +2,7 @@
    Owner: "combat needs an overhaul". One teammate sets a foe up, another cashes in (only across different fighters: you,
    your follower, a summon, a friend in your party):
    - Shatter: a chilled foe takes a physical blow from someone else: +30% and it may stagger.
-   - Overload: shock on a foe someone else set burning: +30% and it staggers (loses its next move).
+   - Overload: shock on a foe someone else set burning: +30% and it staggers (its next turn moves back, initiative.js).
    - Steam: frost on a foe someone else set burning: the rest of the burn goes off at once.
    - Thermal shock: fire on a foe someone else chilled: +25%, and the chill is gone.
    - Opening: a staggered or paralyzed foe takes +20% from your follower, summons and friends.

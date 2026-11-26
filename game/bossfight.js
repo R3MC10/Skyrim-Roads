@@ -174,7 +174,7 @@ const BOSSFIGHT = (() => {
     const f = sess.f, b = f.bf; if (!b || !f.kit || sess.mirror) return [];
     register();
     const k = f.kit, ord = sess.order || [], slots = [];
-    for (let i = Math.max(0, sess.idx || 0); i < ord.length; i++) if (String(ord[i].id).startsWith("foe")) slots.push(i);
+    for (let i = Math.max(0, sess.idx || 0); i < ord.length; i++) { const o = ord[i]; if (String(o.id).startsWith("foe") && !o.done && !o.skip && !o.out) slots.push(i); }   // [initiative] lost slots don't get a move
     if (f.dStance || typeof FIGHTREAD === "undefined" || !Array.isArray(k.plan)) k.plan = slots.map(() => null);   // a flying dragon: its own moves (dragons.js), rolled when it acts
     while (k.plan.length < slots.length) k.plan.push(null);
     const me = ord.findIndex((o) => o.id === "me");
@@ -313,7 +313,7 @@ const BOSSFIGHT = (() => {
         const d = TELE[b.tele.key]; b.tele = null; b.teleCd = 1; b.broke++;
         if (Array.isArray(f.kit?.plan)) f.kit.plan = f.kit.plan.map((p) => (p && p.bf === "land" ? null : p));
         if (brk && f.ehp > 0) f.stagger = true;
-        t += " " + fmt("(you break its {0}!)", T(d.name)) + (brk && f.ehp > 0 ? " " + T("(it reels and loses its next move)") : "");
+        t += " " + fmt("(you break its {0}!)", T(d.name)) + (brk && f.ehp > 0 ? " " + T("(it reels and its next turn comes later)") : "");
       }
     }
     return t;

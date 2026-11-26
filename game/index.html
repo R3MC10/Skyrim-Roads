@@ -5632,6 +5632,70 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 .prs-sheet .scene{margin:4px 0 8px}
 .prs-sheet .grid2 .btn{min-height:44px}
 .prs-hint .sub{margin:0}
+/* [initiative] the turn roster (initroster.js): 44px portraits in initiative order, shared turns bracketed, a fast
+   foe's two slots marked, lost turns crossed out and folded away, the next round dimmed; +N opens the whole order */
+#tbf.c2 .tbtop{padding-top:calc(2px + env(safe-area-inset-top));padding-bottom:2px}   /* the bar keeps its 48px: 44px portraits fit with 2px above and below */
+#tbf.c2 .tbord{gap:3px;padding:2px 0 2px 2px;scroll-snap-type:x proximity;position:relative}
+#tbf.c2 .tbini.ini2{position:relative;flex:none;width:44px;height:44px;padding:0;border-radius:50%;justify-content:center;background:none;border:0;scroll-snap-align:start;transition:opacity .25s,filter .25s}
+#tbf.c2 .tbini.ini2 .c2pt{width:42px;height:42px;margin:1px;box-shadow:0 0 0 1.5px #9fb6d8}
+#tbf.c2 .tbini.ini2.foe .c2pt{box-shadow:0 0 0 1.5px #e0614a}
+#tbf.c2 .tbini.ini2.ally .c2pt{box-shadow:0 0 0 1.5px #8fd08f}
+#tbf.c2 .tbini.ini2.now .c2pt{box-shadow:0 0 0 2px #e2bb64,0 0 10px rgba(226,187,100,.6)}
+#tbf.c2 .tbini.ini2.foe.now .c2pt{box-shadow:0 0 0 2px #ff7a5a,0 0 10px rgba(255,122,90,.55)}
+#tbf.c2 .tbini.ini2.now{transform:none;background:none;box-shadow:none}
+#tbf.c2 .tbini.ini2 .c2nm,#tbf.c2.c2wide .tbini.ini2 .c2nm,#tbf.c2 .tbini.ini2.now .c2nm{display:none}
+#tbf.c2 .tbini.ini2>i{position:absolute;right:-2px;bottom:-2px;margin:0;min-width:15px;height:15px;padding:0 2px;box-sizing:border-box;border-radius:8px;background:#141210;border:1px solid rgba(226,187,100,.55);font:700 9.5px/13px "Barlow Semi Condensed",sans-serif;text-align:center;color:#f3e7c8;opacity:1}
+#tbf.c2 .tbini.ini2 .inislot{position:absolute;left:-3px;top:-3px;font:700 12px/1 sans-serif;color:#ffd2c4;text-shadow:0 0 3px #000,0 0 2px #000;padding:0;background:none;border:0}
+#tbf.c2 .tbini.ini2 .inimv{position:absolute;left:50%;transform:translateX(-50%);bottom:-3px;font:700 9px/1 "Barlow Semi Condensed",sans-serif;font-style:normal;color:#f3e7c8;text-shadow:0 0 3px #000}
+#tbf.c2 .tbini.ini2 .iniint{position:absolute;right:-3px;top:-3px;width:16px;height:16px;border-radius:50%;background:#2a0f0b;border:1px solid #e0614a;font:12px/14px "GameIcons","Barlow Semi Condensed",sans-serif;text-align:center;color:#ffb39e}
+#tbf.c2 .tbini.ini2 .iniint.big{background:#6b1a10;color:#fff}
+#tbf.c2 .tbini.ini2 .inimk{position:absolute;left:-3px;bottom:-2px;width:15px;height:15px;border-radius:50%;background:#101418;border:1px solid rgba(160,200,255,.55);font:10px/13px "GameIcons","Barlow Semi Condensed",sans-serif;text-align:center;color:#cfe3ff}
+#tbf.c2 .tbini.ini2 .inimk+.inimk{left:10px}
+#tbf.c2 .tbini.ini2 .iniwhy{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.4);opacity:0;font:20px/1 "GameIcons","Barlow Semi Condensed",sans-serif;color:#ffe08a;text-shadow:0 0 6px #000,0 0 10px rgba(255,200,90,.9);pointer-events:none}
+#tbf.c2 .tbini.ini2.iniflash .iniwhy{animation:iniflash .9s ease-out}
+@keyframes iniflash{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}70%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
+#tbf.c2 .tbini.ini2.gone{opacity:.38;filter:grayscale(1)}
+/* a lost turn: it fades, gets a cross, then folds away */
+#tbf.c2 .tbini.ini2 .inicross{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 30px/1 sans-serif;color:#ff5a45;text-decoration:none;text-shadow:0 0 4px #000;pointer-events:none}
+#tbf.c2 .tbini.ini2.skip.gone,#tbf.c2 .tbini.ini2.out.gone,#tbf.c2 .tbini.ini2.skip:not(.now){animation:iniskip .7s ease-in forwards;animation-delay:var(--inid,0ms);overflow:hidden}
+#tbf.c2 .tbini.ini2.skip .inicross,#tbf.c2 .tbini.ini2.out .inicross{animation:inicross .7s ease-out forwards;animation-delay:var(--inid,0ms)}
+@keyframes iniskip{0%{opacity:1;width:44px}45%{opacity:.4;width:44px;filter:grayscale(1)}75%{opacity:.4;width:44px;margin:0}100%{opacity:0;width:0;margin:0 -3px 0 0;filter:grayscale(1)}}
+@keyframes inicross{0%{opacity:0;transform:scale(1.8)}35%{opacity:0;transform:scale(1.8)}55%{opacity:1;transform:scale(1)}100%{opacity:1}}
+#tbf.c2 .tbini.ini2.skip:not(.gone):not(.lost){animation:none;width:44px;opacity:.7}
+#tbf.c2 .tbini.ini2.skip:not(.gone):not(.lost) .inicross{animation:none;opacity:.85;font-size:22px}
+#tbf.c2 .tbini.ini2.lost{display:none}
+/* a shared turn: a bracket round the heroes acting together */
+#tbf.c2 .inigrp{flex:none;display:flex;gap:3px;padding:1px 3px;border-radius:24px;border:1px solid rgba(143,208,143,.35);border-top-width:2px;border-bottom-width:2px;scroll-snap-align:start}
+#tbf.c2 .inigrp.now{border-color:#e2bb64;box-shadow:0 0 10px rgba(226,187,100,.35);background:rgba(60,48,24,.35)}
+/* the next round, after the marker, if nothing changes */
+#tbf.c2 .inisep{flex:none;align-self:stretch;display:flex;align-items:center;padding:0 4px;margin:0 1px;border-left:1px dashed rgba(226,187,100,.5);font:600 9px/1 "Barlow Semi Condensed",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#cdb98a;writing-mode:vertical-rl;transform:rotate(180deg)}
+#tbf.c2 .tbini.ini2.nx{width:34px;height:34px;opacity:.45;filter:saturate(.4)}
+#tbf.c2 .tbini.ini2.nx .c2pt{width:32px;height:32px}
+#tbf.c2 .tbini.ini2.nx>i{font-size:8.5px;min-width:13px;height:13px;line-height:11px}
+/* +N: the whole turn order */
+#tbf.c2 .inimore{position:sticky;right:0;flex:none;align-self:center;z-index:2;min-width:28px;height:44px;padding:0 4px;border-radius:8px;background:linear-gradient(90deg,rgba(5,5,6,.7),rgba(10,10,12,.95) 35%);border:1px solid rgba(226,187,100,.5);font:700 12px/1 "Barlow Semi Condensed",sans-serif;color:#f3d98b;cursor:pointer;margin-left:auto}
+#tbf.c2.c2wide .tbord{max-width:min(760px,70vw)}
+#tbf .tbwait .tbskipp{margin-left:8px;min-height:32px;padding:4px 10px;font-size:12px}
+#tbf.c2 .tbwait{white-space:normal;max-width:calc(100vw - 24px);text-align:center}
+#tbf.c2 .tbwait:has(.tbskipp){z-index:30;background:rgba(0,0,0,.85)}
+/* the +N sheet */
+.inisheet{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;animation:tbfade .2s}
+.inisheetin{width:100%;max-width:520px;max-height:78vh;display:flex;flex-direction:column;border-radius:16px 16px 0 0;background:#121315;border:1px solid rgba(214,178,94,.35);border-bottom:0;padding:10px 12px calc(12px + env(safe-area-inset-bottom));animation:tbup .25s ease;box-sizing:border-box}
+.inihead{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}.inihead b{font-family:Cinzel,serif;color:#f3d98b}
+.inihelp{margin:0 0 8px;font-size:12px;line-height:1.35;color:#bdb5a2}
+.inilist{list-style:none;margin:0;padding:0;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.inilist ul{list-style:none;margin:2px 0 0;padding:0 0 0 8px;border-left:2px solid rgba(143,208,143,.45);display:flex;flex-direction:column;gap:4px}
+.inishared>span{font:600 11px/1 "Barlow Semi Condensed",sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9fd29f}
+.inirow{display:flex;align-items:center;gap:8px;min-height:44px;padding:3px 6px;border-radius:8px;background:rgba(255,255,255,.035)}
+.inirow .c2pt{flex:none;width:36px;height:36px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#1a1712;box-shadow:0 0 0 1.5px #9fb6d8}
+.inirow.foe .c2pt{box-shadow:0 0 0 1.5px #e0614a}.inirow.ally .c2pt{box-shadow:0 0 0 1.5px #8fd08f}
+.inirow .c2pt img,.inirow .c2pt canvas{display:block;width:100%;height:100%}
+.inirt{flex:1;min-width:0;display:flex;flex-direction:column}.inirt b{font-size:14px;color:#f1e7cf}.inirt small{font-size:11.5px;color:#a9a18f;line-height:1.3}
+.iniri{flex:none;display:flex;flex-direction:column;align-items:flex-end}.iniri i{font:700 18px/1 Cinzel,serif;font-style:normal;color:#f3d98b}.iniri em{font-size:10.5px;font-style:normal;color:#e2bb64}
+.inirow.gone{opacity:.5}.inirow.skip .inirt b{text-decoration:line-through;text-decoration-color:#ff5a45}
+.inirow.nx{opacity:.5}
+.inisep2{margin-top:6px;padding-top:6px;border-top:1px dashed rgba(226,187,100,.45);font:600 11px/1 "Barlow Semi Condensed",sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#cdb98a}
+@media (prefers-reduced-motion:reduce){#tbf.c2 .tbini.ini2,#tbf.c2 .tbini.ini2 .inicross,#tbf.c2 .tbini.ini2.iniflash .iniwhy,.inisheet,.inisheetin{animation:none!important;transition:none!important}#tbf.c2 .tbini.ini2.iniflash .iniwhy{opacity:1;transform:translate(-50%,-50%) scale(.8)}#tbf.c2 .tbini.ini2.skip.gone,#tbf.c2 .tbini.ini2.out.gone{display:none}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -5647,6 +5711,7 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 <script src="world.js"></script>
 <script src="terrain.js"></script>
 <script src="solworld.js"></script>
+<script src="names.js"></script>
 <script src="formulas.js"></script>
 <script src="i18n_perkdesc.js"></script>
 <script src="perks.js"></script>
@@ -5715,6 +5780,7 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 <script src="difficulty.js"></script>
 <script src="minigame.js"></script>
 <script src="tbradial.js"></script>
+<script src="initiative.js"></script>
 <script src="tbfight.js"></script>
 <script src="sharedfight.js"></script>
 <script src="noautoplay.js"></script>
@@ -5746,6 +5812,7 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 <script src="fightpres.js"></script>
 <script src="fightcam.js"></script>
 <script src="channel.js"></script>
+<script src="initroster.js"></script>
 <script src="movepreview.js"></script>
 <script src="guide.js"></script>
 <script src="patchnotes.js"></script>
@@ -6077,6 +6144,8 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 <script src="i18n_dollrig2.js"></script>
 <script src="i18n_difficulty.js"></script>
 <script src="i18n_perkreset.js"></script>
+<script src="i18n_initiative.js"></script>
+<script src="i18n_names.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

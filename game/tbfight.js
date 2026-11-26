@@ -7,7 +7,7 @@
    every round. The notes below are the original design, kept for history.
    Remigiusz: "Let's make fights really turn based; turn order should be initiative based. Followers and summons do their
    turns automatically." You play your own turns (with an Auto button); Athletics and Alteration make your moves cheaper,
-   initiative comes from Acrobatics + Sneak (heavy armour slows you); balanced so fights don't end quickly; party fights
+   initiative is 1d4 + speed, rolled once a fight (initiative.js; heavy armour slows you); balanced so fights don't end quickly; party fights
    harder; in a party each player plays their own turns live.
 
    How it fits the engine: every fight in the game is still a G.Fight. The old instant `run()` is kept for sims, the arena
@@ -16,9 +16,11 @@
    re-run from a snapshot with the same dice up to the fight, which now "finishes" instantly with the played result.
    So loot, death, quests and XP all go through the exact same code as before.
 
-   Each round: everyone rolls initiative (base + d10); you pay stamina, magicka or health for moves (weapon blows, power
-   attacks, guard, spells, shouts, potions, flee); moves you don't make become guard. Followers, summons, thralls and party members act on
-   their own initiative; real players in your party play their own turn on their own phone (sharedfight.js; 90 s, then guard).
+   Turn order (initiative.js, since build 347): everyone rolls 1d4 + speed once a fight; stuns, freezes, staggers, haste
+   and slow move people in the order as the fight goes; heroes next to each other in the order act together (a shared
+   turn). You pay stamina, magicka or health for moves (weapon blows, power attacks, guard, spells, shouts, potions,
+   flee); moves you don't make become guard. Followers, summons, thralls and party members act in their own slots; real
+   players in your party play their own turn on their own phone (sharedfight.js; a shared turn has no timer: it waits for everyone, the leader can skip a player who's gone quiet).
    No one-shots: a single blow can't take more than 40% of a strong target's health, except a finishing blow.
    The AI is reached through one adapter, TB.aiPick(fight, actor), which uses COMBATAI.decide(fight, actor, settings)
    when another module provides it, otherwise the fight's own choice (Smart AI or your custom tactics). */
@@ -38,21 +40,22 @@ const TB = (() => {
   const MAX_FOES = 6;           // [OURS] a party meets one foe per hero, one after another (like dungeon rooms), at most 6; bosses stay alone
   const MAX_ROUNDS = 40;
   const MP_REGEN = 3.2, SP_REGEN = 4.4;   // per round about 22% of your stamina and 10% of your magicka come back (moves cost them now)
-  const TURN_SECONDS = 90;      // a real player's turn in a party fight (on their own full fight screen, sharedfight.js), then they just guard
+  const TURN_SECONDS = 0;   // [initiative] no timer on a shared turn any more (owner's call): it waits for everyone; the leader can skip a quiet player (INIT.CFG.skipAfter)
   const pfx = (s, k) => (typeof PFX !== "undefined" ? PFX.num(s, k) : 0);
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const sameJ = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
   const tr0 = (t) => (typeof I18N !== "undefined" && I18N.tr && I18N.lang?.() === "pl" ? I18N.tr(t) ?? t : t);
-  const d10 = () => 1 + Math.floor(Math.random() * 10);
 
-  /* your initiative and how cheap your moves are (what the screen shows; the skill info texts quote these).
+  /* your speed and how cheap your moves are (what the screen shows; the skill info texts quote these).
+     Speed (initiative.js): 5, +1 in light armour, -1 in heavy, +0..+2 from perks and gear. It decides WHEN you act.
      Athletics and Battle Rhythm make weapon moves cheaper; Alteration and Quickened Casting make spells cheaper. */
   function stats(s, f) {
-    const ath = G.skill(s, "Athletics"), acro = G.skill(s, "Acrobatics"), snk = G.skill(s, "Sneak"), alt = G.skill(s, "Alteration");
+    const ath = G.skill(s, "Athletics"), alt = G.skill(s, "Alteration");
     const spCut = clamp(ath / 1000 + 0.1 * pfx(s, "tbap"), 0, 0.35), mpCut = clamp(alt / 1000 + 0.1 * pfx(s, "tbspap"), 0, 0.35);
     let heavy = 0, medium = 0;
     for (const a of Object.values(f?.armor || {})) { if (a.type === "heavy") heavy++; else if (a.type === "medium") medium++; }
-    const init = Math.round(10 + acro / 8 + snk / 16 - (2 * heavy + 0.5 * medium) * (1 - Math.min(1, pfx(s, "tbheavy"))) + pfx(s, "tbinit"));
-    return { acts: MAX_ACTS, pots: MAX_POTS, spCut, mpCut, init, heavy };
+    const sp = typeof INIT !== "undefined" ? INIT.heroSpeed(s, f) : { speed: 5, parts: [] };
+    return { acts: MAX_ACTS, pots: MAX_POTS, spCut, mpCut, speed: sp.speed, speedParts: sp.parts, heavy };
   }
   const spellOf = (a) => { const [k, arg] = a.split(":"); return k === "spell" || k === "dual" ? D.SPELLS[arg] : k === "scroll" ? D.SPELLS[D.ITEMS[arg]?.spell] : null; };
   const tierOf = (id, sp) => sp?.level || (typeof TOMES !== "undefined" && TOMES.level ? TOMES.level(id) : "Novice");
@@ -163,16 +166,15 @@ const TB = (() => {
     if (foes.length < 2 || typeof AISET === "undefined" || !AISET.pickTarget) return foes;
     try { return AISET.pickTarget(G.loadout(f.s), foes); } catch (e) { return foes; }
   }
-  /* which of the foe's moves this round a turn-order entry is: "foe" is its 1st, "foe2" its 2nd... (one foe, several moves) */
-  const moveNo = (o) => { const m = /^foe(\d+)$/.exec(o?.id || ""); return m ? +m[1] : 1; };
-  const ORD = (n) => (n === 2 ? "2nd" : n === 3 ? "3rd" : n + "th");
   // ------------------------------------------------------------------ one fight, played round by round
   class Session {
     constructor(f, opts = {}) {
       this.f = f; this.s = f.s; this.opts = opts; this.round = 0; this.order = []; this.idx = 0;
       this.ev = [];             // what happened, for the screen: {who, text, line, kind}
       this.st = stats(f.s, f);
-      this.used = {}; this.myActs = 0; this.pots = 0; this.cur = null; this.done = false; this.waiting = null;
+      this.used = {}; this.myActs = 0; this.pots = 0; this.cur = null; this.done = false;
+      this.gr = null;           // the shared turn being played now (initiative.js groupAt + who we're still waiting for)
+      this.meTok = 0;           // goes up every time your turn ends (sharedfight.js and autoTurn watch it)
       this.lines = { me: [], them: [], a: null };   // this round's log line for the fight log
       this.hitters = 0;
       this.everyone = f.allies.slice();   // who started the fight beside you (party view: knocked-down teammates stay listed)
@@ -232,6 +234,7 @@ const TB = (() => {
     }
     emit(who, text, kind, extra = {}) {
       const e = { who, text, kind, round: this.round, hp: Math.max(0, Math.round(this.f.hp)), ehp: Math.max(0, Math.round(this.f.ehp)), ...extra };
+      if (this.cur && this.cur.u && e.u == null && kind !== "round") e.u = this.cur.u;   // which slot it came from: the roster lights that portrait (initroster.js)
       if (this.remote && this.players && !this.mirror) { const ph = {}; for (const a of this.everyone) if (a.pid) ph[a.pid] = Math.max(0, Math.round(a.hp || 0)); e.ph = ph; }   // every player's health at this moment, for their own screens
       if (this.f._rxPend) { e.rx = this.f._rxPend; this.f._rxPend = null; }   // a combo landed: the banner (reactions.js)
       this.ev.push(e); return e;
@@ -251,26 +254,19 @@ const TB = (() => {
       this.emit("foe", `${a ? "A" : "Another"} ${who} steps in! ${left ? `(${left} more behind it)` : "(the last one)"}`, "foe", { wave: this.wave });
       if (typeof SPELLFX !== "undefined") SPELLFX.nextFoe(this);   // area spells already reached it; single-target ones end here
     }
-    /* initiative order for a new round */
+    /* the turn order for a new round (initiative.js): the rolls from the start of the fight, everyone's speed now */
     rollOrder() {
-      const f = this.f, out = [{ id: "me", name: this.s.name || "You", init: this.st.init + d10() + (typeof STACKS !== "undefined" ? STACKS.myInit(f) : 0) }];
-      f.allies.forEach((al, i) => { if (!al.down) out.push({ id: "al" + i, al, name: al.name, init: (al.init || (al.player ? 9 : al.follower ? 8 : 6)) + d10() }); });
-      if (f.summonTurns > 0) out.push({ id: "sum", name: "Summon", init: 6 + d10() });
-      const tg = f.tags, base = 6 + Math.min(12, this.foeLevel / 4) + (tg.has("beast") ? 3 : 0) + (tg.has("big") || tg.has("construct") ? -2 : 0);
+      const f = this.f;
       // the foe acts 1–3 times a round (whole actions, the fraction is a chance), more with a big party
       let n = T.acts[this.kind] + Math.floor(this.players / 2); const whole = Math.floor(n); n = whole + (Math.random() < n - whole ? 1 : 0);
-      const nb = typeof ENCH2 !== "undefined" ? ENCH2.numb(f) : { init: 0, acts: 0 }; n -= nb.acts;   // Numbing Cold: later in the order, a move lost (enchants2.js)
-      for (let i = 0; i < Math.max(1, n); i++) out.push({ id: i ? "foe" + (i + 1) : "foe", name: f.e.name, init: Math.round(base - nb.init) - 4 * i + d10() - (typeof STRAT !== "undefined" ? STRAT.foeInitCut(f) : 0), extra: i > 0 });   // frost slows it (strategy.js)
-      out.sort((a, b) => b.init - a.init || (a.id === "me" ? -1 : 1));
-      // [partyfoeturns] the foe's moves are numbered in the order they happen: its 2nd move never sits before its 1st
-      let k = 0; for (const o of out) if (o.id.startsWith("foe")) { o.id = k ? "foe" + (k + 1) : "foe"; o.extra = k > 0; k++; }
-      return out;
+      const nb = typeof ENCH2 !== "undefined" ? ENCH2.numb(f) : { acts: 0 }; n -= nb.acts;   // Numbing Cold: a move lost (it also slows it: initiative.js)
+      return INIT.build(this, Math.max(1, n));
     }
     startRound() {
       const f = this.f;
       this.round++; f.turn = this.round; this.order = this.rollOrder(); this.idx = 0; this.hitters = 0;
       this.lines = { me: [], them: [], a: null };
-      this.emit("round", `Round ${this.round}`, "round", { order: this.order.map((o) => ({ id: o.id, name: o.name, init: o.init })) });
+      this.emit("round", `Round ${this.round}`, "round", { order: this.order.map((o) => ({ id: o.id, name: o.name, init: o.init, u: o.u, slot: o.slot })) });
       if (typeof FIGHTREAD !== "undefined") FIGHTREAD.plan(this);   // the foe's intents for this round (fightread.js)
       if (typeof FOEINTENT !== "undefined") FOEINTENT.plan(this);   // and who each one goes for (foeintent.js)
       if (this.f.bf && typeof BOSSFIGHT !== "undefined") BOSSFIGHT.plan(this);   // a boss shows its big attacks a turn ahead
@@ -282,33 +278,110 @@ const TB = (() => {
       this.startRound();
       return this.advance();
     }
-    /* run automatic turns until it's a person's turn (yours, or a real party member's) or the fight ends */
+    /* run automatic turns until it's a person's turn (yours, or real party members') or the fight ends */
     advance() {
       while (!this.over) {
+        if (this.gr) { const r = this.pump(); if (r) return r; continue; }
         if (this.idx >= this.order.length) { this.endRound(); if (this.over) break; this.startRound(); continue; }
+        this.tidy();
         const o = this.order[this.idx];
-        this.cur = o;
-        if (o.id === "me") {
-          if (!this.apSet) this.beginTurn();
-          if (this.opts.auto || this.autoRest) { this.autoTurn(); continue; }
-          return { turn: "me" };
-        }
-        if (o.al && o.al.player && o.al.pid && this.remote && !o.al.down && (o.al.late || 0) >= 2 && (!this.remote.live || this.remote.live())) { this.allyMove(o.al, "guard", true); this.idx++; continue; }   // missed two turns: they just guard (no auto fighting)
-        if (o.al && o.al.player && o.al.pid && this.remote && !o.al.down && (!this.remote.live || this.remote.live())) {   // a real player: their own phone picks
-          if (!this.waiting) { this.waiting = { pid: o.al.pid, name: o.al.name, until: Date.now() + TURN_SECONDS * 1000, al: o.al, tid: `${this.round}.${this.idx}` }; this.remote.ask(this, o.al); }
-          if (this.waiting.reply) { const rp = this.waiting.reply; this.waiting = null; o.al.late = 0; this.applyRemote(o.al, rp); this.idx++; continue; }   // their whole turn, played on their own fight screen
-          if (this.waiting.move) { const m = this.waiting.move; this.waiting = null; o.al.late = 0; this.allyMove(o.al, m); this.idx++; continue; }
-          if (Date.now() < this.waiting.until) return { turn: "wait", who: o.al.name, until: this.waiting.until };
-          this.waiting = null; o.al.late = (o.al.late || 0) + 1; this.allyMove(o.al, "guard", true); this.idx++; continue;
-        }
-        this.autoActor(o); this.idx++;
+        if (!o) continue;
+        if (o.done || o.out) { this.idx++; continue; }
+        if (o.skip && !INIT.hero(o)) { this.skipSlot(o); this.idx++; continue; }   // stunned or frozen: this slot is lost
+        if (INIT.hero(o)) { this.openGroup(); continue; }
+        this.cur = o; this.autoActor(o); o.done = true; this.idx++;
       }
       return this.finish();
+    }
+    /* statuses fix up the order (initiative.js refresh): stuns, freezes, staggers, haste, slow, knocked out */
+    tidy() {
+      if (typeof INIT === "undefined" || this.mirror) return;
+      for (const t of INIT.refresh(this)) { this.lines.them.push(t); this.emit("foe", t, "tick"); }
+    }
+    /* a stunned or frozen foe's slot comes up: it loses it */
+    skipSlot(o) {
+      const t = INIT.spend(this, o);
+      if (t) { this.lines.them.push(t); this.emit("foe", t, "foe", { dmg: 0, skipped: o.moves || 1 }); }
+    }
+    /* a real player in a party fight whose own phone picks (an older or offline phone: the AI never plays them) */
+    isRemote(o) { return !!(o.al && o.al.player && o.al.pid && this.remote && !o.al.down && (!this.remote.live || this.remote.live())); }
+    /* a shared turn starts: everyone side by side in the order acts together. Followers, pets and summons act on their
+       orders at once; every real player is asked at the same time; you play yours. No timer: it waits for everyone. */
+    openGroup() {
+      const g = INIT.groupAt(this, this.idx);
+      for (const o of g.skips) this.skipSlot(o);
+      const party = !!(this.remote && this.players > 0 && !this.opts.auto);
+      const t0 = Date.now();
+      const gr = this.gr = { ...g, until: 0, waits: [], me: null, party };
+      let asked = false;
+      for (const o of g.members) {
+        if (this.over) break;
+        if (o.id === "me") { gr.me = o; continue; }
+        if (this.isRemote(o)) {
+          if ((o.al.late || 0) >= 2) { this.cur = o; this.allyMove(o.al, "guard", true); o.done = true; continue; }   // missed two turns: they just guard (no auto fighting)
+          gr.waits.push({ pid: o.al.pid, name: o.al.name, until: 0, t0, seen: t0, al: o.al, o, tid: `${o.uid}.${o.al.pid}` }); asked = true;
+          continue;
+        }
+        this.cur = o; this.autoActor(o); o.done = true;
+      }
+      if (asked) this.remote.ask(this, gr.waits[0].al);
+      if (gr.me) this.cur = gr.me;
+      this.tidy();
+    }
+    /* the shared turn goes on: replies that came in are played, then it's yours, or we wait, or it's over */
+    pump() {
+      const gr = this.gr, now = Date.now();
+      for (const w of gr.waits) {
+        if (w.fin) continue;
+        const al = w.al;
+        if (al.down || al.gone || this.over) { w.fin = true; w.o.done = true; continue; }
+        if (w.reply) { const rp = w.reply; w.fin = true; al.late = 0; this.cur = w.o; this.applyRemote(al, rp); w.o.done = true; this.tidy(); continue; }   // their whole turn, played on their own fight screen
+        if (w.move) { const m = w.move; w.fin = true; al.late = 0; this.cur = w.o; this.allyMove(al, m); w.o.done = true; this.tidy(); continue; }
+        if (w.skip || this.dropped(w, now)) { w.fin = true; al.late = (al.late || 0) + 1; this.cur = w.o; this.allyMove(al, "guard", w.skip ? "skip" : "lost"); w.o.done = true; continue; }   // skipped by the leader, or their phone dropped out: they guard
+      }
+      if (this.over) return null;
+      if (gr.me && !gr.me.done) {
+        this.cur = gr.me;
+        if (!this.apSet) this.beginTurn();
+        if (this.opts.auto || this.autoRest) { this.autoTurn(); return null; }
+        return { turn: "me", until: 0 };
+      }
+      const left = gr.waits.filter((w) => !w.fin);
+      if (left.length) {
+        this.cur = left[0].o;
+        return { turn: "wait", who: left.map((w) => w.name).join(", "), n: left.length, until: 0, quiet: this.quiet(now).map((w) => ({ pid: w.pid, name: w.name })) };
+      }
+      for (const o of gr.members) o.done = true;   // everyone in it is done: on to what comes after
+      this.idx = gr.end; this.gr = null;
+      this.tidy();
+      return null;
+    }
+    /* a player's phone dropped out: it never picked up the turn, and it's gone offline (or never answered for a while) */
+    dropped(w, now = Date.now()) {
+      if (w.ack) return false;
+      const on = this.remote && this.remote.online ? this.remote.online(w.pid) : null;   // null: we can't tell
+      return now - w.t0 >= INIT.CFG.lostAfter * 1000 && on !== true;
+    }
+    /* players in the shared turn who've made no move for 30 s: the leader may skip them (their moves turn into guard) */
+    quiet(now = Date.now()) { return this.gr ? this.gr.waits.filter((w) => !w.fin && now - (w.seen || w.t0 || now) >= INIT.CFG.skipAfter * 1000) : []; }
+    /* the leader skips a quiet player */
+    skipPlayer(pid) { const w = this.gr && this.gr.waits.find((x) => !x.fin && x.pid === pid); if (!w) return false; w.skip = true; return true; }
+    /* the first real player we're still waiting for (older code and tests read sess.waiting) */
+    get waiting() { const w = this.gr && this.gr.waits.find((x) => !x.fin); return w || null; }
+    set waiting(v) { /* the shared turn keeps its own list */ }
+    /* guard with what's left (an older phone's own clock, or a test) */
+    timeUp() { if (this.cur?.id !== "me" || !this.apSet) return; this.endTurn(true); this.emit("me", "You hold back and keep your guard up (out of time)", "guard"); }
+    /* your turn ended */
+    passMe() {
+      this.apSet = false; this.meTok++;
+      if (this.gr && this.gr.me) this.gr.me.done = true; else this.idx++;
     }
     /* ---- your actions */
     /* a new turn of yours: nothing used yet (apSet keeps its old name for the modules that check it) */
     beginTurn() {
-      this.used = {}; this.myActs = Math.min(1, this.f.kitApLoss || 0); this.pots = 0; this.apSet = true; this.f.kitApLoss = 0;   // kitApLoss: thrown from the saddle (mountfight.js) = one move fewer this turn
+      const up = typeof INIT !== "undefined" ? INIT.standUp(this.f) : Math.min(1, this.f.kitApLoss || 0);   // knocked down (thrown from the saddle, mountfight.js): a move goes into getting up
+      this.used = {}; this.myActs = up; this.pots = 0; this.apSet = true; this.f.kitApLoss = 0;
+      if (up) this.emit("tick", "You get back on your feet (one move)", "tick");
       const w = typeof STACKS !== "undefined" ? STACKS.beginTurn(this.f) : "";   // Winded / Drained stacks bite (stacks.js)
       if (w) this.emit("tick", w.replace(/^ · /, ""), "tick");
       if (typeof REACT !== "undefined") REACT.beginTurn(this.f);   // Cover allies drops when your turn comes back
@@ -348,7 +421,7 @@ const TB = (() => {
     }
     act(a, tgt, mult, grade) {   // mult: how the minigame went (minigame.js), 1 = normal; grade.cls "perfect" adds a stack
       if (this.cur?.id !== "me") return null;
-      if (this.over) { this.apSet = false; this.idx++; return { turn: "next" }; }   // the foe fell outside your moves (a tick, a teammate): any tap wraps the fight up instead of doing nothing
+      if (this.over) { this.passMe(); return { turn: "next" }; }   // the foe fell outside your moves (a tick, a teammate): any tap wraps the fight up instead of doing nothing
       const f = this.f;
       const al = tgt != null && tgt !== "" ? (+tgt >= 1000 ? (f._downed || [])[+tgt - 1000] : f.allies[+tgt]) : null;
       if (a === "end") return this.endTurn();
@@ -383,7 +456,8 @@ const TB = (() => {
       if (typeof STACKS !== "undefined") STACKS.sync(f);
       this.lines.me.push(text); this.lines.a = a;
       this.emit("me", text, "me", { a, wt: f.wt, dmg: Math.max(0, Math.round(before - f.ehp)), healed: Math.max(0, Math.round(f.hp - myBefore)) });
-      if (this.over) { this.apSet = false; this.idx++; return { turn: "next" }; }
+      this.tidy();   // a stun, a freeze, a stagger or a slow moves the foe in the order at once
+      if (this.over) { this.passMe(); return { turn: "next" }; }
       if (typeof STRAT !== "undefined" && STRAT.ends && STRAT.ends(a)) return this.endTurn(true);   // Breathe is your whole turn
       if (typeof REACT !== "undefined" && REACT.ends(a)) return this.endTurn(true);   // Cover allies is a stance
       if (this.myActs >= this.st.acts || !this.anyAffordable()) return this.endTurn(true);
@@ -395,13 +469,13 @@ const TB = (() => {
     endTurn(auto) {
       this.f.tbGuard = this.guardLeft();
       if (this.f.tbGuard > 0 && !auto) this.emit("me", `You hold back and keep your guard up (−${Math.round(this.f.tbGuard * 100)}% damage)`, "guard");
-      this.apSet = false; this.idx++;
+      this.passMe();
       return { turn: "next" };
     }
     flee() {
       const f = this.f, s = f.s;
       const ch = clamp(0.4 + G.skill(s, "Athletics") / 300 + G.skill(s, "Acrobatics") / 400 - (f.e.boss ? 0.3 : f.e.danger === "high" ? 0.15 : 0) - 0.05 * this.st.heavy + (f.e.pool ? 0.45 : 0), 0.05, 0.9);   // a raid: the town has plenty of places to hide
-      if (Math.random() < ch) { f.endWon = true; f.escaped = true; f.ranAway = true; this.lines.me.push("You break away and escape"); this.emit("me", "You break away and escape!", "flee"); this.apSet = false; this.idx++; return { turn: "next" }; }
+      if (Math.random() < ch) { f.endWon = true; f.escaped = true; f.ranAway = true; this.lines.me.push("You break away and escape"); this.emit("me", "You break away and escape!", "flee"); this.passMe(); return { turn: "next" }; }
       this.myActs = this.st.acts; this.lines.me.push("You try to break away, but can't"); this.emit("me", `You try to break away, but the ${f.e.name} cuts you off (${Math.round(ch * 100)}%)`, "flee");
       return this.endTurn(true);
     }
@@ -410,9 +484,9 @@ const TB = (() => {
       const f = this.f;
       if (this.cur?.id !== "me" || this.over) return { turn: "next" };
       if (!this.apSet) this.beginTurn();
-      const idx0 = this.idx;
+      const tok0 = this.meTok;
       let guard = 0;
-      while (!this.over && this.idx === idx0 && guard++ < MAX_ACTS + 2) {
+      while (!this.over && this.meTok === tok0 && guard++ < MAX_ACTS + 2) {
         f.aiPickWhy = "";
         let a = aiPick(f, "me");
         const a0 = a;   // the AI's own pick, before the fight tricks below swap it
@@ -427,7 +501,7 @@ const TB = (() => {
         this.aiNote(n0, a, a === a0 ? f.aiPickWhy : "plays the opening");   // "[AI] reason" on the log line of a move the AI picked
         if (!r || r.turn !== "me" || r.err) break;
       }
-      if (this.idx === idx0 && !this.over) this.endTurn(true);
+      if (this.meTok === tok0 && !this.over) this.endTurn(true);
       return { turn: "next" };
     }
     /* the auto-played move's log line says why: "… [AI] finishing blow". Only for moves the AI picked, never yours. */
@@ -462,7 +536,9 @@ const TB = (() => {
       if (typeof REACT !== "undefined" && f.ehp < b && move !== "heal" && move !== "potion" && move !== "guard") { const rx = REACT.ally(this, f, al, move === "power" ? "power" : "attack", b, rxPre); if (rx.key) { t += rx.text; f._rxPend = rx.key; } }
       if (f.ehp < b) { t += this.capFoe(b) + this.flank(b); this.hitters++; }
       if (move === "heal" && f.hp > hpB && f.bf && typeof BOSSFIGHT !== "undefined" && BOSSFIGHT.cleanse) t += BOSSFIGHT.cleanse(f);   // a friend heals the boss's hex off you
-      if (timedOut) t = `${al.name} took too long and keeps their guard up. ` + t;
+      if (timedOut === "skip") t = `${al.name} is skipped and keeps their guard up. ` + t;
+      else if (timedOut === "lost") t = `${al.name} lost the connection and keeps their guard up. ` + t;
+      else if (timedOut) t = `${al.name} took too long and keeps their guard up. ` + t;
       if (al.left != null && --al.left <= 0) { f.allies = f.allies.filter((x) => x !== al); t += ` · ${al.name} fades away`; }   // a teammate's summon runs out
       this.lines.me.push(t);
       this.emit(al.player ? "mate" : "ally", t, "ally", { name: al.name, healed: Math.max(0, Math.round(f.hp - hpB)) });
@@ -484,7 +560,11 @@ const TB = (() => {
       if (!r || !al || al.down) return;
       if (typeof PARTYSPELLS !== "undefined") PARTYSPELLS.learn(r.spells, f.s);   // the crafted spells they cast (partyspells.js)
       const name = al.name, b = f.ehp, sameFoe = r.wave == null || r.wave === this.wave;
-      if (sameFoe && r.fs) for (const k of FOE_KEYS) if (k in r.fs && k !== "ehp0") f[k] = r.fs[k] && typeof r.fs[k] === "object" ? clone(r.fs[k]) : r.fs[k];
+      if (sameFoe && r.fs) for (const k of FOE_KEYS) {
+        if (k === "ehp0") continue;
+        if (r.fs0) { if (sameJ(r.fs[k], r.fs0[k])) continue; if (!(k in r.fs)) { delete f[k]; continue; } }   // [initiative] only what their turn changed: others in the same shared turn changed the rest
+        if (k in r.fs) f[k] = r.fs[k] && typeof r.fs[k] === "object" ? clone(r.fs[k]) : r.fs[k];
+      }
       if (sameFoe && typeof r.e0 === "number" && typeof r.ehp === "number") f.ehp = b - clamp(r.e0 - r.ehp, 0, Math.max(0, b));
       if (typeof r.hp === "number" && typeof r.hp0 === "number") { if (r.hpMax > 0) al.maxHp = r.hpMax; al.hp = clamp((al.hp || 0) + (r.hp - r.hp0), 1, al.maxHp || Math.max(al.hp || 1, r.hp)); }
       al.tbGuard = clamp(+r.guard || 0, 0, 0.3);
@@ -496,7 +576,7 @@ const TB = (() => {
       for (const x of r.allies || []) this.remoteBuff(x);
       if (r.summon && r.summon.turns > 0 && r.summon.dmg > 0) {   // their summon fights on its own, beside the rest of us
         let sm = f.allies.find((a) => a.summonOf === al.pid);
-        if (!sm) { sm = { name: `${name}'s ${r.summon.name || "summon"}`, summon: true, summonOf: al.pid, init: 6 }; f.allies.push(sm); }
+        if (!sm) { sm = { name: `${name}'s ${r.summon.name || "summon"}`, summon: true, summonOf: al.pid, speed: 5 }; f.allies.push(sm); }
         sm.dmg = r.summon.dmg; sm.left = Math.min(12, r.summon.turns);
       }
       this.hitters += Math.max(0, r.hits | 0);
@@ -533,7 +613,8 @@ const TB = (() => {
     foeAct(prefix) {
       const f = this.f;
       if (f.ehp <= 0 || f.endWon) return;
-      if (typeof SHIELDFX !== "undefined" && SHIELDFX.stunned(f, this.round)) {   // shield bash: the foe loses its whole turn
+      if (f.stagger && f._stagUsed) { f.stagger = false; f._stagUsed = false; }   // its stagger already cost it its place in the order (initiative.js)
+      if (!this.ini && typeof SHIELDFX !== "undefined" && SHIELDFX.stunned(f, this.round)) {   // no turn order of its own (old tests): the stunned foe loses its whole turn
         if (this.stunSaid !== this.round) { this.stunSaid = this.round; const t = `${prefix}${f.e.name} is stunned and can't act`; this.lines.them.push(t); this.emit("foe", t, "foe", { dmg: 0 }); }
         return;
       }
@@ -835,16 +916,21 @@ const TB = (() => {
     if (playing) state = { turn: "play" };
     // the turn order: whoever is acting right now is lit, while you choose AND while the others' turns play out one by one
     const pe = playing ? vis[vis.length - 1] : null;
-    const acting = (o) => (pe ? (pe.kind === "foe" ? o.id.startsWith("foe") : pe.kind === "me" ? o.id === "me" : pe.kind === "ally" ? o.name === pe.name || (pe.pid && o.pid === pe.pid) : pe.kind === "sum" ? o.id === "sum" : false) : o.id === sess.cur?.id && !sess.done);
+    const uNow = !!(pe && pe.u && sess.order.some((o) => o.u === pe.u));   // a move from a round that is already over (still playing out) has a slot that is gone: match by who
+    const acting = (o) => (pe ? (uNow && o.u ? o.u === pe.u : pe.kind === "foe" ? o.id.startsWith("foe") : pe.kind === "me" ? o.id === "me" : pe.kind === "ally" ? o.name === pe.name || (pe.pid && o.pid === pe.pid) : pe.kind === "sum" ? o.id === "sum" : false) : o.id === sess.cur?.id && !sess.done);
     const actIdx = sess.order.findIndex(acting);
-    // a foe that acts 2 or 3 times a round has one chip per move: the later ones are marked as its 2nd/3rd move, so the bar
-    // doesn't read as three bandits when one is standing there (a group's next foe only steps in when this one falls)
-    const order = sess.order.map((o, i) => { const mv = moveNo(o);
-      return `<span class="tbini ${acting(o) ? "now" : ""} ${(playing ? actIdx >= 0 && i < actIdx : i < sess.idx) ? "gone" : ""} ${o.id.startsWith("foe") ? "foe" : o.id === "me" ? "me" : "ally"}${mv > 1 ? " again" : ""}" data-tip="${mv > 1 ? `${esc(o.name)} acts again: its ${ORD(mv)} move this round.` : `${esc(o.name)}: initiative ${o.init}. Higher initiative acts earlier in the round.`}">${icon(o, f)} ${esc(o.name.split(" ")[0])}${mv > 1 ? `<b class="tbag">${ORD(mv)}</b>` : ""}<i>${o.init}</i></span>`; }).join("");
+    // [initiative] the turn roster (initroster.js): portraits in initiative order, shared turns bracketed, a fast foe's
+    // two slots marked 1 and 2, lost turns crossed out, the next round dimmed after the marker; +N opens the whole order
+    const wide = typeof innerWidth !== "undefined" && innerWidth >= 900;
+    const order = typeof INITUI !== "undefined" ? INITUI.strip(sess, { playing, acting, actIdx }) + INITUI.more(sess, wide)
+      : sess.order.map((o, i) => `<span class="tbini ${acting(o) ? "now" : ""} ${(playing ? actIdx >= 0 && i < actIdx : i < sess.idx) ? "gone" : ""} ${o.id.startsWith("foe") ? "foe" : o.id === "me" ? "me" : "ally"}">${icon(o, f)} ${esc(o.name.split(" ")[0])}<i>${o.init}</i></span>`).join("");
     const pips = (n, m, cls) => Array.from({ length: m }, (_, i) => `<i class="${i < n ? "on" : ""} ${cls}"></i>`).join("");
     const allies = partyHTML(f);
     const mine = state.turn === "me";
-    const wait = state.turn === "wait" ? `<p class="tbwait"> ${esc(state.who)} is choosing their move… <b class="num" id="tbcd">${Math.max(0, Math.ceil((state.until - Date.now()) / 1000))}s</b>, then they guard</p>` : "";
+    // no timer on a shared turn: it waits for everyone; after 30 s of nothing from a player the leader can skip them (guard)
+    const since = sess.waiting?.t0 ? Math.max(0, Math.floor((Date.now() - sess.waiting.t0) / 1000)) : 0;
+    const quiet = state.turn === "wait" && !sess.mirror && sess.quiet ? sess.quiet() : [];
+    const wait = state.turn === "wait" ? `<p class="tbwait"> ${esc(state.who)} ${(state.n || 1) > 1 ? "are" : "is"} choosing… ${since ? `<b class="num" id="tbcd">${since}s</b>` : ""}${quiet.map((w) => `<button class="btn sm tbskipp" data-tbx="skipp" data-pid="${esc(w.pid)}" data-tip="${esc(`No move from ${w.name} for a while: they keep their guard up this turn.`)}">Skip ${esc(w.name)}</button>`).join("")}</p>` : "";
     const scene = (newEv.length || !ui.lastScene) && typeof FIGHTART !== "undefined" ? sceneFor(newEv) : "";
     const keepScene = !scene && ui.lastScene ? el.querySelector("#tbscene > .fscene") : null;   // [phantom] nothing new happened: the scene on screen stays as it is (redrawing it played the last blow again)
     const fmt = typeof TBUI !== "undefined" ? TBUI.logLine : (e) => `<div class="tbl ${e.kind}">${esc(e.text)}</div>`;
@@ -870,12 +956,13 @@ const TB = (() => {
       if (R) R.play("turn-me");
     }
     if (R && newEv.length) { const k = Math.max(0, newEv.length - 3); newEv.slice(k).forEach((e, i) => R.play(R.cue(e, vis[vis.indexOf(e) - 1]), i * 0.25)); }
+    if (typeof INITUI !== "undefined") INITUI.before(el);   // where the portraits are now, so a reorder slides
     const keepGame = ui.timing ? el.querySelector(":scope > .tbtime:not(.hit)") : null;   // [channel] an update from the party mid-minigame must not wipe your game
     el.innerHTML = `<div class="tbin">
       <div class="tbtop"><b>Round ${sess.round}</b>${typeof DIFF !== "undefined" ? DIFF.chip(f) : ""}<span class="tbord">${order}</span><button class="tbff" data-tbx="log" aria-label="Full fight log"></button>${typeof TBRADIAL !== "undefined" ? `<button class="tbff ${TBRADIAL.on() ? "on" : ""}" data-tbx="wheel" aria-label="Combat wheel and timing ring" data-tip="${typeof FIGHTCTL !== "undefined" && FIGHTCTL.on() ? "Timing ring: after a strike or a damage spell, tap when the needle is in the bright zone (Perfect +25%, a miss −20%). Tap to switch it on or off." : "Combat wheel: your moves in a ring, and a timing ring for strikes and spells (Perfect +25%, a miss −20%). Tap to switch to cards."}"></button>` : ""}</div>
       <div class="tbstage" data-tbzone="foe"><div class="tbscene" id="tbscene">${scene || (keepScene ? "" : ui.lastScene || "")}</div>${banner}${rd ? rd.bubble : ""}<div class="tbhint" aria-hidden="true"></div></div>
       <div class="tbvit"><div class="tbu me" data-tbzone="self"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.me(f, sess.st))}"` : ""}><small class="nm">\uE102 ${esc(s.name || "You")}</small>${uBar(hpNow, prev.hp, hpMax, "hp", rd ? rd.meMarks(hpNow, hpMax) : "")}${rd ? rd.meLine : ""}<div class="tbsub">${rBar(mpNow, prev.mp, mpMax, "mp", "MP")}${rBar(spNow, prev.sp, spMax, "sp", "SP")}${typeof CHARGE !== "undefined" ? CHARGE.fightBar(f) : ""}</div>${f.ward > 0 ? `<div class="tbward" title="Ward: soaks magic until it breaks. Cast it again to refill it."><i style="width:${pc(f.ward, f.wardMax || f.ward)}%"></i><span>\uE102 Ward ${Math.round(f.ward)} / ${Math.round(f.wardMax || f.ward)}</span></div>` : ""}${R ? R.myChips(f) : ""}${typeof SPELLFX !== "undefined" ? SPELLFX.meHTML(f) : ""}</div>
-        <div class="tbu foe" data-tbzone="foe"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.foe(f, sess.ehpMax))}"` : ""}><small class="nm">${f.e.player ? "\uE101" : "\uE12E"} ${esc(f.e.name)}${f.e.archLabel && !String(f.e.name).toLowerCase().includes(f.e.archLabel) ? ` <span class="arch">${esc(f.e.archLabel)}</span>` : ""}${sess.waves > 1 ? ` <span class="arch">${sess.wave}/${sess.waves}</span>` : ""}</small>${uBar(ehpNow, prev.ehp, sess.ehpMax, "hp foe", rd ? rd.foeMarks(ehpNow, sess.ehpMax) : "")}${rd ? rd.foeLine : ""}${statusChips(f)}${rd ? rd.intents : ""}</div></div>
+        <div class="tbu foe" data-tbzone="foe"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.foe(f, sess.ehpMax))}"` : ""}><small class="nm">${f.e.player ? "\uE101" : "\uE12E"} ${esc(f.e.player || typeof NAMES === "undefined" ? f.e.name : NAMES.foe(f.e.name))}${f.e.archLabel && !String(f.e.name).toLowerCase().includes(f.e.archLabel) ? ` <span class="arch">${esc(f.e.archLabel)}</span>` : ""}${sess.waves > 1 ? ` <span class="arch">${sess.wave}/${sess.waves}</span>` : ""}</small>${uBar(ehpNow, prev.ehp, sess.ehpMax, "hp foe", rd ? rd.foeMarks(ehpNow, sess.ehpMax) : "")}${rd ? rd.foeLine : ""}${statusChips(f)}${rd ? rd.intents : ""}</div></div>
       ${allies}
       <button class="tblog" aria-live="polite" data-tbx="log" aria-label="Fight log, tap for the full log"${log ? "" : " hidden"}>${log}</button>
       ${wait}
@@ -885,8 +972,10 @@ const TB = (() => {
         ${playing ? "" : sess.done ? `<button class="btn pri tbdone" data-tbx="done">${f.won ? (f.escaped ? "Continue" : "Victory — continue") : "Continue"}</button>` : mine ? actionsHTML(sess) : ""}
       </div>
       ${ui.logOpen ? fullLog(sess, fmt) : ""}
+      ${ui.rosterOpen && typeof INITUI !== "undefined" ? INITUI.sheet(sess) : ""}
     </div>`;
     if (scene) ui.lastScene = scene;
+    if (typeof INITUI !== "undefined") { try { INITUI.after(el, sess); } catch (e) { console.warn("roster", e); } }   // reordered portraits slide, the cause flashes (initroster.js)
     if (keepGame) el.appendChild(keepGame);
     if (keepScene) { const box = el.querySelector("#tbscene"); if (box) box.prepend(keepScene); }
     if (typeof COMBAT2 !== "undefined") { try { COMBAT2.layout(el, sess, { playing, mine, pops, big: prev.hp - hpNow > hpMax * 0.15 }); } catch (e) { console.warn("combat2", e); } }   // combat2.js: the cards go into the scene
@@ -1018,6 +1107,9 @@ const TB = (() => {
     if (b.dataset.tbx === "skip") { ui.skip = true; try { FIGHTART.finishAll(); } catch (e) { /* nothing playing */ } return render(ui.pendState || { turn: sess.done ? "done" : sess.cur?.id === "me" ? "me" : "auto" }); }
     if (b.dataset.tbx === "log") { ui.logOpen = true; return step(); }
     if (b.dataset.tbx === "logx") { ui.logOpen = false; return step(); }
+    if (b.dataset.tbx === "roster") { ui.rosterOpen = true; return step(); }   // the whole turn order (initroster.js)
+    if (b.dataset.tbx === "rosterx") { ui.rosterOpen = false; return step(); }
+    if (b.dataset.tbx === "skipp") { if (sess.skipPlayer && sess.skipPlayer(b.dataset.pid)) return step(sess.advance()); return step(); }   // the leader skips a quiet player: they guard
     if (typeof HOTBAR !== "undefined" && HOTBAR.click(b, sess)) { ui.menu = null; return step(); }   // hotbar.js: Edit hotbar, slots and the picker
     if (b.dataset.tba) {
       ui.menu = null;
@@ -1072,8 +1164,15 @@ const TB = (() => {
     clearInterval(waitT);
     waitT = setInterval(() => {
       if (!ui) return clearInterval(waitT);
-      const s = ui.sess;
-      if (s.waiting) { const c = document.getElementById("tbcd"); if (c) c.textContent = Math.max(0, Math.ceil((s.waiting.until - Date.now()) / 1000)) + "s"; if (s.waiting.move || s.waiting.reply || Date.now() >= s.waiting.until) step(s.advance()); }
+      const s = ui.sess, gr = !s.mirror && s.gr;
+      if (gr && gr.me && !gr.me.done) {   // your part of a shared turn: the others' moves land as they make them, and one clock for everyone
+        if (ui.timing || (typeof FIGHTART !== "undefined" && FIGHTART.playing && FIGHTART.playing())) return;
+        if (gr.waits.some((w) => !w.fin && (w.move || w.reply || w.skip || s.dropped(w)))) step(s.advance());
+      }
+      else if (s.waiting) {   // no timer: we wait for them; after 30 s of nothing the leader gets a Skip button
+        const now = Date.now(), q = s.quiet(now).length, c = document.getElementById("tbcd"); if (c) c.textContent = Math.max(0, Math.ceil((now - s.waiting.t0) / 1000)) + "s";
+        if (s.gr.waits.some((x) => !x.fin && (x.move || x.reply || x.skip || s.dropped(x, now))) || q !== (ui.quietN || 0)) { ui.quietN = q; step(s.advance()); }
+      }
       else if (s.mirror && s.until) { const c = document.getElementById("tbcd"); if (c) c.textContent = Math.max(0, Math.ceil((s.until - Date.now()) / 1000)) + "s"; if (Date.now() >= s.until && !ui.timing) { ui.menu = null; s.timeUp(); step(s.advance()); } }   // your turn in a teammate's fight ran out
     }, 500);
   }
@@ -1105,15 +1204,19 @@ const TB = (() => {
   // ------------------------------------------------------------------ live party fights (everyone sees the fight; each player picks on their own phone)
   /* The phone that started the fight runs it and owns the record tbf/<id>. It keeps the record up to date (foe, health,
      log, who's in it) so party members in the fight watch it live on their own screen. When a member's turn comes the
-     record holds {turn:{pid, until}} and the member's phone writes back {reply:{pid, move}}. Since v2 a whole turn comes back in tbf/<id>~<pid> (sharedfight.js). 90 s, then guard. */
+     record holds {turn:{pid, until}} and the member's phone writes back {reply:{pid, move}}. Since v2 a whole turn comes back in tbf/<id>~<pid> (sharedfight.js).
+     [initiative] A shared turn waits for several players at once: turns:[{pid, until, tid}] (turn is the first of them,
+     for older phones). No timer: it waits for everyone. A teammate's phone writes tbf/<id>~<pid>~b when it picks up
+     its turn and after every move (that's how the leader knows they're there; 30 s of nothing and the leader can skip). */
   const players = (sess) => [...new Set([...(sess.everyone || []), ...sess.f.allies, ...(sess.f._downed || [])])].filter((a) => a && a.player && a.pid && !a.gone);
   function fightState(sess) {
-    const f = sess.f, w = sess.waiting;
+    const f = sess.f, w = sess.waiting, ws = sess.gr ? sess.gr.waits.filter((x) => !x.fin) : [];
+    const tw = (x) => ({ pid: x.pid, until: x.until || 0, name: x.name, heals: x.al?.heals || 0, pots: x.al?.pots || 0, tid: x.tid || null });   // until 0: no timer
     return { foe: f.e.name, boss: !!f.e.boss, round: sess.round, wave: sess.wave || 1, waves: sess.waves || 1,
       ehp: Math.max(0, Math.round(f.ehp)), ehpMax: sess.ehpMax, ownerName: f.s.name, hp: Math.max(0, Math.round(f.hp)), hpMax: G.maxHealth(f.s),
       pids: players(sess).map((a) => a.pid),   // knocked-down players stay in: they still watch the fight to the end
       allies: f.allies.filter((a) => !a.summon).slice(0, 9).map((a) => ({ name: a.name, pid: a.pid || null, hp: Math.max(0, Math.round(a.hp ?? 0)), hpMax: Math.round(a.hp0 || a.maxHp || a.hp || 1), down: !!a.down })),
-      turn: w ? { pid: w.pid, until: w.until, name: w.name, heals: w.al?.heals || 0, pots: w.al?.pots || 0, tid: w.tid || null } : null,
+      turn: w ? tw(w) : null, turns: ws.map(tw),
       log: sess.ev.filter((e) => e.kind !== "round").slice(-6).map((e) => e.text),
       done: !!sess.done, won: sess.done ? !!f.won : null, t: Date.now() / 1000, diff: f.diff ? f.diff.id : null, ...shared(sess) };
   }
@@ -1144,12 +1247,15 @@ const TB = (() => {
       return o;
     });
     return { v: 2, foeE: e, fs, kind: sess.kind, hitters: sess.hitters || 0, roster,
-      order: sess.order.map((o) => ({ id: o.id, name: o.name, init: o.init, pid: o.al?.pid || null })), idx: sess.idx,
+      order: sess.order.map((o) => { const x = { id: o.id, name: o.name, init: o.init, pid: o.al?.pid || null, fid: o.al?.fid || null };
+        for (const k of ["side", "u", "uid", "grp", "slot", "moves", "mv", "d", "spd", "gap", "push", "why", "skip", "out", "done"]) if (o[k] != null && o[k] !== false && o[k] !== 0) x[k] = o[k];
+        return x; }), idx: sess.idx, gnow: sess.gr ? sess.order[sess.gr.start]?.grp || 0 : 0,
+      next: typeof INIT !== "undefined" && sess.ini ? INIT.predict(sess).map((o) => ({ id: o.id, name: o.name, init: o.init, side: o.side, slot: o.slot, pid: o.al?.pid || null, fid: o.al?.fid || null, uid: o.uid })) : [],
       cur: sess.cur ? { id: sess.cur.id, name: sess.cur.name, pid: sess.cur.al?.pid || null } : null, evs,
       escaped: sess.done ? !!f.escaped : null, ...(typeof PARTYSPELLS !== "undefined" ? PARTYSPELLS.forRecord(sess) : {}),
       ...(typeof CHANNEL !== "undefined" ? CHANNEL.forRecord(sess) : {}) };   // [channel] the moves being prepared right now (also restores them after a reconnect)   // crafted spells cast in this fight (partyspells.js)
   }
-  function remoteFor(store, myId) {
+  function remoteFor(store, myId, cards) {
     if (!store || typeof store.put !== "function") return null;
     let fid = null, cur = null, watching = false, last = "", lastT = 0, made = false, timer = null, beat = null, pidsSeen = new Set();
     const push = (force) => {
@@ -1166,10 +1272,15 @@ const TB = (() => {
     const watchReplies = () => {
       if (watching || !store.watch) return; watching = true;
       store.watch("tbf", (docs) => {
-        const s2 = cur, w = s2?.waiting; if (!s2 || !fid || !w) return;
-        const rp = docs.find((x) => x.id === `${fid}~${w.pid}`);   // a whole turn played on their own fight screen (sharedfight.js)
-        if (rp && rp.tid && rp.tid === w.tid && !w.reply) { w.reply = rp; return; }
-        const d = docs.find((x) => x.id === fid); if (d?.reply && d.reply.pid === w.pid && d.reply.round === s2.round) w.move = d.reply.move;   // an older phone: one simple move
+        const s2 = cur; if (!s2 || !fid || !s2.gr) return;
+        for (const w of s2.gr.waits) {   // everyone in the shared turn
+          if (w.fin || w.reply || w.move) continue;
+          const rp = docs.find((x) => x.id === `${fid}~${w.pid}`);   // a whole turn played on their own fight screen (sharedfight.js)
+          if (rp && rp.tid && rp.tid === w.tid) { w.reply = rp; continue; }
+          const bt = docs.find((x) => x.id === `${fid}~${w.pid}~b`);   // they picked up the turn / made a move
+          if (bt && bt.bt === w.tid && bt.n !== w.beatN) { w.beatN = bt.n; w.ack = true; w.seen = Date.now(); }
+          const d = docs.find((x) => x.id === fid); if (d?.reply && d.reply.pid === w.pid && d.reply.round === s2.round) w.move = d.reply.move;   // an older phone: one simple move
+        }
       });
     };
     const start = (sess) => { cur = sess; fid = fid || `${myId}-${Math.floor(Date.now() / 1000)}`; watchReplies(); if (!beat) beat = setInterval(() => push(), 5000); };
@@ -1178,10 +1289,12 @@ const TB = (() => {
       sync(sess) { if (!players(sess).length) return; start(sess); push(sess.done); },
       ask(sess) { start(sess); push(true); },
       live: () => !!store.online,
+      /* is this player online? true / false, or null when we can't tell (social.js cards) */
+      online: (pid) => { try { if (typeof SOCIAL === "undefined" || !cards) return null; const c = (cards() || []).find((x) => x.id === pid); return c ? !!SOCIAL.status(c).online : null; } catch (e) { return null; } },
       fid: () => fid,   // [channel] the fight record's id (channel.js reads teammates' tbf/<fid>~ch~<pid>)
       end() {
         clearTimeout(timer); clearInterval(beat); beat = null;
-        if (cur && fid) { push(true); const id = fid, ps = [...pidsSeen]; setTimeout(() => { store.remove?.("tbf", id); ps.forEach((p) => store.remove?.("tbf", `${id}~${p}`)); }, 12000); }   // members see the ending, then it's tidied away
+        if (cur && fid) { push(true); const id = fid, ps = [...pidsSeen]; setTimeout(() => { store.remove?.("tbf", id); ps.forEach((p) => { store.remove?.("tbf", `${id}~${p}`); store.remove?.("tbf", `${id}~${p}~b`); }); }, 12000); }   // members see the ending, then it's tidied away
         fid = null; cur = null; made = false; last = ""; pidsSeen = new Set();
       },
     };
@@ -1196,7 +1309,7 @@ const TB = (() => {
       const nowS = Date.now() / 1000;
       const mine = (x) => !watchClosed[x.id] && !(typeof SHAREDFIGHT !== "undefined" && SHAREDFIGHT.claims(x));   // the full shared fight screen takes these (sharedfight.js)
       const d = docs.find((x) => x.owner !== me && (x.pids || []).includes(me) && nowS - (x.t || 0) < 180 && mine(x))
-        || docs.find((x) => x.turn && x.turn.pid === me && !(x.reply && x.reply.round === x.round) && x.turn.until > Date.now() && mine(x));
+        || docs.find((x) => x.turn && x.turn.pid === me && !(x.reply && x.reply.round === x.round) && (!x.turn.until || x.turn.until > Date.now()) && mine(x));
       let el = document.getElementById("tbwatch");
       if (!d || open) { if (el) el.remove(); return; }
       if (!el) {
@@ -1210,7 +1323,7 @@ const TB = (() => {
         document.body.appendChild(el);
       }
       el.dataset.id = d.id; el.dataset.round = d.round;
-      const myTurn = d.turn && d.turn.pid === me && !(d.reply && d.reply.round === d.round) && d.turn.until > Date.now();
+      const myTurn = d.turn && d.turn.pid === me && !(d.reply && d.reply.round === d.round) && (!d.turn.until || d.turn.until > Date.now());
       const opts = [["attack", " Attack"], ["power", " Power attack"], ["guard", " Guard"], ...(d.turn?.heals ? [["heal", "✚ Heal the leader"]] : []), ...(d.turn?.pots ? [["potion", " Potion"]] : [])];
       const lead = esc(d.ownerName || "your leader");
       const foeN = d.waves > 1 ? ` <small>foe ${d.wave} of ${d.waves}</small>` : "";
@@ -1220,7 +1333,7 @@ const TB = (() => {
         <div class="tbw-team"><div class="tbw-m"><span>${lead} ⚑</span>${bar(d.hp, d.hpMax, "hp")}</div>${(d.allies || []).map((a) => `<div class="tbw-m${a.down ? " down" : ""}${a.pid === me ? " me" : ""}"><span>${esc(a.name)}${a.pid === me ? " (you)" : ""}${a.down ? " · down" : ""}</span>${bar(a.hp, a.hpMax, "hp")}</div>`).join("")}</div>
         <div class="tbw-log">${(d.log || []).map((t) => `<p>${esc(t)}</p>`).join("")}</div>
         ${d.done ? `<div class="tbw-end ${d.won ? "won" : "lost"}"><b>${d.won ? "Victory!" : "Defeated…"}</b><button class="btn pri" data-tbwclose="1">Continue</button></div>`
-          : myTurn ? `<div class="tbw-turn"><b>Your turn</b> <small class="num">${Math.max(0, Math.ceil((d.turn.until - Date.now()) / 1000))}s</small><div class="tbaskb">${opts.map(([k, l]) => `<button class="btn" data-tbmove="${k}">${l}</button>`).join("")}</div></div>`
+          : myTurn ? `<div class="tbw-turn"><b>Your turn</b>${d.turn.until ? ` <small class="num">${Math.max(0, Math.ceil((d.turn.until - Date.now()) / 1000))}s</small>` : ""}<div class="tbaskb">${opts.map(([k, l]) => `<button class="btn" data-tbmove="${k}">${l}</button>`).join("")}</div></div>`
           : `<p class="tbw-wait">${d.turn ? ` ${esc(d.turn.name)} is choosing…` : `${lead} is fighting. Your turn comes up in the turn order.`}</p>`}
       </div>`;
     });

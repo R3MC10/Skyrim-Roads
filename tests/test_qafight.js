@@ -4,7 +4,7 @@
 const fs = require("fs"), vm = require("vm"), path = require("path");
 const W = process.env.W || path.join(__dirname, "../game/");
 const c = vm.createContext({ console, Math, Date, JSON, Object, Array, Set, Map, Number, String, structuredClone });
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "powers.js", "engine.js", "stacks.js", "tbfight.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "powers.js", "engine.js", "stacks.js", "initiative.js", "tbfight.js"])
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 let fails = 0;
 const ok = (v, m) => { if (!v) { fails++; console.log("FAIL", m); } else console.log("ok  ", m); };

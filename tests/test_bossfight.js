@@ -6,7 +6,7 @@ const W = process.env.W || path.join(__dirname, "../game/");
 const c = vm.createContext({ process: { env: process.env }, console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, WeakMap, Proxy, Number, String, RUNS: 10 });
 const TBT = fs.readFileSync(path.join(__dirname, "test_tbfight.js"), "utf8");
 const FILES = JSON.parse(TBT.match(/for \(const f of (\[[^\]]+\])\)/)[1]).filter((f) => f !== "tbfight.js" && f !== "foeintent.js")
-  .concat(["dragons.js", "priests.js", "daedric.js", "foekit.js", "fightread.js", "foeintent.js", "tbfight.js", "bossfight.js"]);
+  .concat(["dragons.js", "priests.js", "daedric.js", "foekit.js", "fightread.js", "foeintent.js", "initiative.js", "tbfight.js", "bossfight.js"]);
 for (const f of [...new Set(FILES)]) if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 vm.runInContext(TBT.slice(TBT.indexOf("const LEVELS"), TBT.indexOf("{ const TUNE")) + "; this.make = make;", c);
 let fails = 0, n = 0;
@@ -116,7 +116,7 @@ const BANDIT = { name: "Bandit outlaw", health: 60, damage: 10, tags: ["humanoid
   // Break Their Focus: a tenth of its health always breaks it, and it reels
   const f3 = fightOf("twohand", 30, foeOf(CHIEF, 30, { boss: true })), s3 = new TB.Session(f3, { trySneak: false }); f3.s.perks = { ...f3.s.perks, break_their_focus: 1 };
   f3.bf.tele = { key: "slam", round: 1, idx: 0, meAfter: true }; const before = f3.ehp; f3.ehp -= s3.ehpMax * 0.11;
-  const t = B.answer(s3, "power_attack", before); ok(!f3.bf.tele && f3.stagger && /reels/.test(t), "Break Their Focus: a heavy blow breaks it and it loses a move");
+  const t = B.answer(s3, "power_attack", before); ok(!f3.bf.tele && f3.stagger && /reels/.test(t), "Break Their Focus: a heavy blow breaks it and it reels (its next turn comes later)");
 }
 
 // ---- Polish
