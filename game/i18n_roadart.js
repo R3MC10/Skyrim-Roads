@@ -39,5 +39,9 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Changing a setting no longer throws you back to the top of the Settings page: you stay where you were.": "Zmiana ustawienia nie przerzuca już na górę strony Ustawień: zostajesz tam, gdzie byłeś.",
     "Nordic tabs": "Nordyckie zakładki",
     "Tabs (Travel and Places, the Journal's Quests, Discoveries and the rest, Active, Misc and Completed) now sit on a thin bronze line, and the one you're on gets a small knotwork ornament under its name.": "Zakładki (Podróż i Miejsca, w Dzienniku Zadania, Odkrycia i pozostałe, Aktywne, Różne i Ukończone) leżą teraz na cienkiej brązowej linii, a wybrana ma pod nazwą mały pleciony ornament.",
+    "Real snow on the map": "Prawdziwy śnieg na mapie",
+    "Snow on the world map is new: you watch it fall from above, so flakes drift on the wind and shrink away toward the ground instead of sliding down the screen.": "Śnieg na mapie świata jest nowy: patrzysz na niego z góry, więc płatki dryfują z wiatrem i maleją, opadając ku ziemi, zamiast zsuwać się po ekranie.",
+    "Flakes are soft, uneven clumps that tumble and catch the light; the ones closest to you blur, and a blizzard drives small hard grains almost sideways with gusts of whiteout.": "Płatki to miękkie, nierówne kłębki, które koziołkują i łapią światło; najbliższe się rozmywają, a zamieć niesie drobne twarde ziarna niemal poziomo, z porywami białej mgły.",
+    "Lite motion uses fewer flakes, and with motion off the snow holds still.": "Przy lekkim ruchu płatków jest mniej, a przy wyłączonym ruchu śnieg stoi w miejscu.",
   });
 })();

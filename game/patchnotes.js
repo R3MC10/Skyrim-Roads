@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b371-mapsnow", build: 371, date: "26 Nov 2026", title: "Real snow on the map", items: [
+      "Snow on the world map is new: you watch it fall from above, so flakes drift on the wind and shrink away toward the ground instead of sliding down the screen.",
+      "Flakes are soft, uneven clumps that tumble and catch the light; the ones closest to you blur, and a blizzard drives small hard grains almost sideways with gusts of whiteout.",
+      "Lite motion uses fewer flakes, and with motion off the snow holds still.",
+    ] },
     { id: "b370-tabs", build: 370, date: "26 Nov 2026", title: "Nordic tabs", items: [
       "Tabs (Travel and Places, the Journal's Quests, Discoveries and the rest, Active, Misc and Completed) now sit on a thin bronze line, and the one you're on gets a small knotwork ornament under its name.",
     ] },

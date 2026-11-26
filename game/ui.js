@@ -1213,7 +1213,8 @@
     const raidNow = typeof RAIDART !== "undefined" && WEVENTS.activeRaid();
     const fxNow = typeof FXART !== "undefined" && S ? FXART.state(S) : null;   // spell and shout effects on the map
     const PC = typeof PCMAP !== "undefined" && PCMAP.on();   // PC map home screen (pcmap.js): smooth pan and zoom, living map (mapfx.js)
-    const gap = PC && performance.now() - mapTouchedAt < 400 ? 16 : moving || mapAnim ? 33 : PC && typeof MAPFX !== "undefined" && MAPFX.busy(reduceMotion) ? 50 : weatherAnim || (raidNow && !reduceMotion) || (fxNow?.anim && !reduceMotion) ? 66 : 125;
+    const snowing = !reduceMotion && typeof SNOWFX !== "undefined" && (["snow", "blizzard"].includes(wx) || SNOWFX.live() > 0);   // falling snow wants smooth frames
+    const gap = PC && performance.now() - mapTouchedAt < 400 ? 16 : moving || mapAnim || snowing ? 33 : PC && typeof MAPFX !== "undefined" && MAPFX.busy(reduceMotion) ? 50 : weatherAnim || (raidNow && !reduceMotion) || (fxNow?.anim && !reduceMotion) ? 66 : 125;
     if (!mapResized && ts - lastFrame < gap - 4) return gap - (ts - lastFrame);
     lastFrame = ts; mapResized = false;
     const pos = livePos();
