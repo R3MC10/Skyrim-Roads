@@ -19,5 +19,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "A living main menu": "Żywe menu główne",
     "On phones, the main menu is now a moving painting: northern lights ripple over the valley, snow drifts down and the hero's cloak stirs in the wind.": "Na telefonach menu główne to teraz ruchomy obraz: zorza faluje nad doliną, pada śnieg, a płaszcz bohatera porusza się na wietrze.",
     "The usual title music plays over it, and the old drawn snowflakes step aside since the painting has its own snow.": "Gra przy nim zwykła muzyka z menu, a dawne rysowane płatki śniegu znikają, bo obraz ma własny śnieg.",
+    "Clearer main menu": "Wyraźniejsze menu główne",
+    "The dark patch in the middle of the main menu is gone, so the painting shows through clearly behind the buttons.": "Ciemna plama na środku menu głównego zniknęła, więc obraz wyraźnie widać za przyciskami.",
   });
 })();
