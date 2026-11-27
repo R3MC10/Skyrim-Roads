@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b384-raceportraits", build: 384, date: "27 Nov 2026", title: "Portraits for everyone", items: [
+      "Every race now has a painted portrait for both men and women. Before, half the heroes borrowed a face from another race; now Automatic shows your own race and sex, and all twenty faces are in the portrait picker.",
+    ] },
     { id: "b383-perf", build: 383, date: "27 Nov 2026", title: "Smoother on phones", items: [
       "Fights run much smoother on phones: the blurred picture behind the fight was being redrawn by the phone every single frame. Now it's made once and simply stretched, which roughly tripled the frame rate on a slow phone in our tests.",
       "On phones fights now start at Medium quality and 30 frames a second (you can still pick High or No cap in Settings → Fights).",
