@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b375-fightlogic", build: 375, date: "27 Nov 2026", title: "Fight fixes: foes, spells and helpers", items: [
+      "What a foe shows it will do next round is now what it really does: the moves and the \"→ you / → Lydia\" targets on its intent chips no longer change when the round starts.",
+      "Courage, Rally and Call to Arms no longer stack again and again on each cast, and no longer push your health above its maximum.",
+      "Healing a hero of Sovngarde, Odahviing or a wild animal you called with a shout no longer breaks their health; the heal goes to you instead.",
+      "No more \"(−0 stamina)\" lines in the fight log.",
+    ] },
     { id: "b374-savecopies", build: 374, date: "26 Nov 2026", title: "Fewer save questions", items: [
       "The \"Two copies\" screen no longer pops up by itself. If a save reached your account but the game never heard back (the app went to the background, or the signal dropped), it now recognises its own save and just carries on.",
       "When it does ask, because you really played on another device, each copy shows its level, gold and when it was last played, and the newest one is marked and comes first.",

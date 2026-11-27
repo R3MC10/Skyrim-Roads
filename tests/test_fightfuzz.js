@@ -98,7 +98,7 @@ function play(i) {
   let ss;
   try { ss = new TB.Session(f, { trySneak: rnd() < 0.3 }); if (mode >= 0.75) ss.remote = { ask() {}, end() {} }; } catch (x) { bad(tag0 + ": session " + x.message); return; }
   const folKeep = fol ? (f.allies || []).find((a) => a.follower) : null;
-  let r, g = 0, lastA = "", rBefore = 0, sumBefore = 0;
+  let r, g = 0, lastA = "", rBefore = 0, sumBefore = 0, evSeen = 0;
   try {
     r = ss.begin();
     while (!ss.done && g++ < 900) {
@@ -120,6 +120,8 @@ function play(i) {
       } else if (r && r.turn === "wait") { if (ss.waiting) ss.waiting.skip = true; r = ss.advance(); }
       else r = ss.advance();
       checkState(ss, tag);
+      for (let q = evSeen; q < ss.ev.length; q++) { const t = String(ss.ev[q].text || ""); if (["NaN", "undefined", "[object", " null", "(−0", "Infinity"].some((w) => t.includes(w))) bad(tag + ": odd log line: " + t.slice(0, 160)); }
+      evSeen = ss.ev.length;
       if (ss.round > rBefore && sumBefore > 1 && f.summonTurns > 0 && f.ehp > 0 && !ss.done) { sumStat.r++; if (!(ss.order || []).some((o) => o.id === "sum")) { sumStat.stuck++; if (sumStat.stuck < 4) bad(tag + ": a summon with " + f.summonTurns + " turns left has no place in the turn order"); } }
       rBefore = ss.round; sumBefore = f.summonTurns || 0;
       if (folKeep && folKeep.hp != null && folKeep.hp <= 0 && (f.allies || []).includes(folKeep) && !folKeep.down) bad(tag + ": follower at 0 health still standing");

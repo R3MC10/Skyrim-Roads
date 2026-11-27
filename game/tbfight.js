@@ -297,6 +297,7 @@ const TB = (() => {
       return me + al;
     }
     emit(who, text, kind, extra = {}) {
+      if (typeof text === "string" && text.includes("(−0 ")) text = text.replace(/ \(−0 [^)]*\)/g, "");   // [fight-logic] "(−0 stamina)" when there was nothing left to lose says nothing
       const e = { who, text, kind, round: this.round, hp: Math.max(0, Math.round(this.f.hp)), ehp: Math.max(0, Math.round(this.f.ehp)), ...extra };
       if (this.cur && this.cur.u && e.u == null && kind !== "round") e.u = this.cur.u;   // which slot it came from: the roster lights that portrait (initroster.js)
       if (this.remote && this.players && !this.mirror) { const ph = {}; for (const a of this.everyone) if (a.pid) ph[a.pid] = Math.max(0, Math.round(a.hp || 0)); e.ph = ph; }   // every player's health at this moment, for their own screens
@@ -782,11 +783,11 @@ const TB = (() => {
       if (FI) { FI.done(this); t = FI.say(this, t); }   // "takes aim at Lydia"
       if (typeof STACKS !== "undefined") {   // Chill and Weak stacks soften its blows (stacks.js)
         const so = STACKS.foeSoften(f), l0 = hpB - f.hp;
-        if (so > 0 && l0 > 0) { f.hp += l0 * so; t += ` (−${Math.round(l0 * so)} chilled/weak)`; }
+        if (so > 0 && l0 > 0) { f.hp += l0 * so; if (Math.round(l0 * so) >= 1) t += ` (−${Math.round(l0 * so)} chilled/weak)`; }   // [fight-logic] no "(−0 ...)" lines
         STACKS.sync(f);
       }
       const loss = hpB - f.hp;
-      if (loss > 0 && f.tbGuard) { const back = loss * f.tbGuard; f.hp += back; t += ` (guard −${Math.round(back)})`; }
+      if (loss > 0 && f.tbGuard) { const back = loss * f.tbGuard; f.hp += back; if (Math.round(back) >= 1) t += ` (guard −${Math.round(back)})`; }
       if (typeof REACT !== "undefined") t += REACT.foePost(this, hpB);
       const mh = G.maxHealth(f.s), cap = HIT_CAP * mh, loss2 = hpB - f.hp;
       if (loss2 > cap && hpB > cap) { f.hp = hpB - cap; t += " (you stay on your feet)"; }
