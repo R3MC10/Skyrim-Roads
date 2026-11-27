@@ -71,17 +71,60 @@ const DIORAMA = (() => {
   }
   const ready = () => K().FILES.every((f) => LOADED.has(f));
 
+  /* fog (one model for everything in the view): exponential height fog after Inigo Quilez's "better fog": the air is
+     thickest low down and thins with height, so mist pools in hollows and along the ground while hilltops and the
+     ridges' peaks stand out of it. Extinction and in-scattering per colour (blue scatters more), so far things turn
+     soft and blue instead of a flat grey; the fog glows warm toward the sun; slow wisps of thicker and thinner air
+     drift with the wind. dfMul shortens the distance for paintings that already carry their own haze (places, ridges). */
+  const FOG_GLSL = `
+    uniform vec3 dfCol, dfSun, dfSunDir, dfCam; uniform float dfA, dfHaze, dfB, dfBase, dfT, dfWisp, dfMax; uniform vec2 dfWind;
+    float dfH(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+    float dfN(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
+      return mix(mix(dfH(i), dfH(i + vec2(1., 0.)), f.x), mix(dfH(i + vec2(0., 1.)), dfH(i + 1.), f.x), f.y); }
+    vec3 dioFog(vec3 col, vec3 wp, float mul){
+      vec3 rd = wp - dfCam; float len = max(length(rd), 1e-4), dist = len * mul; rd /= len;
+      float k = dfB * rd.y, h0 = dfCam.y - dfBase;
+      // a light haze over distance (the air itself) + a mist layer lying on the ground that thins fast with height
+      float od = dfHaze * dist + dfA * exp(-dfB * h0) * (abs(k * dist) > 1e-3 ? (1. - exp(-k * dist)) / k : dist);
+      if (dfWisp > 0.01) {
+        vec2 q = (wp.xz - dfWind * dfT) * 0.03;
+        float n = dfN(q) * .62 + dfN(q * 2.6 + 7.3) * .38;
+        od *= max(0., 1. + dfWisp * (n - .48) * 1.7 * smoothstep(5., 35., dist));
+      }
+      vec3 ext = max(exp(-max(od, 0.) * vec3(.9, 1., 1.12)), vec3(1. - dfMax));
+      float s = pow(max(dot(rd, dfSunDir), 0.), 5.);
+      vec3 fc = mix(dfCol * .94, dfCol * 1.08 + .02, smoothstep(-.15, .12, rd.y));   // the mist is lit from above: brighter toward the sky
+      return col * ext + mix(fc, dfSun, s * .6) * (1. - ext);
+    }`;
+  let FOGU = null;   // the fog's uniforms, shared by every material (made once three.js is here)
+  const fogU = () => FOGU || (FOGU = { dfCol: { value: new THREE.Color(0x8e9fae) }, dfSun: { value: new THREE.Color(0xffe9c4) }, dfSunDir: { value: new THREE.Vector3(0, 0.3, 1) },
+    dfA: { value: 0.012 }, dfHaze: { value: 0.0025 }, dfB: { value: 0.12 }, dfBase: { value: 0 }, dfT: { value: 0 }, dfWisp: { value: 0.15 }, dfMax: { value: 0.97 }, dfWind: { value: new THREE.Vector2(0, 0) }, dfCam: { value: new THREE.Vector3() } });   // dfCam: three.js doesn't hand its basic materials the camera's position
+  /* three.js's own materials (ground, road, bridges, you, your company, the ridges) take the same fog: their fog lines
+     are swapped for dioFog. material.userData.dfMul shortens the distance; a material with fog: false keeps none. */
+  function patchFog() {
+    const M = THREE.MeshBasicMaterial.prototype;
+    if (M.__dioFog) return; M.__dioFog = true;
+    M.onBeforeCompile = function (sh) {
+      if (!this.fog) return;
+      Object.assign(sh.uniforms, fogU(), { dfMul: { value: (this.userData && this.userData.dfMul) || 1 } });
+      sh.vertexShader = sh.vertexShader.replace("#include <fog_pars_vertex>", "varying vec3 vDioW;")
+        .replace("#include <fog_vertex>", "{ vec4 dw = vec4(transformed, 1.0);\n#ifdef USE_INSTANCING\n dw = instanceMatrix * dw;\n#endif\n vDioW = (modelMatrix * dw).xyz; }");
+      sh.fragmentShader = sh.fragmentShader.replace("#include <fog_pars_fragment>", "varying vec3 vDioW; uniform float dfMul;" + FOG_GLSL)
+        .replace("#include <fog_fragment>", "gl_FragColor.rgb = dioFog(gl_FragColor.rgb, vDioW, dfMul);");
+    };
+  }
+
   /* cut-outs that turn to face you: one instanced quad per kind; position, size and mirror per instance */
   const CARD_VS = `
     attribute vec3 iPos; attribute vec2 iSize; attribute float iFlip;
     uniform vec3 camRight; uniform vec3 heroPos; uniform vec3 camPos; uniform float fogMul;
-    varying vec2 vUv; varying float vFog; varying float vFade;
+    varying vec2 vUv; varying vec3 vW; varying float vFade;
     void main() {
       vUv = uv;
       vec3 r = normalize(vec3(camRight.x, 0.0, camRight.z));
       vec3 wp = iPos + r * position.x * iSize.x * iFlip + vec3(0.0, position.y * iSize.y, 0.0);
       vec4 mv = viewMatrix * vec4(wp, 1.0);
-      vFog = -mv.z * fogMul;
+      vW = wp;
       // see-through: something tall standing between you and the camera fades so it never hides you
       float dHero = distance(camPos.xz, heroPos.xz), dMe = distance(camPos.xz, iPos.xz);
       float lat = abs(dot(iPos.xz - heroPos.xz, r.xz));
@@ -89,20 +132,20 @@ const DIORAMA = (() => {
       gl_Position = projectionMatrix * mv;
     }`;
   const CARD_FS = `
-    uniform sampler2D map; uniform vec3 tint; uniform vec3 fogColor; uniform float fogNear; uniform float fogFar;
-    varying vec2 vUv; varying float vFog; varying float vFade;
+    uniform sampler2D map; uniform vec3 tint; uniform float fogMul;
+    varying vec2 vUv; varying vec3 vW; varying float vFade;${FOG_GLSL}
     void main() {
       vec4 c = texture2D(map, vUv);
       if (c.a < 0.45) discard;
       if (vFade < 1.0) { vec2 p = floor(gl_FragCoord.xy); if (mod(p.x + p.y, 2.0) < 1.0 || mod(p.y, 2.0) < 1.0) discard; }
       vec3 col = c.rgb * tint;
-      col = mix(col, fogColor, smoothstep(fogNear, fogFar, vFog));
+      col = dioFog(col, vW, fogMul);
       gl_FragColor = vec4(col, 1.0);
     }`;
   function cardMaterial(map) {
     return new THREE.ShaderMaterial({ vertexShader: CARD_VS, fragmentShader: CARD_FS, side: THREE.DoubleSide,
       uniforms: { map: { value: map }, tint: { value: new THREE.Color(1, 1, 1) }, camRight: { value: new THREE.Vector3(1, 0, 0) }, heroPos: { value: new THREE.Vector3() }, camPos: { value: new THREE.Vector3() },
-        fogColor: { value: new THREE.Color(0x8e9fae) }, fogNear: { value: 30 }, fogFar: { value: 190 }, fogMul: { value: 1 } } });
+        fogMul: { value: 1 }, ...fogU() } });
   }
   function cardMesh(kind, max, file) {
     const map = tex(file || K().PROPS[kind].file), img = map.image, aspect = img && img.width ? img.width / img.height : 0.6;
@@ -139,7 +182,7 @@ const DIORAMA = (() => {
       if (wo > .01) {   // whiteout drifting past in patches, carried by the wind
         vec2 p = vUv * vec2(res.x / res.y, 1.) * 1.6 - woDir * woT * .02;
         float n = sin(p.x * 2.1 + woT * .21) * sin(p.y * 2.7 - woT * .17) + .6 * sin(p.x * 4.3 - p.y * 3.1 + woT * .33);
-        col = mix(col, vec3(.93, .95, .98) * grade, wo * .16 * smoothstep(-.6, 1.3, n));
+        col = mix(col, vec3(.93, .95, .98) * grade, wo * .08 * smoothstep(-.6, 1.3, n));
       }
       vec2 q = vUv - .5; col *= 1. - dot(q * vec2(1., 1.25), q * vec2(1., 1.25)) * (.5 + dark);
       gl_FragColor = vec4(col, 1.);
@@ -150,8 +193,8 @@ const DIORAMA = (() => {
     host.appendChild(canvas);
     let renderer;
     try { renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance", preserveDrawingBuffer: /[?&]diorama\b/.test(location.search) /* tests read the picture back */ }); } catch { canvas.remove(); webgl = false; return null; }
+    patchFog();
     const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(32, 2, 0.5, 2600);
-    const fogU = []; // every material that follows the fog
     const basic = (map, o = {}) => new THREE.MeshBasicMaterial({ map, ...o });
     // sky and two ridges: rings round the camera, far enough to count as the horizon. They move with you but never
     // turn: turning the camera simply looks round at them, like the real horizon (no sliding or racing)
@@ -171,7 +214,8 @@ const DIORAMA = (() => {
     const haze = new THREE.Mesh(hazeG, new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(hzc), transparent: true, depthWrite: false, fog: false, side: THREE.BackSide }));
     haze.renderOrder = -9.5; haze.frustumCulled = false; haze.userData = { base: -200 }; scene.add(haze);
     const backs = [ring("dio-far", 900, 1400 * 0.2 * 1.1, -16, 4, -9), ring("dio-mid", 430, 620 * 0.168 * 1.1, -28, 4, -8)];
-    const farGround = new THREE.Mesh(new THREE.PlaneGeometry(8000, 8000).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x8e9fae, depthWrite: false })); farGround.renderOrder = -11; scene.add(farGround);   // never hides the ridges behind it
+    backs.forEach((b, i) => { b.material.fog = true; b.material.userData.dfMul = i ? 0.09 : 0.06; });   // the ridges sit in the same fog: their feet in the mist, the peaks above it
+    const farGround = new THREE.Mesh(new THREE.PlaneGeometry(8000, 8000).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x8e9fae, depthWrite: false }));   // the land beyond the patch: the forest floor, fading into the fog farGround.renderOrder = -11; scene.add(farGround);   // never hides the ridges behind it
     // the ground patch round you (rebuilt as you go) and the road ribbon
     const gGeo = new THREE.PlaneGeometry(240, 240, 96, 96); gGeo.rotateX(-Math.PI / 2);
     const ground = new THREE.Mesh(gGeo, basic(tex("dio-floor", true))); ground.frustumCulled = false; scene.add(ground);
@@ -204,9 +248,9 @@ const DIORAMA = (() => {
     // current, a faint pale line where it meets the bank, edges that fade into the ground; fog and time of day apply
     const waterMat = (lakeMode) => new THREE.ShaderMaterial({ transparent: true, depthWrite: false,
       uniforms: { map: { value: waterTex }, t: { value: 0 }, deep: { value: new THREE.Color(0x2c4652) }, shallow: { value: new THREE.Color(0x8fa6b2) }, tint: { value: new THREE.Color(1, 1, 1) },
-        fogColor: { value: new THREE.Color(0x8e9fae) }, fogNear: { value: 30 }, fogFar: { value: 190 }, lake: { value: lakeMode ? 1 : 0 } },
-      vertexShader: "varying vec2 vUv; varying vec3 vW; varying float vFog; void main(){ vUv = uv; vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vec4 mv = viewMatrix * w; vFog = -mv.z; gl_Position = projectionMatrix * mv; }",
-      fragmentShader: `uniform sampler2D map; uniform float t, fogNear, fogFar, lake; uniform vec3 deep, shallow, tint, fogColor; varying vec2 vUv; varying vec3 vW; varying float vFog;
+        lake: { value: lakeMode ? 1 : 0 }, ...fogU() },
+      vertexShader: "varying vec2 vUv; varying vec3 vW; void main(){ vUv = uv; vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vec4 mv = viewMatrix * w; gl_Position = projectionMatrix * mv; }",
+      fragmentShader: `uniform sampler2D map; uniform float t, lake; uniform vec3 deep, shallow, tint; varying vec2 vUv; varying vec3 vW;${FOG_GLSL}
         void main(){
           float e = lake > 0.5 ? 1.0 : min(vUv.x, 1.0 - vUv.x) * 2.0;           // 0 at the banks, 1 mid-stream
           vec2 p = lake > 0.5 ? vW.xz / 22.0 : vec2(vUv.x, vUv.y);
@@ -217,7 +261,7 @@ const DIORAMA = (() => {
           float foam = lake > 0.5 ? 0.0 : smoothstep(0.06, 0.13, e) * (1.0 - smoothstep(0.13, 0.24, e)) * 0.3;
           col = mix(col, vec3(0.86, 0.9, 0.92), foam);
           col *= tint;
-          col = mix(col, fogColor, smoothstep(fogNear, fogFar, vFog));
+          col = dioFog(col, vW, 1.0);
           gl_FragColor = vec4(col, (lake > 0.5 ? 0.93 : smoothstep(0.0, 0.32, e) * 0.95));
         }` });
     const river = new THREE.Mesh(new THREE.BufferGeometry(), waterMat(false)); river.renderOrder = 0.5; river.frustumCulled = false; scene.add(river);
@@ -476,7 +520,10 @@ const DIORAMA = (() => {
     if (wx === "fog" || wx === "blizzard") fog.lerp(new THREE.Color(0xd6dadc), (wx === "fog" ? 0.45 : 0.3) * (tod === "night" ? 0.3 : 1));
     const dull = { cloudy: 0.9, rain: 0.78, storm: 0.62, fog: 0.9, snow: 0.92, blizzard: 0.85 }[wx] || 1;
     const t = new THREE.Color(L.tint[0] * dull, L.tint[1] * dull, L.tint[2] * dull);
-    return { tod, wx, fog, near: 30 * thick, far: 190 * thick, tint: t, grade: L.grade, dark: L.dark + (wx === "storm" ? 0.15 : 0), snow: ["snow", "blizzard"].includes(wx) };
+    const W = { fog: [0.007, 0.03], blizzard: [0.0028, 0.008], snow: [0.0026, 0.006], rain: [0.0028, 0.006], storm: [0.0034, 0.008], ashstorm: [0.006, 0.016], cloudy: [0.0022, 0.005] }[wx] || [0.0018, 0.004];   // [haze per metre, ground mist]
+    const haze = W[0], fogA = W[1], wisp = ({ fog: 0.85, blizzard: 1, snow: 0.45, rain: 0.4, storm: 0.5, ashstorm: 0.8, cloudy: 0.3 }[wx] || 0.18);
+    const sun = new THREE.Color({ night: 0x8b9bbd, dusk: 0xffae6a, dawn: 0xffc2a6 }[tod] || 0xffe9c4).lerp(fog, wx === "clear" ? 0 : ["cloudy", "snow", "rain"].includes(wx) ? 0.5 : 0.8);
+    return { tod, wx, fog, fogA, haze, wisp, sun, near: 30 * thick, far: 190 * thick, tint: t, grade: L.grade, dark: L.dark + (wx === "storm" ? 0.15 : 0), snow: ["snow", "blizzard"].includes(wx) };
   }
 
   /* walking up to whoever stops you: how far back they first stand (just out of view) and at what pace; the event card
@@ -688,11 +735,18 @@ const DIORAMA = (() => {
     V.heroShadow.position.set(here.x + 0.25, here.y + 0.05, here.z); V.heroShadow.scale.set(I.riding ? 3.2 : 1.5, 1, I.riding ? 1 : 0.6); V.heroShadow.rotation.y = -camYaw;
     // light
     const Lt = light(I, kit);
-    V.scene.fog.color.copy(Lt.fog); V.scene.fog.near = Lt.near; V.scene.fog.far = Lt.far; V.farGround.material.color.copy(Lt.fog); V.renderer.setClearColor(Lt.fog);
+    V.scene.fog.color.copy(Lt.fog); V.scene.fog.near = Lt.near; V.scene.fog.far = Lt.far; V.renderer.setClearColor(Lt.fog);
     const gt = new THREE.Color(Lt.tint.r * kit.ground[0], Lt.tint.g * kit.ground[1], Lt.tint.b * kit.ground[2]);
+    V.farGround.material.color.copy(gt);
+    if (!V.farGround.material.map && LOADED.has("dio-floor")) { const ft = TEX["dio-floor"].clone(); ft.needsUpdate = true; ft.repeat.set(8000 / 60, 8000 / 60); V.farGround.material.map = ft; V.farGround.material.needsUpdate = true; }
+    { // the fog: thickness and colour from the weather, the sun's side of the sky glowing warmer, wisps carried by the wind
+      const F = fogU(), wd = V.snow && Lt.snow ? V.snow.windDir() : [0.7, 0.25], fwd = new THREE.Vector3(); V.camera.getWorldDirection(fwd);
+      F.dfCam.value.copy(V.camera.position); F.dfCol.value.copy(Lt.fog); F.dfA.value = Lt.fogA; F.dfHaze.value = Lt.haze; F.dfBase.value = here.y - 1; F.dfT.value = I.reduce ? 0 : t; F.dfWisp.value = Lt.wisp; F.dfWind.value.set(wd[0], wd[1]);
+      F.dfSun.value.copy(Lt.sun); F.dfSunDir.value.set(-right.x * 0.7 + fwd.x * 0.6, 0.35, -right.z * 0.7 + fwd.z * 0.6).normalize();   // the light comes from the upper left, as in every painting
+    }
     V.ground.material.color.copy(gt); for (const a of V.actors.values()) a.mesh.material.color.setRGB(Math.max(0.7, Lt.tint.r), Math.max(0.72, Lt.tint.g), Math.max(0.8, Lt.tint.b)); if (V.bridgeMats) for (const m of Object.values(V.bridgeMats)) if (m.color) m.color.copy(Lt.tint); V.road.material.color.copy(Lt.tint); V.hero.material.color.setRGB(Math.max(0.78, Lt.tint.r), Math.max(0.8, Lt.tint.g), Math.max(0.86, Lt.tint.b)); V.sky.material.color.copy(Lt.tint);   // you stay easy to see
     V.backs.forEach((b) => b.material.color.setRGB(Lt.tint.r * kit.far[0], Lt.tint.g * kit.far[1], Lt.tint.b * kit.far[2]));
-    for (const m of [...Object.values(V.cards), ...Object.values(V.places)]) { const u = m.material.uniforms; u.tint.value.copy(Lt.tint); u.camRight.value.copy(right); u.heroPos.value.set(here.x, here.y, here.z); u.camPos.value.copy(V.camera.position); u.fogColor.value.copy(Lt.fog); u.fogNear.value = Lt.near; u.fogFar.value = Lt.far; }
+    for (const m of [...Object.values(V.cards), ...Object.values(V.places)]) { const u = m.material.uniforms; u.tint.value.copy(Lt.tint); u.camRight.value.copy(right); u.heroPos.value.set(here.x, here.y, here.z); u.camPos.value.copy(V.camera.position); }
     V.post.uniforms.grade.value.set(...Lt.grade); V.post.uniforms.dark.value = Lt.dark;
     // sky and ridges sit far off along the camera's view, turning with it
     const cpos = V.camera.position;
@@ -706,7 +760,7 @@ const DIORAMA = (() => {
     if (V.placeList.some((o) => LOADED.has(o.file) && !V.places[o.file]) || (V.wantBridge && LOADED.has(K().BRIDGE.file))) { V.patch = null; V.wantBridge = false; }
     // the current drifts down the river; the lake ripples slowly
     { V.waterT = (V.waterT || 0) + (I.reduce ? 0 : dt);
-      for (const m of [V.river.material, V.lake.material]) { const u = m.uniforms; u.t.value = V.waterT; u.tint.value.copy(Lt.tint); u.fogColor.value.copy(Lt.fog); u.fogNear.value = Lt.near; u.fogFar.value = Lt.far;
+      for (const m of [V.river.material, V.lake.material]) { const u = m.uniforms; u.t.value = V.waterT; u.tint.value.copy(Lt.tint);
         u.shallow.value.setRGB(0.36, 0.48, 0.52).lerp(Lt.fog, 0.35); u.deep.value.setRGB(0.1, 0.17, 0.21).lerp(Lt.fog, 0.15); } }
     labels(host, I, here);
     V.lastDrew = performance.now();
