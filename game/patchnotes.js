@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b379-npctasks", build: 379, date: "27 Nov 2026", title: "Every job you take is in the Journal", items: [
+      "Every job, rumour and contract you take from someone in the world is in the Journal now: notice-board jobs, odd jobs at farms and camps, rumours from innkeepers and townsfolk, legendary hunts from a Jarl's steward, a Daedric prince's contract, your company's caravan escort and expedition.",
+      "Each one shows who gave it and where, what to do next, how far along you are (like 3/5), how long you have left, and the reward. ☆ Track it to steer the compass, the map and the What to do next card, just like a quest.",
+      "Taking a new task pops up a small \"Quest added\" card with a Track button. Tasks you finish move to Completed, and you can give one up from the Journal (tap Abandon twice).",
+    ] },
     { id: "b378-fightsync", build: 378, date: "27 Nov 2026", title: "Party fights stay in step", items: [
       "Party fights no longer get stuck on someone's turn when a message gets lost on a bad connection: your phone sends your turn again until the leader has it, and the leader's phone keeps telling you it's your turn until you've seen it. Nothing is ever played twice.",
       "A spell that makes the foe flee or vanish (Turn Undead, Banish) now ends the fight for the whole party, not just on your screen. Before, your next turns did nothing.",

@@ -973,6 +973,7 @@
     if (typeof TB !== "undefined" && TB.open) return;   // the world waits while you play out a turn-by-turn fight
     const t = G.now();
     { const cm = CARAVANS.tick(S, t); if (cm) { persist(true); toast(cm); if (S.caravanJob === null) Store.change("guards", `${lastJobId}-${S.id}`, (d) => (d && d.status === "signed" ? { ...d, status: "left" } : d)); bump(); } lastJobId = S.caravanJob?.id || lastJobId; }
+    if (typeof NPCTASKS !== "undefined" && Math.floor(t) % 2 === 0) NPCTASKS.tick({ S, persist: () => persist(true), render: () => { if (tab === "log") renderPanel(true); bump(); }, toast, badge: () => { renderTabs(); }, openJournal: () => { closeMenu?.(); if (!toScreen("log")) { tab = "log"; jTab = "active"; renderTabs(); renderPanel(true); bump(); } } });   // npctasks.js: "Quest added" + finished tasks
     tickTimers(t); hallTick(t); discoveryToast(); if (lvUI && Math.floor(t) % 3 === 0) lvUI.tick(); if (pvUI) pvUI.tick(); if (Math.floor(t) % 5 === 0) courierCheck();
     if (S.remake) remakeCheck();   // [remake] once per old hero
     if (typeof LIVING !== "undefined") { const lm = LIVING.tick(S, t); if (lm) { toast(lm); bump(); } }   // deeds remembered, whispers come true, the party leader's world (livingworld.js)
@@ -3746,7 +3747,7 @@
   /* a non-story task in the same shape: icon, title, text, buttons */
   const miscCard = (icon, title, text, btns = "") => `<div class="qcard misc qt-misc"><div class="qhead"><span class="qico" aria-hidden="true">${icon}</span><div class="t">${title}</div></div><div class="qobj"><p>${text}</p>${btns ? `<div class="qbtns">${btns}</div>` : ""}</div></div>`;
   /* the signature of your quest progress: a dot on the Journal tab when it changes */
-  const jSig = () => QUESTS.active(S).map((a) => `${a.id}:${a.stage}`).join(",");
+  const jSig = () => QUESTS.active(S).map((a) => `${a.id}:${a.stage}`).join(",") + (typeof NPCTASKS !== "undefined" ? "|" + NPCTASKS.list(S).map((e) => e.key).join(",") : "");   // npctasks.js: a new task from an NPC lights the dot too
   const journalNew = () => { try { return !!S && jSig() !== (S.jSeen ?? jSig()); } catch { return false; } };
   /* keeps the old #j-… ids on sections that moved, so links and bookmarks still find them */
   const idPanel = (id, h) => (h && /<div class="panel"/.test(h) ? h.replace(/<div class="panel"/, `<div id="j-${id}" class="panel"`) : `<div id="j-${id}">${h || ""}</div>`);
@@ -3771,6 +3772,7 @@
     QUESTS.ensure(S);
     if (S.jSeen === undefined || tab === "log") S.jSeen = jSig();
     const act = QUESTS.active(S);
+    const TK = typeof NPCTASKS !== "undefined" ? NPCTASKS : null, tkNm = (n) => (typeof NM !== "undefined" ? NM.place(n) : n);   // npctasks.js: jobs, rumours, contracts and errands you took from people
     const story = act.filter((a) => qCat(a.id) !== "Misc"), miscQ = act.filter((a) => qCat(a.id) === "Misc");
     const doneIds = Object.entries(S.quests || {}).filter(([id, v]) => v.done && QUESTS.L[id]).map(([id]) => id);
     // misc objectives: cures, guild work, the Jarl's bounty board, events, caravan jobs, treasure maps, the guide
@@ -3790,26 +3792,29 @@
     }).join("");
     const coopRun = coopUI && coopUI.card ? coopUI.card() : null;
     const sections = [
-      ["Active", "active", story.length],
-      ["Misc", "misc", miscQ.length + (work ? 1 : 0) + (maps ? 1 : 0)],
+      ["Active", "active", story.length + (TK ? TK.count(S, "active") : 0)],
+      ["Misc", "misc", miscQ.length + (work ? 1 : 0) + (maps ? 1 : 0) + (TK ? TK.count(S, "misc") : 0)],
       ["Completed", "done", doneIds.length],
     ];
     const seg = `<div class="seg jseg" role="tablist">${sections.map(([l, k, n]) => `<button class="${jTab === k ? "on" : ""}" data-act="jtab" data-id="${k}" role="tab" aria-selected="${jTab === k}">${l}${n ? ` <b class="jbadge">${n}</b>` : ""}</button>`).join("")}</div>`;
     let body = "", after = "";
     if (jTab === "active") {
       const groups = Q_ORDER.map((c) => [c, story.filter((a) => qCat(a.id) === c)]).filter(([, l]) => l.length);
-      body = groups.length ? groups.map(([c, l]) => `<h3 class="qcat">${esc(c)}</h3>${l.map((a) => questCard(a.id, a, false)).join("")}`).join("")
+      const tasks = TK ? TK.shelf(S, "active", tkNm) : "";
+      body = groups.length || tasks ? groups.map(([c, l]) => `<h3 class="qcat">${esc(c)}</h3>${l.map((a) => questCard(a.id, a, false)).join("")}`).join("") + tasks
         : `<p class="sub">No active quests. Quest givers are listed below, and inns (Area tab) sell rumours.</p>`;
       if (coopRun && S.dungeon) body += `<h3 class="qcat">Co-op</h3>${miscCard("", `Co-op run: ${esc(S.dungeon.place)}`, `You're clearing ${esc(S.dungeon.place)} with your party, room by room. Open the Travel tab to carry on.`, `<button class="btn sm pri" data-act="tabgo" data-id="map">Carry on</button>`)}`;
       if (avail) body += `<h3 class="qcat">Quest givers</h3><div class="list">${avail}</div>`;
       body += `<p class="sub" style="margin-top:8px">☆ Track a quest to show it on the compass, the map's gold diamond and the “What to do next” card.</p>`;
     } else if (jTab === "misc") {
-      body = [miscQ.map((a) => questCard(a.id, a, false)).join(""), work ? `<div class="list">${work}</div>` : "", maps].join("");
+      body = [TK ? TK.shelf(S, "misc", tkNm) : "", miscQ.map((a) => questCard(a.id, a, false)).join(""), work ? `<div class="list">${work}</div>` : "", maps].join("");
       const extra = [...(typeof MENUS !== "undefined" ? [] : [["rumours", typeof RUMOURS !== "undefined" ? RUMOURS.panel(S) : ""], ["wev", typeof WORLDEV !== "undefined" ? WORLDEV.journal() : ""], ["event", festPanel()]]), ["bounty", bountyPanel()], ["caravan", caravanJobPanel()], ["guide", guideCard()]].filter(([, h]) => h && h.trim()).map(([id, h]) => idPanel(id, h)).join("");
       body = body || (extra ? "" : `<p class="sub">No miscellaneous tasks right now.</p>`); after = extra;
     } else {
-      body = doneIds.length ? doneIds.map((id) => questCard(id, S.quests[id], true)).join("") : `<p class="sub">Nothing finished yet.</p>`;
+      const tkDone = TK ? TK.doneShelf(S) : "";
+      body = doneIds.length || tkDone ? doneIds.map((id) => questCard(id, S.quests[id], true)).join("") + tkDone : `<p class="sub">Nothing finished yet.</p>`;
     }
+    if (TK && tab === "log" && jTab !== "done") setTimeout(() => TK.markSeen(S), 0);   // the "New" tag shows once
     return `<div class="panel journal" id="j-quests">${seg}${body}</div>${after}`;
   }
   // ------------------------------------------------------------ panel events
@@ -4060,6 +4065,7 @@
       case "bperk": { const [tr, id] = b.dataset.id.split(":"); const m = CURSE.takePerk(S, tr, id); persist(true); SOUND.fx(/: /.test(m) ? "levelup" : "click"); toast(m); renderPanel(true); break; }
       case "vfeed": say(CURSE.feed(S)); break;
       case "jtab": jTab = b.dataset.id; renderPanel(true); if (typeof MENUTOP !== "undefined") MENUTOP.top(); else scrollTo(0, 0); break;
+      case "tasktrack": case "taskdrop": case "taskact": if (typeof NPCTASKS !== "undefined") NPCTASKS.onClick(a, b.dataset.id, { S, persist: () => persist(true), render: () => { renderPanel(true); bump(); }, toast }); break;   // npctasks.js
       case "qtrack": { const id = b.dataset.id; S.trackQ = QUESTS.tracked(S)?.id === id && S.trackQ === id ? null : id; persist(); renderPanel(true); bump(); toast(S.trackQ ? `★ Tracking ${QUESTS.L[id]?.name || "the quest"}.` : "No quest tracked: the first active quest shows."); break; }
       case "qmap": { const n = b.dataset.place, p = WORLD.places[n]; if (!p) break; closeMenu?.(); tab = "map"; selected = n; follow = false; center = [p[0], p[1]]; if (zoom < 2) zoom = 2.4; renderTabs(); renderPanel(true); renderPicked(); bump(); scrollTo(0, 0); break; }
       case "rowpick": if (typeof FOEFIELD !== "undefined" && FOEFIELD.setChoice(S, b.dataset.id)) { persist(true); renderPanel(true); toast(FOEFIELD.rowSaid(S)); } break;   // [rows] Front / Back / Auto, saved with this loadout
