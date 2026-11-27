@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b375-titlewide", build: 375, date: "27 Nov 2026", title: "Moving main menu on PC", items: [
+      "On computers, tablets and phones turned sideways, the main menu painting now moves too: the northern lights ripple, clouds drift, snow falls and the hero's cloak stirs in the wind, just like on phones held upright. The dragon has flown off this one as well.",
+    ] },
     { id: "b374-savecopies", build: 374, date: "26 Nov 2026", title: "Fewer save questions", items: [
       "The \"Two copies\" screen no longer pops up by itself. If a save reached your account but the game never heard back (the app went to the background, or the signal dropped), it now recognises its own save and just carries on.",
       "When it does ask, because you really played on another device, each copy shows its level, gold and when it was last played, and the newest one is marked and comes first.",
