@@ -36,11 +36,9 @@
                                          sword-iron dagger greatsword axe battleaxe mace staff (360/330/200/460/320/440/330/460
                                          wide). bow bow-drawn arrow, shield shield-side shield-kite shield-kite-side (200-300 tall).
                                          Missing ones (warhammer spear club crossbow) use the shaded drawings.
-     bust-<race>              512×512    painted race busts (bustart.js): transparent, head and shoulders, 3/4 view facing right,
-                                         plain linen tunic, bottom fades out. WebP q85. races: nord imperial breton redguard altmer
-                                         bosmer dunmer orc khajiit argonian. One sex each (BUSTART.SEX: m f f m f m f m f m); for the
-                                         other sex the bust shows as a round race crest. Shown in the race picker, the Hero page and
-                                         the paper doll's corner; the drawn portrait stays until the file loads.
+     bust-<race> and bust-<race>-<sex>  512×512 painted race busts (bustart.js, avatar.js).
+                                         Transparent, 3/4 facing right, plain linen tunic, bottom fade. The original asset
+                                         keeps the race-only name; the second uses -m or -f. Drawn fallback while unavailable.
      npc-<name-slug>          256×256    painted NPC portraits (npcart.js): transparent, chest up, 3/4 view facing right, upper-left
                                          light, same painted look as bust-*.webp, WebP q85 (made at 512, shipped at 256). Named people
                                          first (npc-adrianne-avenicci), then generics npcg-<role>-<race>-<sex> (guard, merchant,

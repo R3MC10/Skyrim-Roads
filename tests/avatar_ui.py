@@ -87,7 +87,7 @@ async def main():
             await B.click("[data-act=avatar]"); await B.wait_for_timeout(400)
             await B.screenshot(path=os.path.join(OUT, PRE + "picker_phone.png"))
             await B.click("#modal [data-act=avall]"); await B.wait_for_timeout(300)
-            ok(await B.locator("#modal .avtile").count() == 11, "Show all lists every portrait plus Automatic")
+            ok(await B.locator("#modal .avtile").count() == await B.evaluate("AVATAR.IDS.length") + 1, "Show all lists every portrait plus Automatic")
             await B.click("#modal [data-act=avpick][data-id=auto]"); await B.wait_for_timeout(300)
             ok(await B.evaluate("!('avatar' in window.__dbg.save())"), "Automatic clears the pick")
             # Ask to join card shows Beta's portrait on Alfa's phone
