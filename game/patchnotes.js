@@ -10,7 +10,7 @@ const PATCHNOTES = (() => {
       "The five cities, twenty towns and villages, High Hrothgar and Sky Haven Temple each have their own painting, so you can tell Riverwood's water wheel, Solitude's great arch and Dragon Bridge's dragon-head bridge as you ride past.",
       "Towns, cities, forts, farms, camps, shrines and standing stones stand by the road where they really are on the map, with their names over the ones you know. Rivers wind past and you cross them on stone bridges, and as you near the end of the trip the view turns to show the place you're arriving at.",
       "You don't travel alone: your party, your follower and your pet walk or ride behind you on the road. When something stops you, bandits at a toll, a patrol, wolves, pilgrims, you see them on the road ahead for a moment before the choice comes up.",
-      "Time of day and the weather change the light, and snow falls when it snows. If your phone struggles, or you prefer the old view, set Settings → Look → Road view to Classic.",
+      "Time of day and the weather change the light. When it snows, you get the same snow as on the map: soft clumps and little crystals drifting and tumbling in a gusting wind, and in a blizzard hard grains blown sideways with white-outs rolling past. If your phone struggles, or you prefer the old view, set Settings → Look → Road view to Classic.",
     ] },
     { id: "b387-perfdeep", build: 387, date: "27 Nov 2026", title: "Smoother without lowering graphics", items: [
       "Full graphics are back everywhere: fights on phones start on High at full frame rate again, the map and compass are as sharp as your screen allows, and the title screen moves at full speed. Only Battery saver (off unless you turn it on) lowers anything.",

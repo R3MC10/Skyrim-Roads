@@ -66,7 +66,7 @@ async def main():
             if r["url"]:
                 with open(os.path.join(OUT, tag + ".png"), "wb") as f: f.write(base64.b64decode(r["url"].split(",")[1]))
             dbg = r["dbg"] or {}
-            print(tag, "drew", r["drew"], "moved %.1f m" % r["moved"], "props", dbg.get("props"), "worst grade %.3f" % r["worst"], "ms", round(dbg.get("ms") or 0, 1), "places", (dbg.get("places") or [])[:6], "labels", r["lbls"], "rivers", dbg.get("rivers"), "bridges", dbg.get("bridges"), "lake", dbg.get("lake"))
+            print(tag, "drew", r["drew"], "moved %.1f m" % r["moved"], "props", dbg.get("props"), "worst grade %.3f" % r["worst"], "ms", round(dbg.get("ms") or 0, 1), "places", (dbg.get("places") or [])[:6], "labels", r["lbls"], "rivers", dbg.get("rivers"), "bridges", dbg.get("bridges"), "lake", dbg.get("lake"), "snow", dbg.get("snow"))
             if not dbg.get("places"): fails.append((tag, "no places round you"))
             if f0 > 0.9 and d not in r["lbls"] and (d + " \u203a") not in r["lbls"]: fails.append((tag, "the destination should be labelled", r["lbls"]))
             if r["drew"] < 30: fails.append((tag, "diorama hardly drew", r["drew"]))
@@ -75,6 +75,8 @@ async def main():
             if r["moved"] <= 0.3 and f0 < 0.9: fails.append((tag, "you didn't move along the road", r["moved"]))
             if r["worst"] > 0.1001: fails.append((tag, "road too steep", r["worst"]))
             if dbg.get("riding") != riding: fails.append((tag, "riding flag", dbg.get("riding")))
+            if weather == "snow" and (dbg.get("snow") or 0) < 100: fails.append((tag, "it should be snowing", dbg.get("snow")))
+            if weather == "clear" and (dbg.get("snow") or 0) > 0: fails.append((tag, "snow in clear weather", dbg.get("snow")))
         # nothing moves when the land is rebuilt: draw at one spot, then 40 m further on, and compare every cut-out and
         # place in the overlap; and no place ever stands in water
         STAB = """async ([o, d, region, fa, fb]) => {

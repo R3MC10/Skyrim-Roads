@@ -192,6 +192,6 @@ const SNOWFX = (() => {
     if (!cap) F.length = Math.min(F.length, alive);
     g.restore();
   }
-  return { draw, live: () => alive };
+  return { draw, live: () => alive, atlas, WX };   // atlas + WX: the road view's snow (dioramasnow.js) uses the same flakes and weather
 })();
 if (typeof module !== "undefined") module.exports = SNOWFX;

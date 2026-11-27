@@ -118,7 +118,7 @@ const DIORAMA = (() => {
 
   /* the finish: depth blur above and below the focus line, a soft glow, a grade, a frame */
   const POST_FS = `
-    uniform sampler2D t; uniform vec2 res; uniform float focus, band, blur, taps, dark; uniform vec3 grade; varying vec2 vUv;
+    uniform sampler2D t; uniform vec2 res; uniform float focus, band, blur, taps, dark, wo, woT; uniform vec2 woDir; uniform vec3 grade; varying vec2 vUv;
     void main(){
       vec3 base = texture2D(t, vUv).rgb;
       float d = max(0., abs(vUv.y - focus) - band) / (1. - band);
@@ -136,6 +136,11 @@ const DIORAMA = (() => {
       float l = dot(col, vec3(.3,.59,.11));
       col = mix(vec3(l), col, 1.06);
       col = mix(col, col * vec3(.84,.92,1.05), (1. - l) * .22);
+      if (wo > .01) {   // whiteout drifting past in patches, carried by the wind
+        vec2 p = vUv * vec2(res.x / res.y, 1.) * 1.6 - woDir * woT * .02;
+        float n = sin(p.x * 2.1 + woT * .21) * sin(p.y * 2.7 - woT * .17) + .6 * sin(p.x * 4.3 - p.y * 3.1 + woT * .33);
+        col = mix(col, vec3(.93, .95, .98) * grade, wo * .28 * smoothstep(-.6, 1.3, n));
+      }
       vec2 q = vUv - .5; col *= 1. - dot(q * vec2(1., 1.25), q * vec2(1., 1.25)) * (.5 + dark);
       gl_FragColor = vec4(col, 1.);
     }`;
@@ -221,18 +226,13 @@ const DIORAMA = (() => {
     lake.renderOrder = 0.5; lake.visible = false; scene.add(lake);
     // places and bridges: cut-outs made when first needed
     const places = {};
-    // snow
-    const N = phone() ? 700 : 1400, sp = new Float32Array(N * 3), rr = (i) => R().rand(i, 7, 9);
-    for (let i = 0; i < N; i++) { sp[i * 3] = (rr(i) - 0.5) * 80; sp[i * 3 + 1] = R().rand(i, 3, 2) * 28; sp[i * 3 + 2] = (R().rand(i, 5, 1) - 0.5) * 60; }
-    const sgeo = new THREE.BufferGeometry(); sgeo.setAttribute("position", new THREE.BufferAttribute(sp, 3));
-    const fc = document.createElement("canvas"); fc.width = fc.height = 32; const fg = fc.getContext("2d");
-    const fr = fg.createRadialGradient(16, 16, 0, 16, 16, 15); fr.addColorStop(0, "rgba(255,255,255,.95)"); fr.addColorStop(1, "rgba(255,255,255,0)"); fg.fillStyle = fr; fg.fillRect(0, 0, 32, 32);
-    const snow = new THREE.Points(sgeo, new THREE.PointsMaterial({ size: 0.2, map: new THREE.CanvasTexture(fc), transparent: true, depthWrite: false, opacity: 0.85 }));
-    snow.visible = false; snow.renderOrder = 5; snow.frustumCulled = false; scene.add(snow);
+    // snow: the map's flakes, seen from the side (dioramasnow.js)
+    const snow = typeof DIOSNOW !== "undefined" ? DIOSNOW.make(THREE, phone() ? 700 : 1400) : null;
+    if (snow) scene.add(snow.mesh);
     scene.fog = new THREE.Fog(0x8e9fae, 30, 190);
     // the finish
     const rt = new THREE.WebGLRenderTarget(2, 2, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat });
-    const post = new THREE.ShaderMaterial({ uniforms: { t: { value: rt.texture }, res: { value: new THREE.Vector2(1, 1) }, focus: { value: 0.38 }, band: { value: 0.18 }, blur: { value: 8 }, taps: { value: 14 }, grade: { value: new THREE.Vector3(1, 1, 1) }, dark: { value: 0 } },
+    const post = new THREE.ShaderMaterial({ uniforms: { t: { value: rt.texture }, res: { value: new THREE.Vector2(1, 1) }, focus: { value: 0.38 }, band: { value: 0.18 }, blur: { value: 8 }, taps: { value: 14 }, grade: { value: new THREE.Vector3(1, 1, 1) }, dark: { value: 0 }, wo: { value: 0 }, woT: { value: 0 }, woDir: { value: new THREE.Vector2(0, 0) } },
       vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }", fragmentShader: POST_FS, depthTest: false, depthWrite: false });
     const postScene = new THREE.Scene(), postCam = new THREE.Camera(); postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), post));
     return { haze, shadowTex, actors: new Map(), canvas, renderer, scene, camera, sky, backs, farGround, gGeo, ground, road, shadows, cards, hero, hg, heroTex, heroShadow, snow, rt, post, postScene, postCam, river, waterTex, lake, lakeTex, places, placeList: [], labels: new Map(),
@@ -700,13 +700,8 @@ const DIORAMA = (() => {
     V.haze.position.set(cpos.x, V.camY + V.haze.userData.base, cpos.z); V.haze.material.color.copy(Lt.fog);
     for (const b of V.backs) { b.position.set(cpos.x, V.camY + b.userData.base, cpos.z); }
     V.farGround.position.set(cpos.x, Math.min(here.y, V.camY) - 0.8, cpos.z);
-    // snow
-    V.snow.visible = Lt.snow && !I.reduce;
-    if (V.snow.visible) {
-      const a = V.snow.geometry.attributes.position, arr = a.array;
-      for (let i = 0; i < arr.length; i += 3) { arr[i + 1] -= dt * (1.4 + (i % 7) * 0.12) * (Lt.wx === "blizzard" ? 2 : 1); arr[i] += dt * (0.6 + Math.sin(t + i) * 0.4) * (Lt.wx === "blizzard" ? 4 : 1); if (arr[i + 1] < -2) arr[i + 1] = 26; if (arr[i] > 40) arr[i] -= 80; }
-      a.needsUpdate = true; V.snow.position.set(here.x, V.camY, here.z); V.snow.rotation.y = -camYaw;
-    }
+    // snow (it eases in and out with the weather, like the map's)
+    if (V.snow) { V.snow.update(dt, t, V.camera, here.y, Lt, { reduce: I.reduce, lite: phone(), h: V.h }); V.post.uniforms.wo.value = I.reduce ? 0 : V.snow.whiteout(); V.post.uniforms.woT.value = t; const wd = V.snow.windDir(); V.post.uniforms.woDir.value.set(wd[0] * right.x + wd[1] * right.z, 0); }
     // a place's picture just arrived: put it in
     if (V.placeList.some((o) => LOADED.has(o.file) && !V.places[o.file]) || (V.wantBridge && LOADED.has(K().BRIDGE.file))) { V.patch = null; V.wantBridge = false; }
     // the current drifts down the river; the lake ripples slowly
@@ -722,7 +717,7 @@ const DIORAMA = (() => {
     // too slow for this phone? frames that keep taking long hand back to the classic view
     // too slow for this phone? an average under ~18 pictures a second for 6 s hands back to the classic view
     if (dt > 0 && !I.reduce) { avgDt = avgDt ? avgDt * 0.95 + Math.min(dt, 0.25) * 0.05 : dt; if (avgDt > 0.055) slow += dt; else slow = Math.max(0, slow - dt); }
-    V.dbg = { ...V.dbg, region, ahead: V.ahead || 0, stopAt: V.stopKey ? V.stopAt : null, s: V.sDisp, len: P.len, moving, riding: !!I.riding, tod: Lt.tod, wx: Lt.wx, ms: (typeof performance !== "undefined" ? performance.now() : 0) - t0, y: here.y };
+    V.dbg = { ...V.dbg, region, ahead: V.ahead || 0, stopAt: V.stopKey ? V.stopAt : null, s: V.sDisp, len: P.len, moving, riding: !!I.riding, tod: Lt.tod, wx: Lt.wx, snow: V.snow ? V.snow.live() : 0, ms: (typeof performance !== "undefined" ? performance.now() : 0) - t0, y: here.y };
     return true;
   }
   /* names over the places you know (and the one you're heading for); an arrow at the edge while it's still off screen */
@@ -752,7 +747,7 @@ const DIORAMA = (() => {
   }
   return { frame, detach, mode, setMode, settingsHTML, pref, usable, cueMs, showing: () => !!(V && V.canvas.isConnected && V.lastDrew && performance.now() - V.lastDrew < 1500), debug: () => (V ? V.dbg : null),
     /* tests: every cut-out and place as it stands now, and whether a spot is in water */
-    _snap: () => V && { props: Object.entries(V.cards).flatMap(([k, m]) => { const a = m.geometry.attributes.iPos.array, n = m.geometry.instanceCount, out = []; for (let i = 0; i < n; i++) out.push([k, a[i * 3], a[i * 3 + 1], a[i * 3 + 2]]); return out; }),
+    _v: () => V, _snap: () => V && { props: Object.entries(V.cards).flatMap(([k, m]) => { const a = m.geometry.attributes.iPos.array, n = m.geometry.instanceCount, out = []; for (let i = 0; i < n; i++) out.push([k, a[i * 3], a[i * 3 + 1], a[i * 3 + 2]]); return out; }),
       places: V.placeList.map((o) => ({ name: o.name, file: o.file, x: o.x, y: o.y, z: o.z, rad: o.rad, s: o.s, d: o.d * o.side, wet: V.wet ? footWet(V.prof, o.x, o.z, o.rad, V.wet) : null })), patch: V.patch, lake: V.lake.visible ? V.lake.position.y : null }, why: () => why || (threeState !== "ready" ? "loading three.js" : V && !ready() ? "loading paintings" : ""), _slow: () => slow };
 })();
 if (typeof module !== "undefined") module.exports = DIORAMA;
