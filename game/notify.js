@@ -170,7 +170,8 @@ const NOTIFY = (() => {
     }
     function load(list) { if (Array.isArray(list)) for (const r of list.slice(0, HIST)) if (r && r.text) hist.push({ t: +r.t || 0, kind: String(r.kind || ""), cat: String(r.cat || "world"), title: String(r.title || ""), text: String(r.text) }); }
     const filter = (cat) => (cat && cat !== "all" ? hist.filter((h) => h.cat === cat) : hist.slice());
-    return { push, note, lease, tick, pause, resume, direct, load, filter, queue, hist, showing, get paused() { return !!pausedAt; } };
+    const idle = () => !queue.length && !showing.msg && !showing.ban && !pausedAt;   // nothing waits, nothing on screen (notify pump skips its screen reads)
+    return { push, note, lease, tick, pause, resume, direct, load, filter, queue, hist, showing, idle, get paused() { return !!pausedAt; } };
   }
 
   // ------------------------------------------------------------ Polish
@@ -241,12 +242,20 @@ const NOTIFY = (() => {
     }
   }
   let ticking = 0;
+  /* [perfmap] when nothing waits and nothing shows, only the vote card / lost connection matters: skip the style reads */
+  let histN = null;
   function pump() {
     if (!DOM) return;
+    if (C.idle && C.idle()) {
+      const p0on = p0.size > 0 || !!document.querySelector(".pvote");
+      if (document.body && document.body.classList.contains("nf-p0") !== p0on) document.body.classList.toggle("nf-p0", p0on);
+      if (!p0on) { if (C.hist[0] !== histN) { histN = C.hist[0]; if (histN) { save(); histBtn(); } } return; }
+    }
     const scr = screen();
     document.body?.classList.toggle("nf-p0", !!scr.p0);
     for (const a of C.tick(Date.now(), scr)) { try { run(a); } catch (e) { console.warn("notify", e); } }
-    if (C.hist.length) { save(); histBtn(); }
+    if (C.hist.length && C.hist[0] !== histN) { histN = C.hist[0]; save(); histBtn(); }   // (saving every beat kept pushing the save back for ever)
+    else if (C.hist.length && !document.getElementById("nfhbtn")) histBtn();
   }
   const soon = () => { if (DOM && !ticking) ticking = setTimeout(() => { ticking = 0; pump(); }, 0); };
 

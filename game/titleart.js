@@ -186,11 +186,15 @@ const TITLEART = (() => {
     }
     /* [perf] ~30 fps: after a picture the loop sleeps on a timer instead of waking (and restyling the page) every refresh */
     let tmo = 0;
-    const later = () => { tmo = setTimeout(() => { tmo = 0; if (!stopped) raf = requestAnimationFrame(frame); }, 20); };
+    /* [perfmap] the title only moves slowly (a push-in over two minutes, the aurora's sway): 12 pictures a second look the same
+       as 30 and leave the phone mostly idle; 6 with Battery saver. Hidden or covered: one look every half second */
+    const every = () => (typeof PERFMODE !== "undefined" && PERFMODE.saver() ? 160 : 80);
+    const later = (ms) => { tmo = setTimeout(() => { tmo = 0; if (!stopped) raf = requestAnimationFrame(frame); }, ms); };
     function frame(ts) {
       if (stopped || !cv.isConnected) return;
-      if (!reduce && (document.hidden || ts - last < 29)) { raf = requestAnimationFrame(frame); return; }
-      if (!reduce) later();
+      if (!reduce && document.hidden) { later(500); return; }
+      if (!reduce && ts - last < every() - 6) { later(Math.max(10, every() - (ts - last) - 4)); return; }
+      if (!reduce) later(every() - 16);
       last = ts;
       try { if (!cv.dataset.rest) draw(ts); } finally { try { opts.onFrame?.(ts); } catch (e) { /* the fog is optional */ } }
     }

@@ -241,15 +241,33 @@ const WORLD = {
   ],
 };
 /* which hold a point is in: inside a hold's outline, else the nearest seed */
+// [OURS] the outlines flattened into number arrays with a bounding box, built once: the map asks this for every
+// cell of its ~44,000-cell grid on the first draw, and the plain version (allocating pairs per edge) took ~2 s on a
+// slow phone. Same answers, same order of holds.
+let holdFlat = null, holdFlatOf = null;
+const holdPolysFlat = () => {
+  if (holdFlat && holdFlatOf === WORLD.holdPolys) return holdFlat;
+  holdFlatOf = WORLD.holdPolys;
+  holdFlat = Object.entries(WORLD.holdPolys || {}).map(([h, poly]) => {
+    const n = poly.length, xs = new Float64Array(n), ys = new Float64Array(n);
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (let i = 0; i < n; i++) { const x = xs[i] = poly[i][0], y = ys[i] = poly[i][1]; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    return { h, n, xs, ys, x0, y0, x1, y1 };
+  });
+  return holdFlat;
+};
 WORLD.holdAt = (pos) => {
   if (!pos) return null;
-  for (const [h, poly] of Object.entries(WORLD.holdPolys || {})) {
+  const px = pos[0], py = pos[1];
+  for (const P of holdPolysFlat()) {
+    if (px < P.x0 || px > P.x1 || py < P.y0 || py > P.y1) continue;   // outside its box: can't be inside
+    const xs = P.xs, ys = P.ys;
     let inside = false;
-    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-      const [xi, yi] = poly[i], [xj, yj] = poly[j];
-      if ((yi > pos[1]) !== (yj > pos[1]) && pos[0] < (xj - xi) * (pos[1] - yi) / (yj - yi) + xi) inside = !inside;
+    for (let i = 0, j = P.n - 1; i < P.n; j = i++) {
+      const yi = ys[i], yj = ys[j];
+      if ((yi > py) !== (yj > py) && px < (xs[j] - xs[i]) * (py - yi) / (yj - yi) + xs[i]) inside = !inside;
     }
-    if (inside) return h;
+    if (inside) return P.h;
   }
   let best = null, bd = Infinity;
   for (const [h, seeds] of Object.entries(WORLD.holdSeeds)) for (const s of seeds) {
