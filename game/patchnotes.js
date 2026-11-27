@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b376-fightlogic", build: 376, date: "27 Nov 2026", title: "Fight fixes: foes, spells and helpers", items: [
+      "What a foe shows it will do next round is now what it really does: the moves and the \"→ you / → Lydia\" targets on its intent chips no longer change when the round starts.",
+      "Courage, Rally and Call to Arms no longer stack again and again on each cast, and no longer push your health above its maximum.",
+      "Healing a hero of Sovngarde, Odahviing or a wild animal you called with a shout no longer breaks their health; the heal goes to you instead.",
+      "No more \"(−0 stamina)\" lines in the fight log.",
+    ] },
     { id: "b375-titlewide", build: 375, date: "27 Nov 2026", title: "Moving main menu on PC", items: [
       "On computers, tablets and phones turned sideways, the main menu painting now moves too: the northern lights ripple, clouds drift, snow falls and the hero's cloak stirs in the wind, just like on phones held upright. The dragon has flown off this one as well.",
     ] },

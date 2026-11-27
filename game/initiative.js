@@ -173,7 +173,8 @@ const INIT = (() => {
   /* what the next round will look like if nothing changes (dimmed after the round marker) */
   function predict(sess) {
     if (!sess.ini) return [];
-    const n = (sess.order || []).filter((o) => o.side === "foe" || String(o.id).startsWith("foe")).length || 1;
+    let n = (sess.order || []).filter((o) => o.side === "foe" || String(o.id).startsWith("foe")).length || 1;
+    if (sess._nextN != null) { const nb = typeof ENCH2 !== "undefined" && sess.f ? ENCH2.numb(sess.f) : { acts: 0 }; n = Math.max(1, sess._nextN - (nb.acts || 0)); }   // [fight-logic] next round's real count, already rolled (tbfight.js rollOrder)
     const f = sess.f, us = [];
     const add = (o) => { o.key = keyOf(o, f); o.d = state(sess).roll[o.key] ?? 0; o.spd = speedOf(sess, o); o.init = o.d + o.spd - (o.gap || 0); us.push(o); };
     add({ id: "me", name: (sess.s || f.s).name || "You", side: "hero" });

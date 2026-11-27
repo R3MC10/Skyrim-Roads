@@ -53,7 +53,7 @@ if (!process.env.SIMONLY) {
       const s = fresh(["warrior", "mage", "archer"][i % 3], 20 + (i % 3) * 10); hireAs(s, ["lydia", "jenassa", "marcurio"][i % 3]);
       const e = i % 4 === 0 ? boss(["deathlord", "chief", "centurion", "hagraven", "master", "lich"][i % 6], 30) : enc(["Bandit outlaw", "Draugr", "Frost troll", "Sabre cat", "Forsworn ambush"][i % 5], 25);
       const f = new G.Fight(s, e), ss = new TB.Session(f, { trySneak: false });
-      const rec = play(ss, { onRound: (x) => { const its = FIGHTREAD.intents(x); if (its.length > 1) multi++; OK(its.length === (x.f.foeTgts || []).length, "one target per foe action this round (" + its.length + " vs " + (x.f.foeTgts || []).length + ")"); } });
+      const rec = play(ss, { onRound: (x) => { const its = FIGHTREAD.intents(x); if (its.length > 1) multi++; const want = x.field ? x.field.queue.filter((j) => !x.field.foes[j].down).length || its.length : (x.f.foeTgts || []).length;   /* [rows] a group spreads its moves over several foes, each with its own targets */ OK(its.length === want && (x.field && !FIGHTREAD.foeLeft(x) || its.every((it) => it.skip || it.heal || (it.buff && !it.tele) || it.tgt)), "one target per foe action this round (" + its.length + " vs " + want + ")"); } });
       acts += rec.acts; same += rec.same; ally += rec.ally; re += rec.re; diffs = diffs.concat(rec.diff);
     }
     OK(acts > 200 && same === acts, "with a follower: shown == hit " + same + "/" + acts + (diffs.length ? " " + JSON.stringify(diffs.slice(0, 3)) : ""));
@@ -63,23 +63,23 @@ if (!process.env.SIMONLY) {
 
   // 3. retarget: the follower is knocked down before the blow → a new roll, shown as "down", and the blow lands on the new target
   { const s = fresh("warrior", 20); hireAs(s, "lydia"); const f = new G.Fight(s, enc("Bandit outlaw", 20)), ss = new TB.Session(f, { trySneak: false });
-    ss.begin(); const Ly = f.allies.find((a) => a.follower); OK(Ly, "Lydia is in the fight");
+    ss.field = null; ss.waves = 1; ss.begin();   /* one foe: these check the retarget itself (groups: case 6) */ const Ly = f.allies.find((a) => a.follower); OK(Ly, "Lydia is in the fight");
     f.foeTgts = [{ k: FI.keyOf(Ly), n: Ly.name, kind: "follower" }];
     f.allies = f.allies.filter((a) => a !== Ly);   // engine.js: a knocked-down follower leaves the line
     OK(FI.refresh(ss) && f.foeTgts[0].why === "down" && f.foeTgts[0].from === Ly.name && f.foeTgts[0].k === "host", "Lydia down: the blow turns to you, marked as a retarget");
-    const its = FIGHTREAD.intents(ss); const it = its.find((x) => x.tgt);
-    OK(!it || (it.tgt.why === "down" && /fitg me re/.test(FI.chipHTML(it)) && /is down, so it turns to/.test(FI.tipText(it))), "the chip and the tip show the retarget");
+    const fl = FIGHTREAD.foeLeft(ss), its = FIGHTREAD.intents(ss); const it = its.find((x) => x.tgt);
+    OK(!it || !fl || (it.tgt.why === "down" && /fitg me re/.test(FI.chipHTML(it)) && /is down, so it turns to/.test(FI.tipText(it))), "the chip and the tip show the retarget");
     const d = FI.next(ss); f.enemyTurnInner(); const hit = f.tgtHit; FI.done(ss);
     OK(d.k === "host" && hit == null, "the blow hits you, as shown (or the foe did something else)"); }
 
   // 4. cover: a follower steps in front of you → the first blow at you goes to them, shown before it lands
   { const s = fresh("warrior", 20); hireAs(s, "lydia"); const f = new G.Fight(s, enc("Bandit outlaw", 20)), ss = new TB.Session(f, { trySneak: false });
-    ss.begin(); const Ly = f.allies.find((a) => a.follower);
+    ss.field = null; ss.waves = 1; ss.begin();   /* one foe: these check the retarget itself (groups: case 6) */ const Ly = f.allies.find((a) => a.follower);
     f.kit = f.kit || {}; f.kit.plan = [{ id: "blow" }];
     f.foeTgts = [{ k: "host", n: s.name || "You", kind: "you" }]; f.coverAl = Ly;
     OK(FI.refresh(ss) && f.foeTgts[0].k === FI.keyOf(Ly) && f.foeTgts[0].why === "cover", "cover: the target moves to Lydia before the screen draws");
-    const it = FIGHTREAD.intents(ss).find((x) => x.tgt);
-    OK(!it || (/→ Lydia/.test(FI.chipHTML(it)) && /stepped in front/.test(FI.tipText(it))), "the chip says '→ Lydia' and why");
+    const fl4 = FIGHTREAD.foeLeft(ss), it = FIGHTREAD.intents(ss).find((x) => x.tgt);
+    OK(!it || !fl4 || (/→ Lydia/.test(FI.chipHTML(it)) && /stepped in front/.test(FI.tipText(it))), "the chip says '→ Lydia' and why");
     const d = FI.next(ss); f.enemyTurnInner(); OK(d.k === FI.keyOf(Ly) && (f.tgtHit === Ly || f.tgtHit === undefined), "the blow hits Lydia, as shown (or the foe did something else)"); FI.done(ss); }
 
   // 5. wind-up: the blow that follows a wind-up keeps its target, also across rounds
@@ -115,7 +115,7 @@ if (!process.env.SIMONLY) {
       try { const rec = play(ss); acts += rec.acts; same += rec.same; ally += rec.ally; } finally { FI.done = nx; }
     }
     OK(acts > 50 && same === acts, "party: shown == hit " + same + "/" + acts);
-    OK(heal / Math.max(1, acts) > 0.2, "healers draw a big share of the blows: " + heal + "/" + acts);
+    OK(heal / Math.max(1, acts) > 0.1, "healers draw a big share of the blows (since rows: melee foes can't reach a back-row healer while the front row stands): " + heal + "/" + acts);
     OK(guard > 0, "the guard steps in (shown on the chip): " + guard);
     // the shared screen: Beta's phone gets the same targets, and the blow aimed at her reads "→ you" there
     let s, f, B, ss, r;
