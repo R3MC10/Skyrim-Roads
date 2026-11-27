@@ -225,6 +225,9 @@ const DIORAMA = (() => {
     let hint = V.hint;
     const TR = typeof Terrain !== "undefined" ? Terrain : null, TT = TR?.T || {};
     const segs = TR ? D.riverSegs(TR.rivers, cx, cz, 170) : [];
+    // the road wins over the river away from bridges: no channel or water under it (the map's river can brush a road)
+    const nearBridge = (x, z) => (V.bridges || []).some((b) => Math.hypot(b.x - x, b.z - z) < (b.len || 24) / 2 + 6);
+    const roadKeep = (x, z) => { const d = D.near(P, x, z).d; if (d > 9 || nearBridge(x, z)) return 1; return d < 5 ? 0 : (d - 5) / 4; };
     const lakeH = [];
     const tile = Math.floor(cx / 600) + "," + Math.floor(cz / 600);
     let level = LAKE_LEVEL.get(tile);
@@ -240,7 +243,7 @@ const DIORAMA = (() => {
       const x = b[i * 3] + cx, z = b[i * 3 + 2] + cz;
       let y = D.land(P, x, z, hAt, hint);
       // water: the river's channel and lake or sea beds sink below the banks
-      if (segs.length) { const rd = D.riverDist(segs, x, z); if (rd < 8) { const k = rd < 3.5 ? 1 : 1 - (rd - 3.5) / 4.5; y -= 2.2 * k * k * (3 - 2 * k); } }
+      if (segs.length) { const rd = D.riverDist(segs, x, z); if (rd < 8) { const k = rd < 3.5 ? 1 : 1 - (rd - 3.5) / 4.5, keep = roadKeep(x, z); y -= 2.2 * k * k * (3 - 2 * k) * keep; } }
       if (TR) { let ty = -1; try { ty = TR.typeAtPos(D.toMap(x, z)); } catch { /* off the map */ } if (ty === TT.SEA || ty === TT.LAKE) { lakeH.push(y); y = level != null ? Math.min(y - 2.6, level - 1.6) : y - 2.6; } }
       p.setXYZ(i, x, y, z); uv.setXY(i, x / 9, -z / 9);
     }
@@ -252,7 +255,7 @@ const DIORAMA = (() => {
         const L = Math.hypot(bx - ax, bz - az); if (L < 0.5) continue;
         const nx = -(bz - az) / L * 4.5, nz = (bx - ax) / L * 4.5, steps = Math.max(1, Math.ceil(L / 3));
         for (let q = 0; q <= steps; q++) {
-          const x = ax + (bx - ax) * q / steps, z = az + (bz - az) * q / steps, y = D.land(P, x, z, hAt, hint) - 1.0, v = q * 3 / 9;
+          const x = ax + (bx - ax) * q / steps, z = az + (bz - az) * q / steps, y = D.land(P, x, z, hAt, hint) - 1.0 - (1 - roadKeep(x, z)) * 3, v = q * 3 / 9;   // under the road the water sinks out of sight
           pos.push(x + nx, y, z + nz, x - nx, y, z - nz); uvs.push(0, v, 1, v);
           if (q) { const a = (k - 1) * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
           k++;
@@ -264,7 +267,7 @@ const DIORAMA = (() => {
     const wet = (x, z) => {
       let ty = -1; try { ty = TR ? TR.typeAtPos(D.toMap(x, z)) : -1; } catch { /* off the map */ }
       if (ty === TT.SEA || ty === TT.LAKE || ty === TT.RIVER) return true;
-      return TR ? D.riverDist(D.riverSegs(TR.rivers, x, z, 40), x, z) < 10 : false;
+      return TR ? D.riverDist(D.riverSegs(TR.rivers, x, z, 40), x, z) < 6.5 : false;
     };
     V.wet = wet;
     // bridges where the road crosses a river on a real bridge (a ford stays a ford)
@@ -311,21 +314,9 @@ const DIORAMA = (() => {
     // places: where they really are on the land, never on the road or in water
     const B = K().BRIDGE, PL = K().PLACES, Wd = typeof WORLD !== "undefined" ? WORLD.places || {} : {}, byFile = {};
     const list = [];
-    for (const [name, pp] of Object.entries(Wd)) {
-      if (!pp) continue; const kind = pp[2] || "town", art = PL[kind]; if (!art) continue;
-      let [x, z] = D.toWorld(pp); const dd = Math.hypot(x - cx, z - cz); if (dd > 900) continue;
-      const r = D.near(P, x, z), q = P.pts[r.i], minD = 9 + art.h * 0.7;
-      // on the road, or standing in water: move it back from the road on the far side (the camera looks from the other)
-      // until it stands on dry land clear of the road; if there's none within 90 m it isn't shown
-      const wetAt = (px, pz) => wet(px, pz) || D.near(P, px, pz).d < minD;
-      if (wetAt(x, z)) {
-        let ok = false;
-        for (let k = minD; k <= minD + 90 && !ok; k += 6) { const nx = q.x + q.tz * k, nz = q.z - q.tx * k; if (!wetAt(nx, nz)) { x = nx; z = nz; ok = true; } }
-        if (!ok) continue;
-      }
-      const y = D.land(P, x, z, hAt) - 0.4;
-      list.push({ name, kind, x, y, z, h: art.h, file: art.file });
-      (byFile[art.file] ||= []).push([x, y, z, art.h, 1]);
+    for (const o of V.placed || []) {
+      if (Math.hypot(o.x - cx, o.z - cz) > 900) continue;
+      list.push(o); (byFile[o.file] ||= []).push([o.x, o.y, o.z, o.h, 1]);
     }
     // bridges: built in 3D along the road. Two stone side walls with real thickness, painted with the bridge's arches and
     // parapet on their outer faces; a stone deck between them under the road; stone on the ends and tops
@@ -337,7 +328,7 @@ const DIORAMA = (() => {
         const img = TEX[B.file].image, c = document.createElement("canvas"); c.width = c.height = 128;
         c.getContext("2d").drawImage(img, img.width * 0.43, img.height * 0.4, img.width * 0.12, img.height * 0.3, 0, 0, 128, 128);   // a patch of the painted stonework
         const st = new THREE.CanvasTexture(c); st.wrapS = st.wrapT = THREE.RepeatWrapping;
-        V.bridgeMats = { face: new THREE.MeshBasicMaterial({ map: TEX[B.file], alphaTest: 0.45 }), stone: new THREE.MeshBasicMaterial({ map: st }) };
+        V.bridgeMats = { face: new THREE.MeshBasicMaterial({ map: TEX[B.file], alphaTest: 0.45 }), stone: new THREE.MeshBasicMaterial({ map: st }), none: new THREE.MeshBasicMaterial({ visible: false }) };
       }
       const M = V.bridgeMats, img = TEX[B.file].image;
       for (const c of bridges) {
@@ -346,7 +337,7 @@ const DIORAMA = (() => {
         grp.position.set(c.x, q.y + 0.05 - deckY, c.z); grp.rotation.y = -Math.atan2(c.tz, c.tx);   // local x runs along the road
         for (const sd of [-1, 1]) {
           const g = new THREE.BoxGeometry(Lb, Hs, thick); g.translate(0, Hs / 2, sd * (half + thick / 2));
-          grp.add(new THREE.Mesh(g, [M.stone, M.stone, M.stone, M.stone, M.face, M.face]));
+          grp.add(new THREE.Mesh(g, [M.none, M.none, M.none, M.none, M.face, M.face]));   // the two painted faces, 0.55 m apart
         }
         const dg = new THREE.BoxGeometry(Lb - 0.3, 0.7, half * 2); dg.translate(0, deckY - 0.37, 0);
         grp.add(new THREE.Mesh(dg, M.stone));
@@ -366,6 +357,64 @@ const DIORAMA = (() => {
     for (let q = 0; q < n; q++) { const [x, y, z, w] = sh[q]; d.position.set(x + w * 0.25, y + 0.04, z); d.scale.set(w * 1.6, 1, w * 0.7); d.updateMatrix(); V.shadows.setMatrixAt(q, d.matrix); }
     V.shadows.count = n; V.shadows.instanceMatrix.needsUpdate = true;
     V.patch = [cx, cz]; V.dbg.props = Object.fromEntries(Object.entries(lists).map(([kk, a]) => [kk, a.length]));
+  }
+
+  /* where every place along the trip stands, worked out once per trip so nothing ever shifts: on dry land with its
+     whole footprint (the painting's width) clear of water and of the road, and clear of the other places. The most
+     important place keeps its spot (city, town, fort...); a smaller one moves to the nearest free dry spot within 120 m,
+     preferring the road's far side; with none it isn't shown. */
+  /* a cut-out stands on a strip of ground along its base: it faces the camera, which looks across the road, so the strip
+     runs along the road's direction there. That strip (its width, 6 m deep) must be dry; water in front is fine. */
+  function footWet(P, x, z, rad, wetPt) {
+    const q = P.pts[R().near(P, x, z).i];
+    for (const f of [-0.9, -0.6, -0.3, 0, 0.3, 0.6, 0.9]) for (const dd of [-3, 0, 3]) if (wetPt(x + q.tx * f * rad - q.tz * dd, z + q.tz * f * rad + q.tx * dd)) return true;
+    return false;
+  }
+  function placeAll(P, segs, TR, TT) {
+    const D = R(), PL = K().PLACES, Wd = typeof WORLD !== "undefined" ? WORLD.places || {} : {}, out = [];
+    let near = [];   // the rivers round the place being placed (set per place below)
+    const wetPt = (x, z) => {
+      let ty = -1; try { ty = TR ? TR.typeAtPos(D.toMap(x, z)) : -1; } catch { /* off the map */ }
+      return ty === TT.SEA || ty === TT.LAKE || ty === TT.RIVER || (near.length > 0 && D.riverDist(near, x, z) < 8);
+    };
+    const cand = [];
+    for (const [name, pp] of Object.entries(Wd)) {
+      if (!pp) continue; const kind = pp[2] || "town", art = PL[kind]; if (!art) continue;
+      const [x, z] = D.toWorld(pp), r = D.near(P, x, z); if (r.d > 1000) continue;
+      cand.push({ name, kind, art, x0: x, z0: z, rad: art.h * art.w / 2 });
+    }
+    cand.sort((a, b) => b.art.rank - a.art.rank || a.name.localeCompare(b.name));
+    for (const c of cand) {
+      near = TR ? D.riverSegs(TR.rivers, c.x0, c.z0, c.rad + 170) : [];
+      const fits = (x, z) => {
+        const rn = D.near(P, x, z);
+        if (rn.d < c.rad * 0.45 + 5) return false;                                          // the road stays clear (a cut-out faces you: half its width is enough)
+        if (rn.side > 0 && rn.d < c.rad + 45) return false;                                 // never close by on the camera's side (it would block the view or go unseen)
+        if (out.some((o) => Math.hypot(o.x - x, o.z - z) < (o.rad + c.rad) * 0.8 + 3)) return false;  // so do the other places
+        // and they don't stand behind one another as seen from the road (that reads as a tower growing out of a house)
+        if (out.some((o) => Math.abs(o.s - rn.s) < (o.rad + c.rad) * 0.9 + 4 && Math.abs(o.d * o.side - rn.d * rn.side) < 160)) return false;
+        return !footWet(P, x, z, c.rad, wetPt);
+      };
+      // the camera always looks across the road from its left side: a place close by on that side would stand behind the
+      // camera, never seen. It stands mirrored across the road instead, the same distance from it.
+      { const r0 = D.near(P, c.x0, c.z0), q0 = P.pts[r0.i];
+        if (r0.side > 0 && r0.d < c.rad + 45) { c.x0 += q0.tz * r0.d * 2; c.z0 -= q0.tx * r0.d * 2; } }
+      let spot = fits(c.x0, c.z0) ? [c.x0, c.z0] : null;
+      if (!spot) {
+        const r = D.near(P, c.x0, c.z0), q = P.pts[r.i];
+        // try outward in rings, the road's far side first (the camera looks from the other)
+        const reach = c.art.rank >= 7 ? 220 : 120;   // towns and cities look further for dry land before giving up
+        for (let dist = 6; dist <= reach && !spot; dist += 6) for (let k = 0; k < 16 && !spot; k++) {
+          const a = Math.atan2(-q.tx, q.tz) + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (Math.PI / 8);   // starts pointing to the far side, then fans round
+          const x = c.x0 + Math.cos(a) * dist, z = c.z0 + Math.sin(a) * dist;
+          if (fits(x, z)) spot = [x, z];
+        }
+      }
+      if (!spot) continue;
+      const rs = D.near(P, spot[0], spot[1]);
+      out.push({ name: c.name, kind: c.kind, x: spot[0], z: spot[1], s: rs.s, d: rs.d, side: rs.side, y: D.land(P, spot[0], spot[1], hAt) - 0.4, h: c.art.h, rad: c.rad, file: c.art.file });
+    }
+    return out;
   }
 
   // ---------------------------------------------------------------- light: time of day and weather
@@ -415,6 +464,7 @@ const DIORAMA = (() => {
       const segsAll = TR ? D.riverSegs(TR.rivers, (bx0 + bx1) / 2, (bz0 + bz1) / 2, Math.max(bx1 - bx0, bz1 - bz0) / 2 + 20) : [];
       const cross = D.crossings(V.prof, segsAll).filter((c) => { try { return !TR || TR.typeAtPos(D.toMap(c.x, c.z)) !== TT.RIVER; } catch { return true; } });   // fords stay fords
       V.bridges = D.straighten(V.prof, cross);
+      V.placed = placeAll(V.prof, segsAll, TR, TT);
     }
     const P = V.prof, [hx0, hz0] = D.toWorld(I.pos);
     const nr = D.near(P, hx0, hz0, V.hint); V.hint = nr.i;
@@ -523,6 +573,6 @@ const DIORAMA = (() => {
   return { frame, detach, mode, setMode, settingsHTML, pref, usable, debug: () => (V ? V.dbg : null),
     /* tests: every cut-out and place as it stands now, and whether a spot is in water */
     _snap: () => V && { props: Object.entries(V.cards).flatMap(([k, m]) => { const a = m.geometry.attributes.iPos.array, n = m.geometry.instanceCount, out = []; for (let i = 0; i < n; i++) out.push([k, a[i * 3], a[i * 3 + 1], a[i * 3 + 2]]); return out; }),
-      places: V.placeList.map((o) => ({ name: o.name, x: o.x, y: o.y, z: o.z, wet: V.wet ? V.wet(o.x, o.z) : null })), patch: V.patch, lake: V.lake.visible ? V.lake.position.y : null }, why: () => why || (threeState !== "ready" ? "loading three.js" : V && !ready() ? "loading paintings" : ""), _slow: () => slow };
+      places: V.placeList.map((o) => ({ name: o.name, x: o.x, y: o.y, z: o.z, rad: o.rad, s: o.s, d: o.d * o.side, wet: V.wet ? footWet(V.prof, o.x, o.z, o.rad, V.wet) : null })), patch: V.patch, lake: V.lake.visible ? V.lake.position.y : null }, why: () => why || (threeState !== "ready" ? "loading three.js" : V && !ready() ? "loading paintings" : ""), _slow: () => slow };
 })();
 if (typeof module !== "undefined") module.exports = DIORAMA;

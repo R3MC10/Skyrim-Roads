@@ -32,11 +32,13 @@ const DIOKITS = (() => {
   };
   /* places on the map (WORLD.places kind) → their painted cut-out and height in metres; they stand where they really
      are, pushed back off the road to its far side when they sit on it */
-  const PLACES = {
-    city: { file: "dio-place-city", h: 34 }, town: { file: "dio-place-town", h: 15 }, fort: { file: "dio-place-fort", h: 20 },
-    camp: { file: "dio-place-camp", h: 9 }, farm: { file: "dio-place-farm", h: 10 }, stone: { file: "dio-place-stone", h: 6 },
-    shrine: { file: "dio-place-shrine", h: 4.2 }, lair: { file: "dio-place-lair", h: 16 }, landmark: { file: "dio-place-tower", h: 13 },
-    dungeon: { file: "dio-place-barrow", h: 10 }, college: { file: "dio-place-city", h: 30 },
+  const PLACES = {   // h: height in metres; w: the painting's width / height; rank: who keeps its spot when two would overlap
+    city: { file: "dio-place-city", h: 34, w: 2.72, rank: 9 }, college: { file: "dio-place-city", h: 30, w: 2.72, rank: 8 },
+    town: { file: "dio-place-town", h: 15, w: 2.45, rank: 7 }, fort: { file: "dio-place-fort", h: 20, w: 1.8, rank: 6 },
+    camp: { file: "dio-place-camp", h: 9, w: 2.0, rank: 4 }, farm: { file: "dio-place-farm", h: 10, w: 2.08, rank: 5 },
+    stone: { file: "dio-place-stone", h: 6, w: 0.66, rank: 3 }, shrine: { file: "dio-place-shrine", h: 4.2, w: 0.87, rank: 3 },
+    lair: { file: "dio-place-lair", h: 16, w: 1.79, rank: 4 }, landmark: { file: "dio-place-tower", h: 13, w: 0.66, rank: 3 },
+    dungeon: { file: "dio-place-barrow", h: 10, w: 1.78, rank: 2 },
   };
   const BRIDGE = { file: "dio-place-bridge", h: 3.8, deck: 0.86 };   // deck: where the road runs, as a share of the height from the bottom
   const FILES = ["dio-sky", "dio-far", "dio-mid", "dio-floor", "dio-road", ...new Set(Object.values(PROPS).map((p) => p.file))];

@@ -95,8 +95,22 @@ async def main():
           const pb = Object.fromEntries(b.places.map((p) => [p.name, p]));
           const moved = a.places.filter((p) => pb[p.name] && Math.hypot(p.x - pb[p.name].x, p.y - pb[p.name].y, p.z - pb[p.name].z) > 0.01).map((p) => p.name);
           const wet = [...a.places, ...b.places].filter((p) => p.wet).map((p) => p.name);
-          return { gap, n: A1.size, onlyA: onlyA.length, onlyB: onlyB.length, moved, wet, lakes: [a.lake, b.lake] };
+          const overlap = []; for (const L of [a.places, b.places]) for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) if (Math.hypot(L[i].x - L[j].x, L[i].z - L[j].z) < (L[i].rad + L[j].rad) * 0.8) overlap.push(L[i].name + ' / ' + L[j].name);
+          for (const L of [a.places, b.places]) for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) if (Math.abs(L[i].s - L[j].s) < (L[i].rad + L[j].rad) * 0.9 && Math.abs(L[i].d - L[j].d) < 160) overlap.push('behind: ' + L[i].name + ' / ' + L[j].name);
+          return { gap, n: A1.size, onlyA: onlyA.length, onlyB: onlyB.length, moved, wet, overlap, lakes: [a.lake, b.lake] };
         }"""
+        # the towns at either end of a trip are always shown
+        r = await pg.evaluate("""async () => { const A = WORLD.places.Riverwood, B = WORLD.places.Whiterun, path = Terrain.route([A[0], A[1]], [B[0], B[1]]);
+          const box = document.getElementById('diobox') || Object.assign(document.body.appendChild(document.createElement('div')), { id: 'diobox' }); box.style.cssText = 'position:fixed;left:0;top:0;width:960px;height:310px;z-index:99999';
+          DIORAMA.detach(); const info = { pos: path[2], path, idx: 2, look: HEROART.lookOf(window.__dbg.save()), dest: 'Whiterun', origin: 'Riverwood', id: 'me' };
+          for (let k = 0; k < 200 && !DIORAMA.frame(box, info, 0, 0, 'valley'); k++) await new Promise((r) => setTimeout(r, 30));
+          const pl = DIORAMA._snap().places, rw = pl.find((p) => p.name === 'Riverwood'), [mx, mz] = DIOROUTE.toWorld(A);
+          const P = DIOROUTE.profile(path, (q) => FPREAL.heightAt(q)), camSide = pl.filter((p) => { const n = DIOROUTE.near(P, p.x, p.z); return n.side > 0 && n.d < p.rad + 44; }).map((p) => p.name);
+          return { names: pl.map((p) => p.name), off: rw ? Math.hypot(rw.x - mx, rw.z - mz) : null, camSide }; }""")
+        if r["camSide"]: fails.append(("ends", "places close by on the camera's side of the road", r["camSide"]))
+        if "Riverwood" not in r["names"]: fails.append(("ends", "Riverwood should be shown at the start of the trip", r["names"][:8]))
+        elif r["off"] > 60: fails.append(("ends", "Riverwood moved too far from where it is on the map", round(r["off"])))
+        print("Riverwood stands", r["off"] and round(r["off"]), "m from its map spot")
         for (o, d, region, fa, fb) in [("Riverwood", "Whiterun", "valley", 0.05, 0.16), ("Whiterun", "Riverwood", "tundra", 0.7, 0.82), ("Riften", "Ivarstead", "autumn", 0.3, 0.38), ("Solitude", "Morthal", "valley", 0.35, 0.42)]:
             r = await pg.evaluate(STAB, [o, d, region, fa, fb])
             print("stable", o, d, r)
@@ -104,6 +118,7 @@ async def main():
             if r["onlyA"] or r["onlyB"]: fails.append(("stable " + o, "cut-outs moved or popped when the land was rebuilt", r["onlyA"], r["onlyB"]))
             if r["moved"]: fails.append(("stable " + o, "places moved", r["moved"]))
             if r["wet"]: fails.append(("stable " + o, "places standing in water", r["wet"]))
+            if r["overlap"]: fails.append(("stable " + o, "places overlapping", r["overlap"][:5]))
         # no kit for the marsh, and Road view: Classic → the classic view draws
         r = await pg.evaluate(RUN, ["Morthal", "Solitude", "marsh", False, 390, 150, "day", "clear", 1, 0.3])
         if r["drew"]: fails.append(("marsh", "should keep the classic view"))
