@@ -222,4 +222,5 @@ function makeTerrain(W, opts = {}) {
   return { T, NAMES, SPEED, GW, GH, grid, hgrid, typeAtPos, speedAt, heightAt, typeAt, fbm, vnoise, route, moveAlong, secondsLeft, lineDist, inPoly, land, border, ranges, rivers, roads };
 }
 const Terrain = makeTerrain(WORLD);
+Terrain.heightAtPos = (pos) => Terrain.heightAt([pos[0] * 1000, pos[1] * 700]);   // the same height from a 0..1 map position (the road view, fpreal.js)
 if (typeof module !== "undefined") module.exports = Terrain;

@@ -131,6 +131,7 @@ const SOL_THEMES = {
   const SK = { typeAtPos: Terrain.typeAtPos, speedAt: Terrain.speedAt, route: Terrain.route, moveAlong: Terrain.moveAlong, secondsLeft: Terrain.secondsLeft };
   Terrain.typeAtPos = (pos) => (isSol(pos) ? ST.typeAtPos(toL(pos)) : SK.typeAtPos(pos));
   Terrain.speedAt = (pos) => (isSol(pos) ? ST.speedAt(toL(pos)) : SK.speedAt(pos));
+  { const skH = Terrain.heightAtPos; Terrain.heightAtPos = (pos) => (isSol(pos) ? ST.heightAt([pos[0] * 1000, (pos[1] - OY) * 700]) : skH(pos)); }   // the road view reads the island's hills too
   Terrain.route = (a, b) => {
     const sa = isSol(a), sb = isSol(b);
     if (!sa && !sb) return SK.route(a, b);

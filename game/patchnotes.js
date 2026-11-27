@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b380-travelpov", build: 380, date: "27 Nov 2026", title: "The road ahead is the real world", items: [
+      "The view from the saddle (or on foot) now shows the land you're really crossing: the real mountains on the skyline, with the Throat of the World standing snow-capped when you can see it, and the road bending the way it really does on the map.",
+      "Towns, forts, standing stones, shrines and farms appear where they really are, beside the road or far on the horizon, with their names once you get close. Solstheim shows its own places.",
+      "Your party rides or walks with you: friends on their horses (seen from behind, in their own armour and colours), followers on foot, and pets trotting along.",
+    ] },
     { id: "b379-creaturerigs", build: 379, date: "27 Nov 2026", title: "Creatures come alive", items: [
       "Beasts and monsters in fights now really move their bodies instead of the whole painting bending: wolves, sabre cats and skeevers snap with their jaws and paw at you, bears swipe, mammoths swing their trunks, and horkers rear their heads.",
       "Trolls, giants, Dwarven Centurions and atronachs swing their arms and step on their legs, spiders and chauruses move their legs and fangs, mudcrabs pinch with their big claw, ice wraiths whip their tails, and dragons beat their wings and lash their tails and necks.",
