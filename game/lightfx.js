@@ -246,8 +246,11 @@ const LIGHTFX = (() => {
     g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true;
     g.imageSmoothingQuality = "low";   // [perf] these are soft quarter-size washes: plain smoothing looks the same and costs a fraction of "high"
     // 1) the grade and vignette, over the painted ground (the markers and names come after, so they stay readable)
-    if (sl.mul) { g.globalCompositeOperation = "multiply"; g.drawImage(sl.mul, 0, 0, cw, ch); }
-    if (!o.sol && L.desat > 0.02) { g.globalCompositeOperation = "saturation"; g.globalAlpha = L.desat * (hcOn ? 0.5 : 1); g.fillStyle = "#808080"; g.fillRect(0, 0, cw, ch); g.globalAlpha = 1; }
+    // o.out (glmap.js, the map on the GPU): the buffers are handed back and shown with the same blends by the compositor
+    const out = o.out || null; if (out) { out.mul = sl.mul || null; out.desat = 0; out.air = null; out.light = null; out.lightA = 1; }
+    if (sl.mul && !out) { g.globalCompositeOperation = "multiply"; g.drawImage(sl.mul, 0, 0, cw, ch); }
+    if (!o.sol && L.desat > 0.02 && out) out.desat = L.desat * (hcOn ? 0.5 : 1);
+    else if (!o.sol && L.desat > 0.02) { g.globalCompositeOperation = "saturation"; g.globalAlpha = L.desat * (hcOn ? 0.5 : 1); g.fillStyle = "#808080"; g.fillRect(0, 0, cw, ch); g.globalAlpha = 1; }
     g.globalCompositeOperation = "source-over";
     // the moving layers only change slowly: redraw their small buffers about 3 times a second, or when the view moves
     const view = `${T.a.toFixed(4)},${T.e.toFixed(1)},${T.f.toFixed(1)}`, tick = high && !still ? Math.floor(t * 3) : 0;
@@ -279,7 +282,7 @@ const LIGHTFX = (() => {
           }
           bg.globalAlpha = 1; b.k = key;
         }
-        g.drawImage(b.c, 0, 0, cw, ch);
+        if (out) out.air = b.c; else g.drawImage(b.c, 0, 0, cw, ch);
       }
     }
     // 3) all the added light in one pass: town and camp fires, water catching the sun or the moons, aurora on the
@@ -298,9 +301,9 @@ const LIGHTFX = (() => {
         else if (wa) { bg.globalAlpha = 1; bg.drawImage(wa, 0, 0, o.W, o.H); }
         bg.globalAlpha = 1; bg.globalCompositeOperation = "source-over"; b.k = key;
       }
-      g.globalCompositeOperation = "lighter";
-      g.globalAlpha = high && !still && wl ? clamp(1 + 0.045 * Math.sin(t * 7.3) + 0.03 * Math.sin(t * 12.7)) : 1;   // fires flicker
-      g.drawImage(b.c, 0, 0, cw, ch);
+      const la = high && !still && wl ? clamp(1 + 0.045 * Math.sin(t * 7.3) + 0.03 * Math.sin(t * 12.7)) : 1;   // fires flicker
+      if (out) { out.light = b.c; out.lightA = la; }
+      else { g.globalCompositeOperation = "lighter"; g.globalAlpha = la; g.drawImage(b.c, 0, 0, cw, ch); }
       g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
     }
     g.restore();

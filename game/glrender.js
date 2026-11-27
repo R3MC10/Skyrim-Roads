@@ -31,7 +31,8 @@
    is only kept on phones where it is really quicker (see "GPU or 2D" below).
 
    PLAN for the next steps (each its own pull request, pixel-compared against the 2D path):
-   2) map: painted tiles + clan tint + fog as GPU sprites (pan/zoom = one matrix change), labels/pins stay 2D on top.
+   2) map: DONE in glmap.js (a visible WebGL canvas under the 2D map, no copy-back; ground + fog as textures, lightfx
+      buffers blended by the compositor, labels/pins stay 2D on top). Zooming still draws the classic way.
    3) title / sky panorama, mini-games' painted backgrounds.
    4) painted figures (rig parts are already separate pictures → one batch per figure) and the rest of the fight effects.
    (the road view is not in this plan: Kacper's diorama already draws it with WebGL)
