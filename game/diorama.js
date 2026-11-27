@@ -300,15 +300,19 @@ const DIORAMA = (() => {
       (byFile[art.file] ||= []).push([x, y, z, art.h, 1]);
     }
     // bridges lie along the road (not turned to face you): seen from the side when the road crosses the view
-    for (const m of V.bridgeMeshes || []) { V.scene.remove(m); m.geometry.dispose(); }
+    for (const m of new Set(V.bridgeMeshes || [])) { V.scene.remove(m); }
+    for (const g of new Set((V.bridgeMeshes || []).map((m) => m.geometry))) g.dispose();
     V.bridgeMeshes = [];
     tex(B.file);
     if (LOADED.has(B.file)) for (const c of bridges) {
       const q = D.at(P, c.s), img = TEX[B.file].image, w = B.h * img.width / img.height;
       const g = new THREE.PlaneGeometry(w, B.h); g.translate(0, B.h / 2, 0);
-      const m = new THREE.Mesh(g, V.bridgeMat || (V.bridgeMat = new THREE.MeshBasicMaterial({ map: TEX[B.file], alphaTest: 0.45, side: THREE.DoubleSide })));
-      m.position.set(c.x, q.y + 0.05 - B.h * B.deck, c.z); m.rotation.y = -Math.atan2(q.tz, q.tx);
-      V.scene.add(m); V.bridgeMeshes.push(m);
+      // two side walls, one on each edge of the road: from the side you see the arches, along the road the parapets
+      for (const sd of [-1, 1]) {
+        const m = new THREE.Mesh(g, V.bridgeMat || (V.bridgeMat = new THREE.MeshBasicMaterial({ map: TEX[B.file], alphaTest: 0.45, side: THREE.DoubleSide })));
+        m.position.set(c.x - q.tz * 2.9 * sd, q.y + 0.05 - B.h * B.deck, c.z + q.tx * 2.9 * sd); m.rotation.y = -Math.atan2(q.tz, q.tx);
+        V.scene.add(m); V.bridgeMeshes.push(m);
+      }
     } else if (bridges.length) V.wantBridge = true;
     for (const m of Object.values(V.places)) m.geometry.instanceCount = 0;
     for (const [file, arr] of Object.entries(byFile)) {
