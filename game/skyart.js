@@ -202,7 +202,8 @@ const SKY = (() => {
       : st.season === "autumn" && !st.cold && st.weather !== "fog" ? "leaf" : (st.season === "summer" || st.season === "spring") && (st.tod === "night" || st.tod === "dusk") ? "fly"
       : st.season === "spring" && st.tod !== "night" ? "petal" : null;
     if (!kind) return { kind: null, step() {} };
-    const n = { snow: st.weather === "blizzard" ? 90 : 45, rain: st.weather === "storm" ? 70 : 45, ash: 110, mist: 8, leaf: 12, fly: 10, petal: 14 }[kind];
+    const n0 = { snow: st.weather === "blizzard" ? 90 : 45, rain: st.weather === "storm" ? 70 : 45, ash: 110, mist: 8, leaf: 12, fly: 10, petal: 14 }[kind];
+    const n = Math.max(3, Math.round(n0 * (typeof PERFMODE !== "undefined" ? PERFMODE.particles() : 1)));   // [perf] Battery saver thins them
     for (let i = 0; i < n; i++) parts.push({ x: r() * w, y: r() * h, v: 0.6 + r() * 0.8, a: r() * 6, s: 1 + r() * 1.2, c: ["#c4572e", "#e8923a", "#d6b25e"][i % 3] });
     let flash = 0, tt = 0;
     const wind = st.wind;

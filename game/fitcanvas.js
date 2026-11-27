@@ -17,7 +17,7 @@
 const FITCANVAS = (() => {
   const DOM = typeof document !== "undefined";
   const CAP = 2.5;
-  const dpr = (cap = CAP) => Math.max(1, Math.min(cap, (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1));
+  const dpr = (cap = CAP) => Math.max(1, Math.min(typeof PERFMODE !== "undefined" ? PERFMODE.dprCap(cap) : cap, (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1));   // [perf] Battery saver: fewer backing pixels
   // the box on screen, zoom included (getBoundingClientRect counts CSS zoom; clientWidth doesn't)
   function box(el) {
     if (!el || !el.getBoundingClientRect) return { w: 0, h: 0 };

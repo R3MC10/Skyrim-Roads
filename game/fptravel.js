@@ -139,7 +139,7 @@ const FPT = (() => {
     raf = 0;
     if (!band || !band.isConnected || !info || isShut()) return;
     if (typeof document !== "undefined" && document.hidden) { setTimeout(kick, 500); return; }
-    const gap = phone() ? 33 : 22;
+    const gap = typeof PERFMODE !== "undefined" ? PERFMODE.gap(phone() ? 33 : 22) : phone() ? 33 : 22;   // [perf] Battery saver: ~20 pictures a second
     if (lastTs && ts - lastTs < gap - 3) { later(gap - (ts - lastTs)); return; }
     const dt = lastTs ? Math.min(0.1, (ts - lastTs) / 1000) : 0; lastTs = ts;
     const cv = band.querySelector(".fpt-view canvas"), host = cv.parentNode;
