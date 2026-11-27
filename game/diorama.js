@@ -73,14 +73,14 @@ const DIORAMA = (() => {
   /* cut-outs that turn to face you: one instanced quad per kind; position, size and mirror per instance */
   const CARD_VS = `
     attribute vec3 iPos; attribute vec2 iSize; attribute float iFlip;
-    uniform vec3 camRight; uniform vec3 heroPos; uniform vec3 camPos;
+    uniform vec3 camRight; uniform vec3 heroPos; uniform vec3 camPos; uniform float fogMul;
     varying vec2 vUv; varying float vFog; varying float vFade;
     void main() {
       vUv = uv;
       vec3 r = normalize(vec3(camRight.x, 0.0, camRight.z));
       vec3 wp = iPos + r * position.x * iSize.x * iFlip + vec3(0.0, position.y * iSize.y, 0.0);
       vec4 mv = viewMatrix * vec4(wp, 1.0);
-      vFog = -mv.z;
+      vFog = -mv.z * fogMul;
       // see-through: something tall standing between you and the camera fades so it never hides you
       float dHero = distance(camPos.xz, heroPos.xz), dMe = distance(camPos.xz, iPos.xz);
       float lat = abs(dot(iPos.xz - heroPos.xz, r.xz));
@@ -101,10 +101,10 @@ const DIORAMA = (() => {
   function cardMaterial(map) {
     return new THREE.ShaderMaterial({ vertexShader: CARD_VS, fragmentShader: CARD_FS, side: THREE.DoubleSide,
       uniforms: { map: { value: map }, tint: { value: new THREE.Color(1, 1, 1) }, camRight: { value: new THREE.Vector3(1, 0, 0) }, heroPos: { value: new THREE.Vector3() }, camPos: { value: new THREE.Vector3() },
-        fogColor: { value: new THREE.Color(0x8e9fae) }, fogNear: { value: 30 }, fogFar: { value: 190 } } });
+        fogColor: { value: new THREE.Color(0x8e9fae) }, fogNear: { value: 30 }, fogFar: { value: 190 }, fogMul: { value: 1 } } });
   }
-  function cardMesh(kind, max) {
-    const P = K().PROPS[kind], map = tex(P.file), img = map.image, aspect = img && img.width ? img.width / img.height : 0.6;
+  function cardMesh(kind, max, file) {
+    const map = tex(file || K().PROPS[kind].file), img = map.image, aspect = img && img.width ? img.width / img.height : 0.6;
     const base = new THREE.PlaneGeometry(1, 1); base.translate(0, 0.5, 0);
     const g = new THREE.InstancedBufferGeometry(); g.index = base.index; g.attributes.position = base.attributes.position; g.attributes.uv = base.attributes.uv;
     g.setAttribute("iPos", new THREE.InstancedBufferAttribute(new Float32Array(max * 3), 3));
@@ -178,6 +178,19 @@ const DIORAMA = (() => {
     const HS = 3.6, hgeo = new THREE.PlaneGeometry(HS, HS); hgeo.translate(0, HS / 2 - HS * (24 / 320), 0);
     const hero = new THREE.Mesh(hgeo, basic(heroTex, { alphaTest: 0.35, side: THREE.DoubleSide, fog: true })); hero.renderOrder = 3; scene.add(hero);
     const heroShadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false })); scene.add(heroShadow);
+    // water: rivers as ribbons along the map's river lines, lakes and the sea as one level sheet; a painted streak
+    // texture drifting with the current
+    const wc = document.createElement("canvas"); wc.width = wc.height = 256; const wg = wc.getContext("2d");
+    wg.fillStyle = "#4d6d7c"; wg.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 140; i++) { const y = R().rand(i, 1, 5) * 256, x = R().rand(i, 2, 5) * 256, l = 20 + R().rand(i, 3, 5) * 70; wg.strokeStyle = `rgba(${R().rand(i, 4, 5) < 0.5 ? "214,228,232" : "40,62,74"},${0.12 + R().rand(i, 6, 5) * 0.25})`; wg.lineWidth = 1 + R().rand(i, 7, 5) * 2; wg.beginPath(); wg.moveTo(x, y); wg.lineTo(x + l, y + (R().rand(i, 8, 5) - 0.5) * 4); wg.stroke(); }
+    const waterTex = new THREE.CanvasTexture(wc); waterTex.wrapS = waterTex.wrapT = THREE.RepeatWrapping;
+    const waterMat = new THREE.MeshBasicMaterial({ map: waterTex, transparent: true, opacity: 0.93, depthWrite: false });
+    const river = new THREE.Mesh(new THREE.BufferGeometry(), waterMat); river.renderOrder = 0.5; river.frustumCulled = false; scene.add(river);
+    const lakeTex = waterTex.clone(); lakeTex.needsUpdate = true; lakeTex.repeat.set(24, 24);
+    const lake = new THREE.Mesh(new THREE.PlaneGeometry(240, 240).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: lakeTex, transparent: true, opacity: 0.94, depthWrite: false }));
+    lake.renderOrder = 0.5; lake.visible = false; scene.add(lake);
+    // places and bridges: cut-outs made when first needed
+    const places = {};
     // snow
     const N = phone() ? 700 : 1400, sp = new Float32Array(N * 3), rr = (i) => R().rand(i, 7, 9);
     for (let i = 0; i < N; i++) { sp[i * 3] = (rr(i) - 0.5) * 80; sp[i * 3 + 1] = R().rand(i, 3, 2) * 28; sp[i * 3 + 2] = (R().rand(i, 5, 1) - 0.5) * 60; }
@@ -192,7 +205,7 @@ const DIORAMA = (() => {
     const post = new THREE.ShaderMaterial({ uniforms: { t: { value: rt.texture }, res: { value: new THREE.Vector2(1, 1) }, focus: { value: 0.38 }, band: { value: 0.14 }, blur: { value: 8 }, taps: { value: 14 }, grade: { value: new THREE.Vector3(1, 1, 1) }, dark: { value: 0 } },
       vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }", fragmentShader: POST_FS, depthTest: false, depthWrite: false });
     const postScene = new THREE.Scene(), postCam = new THREE.Camera(); postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), post));
-    return { canvas, renderer, scene, camera, sky, backs, farGround, gGeo, ground, road, shadows, cards, hero, hg, heroTex, heroShadow, snow, rt, post, postScene, postCam,
+    return { canvas, renderer, scene, camera, sky, backs, farGround, gGeo, ground, road, shadows, cards, hero, hg, heroTex, heroShadow, snow, rt, post, postScene, postCam, river, waterTex, lake, lakeTex, places, placeList: [], labels: new Map(),
       w: 0, h: 0, prof: null, profKey: "", sDisp: null, sTarget: null, vEst: 0, lastS: null, hint: null, patch: null, yaw: null, camY: null, rideSt: {}, stride: 0, dbg: {} };
   }
 
@@ -207,10 +220,37 @@ const DIORAMA = (() => {
     if (!V.gGeo.userData.base) V.gGeo.userData.base = Float32Array.from(p.array);
     const b = V.gGeo.userData.base;
     let hint = V.hint;
+    const TR = typeof Terrain !== "undefined" ? Terrain : null, TT = TR?.T || {};
+    const segs = TR ? D.riverSegs(TR.rivers, cx, cz, 170) : [];
+    const lakeH = [];
     for (let i = 0; i < p.count; i++) {
       const x = b[i * 3] + cx, z = b[i * 3 + 2] + cz;
-      const y = D.land(P, x, z, hAt, hint); p.setXYZ(i, x, y, z); uv.setXY(i, x / 9, -z / 9);
+      let y = D.land(P, x, z, hAt, hint);
+      // water: the river's channel and lake or sea beds sink below the banks
+      if (segs.length) { const rd = D.riverDist(segs, x, z); if (rd < 8) { const k = rd < 3.5 ? 1 : 1 - (rd - 3.5) / 4.5; y -= 2.2 * k * k * (3 - 2 * k); } }
+      if (TR) { let ty = -1; try { ty = TR.typeAtPos(D.toMap(x, z)); } catch { /* off the map */ } if (ty === TT.SEA || ty === TT.LAKE) { lakeH.push(y); y -= 2.6; } }
+      p.setXYZ(i, x, y, z); uv.setXY(i, x / 9, -z / 9);
     }
+    // the lake / sea sheet sits a little under the lowest shore round it
+    if (lakeH.length > 6) { lakeH.sort((a, c) => a - c); V.lake.visible = true; V.lake.position.set(cx, lakeH[Math.floor(lakeH.length * 0.1)] - 0.5, cz); } else V.lake.visible = false;
+    // river ribbons, 9 m wide, a metre under the banks
+    { const pos = [], uvs = [], idx = []; let k = 0;
+      for (const [ax, az, bx, bz] of segs) {
+        const L = Math.hypot(bx - ax, bz - az); if (L < 0.5) continue;
+        const nx = -(bz - az) / L * 4.5, nz = (bx - ax) / L * 4.5, steps = Math.max(1, Math.ceil(L / 3));
+        for (let q = 0; q <= steps; q++) {
+          const x = ax + (bx - ax) * q / steps, z = az + (bz - az) * q / steps, y = D.land(P, x, z, hAt, hint) - 1.0, v = q * 3 / 9;
+          pos.push(x + nx, y, z + nz, x - nx, y, z - nz); uvs.push(0, v, 1, v);
+          if (q) { const a = (k - 1) * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+          k++;
+        }
+      }
+      const rg = new THREE.BufferGeometry(); rg.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); rg.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2)); if (idx.length) rg.setIndex(idx);
+      V.river.geometry.dispose(); V.river.geometry = rg; V.river.material.side = THREE.DoubleSide; V.river.visible = idx.length > 0; }
+    V.dbg.rivers = segs.length; V.dbg.lake = V.lake.visible;
+    // bridges where the road crosses a river on a real bridge (a ford stays a ford)
+    const bridges = D.crossings(P, segs).filter((c) => { try { return !TR || TR.typeAtPos(D.toMap(c.x, c.z)) !== TT.RIVER; } catch { return true; } });   // the map grid is coarse: any crossing that isn't a ford gets a bridge
+    V.dbg.bridges = bridges.length;
     p.needsUpdate = true; uv.needsUpdate = true; V.gGeo.computeBoundingSphere();
     // road: the profile points within reach, a ribbon 5.2 m wide
     const pos = [], uvs = [], idx = []; const W = 2.6; let k = 0;
@@ -247,6 +287,38 @@ const DIORAMA = (() => {
       for (let q = 0; q < n; q++) { const [x, y, z, hh, fl] = arr[q]; ip[q * 3] = x; ip[q * 3 + 1] = y; ip[q * 3 + 2] = z; is[q * 2] = hh * asp; is[q * 2 + 1] = hh; iff[q] = fl; }
       g.instanceCount = n; g.attributes.iPos.needsUpdate = g.attributes.iSize.needsUpdate = g.attributes.iFlip.needsUpdate = true;
     }
+    // places: where they really are, pushed off the road to its far side; far ones stand on the far ground
+    const B = K().BRIDGE, PL = K().PLACES, Wd = typeof WORLD !== "undefined" ? WORLD.places || {} : {}, byFile = {};
+    const list = [];
+    for (const [name, pp] of Object.entries(Wd)) {
+      if (!pp) continue; const kind = pp[2] || "town", art = PL[kind]; if (!art) continue;
+      let [x, z] = D.toWorld(pp); const dd = Math.hypot(x - cx, z - cz); if (dd > 900) continue;
+      const r = D.near(P, x, z, null), q = P.pts[r.i], minD = 9 + art.h * 0.7;
+      if (r.d < minD) { x = q.x + q.tz * minD; z = q.z - q.tx * minD; }   // its far side (the camera looks from the other)
+      const y = dd < 115 ? D.land(P, x, z, hAt, r.i) - 0.4 : Math.min(q.y, D.at(P, D.near(P, cx, cz, hint).s).y) - 0.6;
+      list.push({ name, kind, x, y, z, h: art.h, file: art.file });
+      (byFile[art.file] ||= []).push([x, y, z, art.h, 1]);
+    }
+    // bridges lie along the road (not turned to face you): seen from the side when the road crosses the view
+    for (const m of V.bridgeMeshes || []) { V.scene.remove(m); m.geometry.dispose(); }
+    V.bridgeMeshes = [];
+    tex(B.file);
+    if (LOADED.has(B.file)) for (const c of bridges) {
+      const q = D.at(P, c.s), img = TEX[B.file].image, w = B.h * img.width / img.height;
+      const g = new THREE.PlaneGeometry(w, B.h); g.translate(0, B.h / 2, 0);
+      const m = new THREE.Mesh(g, V.bridgeMat || (V.bridgeMat = new THREE.MeshBasicMaterial({ map: TEX[B.file], alphaTest: 0.45, side: THREE.DoubleSide })));
+      m.position.set(c.x, q.y + 0.05 - B.h * B.deck, c.z); m.rotation.y = -Math.atan2(q.tz, q.tx);
+      V.scene.add(m); V.bridgeMeshes.push(m);
+    } else if (bridges.length) V.wantBridge = true;
+    for (const m of Object.values(V.places)) m.geometry.instanceCount = 0;
+    for (const [file, arr] of Object.entries(byFile)) {
+      let m = V.places[file];
+      if (!m) { tex(file); if (!LOADED.has(file)) continue; m = V.places[file] = cardMesh(file, 40, file); m.material.uniforms.fogMul.value = file === B.file ? 1 : 0.45; V.scene.add(m); }
+      const g = m.geometry, n = Math.min(arr.length, 40), ip = g.attributes.iPos.array, is = g.attributes.iSize.array, iff = g.attributes.iFlip.array, asp = m.userData.aspect;
+      for (let q = 0; q < n; q++) { const [x, y, z, hh] = arr[q]; ip[q * 3] = x; ip[q * 3 + 1] = y; ip[q * 3 + 2] = z; is[q * 2] = hh * asp; is[q * 2 + 1] = hh; iff[q] = 1; }
+      g.instanceCount = n; g.attributes.iPos.needsUpdate = g.attributes.iSize.needsUpdate = g.attributes.iFlip.needsUpdate = true;
+    }
+    V.placeList = list; V.dbg.places = list.map((o) => o.name);
     const d = new THREE.Object3D(), n = Math.min(sh.length, 4000);
     for (let q = 0; q < n; q++) { const [x, y, z, w] = sh[q]; d.position.set(x + w * 0.25, y + 0.04, z); d.scale.set(w * 1.6, 1, w * 0.7); d.updateMatrix(); V.shadows.setMatrixAt(q, d.matrix); }
     V.shadows.count = n; V.shadows.instanceMatrix.needsUpdate = true;
@@ -319,7 +391,11 @@ const DIORAMA = (() => {
     let tx = ahead.x - back.x, tz = ahead.z - back.z; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl;
     let yaw = Math.atan2(tz, tx);
     if (V.yaw == null || I.reduce) V.yaw = yaw; else { let d = yaw - V.yaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; V.yaw += d * Math.min(1, dt * 0.8); }
-    const cx = Math.cos(V.yaw), cz = Math.sin(V.yaw);       // the way you're going, on screen: to the right
+    // nearly there: the camera swings round to look down the road, so the place you're heading for comes into view
+    const left = P.len - V.sDisp, swing = I.reduce ? 0 : 0.62 * (left > 170 ? 0 : left < 45 ? 1 : (170 - left) / 125);
+    V.swing = V.swing == null ? swing : V.swing + (swing - V.swing) * Math.min(1, dt * 0.7);
+    const camYaw = V.yaw + V.swing;
+    const cx = Math.cos(camYaw), cz = Math.sin(camYaw);       // the way you're going, on screen: to the right
     const fx = cz, fz = -cx;                               // the camera looks across the road
     if (V.camY == null || I.reduce) V.camY = here.y; else V.camY += (here.y - V.camY) * Math.min(1, dt * 1.5);
     const tall = V.camera.aspect < 1.2, short = V.h < 200, away = tall ? 11 : short ? 8.5 : 16, up = tall ? 3.6 : short ? 2.8 : 4.2, lead = tall || short ? 0.7 : 2;
@@ -331,29 +407,34 @@ const DIORAMA = (() => {
     if (moving) V.stride += speed * dt / (I.riding ? 2.6 : 0.84);
     const pace = I.riding ? clamp(speed / 1.6, 0, 4) : 1;
     drawHero(I, moving, pace, t, V.stride % 1);
-    V.hero.position.set(here.x, here.y, here.z); V.hero.rotation.y = -V.yaw;
-    V.heroShadow.position.set(here.x + 0.25, here.y + 0.05, here.z); V.heroShadow.scale.set(I.riding ? 3.2 : 1.5, 1, I.riding ? 1 : 0.6); V.heroShadow.rotation.y = -V.yaw;
+    V.hero.position.set(here.x, here.y, here.z); V.hero.rotation.y = -camYaw;
+    V.heroShadow.position.set(here.x + 0.25, here.y + 0.05, here.z); V.heroShadow.scale.set(I.riding ? 3.2 : 1.5, 1, I.riding ? 1 : 0.6); V.heroShadow.rotation.y = -camYaw;
     // light
     const Lt = light(I, kit);
     V.scene.fog.color.copy(Lt.fog); V.scene.fog.near = Lt.near; V.scene.fog.far = Lt.far; V.farGround.material.color.copy(Lt.fog); V.renderer.setClearColor(Lt.fog);
     const gt = new THREE.Color(Lt.tint.r * kit.ground[0], Lt.tint.g * kit.ground[1], Lt.tint.b * kit.ground[2]);
-    V.ground.material.color.copy(gt); V.road.material.color.copy(Lt.tint); V.hero.material.color.setRGB(Math.max(0.78, Lt.tint.r), Math.max(0.8, Lt.tint.g), Math.max(0.86, Lt.tint.b));   // you stay easy to see V.sky.material.color.copy(Lt.tint);
+    V.ground.material.color.copy(gt); if (V.bridgeMat) V.bridgeMat.color.copy(Lt.tint); V.road.material.color.copy(Lt.tint); V.hero.material.color.setRGB(Math.max(0.78, Lt.tint.r), Math.max(0.8, Lt.tint.g), Math.max(0.86, Lt.tint.b)); V.sky.material.color.copy(Lt.tint);   // you stay easy to see
     V.backs.forEach((b) => b.material.color.setRGB(Lt.tint.r * kit.far[0], Lt.tint.g * kit.far[1], Lt.tint.b * kit.far[2]));
-    for (const m of Object.values(V.cards)) { const u = m.material.uniforms; u.tint.value.copy(Lt.tint); u.camRight.value.copy(right); u.heroPos.value.set(here.x, here.y, here.z); u.camPos.value.copy(V.camera.position); u.fogColor.value.copy(Lt.fog); u.fogNear.value = Lt.near; u.fogFar.value = Lt.far; }
+    for (const m of [...Object.values(V.cards), ...Object.values(V.places)]) { const u = m.material.uniforms; u.tint.value.copy(Lt.tint); u.camRight.value.copy(right); u.heroPos.value.set(here.x, here.y, here.z); u.camPos.value.copy(V.camera.position); u.fogColor.value.copy(Lt.fog); u.fogNear.value = Lt.near; u.fogFar.value = Lt.far; }
     V.post.uniforms.grade.value.set(...Lt.grade); V.post.uniforms.dark.value = Lt.dark;
     // sky and ridges sit far off along the camera's view, turning with it
     const cpos = V.camera.position, along = cpos.x * cx + cpos.z * cz;
-    const place = (m, dist, y) => { m.position.set(cpos.x + fx * dist, y, cpos.z + fz * dist); m.rotation.y = -V.yaw; };
-    place(V.sky, 1400, 230 + V.camY * 0.2); V.sky.material.map.offset.x = V.yaw / (2 * Math.PI) * 0.6 + along * 0.00004;
-    for (const b of V.backs) { const u = b.userData; place(b, u.dist, here.y + u.base + b.geometry.parameters.height / 2); u.t.offset.x = V.yaw / (2 * Math.PI) * (2 * Math.PI * u.dist / u.worldW) + along / u.worldW; }
-    V.farGround.position.set(cpos.x + fx * 1700, Math.min(here.y, V.camY) - 0.8, cpos.z + fz * 1700); V.farGround.rotation.y = -V.yaw;
+    const place = (m, dist, y) => { m.position.set(cpos.x + fx * dist, y, cpos.z + fz * dist); m.rotation.y = -camYaw; };
+    place(V.sky, 1400, 230 + V.camY * 0.2); V.sky.material.map.offset.x = camYaw / (2 * Math.PI) * 0.6 + along * 0.00004;
+    for (const b of V.backs) { const u = b.userData; place(b, u.dist, here.y + u.base + b.geometry.parameters.height / 2); u.t.offset.x = camYaw / (2 * Math.PI) * (2 * Math.PI * u.dist / u.worldW) + along / u.worldW; }
+    V.farGround.position.set(cpos.x + fx * 1700, Math.min(here.y, V.camY) - 0.8, cpos.z + fz * 1700); V.farGround.rotation.y = -camYaw;
     // snow
     V.snow.visible = Lt.snow && !I.reduce;
     if (V.snow.visible) {
       const a = V.snow.geometry.attributes.position, arr = a.array;
       for (let i = 0; i < arr.length; i += 3) { arr[i + 1] -= dt * (1.4 + (i % 7) * 0.12) * (Lt.wx === "blizzard" ? 2 : 1); arr[i] += dt * (0.6 + Math.sin(t + i) * 0.4) * (Lt.wx === "blizzard" ? 4 : 1); if (arr[i + 1] < -2) arr[i + 1] = 26; if (arr[i] > 40) arr[i] -= 80; }
-      a.needsUpdate = true; V.snow.position.set(here.x, V.camY, here.z); V.snow.rotation.y = -V.yaw;
+      a.needsUpdate = true; V.snow.position.set(here.x, V.camY, here.z); V.snow.rotation.y = -camYaw;
     }
+    // a place's picture just arrived: put it in
+    if (V.placeList.some((o) => LOADED.has(o.file) && !V.places[o.file]) || (V.wantBridge && LOADED.has(K().BRIDGE.file))) { V.patch = null; V.wantBridge = false; }
+    // the current drifts down the river; the lake ripples slowly
+    if (!I.reduce) { V.waterTex.offset.y -= dt * 0.12; V.lakeTex.offset.x += dt * 0.004; }
+    labels(host, I, here);
     // draw: the scene, then the finish
     const t0 = typeof performance !== "undefined" ? performance.now() : 0;
     V.renderer.setRenderTarget(V.rt); V.renderer.render(V.scene, V.camera);
@@ -364,10 +445,30 @@ const DIORAMA = (() => {
     V.dbg = { ...V.dbg, region, s: V.sDisp, len: P.len, moving, riding: !!I.riding, tod: Lt.tod, wx: Lt.wx, ms: (typeof performance !== "undefined" ? performance.now() : 0) - t0, y: here.y };
     return true;
   }
+  /* names over the places you know (and the one you're heading for); an arrow at the edge while it's still off screen */
+  function labels(host, I, here) {
+    const seen = new Set(), v = new THREE.Vector3(), W = V.w, H = V.h, NMf = (n) => { try { return typeof NM !== "undefined" && NM.place ? NM.place(n) : n; } catch { return n; } };
+    const knows = (n) => { try { return typeof I.known !== "function" || I.known(n); } catch { return true; } };
+    const put = (key, text, x, y, cls) => {
+      let el = V.labels.get(key);
+      if (!el) { el = document.createElement("div"); el.className = "dio-lbl"; host.appendChild(el); V.labels.set(key, el); }
+      if (el.textContent !== text) el.textContent = text;
+      el.className = "dio-lbl" + (cls ? " " + cls : ""); el.style.transform = `translate(${Math.round(x)}px,${Math.round(y)}px) ${cls === "edge" ? "translate(-100%,-50%)" : "translate(-50%,-100%)"}`;
+      seen.add(key);
+    };
+    for (const o of V.placeList) {
+      const dest = o.name === I.dest; if (!dest && !knows(o.name)) continue;
+      const d = Math.hypot(o.x - here.x, o.z - here.z); if (d > (dest ? 900 : 380)) continue;
+      v.set(o.x, o.y + o.h * 1.02, o.z).project(V.camera);
+      if (v.z > 1 || v.x < -1.05 || v.x > 1.05 || v.y < -1) { if (dest && v.z <= 1 && v.x > 1) put("edge", NMf(o.name) + " \u203A", W - 6, H * 0.36, "edge"); continue; }
+      put(o.name, NMf(o.name), (v.x + 1) / 2 * W, Math.max(16, (1 - v.y) / 2 * H - 2), dest ? "dest" : "");   // tall places: the name stays inside the band
+    }
+    for (const [k, el] of V.labels) if (!seen.has(k)) { el.remove(); V.labels.delete(k); }
+  }
   function detach() {
     if (!V) return;
     try { V.renderer.dispose(); V.rt.dispose(); } catch { /* gone */ }
-    V.canvas.remove(); V = null;
+    V.canvas.remove(); for (const el of V.labels.values()) el.remove(); V = null;
   }
   return { frame, detach, mode, setMode, settingsHTML, pref, usable, debug: () => (V ? V.dbg : null), why: () => why || (threeState !== "ready" ? "loading three.js" : V && !ready() ? "loading paintings" : ""), _slow: () => slow };
 })();

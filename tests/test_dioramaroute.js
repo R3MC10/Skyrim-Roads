@@ -39,5 +39,13 @@ ok(R.profile([[0.5, 0.5], [0.51, 0.5]], () => 0).pts.length > 3, "a short route 
 ok(R.profile([[0.5, 0.5]], () => 0) === null && R.profile(null, () => 0) === null, "no route: null");
 ok(R.profile([[0.5, 0.5], [0.6, 0.5]], () => { throw new Error("x"); }).pts.every((p) => p.y === 0), "a failing height lookup is flat ground");
 
+// rivers: a river line crossing the route gives one crossing; distance to it is measured in metres
+const rv = [[[0.31 * 1000, 0.39 * 700], [0.31 * 1000, 0.42 * 700]]];   // a north-south river at x = 0.31 (map px)
+const segs = R.riverSegs(rv, P.pts[0].x, P.pts[0].z, 400);
+ok(segs.length === 1, "river line found near the route");
+const cr = R.crossings(P, segs);
+ok(cr.length === 1 && Math.abs(cr[0].x - 0.31 * 1000 * R.S) < 1, "one crossing where the road meets the river");
+ok(Math.abs(R.riverDist(segs, 0.31 * 1000 * R.S + 5, 0.40 * 700 * R.S) - 5) < 0.01, "distance to the river in metres");
+ok(R.riverSegs(rv, 0, 0, 50).length === 0, "far rivers are skipped");
 console.log(fails ? `${fails} FAILED of ${n}` : `dioramaroute: all ok · ${n} checks`);
 process.exit(fails ? 1 : 0);

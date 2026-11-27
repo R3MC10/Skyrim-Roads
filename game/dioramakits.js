@@ -5,7 +5,8 @@
    Every kit uses the dio-*.webp paintings; a new region kit only needs its own cut-outs listed here.
      DIOKITS.of(region) → kit or null
      DIOKITS.PROPS      → cut-out → { file, h: [min, max] metres tall, tree, shadow (metres wide) }
-     DIOKITS.FILES      → every painting the diorama may load */
+     DIOKITS.PLACES     → place kind → { file, h } · DIOKITS.BRIDGE → the bridge cut-out
+     DIOKITS.FILES      → the paintings the diorama needs before it draws (places and bridges load as they're needed) */
 const DIOKITS = (() => {
   const PROPS = {
     pine: { file: "dio-pine", h: [7, 11], tree: true, shadow: 2.6 },
@@ -29,7 +30,16 @@ const DIOKITS = (() => {
     valley: { trees: 0.3, treeMix: { birch: 0.4, pine: 0.35, spruce: 0.25 }, clutter: 0.55, clutterMix: { grass: 0.4, fern: 0.3, bush: 0.2, rocks: 0.1 }, ground: [1, 1.04, 0.95], far: [1, 1, 1], fog: 0x93a3ab },
     autumn: { trees: 0.5, treeMix: { birch: 0.7, pine: 0.2, spruce: 0.1 }, clutter: 0.55, clutterMix: { fern: 0.35, grass: 0.35, bush: 0.2, stump: 0.1 }, ground: [1.05, 1, 0.9], far: [1.04, 0.98, 0.92], fog: 0xa29c94 },
   };
+  /* places on the map (WORLD.places kind) → their painted cut-out and height in metres; they stand where they really
+     are, pushed back off the road to its far side when they sit on it */
+  const PLACES = {
+    city: { file: "dio-place-city", h: 34 }, town: { file: "dio-place-town", h: 15 }, fort: { file: "dio-place-fort", h: 20 },
+    camp: { file: "dio-place-camp", h: 9 }, farm: { file: "dio-place-farm", h: 10 }, stone: { file: "dio-place-stone", h: 6 },
+    shrine: { file: "dio-place-shrine", h: 4.2 }, lair: { file: "dio-place-lair", h: 16 }, landmark: { file: "dio-place-tower", h: 20 },
+    dungeon: { file: "dio-place-barrow", h: 10 }, college: { file: "dio-place-city", h: 30 },
+  };
+  const BRIDGE = { file: "dio-place-bridge", h: 3.8, deck: 0.86 };   // deck: where the road runs, as a share of the height from the bottom
   const FILES = ["dio-sky", "dio-far", "dio-mid", "dio-floor", "dio-road", ...new Set(Object.values(PROPS).map((p) => p.file))];
-  return { PROPS, KITS, FILES, of: (r) => KITS[r] || null };
+  return { PROPS, KITS, PLACES, BRIDGE, FILES, of: (r) => KITS[r] || null };
 })();
 if (typeof module !== "undefined") module.exports = DIOKITS;

@@ -12,6 +12,8 @@
      DIOROUTE.near(prof, x, z, hint)   → { i, s, d, side, y }: the closest road point (d metres away; side +1 = left of travel)
      DIOROUTE.at(prof, s)              → the road point at distance s (interpolated)
      DIOROUTE.land(prof, x, z, hFn, hint) → ground height in metres: the map's land, pulled onto the road's shelf near it
+     DIOROUTE.riverSegs(rivers, cx, cz, r) → river lines near a point as world segments · riverDist(segs, x, z)
+     DIOROUTE.crossings(prof, segs)    → where the road crosses a river: [{ s, x, z }] (a bridge goes there)
      DIOROUTE.rand(a, b, salt)         → 0..1, the same every time for the same cell (so a stretch of road always grows
                                          the same trees, on every trip and for everyone in a party)
    Pure functions, no DOM: tests/test_dioramaroute.js. */
@@ -101,11 +103,40 @@ const DIOROUTE = (() => {
     const base = h + delta * sm(4, 44, r.d);                       // the land, shifted with the road and easing back
     return base + (road.y - base) * sm(4, 12, r.d);                // a flat shelf right by the road
   }
+  /* rivers near (cx, cz): the map's river lines (Terrain.rivers, map pixels) as world segments within r metres */
+  function riverSegs(rivers, cx, cz, r) {
+    const out = [];
+    for (const line of rivers || []) for (let i = 1; i < line.length; i++) {
+      const ax = line[i - 1][0] * S, az = line[i - 1][1] * S, bx = line[i][0] * S, bz = line[i][1] * S;
+      const mx = Math.max(Math.abs((ax + bx) / 2 - cx) - Math.abs(bx - ax) / 2, 0), mz = Math.max(Math.abs((az + bz) / 2 - cz) - Math.abs(bz - az) / 2, 0);
+      if (mx < r && mz < r) out.push([ax, az, bx, bz]);
+    }
+    return out;
+  }
+  function segDist(sg, x, z) {
+    const [ax, az, bx, bz] = sg, dx = bx - ax, dz = bz - az, L2 = dx * dx + dz * dz || 1, u = clamp(((x - ax) * dx + (z - az) * dz) / L2, 0, 1);
+    return Math.hypot(x - (ax + dx * u), z - (az + dz * u));
+  }
+  const riverDist = (segs, x, z) => { let d = Infinity; for (const sg of segs) d = Math.min(d, segDist(sg, x, z)); return d; };
+  /* where the road crosses a river: [{ s, x, z }] along the profile (bridges go there) */
+  function crossings(prof, segs) {
+    const out = [], P = prof.pts;
+    for (let i = 1; i < P.length; i++) {
+      const a = P[i - 1], b = P[i];
+      for (const [cx, cz, dx2, dz2] of segs) {
+        const r = b.x - a.x, s2 = b.z - a.z, q = dx2 - cx, w = dz2 - cz, den = r * w - s2 * q;
+        if (Math.abs(den) < 1e-9) continue;
+        const t = ((cx - a.x) * w - (cz - a.z) * q) / den, u = ((cx - a.x) * s2 - (cz - a.z) * r) / den;
+        if (t >= 0 && t <= 1 && u >= 0 && u <= 1) { const sAt = a.s + (b.s - a.s) * t; if (!out.some((o) => Math.abs(o.s - sAt) < 12)) out.push({ s: sAt, x: a.x + r * t, z: a.z + s2 * t }); }
+      }
+    }
+    return out;
+  }
   function rand(a, b, salt = 0) {
     let h = (Math.imul(a | 0, 73856093) ^ Math.imul(b | 0, 19349663) ^ Math.imul(salt | 0, 83492791)) >>> 0;
     h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0; h = Math.imul(h ^ (h >>> 13), 3266489909) >>> 0;
     return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
   }
-  return { S, HS, GRADE, STEP, toWorld, toMap, profile, near, at, land, rand };
+  return { S, HS, GRADE, STEP, toWorld, toMap, profile, near, at, land, rand, riverSegs, riverDist, crossings };
 })();
 if (typeof module !== "undefined") module.exports = DIOROUTE;

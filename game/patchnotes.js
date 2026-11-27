@@ -7,6 +7,7 @@ const PATCHNOTES = (() => {
       "While you travel, the road view above the map is now a small painted world: the real road you're on bending over gentle hills, hand-painted trees, ferns and rocks along it, misty ridges and sky behind, and you on the road on foot or on your horse.",
       "What grows depends on where you are: thick pine forest, open tundra with a few trees, rocky hills, snowy mountains, the coast, river valleys and the Rift's golden birches. The same stretch of road always looks the same, for everyone in a party.",
       "Hills stay believable: roads never climb steeper than a real mountain road would.",
+      "Towns, cities, forts, farms, camps, shrines and standing stones stand by the road where they really are on the map, with their names over the ones you know. Rivers wind past and you cross them on stone bridges, and as you near the end of the trip the view turns to show the place you're arriving at.",
       "Time of day and the weather change the light, and snow falls when it snows. If your phone struggles, or you prefer the old view, set Settings → Look → Road view to Classic.",
     ] },
     { id: "b387-perfdeep", build: 387, date: "27 Nov 2026", title: "Smoother without lowering graphics", items: [
