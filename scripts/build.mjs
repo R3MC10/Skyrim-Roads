@@ -20,5 +20,6 @@ let html = fs.readFileSync(path.join(www, "index.html"), "utf8");
 html = html.replace(/<link rel="preconnect"[^>]*>\s*/g, "").replace(/<link href="https:\/\/fonts\.googleapis\.com[^>]*>/, '<link rel="stylesheet" href="fonts/fonts.css">');
 html = html.replace('<script src="store.js"></script>', '<script src="p2pnet.js"></script>\n<script src="store.js"></script>');   // phone-to-phone networking
 html = html.replace("</body>", '<script src="app.js"></script>\n</body>');
+if (!process.env.NOBUNDLE) html = (await import("./bundle.mjs")).bundle(www, html);   // one minified script instead of ~520 (faster start on phones)
 fs.writeFileSync(path.join(www, "index.html"), html);
 console.log("www built:", fs.readdirSync(www).length, "files");

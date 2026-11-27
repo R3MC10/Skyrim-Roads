@@ -38,14 +38,18 @@ jobs:
           openssl enc -d -aes-256-cbc -pbkdf2 -iter 300000 -in android/app/roads.keystore.enc -out android/app/roads.keystore -pass env:SIGNING_PASSPHRASE
           printf 'storeFile=roads.keystore\nstorePassword=%s\nkeyAlias=roads\nkeyPassword=%s\n' "$SIGNING_PASSPHRASE" "$SIGNING_PASSPHRASE" > android/keystore.properties
       - run: npm ci
-      - name: Put the game inside the app
-        run: npm run sync
+      - name: Build the game files (one bundled script, minified)
+        run: npm run build
       - name: Keep the game files for the PC build
         uses: actions/upload-artifact@v4
         with:
           name: www
           path: www
           retention-days: 3
+      - name: Phone-sized pictures and music (the PC build above keeps the full ones)
+        run: node scripts/phoneimg.mjs www
+      - name: Put the game inside the app
+        run: npx cap sync android
       - name: Build the APK
         working-directory: android
         env:
