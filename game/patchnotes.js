@@ -3,10 +3,25 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b379-npctasks", build: 379, date: "27 Nov 2026", title: "Every job you take is in the Journal", items: [
+    { id: "b382-npctasks", build: 382, date: "27 Nov 2026", title: "Every job you take is in the Journal", items: [
       "Every job, rumour and contract you take from someone in the world is in the Journal now: notice-board jobs, odd jobs at farms and camps, rumours from innkeepers and townsfolk, legendary hunts from a Jarl's steward, a Daedric prince's contract, your company's caravan escort and expedition.",
       "Each one shows who gave it and where, what to do next, how far along you are (like 3/5), how long you have left, and the reward. ☆ Track it to steer the compass, the map and the What to do next card, just like a quest.",
       "Taking a new task pops up a small \"Quest added\" card with a Track button. Tasks you finish move to Completed, and you can give one up from the Journal (tap Abandon twice).",
+    ] },
+    { id: "b381-offhand", build: 381, date: "27 Nov 2026", title: "Every person in a fight really moves", items: [
+      "Your off hand is now always behind your body: the shield, a second blade and the arm that holds them stay at the back, and your weapon arm is in front, in every move. When you guard or block, the shield is held further out so you still see it past your chest.",
+      "Bandits, draugr, Forsworn, Falmer, vampires, necromancers, mages, Thalmor, dremora, soldiers and assassins are no longer still paintings: they are full painted fighters like you, with arms, legs and their own weapons, winding up, swinging, flinching and falling. Draugr are grey, dremora ash-red and Falmer pale, and chiefs and deathlords stand a little taller.",
+      "Beasts, dragons, spirits and Dwarven machines keep their own animated bodies.",
+    ] },
+    { id: "b380-travelpov", build: 380, date: "27 Nov 2026", title: "The road ahead is the real world", items: [
+      "The view from the saddle (or on foot) now shows the land you're really crossing: the real mountains on the skyline, with the Throat of the World standing snow-capped when you can see it, and the road bending the way it really does on the map.",
+      "Towns, forts, standing stones, shrines and farms appear where they really are, beside the road or far on the horizon, with their names once you get close. Solstheim shows its own places.",
+      "Your party rides or walks with you: friends on their horses (seen from behind, in their own armour and colours), followers on foot, and pets trotting along.",
+    ] },
+    { id: "b379-creaturerigs", build: 379, date: "27 Nov 2026", title: "Creatures come alive", items: [
+      "Beasts and monsters in fights now really move their bodies instead of the whole painting bending: wolves, sabre cats and skeevers snap with their jaws and paw at you, bears swipe, mammoths swing their trunks, and horkers rear their heads.",
+      "Trolls, giants, Dwarven Centurions and atronachs swing their arms and step on their legs, spiders and chauruses move their legs and fangs, mudcrabs pinch with their big claw, ice wraiths whip their tails, and dragons beat their wings and lash their tails and necks.",
+      "Legs and wings on the far side stay behind the body, and the near ones in front, so nothing pokes through the wrong way.",
     ] },
     { id: "b378-fightsync", build: 378, date: "27 Nov 2026", title: "Party fights stay in step", items: [
       "Party fights no longer get stuck on someone's turn when a message gets lost on a bad connection: your phone sends your turn again until the leader has it, and the leader's phone keeps telling you it's your turn until you've seen it. Nothing is ever played twice.",

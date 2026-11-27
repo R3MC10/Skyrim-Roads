@@ -35,7 +35,7 @@ const FPT = (() => {
   /* painted layers Kacper can add later, per region (TRAVELART.BIOME keys): wide strips that wrap round 360° */
   const LAYERS = {};
   for (const b of ["grass", "tundra", "forest", "pine", "autumn", "marsh", "snow", "ash", "rock"]) LAYERS[b] = { far: `fpv-${b}-far`, hills: `fpv-${b}-hills` };
-  const painted = (key) => { try { return typeof ASSETS !== "undefined" && ASSETS.state(key)?.st === "ok" ? ASSETS.img(key) : null; } catch { return null; } };
+  const painted = (key) => { try { return typeof ASSETS !== "undefined" ? ASSETS.img(key) : null; } catch { return null; } };
 
   // ------------------------------------------------------------------ the band (DOM)
   let band = null, wrapEl = null, clickFn = null, info = null, shutKey = "", lastHead = "", lastSay = "", sayUntil = 0, tipShown = false;
@@ -215,7 +215,15 @@ const FPT = (() => {
     // director puts by it (fpworld.js / fpscene.js). A painted far layer from the art branch still drops in when it exists.
     const nightK = tod === "night" ? 0.45 : tod === "dusk" ? 0.15 : 0, lights = [];
     const region = regionOf(I), W = typeof FPWORLD !== "undefined" ? FPWORLD : null;
+    // the real world round you (fpreal.js): the skyline from the map's heights, real places, the road's real bends, your company
+    const RL = typeof FPREAL !== "undefined" ? FPREAL : null;
+    const relief = RL && I.pos && !I.boat ? RL.relief(I.pos) : null;
+    const places = RL && I.pos && !I.boat ? RL.places(I.pos, headS, { known: I.known, dest: I.dest }) : [];
+    const bend = RL && I.pos && I.path && !I.boat ? RL.bend(I.pos, I.path, I.idx, headS) : null;
+    const mates = RL && !I.boat ? RL.companions([...(I.company || []), ...(I.pets || [])]) : [];
+    dbg.places = places.map((q) => q.name); dbg.mates = mates.map((m) => (m.riding ? "+" : "") + m.name); dbg.relief = relief ? relief.id : null; dbg.bend = !!bend;
     const destFn = (gg, hzE) => {
+      farPlaces(gg, w, h, hzE, places, T, B, L, st, t, pxDeg, dbg);
       const pl = painted(LAYERS[kind]?.far);
       if (pl) { const iw = pl.width * (hz * 0.7 / pl.height), off = ((-headS / 360) * iw * 1.8) % iw; for (let x = off - iw; x < w; x += iw) gg.drawImage(pl, x, hzE - hz * 0.7, iw, hz * 0.7); }
       destination(gg, w, h, hzE, I, T, B, L, st, t, pxDeg, dbg);
@@ -225,7 +233,7 @@ const FPT = (() => {
       if (I.boat) seaFloor(g, w, h, hz, t, L, tod);
       else { const gg = g.createLinearGradient(0, hz, 0, h); gg.addColorStop(0, B.gd); gg.addColorStop(1, B.ground); g.fillStyle = gg; g.fillRect(-4, hz, w + 8, h - hz + 6); }
     } else {
-      const wd = W.paint(g, w, h, hz, I, t, { travel, headS, curveS, pxDeg, L, nightK, snowy, route: routeKey(I), trip: tripSeed, region, lights, horizon: L.horizon, sky: st, sky0: sc[0], dpr: curDpr, dest: destFn });
+      const wd = W.paint(g, w, h, hz, I, t, { travel, headS, curveS, pxDeg, L, nightK, snowy, route: routeKey(I), trip: tripSeed, region, lights, horizon: L.horizon, sky: st, sky0: sc[0], dpr: curDpr, dest: destFn, relief, places, bend, mates, paint: painted });
       if (wd) { dbg.objects = wd.objects; dbg.world = wd; dbg.kind = region; }
     }
     // weather on top of everything in the world
@@ -251,9 +259,24 @@ const FPT = (() => {
       g.lineTo(w + 4, hz + 2); g.closePath(); g.fillStyle = tone(B.far[i] || B.far[0], hazeK * (i ? 0.7 : 1)); g.fill();
     }
   }
+  /* real places too far to stand on the road's land: small on the horizon at their true bearing, bigger the closer they are */
+  function farPlaces(g, w, h, hzE, places, T, B, L, st, t, pxDeg, dbg) {
+    const PXU = typeof FPREAL !== "undefined" ? FPREAL.PX : 1.6, ZFAR = (typeof FPWORLD !== "undefined" ? FPWORLD.ZF : 46) * 0.98;
+    dbg.near = places.filter((q) => q.fwd / PXU >= 1.2 && q.fwd / PXU <= ZFAR).map((q) => q.name);
+    if (!T) return;
+    const far = places.filter((q) => q.fwd / PXU > ZFAR && Math.abs(q.rel) < FOV / 2 + 8 && q.kind !== "peak").sort((a, b) => b.dist - a.dist);
+    for (const q of far) {
+      const x = w / 2 + q.rel * pxDeg, near = clamp(1 - (q.dist - ZFAR * PXU) / 200, 0, 1), big = q.kind === "city" ? 1.4 : q.kind === "town" || q.kind === "fort" ? 1 : 0.7;
+      const k = (h / 112) * (0.12 + 0.22 * near) * big, loc = [];
+      g.save(); g.globalAlpha = 0.55 + 0.45 * near; g.translate(x, hzE + 1); g.scale(k, k); g.translate(-(360 * 0.84), -74);
+      try { T.draw.destination(g, { dest: q.name }, 0, { B, L, ink: true, st }, loc, t); } catch { /* no picture */ }
+      g.restore();
+    }
+  }
   /* where you're heading, rising over its compass marker; it grows (walls, towers, the gate) as you near it */
   function destination(g, w, h, hzE, I, T, B, L, st, t, pxDeg, dbg) {
     if (!T || !I.dest || I.destBear == null || I.boat) return;
+    if (dbg.places?.includes(I.dest) && (dbg.near || []).includes(I.dest)) return;   // it's standing on the land already (fpworld.js)
     const rel = relDeg(I.destBear - headS);
     if (Math.abs(rel) > FOV / 2 + 10) return;
     const p = clamp(I.p || 0, 0, 1), k = (h / 112) * (0.32 + p * 0.6), x = w / 2 + rel * pxDeg, loc = [];
@@ -324,6 +347,9 @@ const FPT = (() => {
     const b = Math.sin(ph) * h * 0.02, nod = Math.sin(ph + 0.6) * h * 0.012, cx = w / 2;
     const top = h * 0.64 + b + nod, s = h / 112;
     g.save();
+    let cid = "bay"; try { cid = (HORSES.COATS.find((k) => k[2] === I.horse?.coat || k[0] === I.horse?.coat) || HORSES.COATS[0])[0]; } catch { /* bay */ }
+    const pimg = painted("tv-horse-ears-" + cid);   // a painted neck, mane and ears (2:1, bottom-anchored) replaces the drawn one
+    if (pimg) { const ih = h - top + 14 * s, iw = ih * 2; g.drawImage(pimg, cx - iw / 2, h - ih + 4, iw, ih); } else {
     // neck rising from the bottom to the poll
     g.fillStyle = coat; g.beginPath(); g.moveTo(cx - 34 * s, h + 4); g.quadraticCurveTo(cx - 20 * s, top + 22 * s, cx - 9 * s, top + 6 * s); g.lineTo(cx + 9 * s, top + 6 * s); g.quadraticCurveTo(cx + 20 * s, top + 22 * s, cx + 34 * s, h + 4); g.closePath(); g.fill();
     g.fillStyle = dark; g.beginPath(); g.moveTo(cx + 10 * s, top + 10 * s); g.quadraticCurveTo(cx + 20 * s, top + 26 * s, cx + 32 * s, h + 4); g.lineTo(cx + 22 * s, h + 4); g.quadraticCurveTo(cx + 14 * s, top + 30 * s, cx + 6 * s, top + 12 * s); g.fill();
@@ -334,6 +360,7 @@ const FPT = (() => {
     // ears
     for (const sd of [-1, 1]) { g.fillStyle = coat; g.beginPath(); g.moveTo(cx + sd * 3 * s, top + 6 * s); g.lineTo(cx + sd * 9 * s, top - 9 * s + Math.sin(ph * 0.5 + sd) * s); g.lineTo(cx + sd * 11 * s, top + 6 * s); g.fill(); g.fillStyle = dark; g.beginPath(); g.moveTo(cx + sd * 6 * s, top + 4 * s); g.lineTo(cx + sd * 9 * s, top - 5 * s); g.lineTo(cx + sd * 10 * s, top + 4 * s); g.fill(); }
     g.strokeStyle = "rgba(30,20,12,0.6)"; g.lineWidth = Math.max(1, s); g.beginPath(); g.moveTo(cx - 9 * s, top + 6 * s); g.quadraticCurveTo(cx - 20 * s, top + 22 * s, cx - 34 * s, h + 4); g.moveTo(cx + 9 * s, top + 6 * s); g.quadraticCurveTo(cx + 20 * s, top + 22 * s, cx + 34 * s, h + 4); g.stroke();
+    }
     // reins from the bit to your hands
     const hy = h - 6 * s + b * 0.5, hl = cx - 46 * s, hr = cx + 46 * s;
     g.strokeStyle = "#3a2618"; g.lineWidth = Math.max(1.2, 1.6 * s);

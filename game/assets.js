@@ -173,7 +173,7 @@ const ASSETS = (() => {
   /* [npcportraits] painted NPC portraits that are in the game folder (npcart.js only asks for these; the rest of
      NPCART.PLAN keeps the drawing). Add a name here when its file lands; tests/test_npcart.js checks each file exists. */
   const NPC = new Set([]);
-  const guessed = (key) => /^icon-/.test(key) || key === "map-world-2x";
+  const guessed = (key) => /^(icon|tv)-/.test(key) || key === "map-world-2x";   // tv-*: travel-view layers (fpworld.js), fetched only once listed in PAINTED
   const wantHi = () => { try { return innerWidth >= 1100 || (devicePixelRatio || 1) > 1.5; } catch { return false; } };
   const state = new Map();   // key -> { st: "loading"|"ok"|"none", img, url }
   const subs = [];
