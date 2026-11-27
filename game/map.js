@@ -578,7 +578,9 @@ const WorldMap = (() => {
     if (painted && base) base = null;   // drop the procedural picture once the painting is in
     const bimg = SV ? SV.base() : painted || (PM && PM.pending() ? null : (base = base || drawBase()));
     // the canvas holds one pixel per device pixel (phones up to 3×), so lines and words are as sharp as the screen
-    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    // [perfmap] at most 2 device pixels per CSS pixel (1.6 with Battery saver): a 3x phone otherwise fills 2.25x as many
+    // pixels every picture for a difference hard to see on a map
+    const dpr = Math.min(typeof PERFMODE !== "undefined" ? PERFMODE.dprCap(2) : 2, window.devicePixelRatio || 1);
     const cw = canvas.clientWidth, ch = canvas.clientHeight;
     if (canvas.width !== Math.round(cw * dpr) || canvas.height !== Math.round(ch * dpr)) { canvas.width = Math.round(cw * dpr); canvas.height = Math.round(ch * dpr); }
     const g = canvas.getContext("2d");
@@ -974,7 +976,7 @@ const WorldMap = (() => {
       g.restore();
     }
     // [snowfx] realistic snow seen from above (snowfx.js); eases in and out with the weather, so call it every frame
-    if (typeof SNOWFX !== "undefined" && !(FX && FX.regional())) {
+    if (typeof SNOWFX !== "undefined" && !(FX && FX.regional()) && !v.snowOverlay) {   // [perfmap] ui.js may paint the snow on its own layer over the map
       const lite = typeof MOTION !== "undefined" && MOTION.lite && MOTION.lite();
       try { SNOWFX.draw(g, canvas.width / dpr, canvas.height / dpr, dpr, { weather: v.weather, reduce: v.reduceMotion, lite }); } catch (e) { /* the map never breaks for snow */ }
     }

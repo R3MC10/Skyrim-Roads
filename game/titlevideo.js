@@ -29,7 +29,7 @@ const TITLEVIDEO = (() => {
     let cur = pick();
     v.className = "tvid" + (cur.wide ? " wide" : ""); v.muted = true; v.loop = true; v.playsInline = true; v.preload = "auto"; v.poster = cur.poster;
     v.setAttribute("muted", ""); v.setAttribute("playsinline", ""); v.setAttribute("aria-hidden", "true");
-    const still = reduced();
+    const still = reduced() || (typeof PERFMODE !== "undefined" && PERFMODE.saver());   // [perfmap] Battery saver: the video's first frame stays (no decoding)
     v.autoplay = !still; if (!still) v.src = cur.src;
     (cv ? cv.after(v) : title.prepend(v));
     const on = (yes) => { v.classList.toggle("on", yes); if (cv) { if (yes) cv.dataset.rest = "1"; else delete cv.dataset.rest; } };

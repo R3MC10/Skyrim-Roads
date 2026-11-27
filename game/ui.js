@@ -1213,7 +1213,22 @@
   let mapOnScreen = true, mapTouchedAt = 0, mapObserved = null, mapResized = false;
   /* [perf] between map pictures the loop sleeps on a timer instead of waking every screen refresh: an idle map used to
      wake the page 60 times a second just to decide not to draw, which kept the phone busy restyling everything else */
-  let frameWait = 0;
+  let frameWait = 0, mapSig = "";
+  /* [perfmap] the snow layer over the map: same box, no taps, device pixels like the map */
+  let lastSnow = 0, snowShown = false;
+  const snowLayerOn = () => !!document.getElementById("mapsnow") && snowShown;
+  function snowCanvas(m) {
+    let c = document.getElementById("mapsnow");
+    if (!c || c.previousElementSibling !== m) { c?.remove(); c = document.createElement("canvas"); c.id = "mapsnow"; c.setAttribute("aria-hidden", "true"); c.style.pointerEvents = "none"; m.after(c); }
+    return c;
+  }
+  function drawSnow(c, m, wx) {
+    const dpr = Math.min(typeof PERFMODE !== "undefined" ? PERFMODE.dprCap(2) : 2, window.devicePixelRatio || 1), cw = m.clientWidth, ch = m.clientHeight;
+    if (c.width !== Math.round(cw * dpr) || c.height !== Math.round(ch * dpr)) { c.width = Math.round(cw * dpr); c.height = Math.round(ch * dpr); }
+    const g = c.getContext("2d"); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, c.width, c.height);
+    const lite = typeof MOTION !== "undefined" && MOTION.lite && MOTION.lite();
+    try { SNOWFX.draw(g, cw, ch, dpr, { weather: wx, reduce: reduceMotion, lite }); snowShown = true; } catch (e) { /* the map never breaks for snow */ }
+  }
   const nextFrame = (ms) => { if (ms > 20) frameWait = setTimeout(() => { frameWait = 0; requestAnimationFrame(frame); }, ms - 12); else requestAnimationFrame(frame); };
   function kickMap() { if (frameWait) { clearTimeout(frameWait); frameWait = 0; requestAnimationFrame(frame); } }   // a touch or resize: draw on the next refresh
   /* full-screen screens that hide the map completely (fight screen, menus, the compass home screen with its picture) */
@@ -1237,9 +1252,29 @@
     const snowing = !reduceMotion && typeof SNOWFX !== "undefined" && (["snow", "blizzard"].includes(wx) || SNOWFX.live() > 0);   // falling snow wants smooth frames
     // [perf] while the road view is showing the trip, the map under it only moves your marker: 20 pictures a second do
     const fpOpen = S?.trip?.status === "travel" && performance.now() - mapTouchedAt > 1500 && !!document.querySelector(".fpt-view canvas");
-    const gap0 = PC && performance.now() - mapTouchedAt < 400 ? 16 : fpOpen && !mapAnim ? 50 : moving || mapAnim || snowing ? 33 : PC && typeof MAPFX !== "undefined" && MAPFX.busy(reduceMotion) ? 50 : weatherAnim || (raidNow && !reduceMotion) || (fxNow?.anim && !reduceMotion) ? 66 : 125;
-    const gap = typeof PERFMODE !== "undefined" && performance.now() - mapTouchedAt > 400 ? PERFMODE.gap(gap0) : gap0;   // Battery saver: fewer map pictures (not while your finger is on it)
-    if (!mapResized && ts - lastFrame < gap - 4) return gap - (ts - lastFrame);
+    const gap0 = PC && performance.now() - mapTouchedAt < 400 ? 16 : fpOpen && !mapAnim ? 50 : moving || mapAnim || (snowing && (!snowLayerOn() || moving || mapAnim)) ? 33 : PC && typeof MAPFX !== "undefined" && MAPFX.busy(reduceMotion) ? 50 : (weatherAnim && !snowLayerOn()) || (raidNow && !reduceMotion) || (fxNow?.anim && !reduceMotion) ? 66 : 125;
+    /* [perfmap] a map left alone: only the slow ambience moves (water glints, cloud shadows, birds). After 4 s of no touch
+       it is drawn 4 times a second, and with Battery saver or reduced motion it is not redrawn at all until something on it
+       changes (the picture is still checked twice a second, and redrawn at least every 10 s for the time of day) */
+    /* [perfmap] falling snow is painted on its own layer over the map (#mapsnow), 30 times a second, while the map under it
+       is only redrawn when it changes: before, every snowflake frame redrew the whole map */
+    const busyMap = moving || mapAnim || (raidNow && !reduceMotion) || (fxNow?.anim && !reduceMotion) || (PC && typeof MAPFX !== "undefined" && MAPFX.busy(reduceMotion));   // the map redraws often anyway: the snow rides along in it
+    const snowLayer = snowing && !busyMap && !(PC && typeof MAPFX !== "undefined" && MAPFX.regional && MAPFX.regional()) ? snowCanvas(m) : null;
+    let snowWait = 1e9;
+    if (snowLayer) { if (ts - lastSnow >= 29 || mapResized) { lastSnow = ts; drawSnow(snowLayer, m, wx); } snowWait = Math.max(4, 33 - (ts - lastSnow)); }
+    else if (snowShown) { snowShown = false; const sc = document.getElementById("mapsnow"); if (sc) sc.getContext("2d").clearRect(0, 0, sc.width, sc.height); }
+    const still = !moving && !mapAnim && !(snowing && !snowLayer) && !(weatherAnim && !snowLayer) && !(raidNow && !reduceMotion) && !(fxNow?.anim && !reduceMotion) && !(PC && typeof MAPFX !== "undefined" && MAPFX.busy(reduceMotion));
+    const quietFor = performance.now() - mapTouchedAt, saver = typeof PERFMODE !== "undefined" && PERFMODE.saver();
+    const gap1 = still && quietFor > 4000 ? Math.max(gap0, 250) : gap0;
+    const gap = typeof PERFMODE !== "undefined" && quietFor > 400 ? PERFMODE.gap(gap1) : gap1;   // Battery saver: fewer map pictures (not while your finger is on it)
+    if (!mapResized && ts - lastFrame < gap - 4) return Math.min(snowWait, gap - (ts - lastFrame));
+    const frozen = still && quietFor > 1500 && (saver || reduceMotion);   // the ambience stands still: draw only on a change
+    if (frozen && !mapResized) {
+      const lp = livePos(), oth = others.map((o) => { const p = otherPos(o); return `${o.id}:${Math.round(p[0] * 4000)},${Math.round(p[1] * 4000)}`; }).join(";");
+      const sig = [zoom, center[0], center[1], Math.round(lp[0] * 4000), Math.round(lp[1] * 4000), selected, follow, S.trip?.status, S.trip?.idx, S.discovered.length, S.explored.length, (S.pins || []).length, WEVENTS.weather(lp).id, Math.floor(Date.now() / 10000), oth, party ? party.members.length : 0, S.location || "", $("#map")?.clientWidth, $("#map")?.clientHeight].join("|");
+      if (sig === mapSig) { lastFrame = ts; return Math.min(snowWait, Math.max(gap, 500)); }
+      mapSig = sig;
+    } else mapSig = "";
     lastFrame = ts; mapResized = false;
     const pos = livePos();
     if (follow) center = pos;
@@ -1254,12 +1289,12 @@
       discovered: S.discovered, explored: [...S.explored, pos], atPlace: !!S.location, others: others.filter((o) => sameMap(o) && seesHero(o)).map((o) => ({ name: typeof GREET !== "undefined" ? GREET.label(S, o, party) : (o.clan ? `[${o.clan}] ` : "") + o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), stranger: typeof GREET !== "undefined" && !GREET.knows(S, o.id, party), atPlace: !!o.loc, pos: otherPos(o), trail: party?.members.some((m) => m.id === o.id) ? otherTrail(o) : null, look: o.look, race: o.race, id: o.id, moving: !!o.moving, pace: o.moving ? (typeof o.ride === "string" ? 1.8 : 1) * Terrain.speedAt(otherPos(o)) : 0, horse: typeof o.ride === "string" ? o.ride : null, side: typeof SIDES !== "undefined" ? SIDES.of(o.id) : null, party: !!party?.members.some((m) => m.id === o.id) })),
       rulers: Object.entries(WARS.rulers(S)).map(([hold, c]) => ({ hold, color: c.colors[0] })),
       banners: CLANS.banners(homeDocs, S, VISITS.record(S)).filter((b) => WORLD.places[b.town]).map((b) => ({ ...b, pos: WORLD.places[b.town].slice(0, 2) })),
-      cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), mask: typeof PRIESTS !== "undefined" ? PRIESTS.marker(S)?.pos : null, tmaps: typeof EXPLORE !== "undefined" ? EXPLORE.marks(S) : [], rumours: typeof RUMOURS !== "undefined" ? RUMOURS.marks(S) : [], herbs: typeof GATHER !== "undefined" && ulOpen("gathering") ? GATHER.marks(S) : [], herbRange: typeof HARVEST !== "undefined" && !S.dungeon && HARVEST.nearPrompt(S) ? { pos: [S.x, S.y], r: GATHER.REACH_PX / 1000 } : null, pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
+      cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion: reduceMotion || frozen, snowOverlay: !!snowLayer, weather: WEVENTS.weather(pos).id, quest: questPos(), mask: typeof PRIESTS !== "undefined" ? PRIESTS.marker(S)?.pos : null, tmaps: typeof EXPLORE !== "undefined" ? EXPLORE.marks(S) : [], rumours: typeof RUMOURS !== "undefined" ? RUMOURS.marks(S) : [], herbs: typeof GATHER !== "undefined" && ulOpen("gathering") ? GATHER.marks(S) : [], herbRange: typeof HARVEST !== "undefined" && !S.dungeon && HARVEST.nearPrompt(S) ? { pos: [S.x, S.y], r: GATHER.REACH_PX / 1000 } : null, pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
       routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, led: typeof RIDING !== "undefined" ? RIDING.led(S) : null, gallop: HORSES.riding(S) && S.trip?.status === "travel" && Terrain.speedAt(pos) >= 1.2, cart: CARAVANS.hasCart(S), guards: typeof GUARDS !== "undefined" ? GUARDS.visible(S).map((p) => (p.visible || !myCone || !VISION.inCone(myCone, p.pos) ? p : { ...p, visible: true })) : null, caravans: (ulOpen("worldevents") ? CARAVANS.all() : []).map((c) => { const cp = CARAVANS.pos(c); return { cp, c }; }).map(({ cp, c }) => ({ pos: cp, visible: G.pxDist(cp, pos) < 160 || (myCone && VISION.inCone(myCone, cp)) || S.discovered.some((n) => WORLD.places[n] && ["city", "town"].includes(WORLD.places[n][2]) && G.pxDist(cp, WORLD.places[n]) < 45), khajiit: c.line.khajiit, moving: c.phase === "road", mine: S.caravanJob?.id === c.id, id: c.id, near: typeof CVROAD !== "undefined" && c.phase === "road" && CVROAD.canMeet(S) && G.pxDist(cp, pos) <= CVROAD.TAP_RANGE, label: c.line.name.replace(/'s caravan$/, "") })).filter((c) => !(c.mine && S.trip?.caravan)), hall: !ulOpen("housing") ? null : S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
     };
     if (typeof WAGONS !== "undefined") WAGONS.decorate(view, S);   // hovered wagons, wagons in trouble
     WorldMap.draw($("#map"), view);
-    return gap;
+    return Math.min(snowWait, gap);
   }
   /* cones of sight (vision.js): yours, then each party member's (fainter); none inside a dungeon */
   function visionCones(pos) {
