@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b385-perfmap", build: 385, date: "27 Nov 2026", title: "Smoother map on phones", items: [
+      "The map no longer redraws itself all the time while you just look at it: falling snow now drifts on its own layer over the map, and a quiet map only updates a few times a second, so the map runs about twice as smooth on slow phones.",
+      "With Battery saver on, a map you're not touching stays completely still until something on it changes, and the title screen shows a still picture instead of the moving one.",
+      "The title screen and the map use less of the phone's power: the slow title animation draws 12 times a second instead of 30, and the map draws at most 2 pixels per screen pixel.",
+      "Messages and banners check the screen much less often, which keeps taps snappier."] },
     { id: "b384-perfload", build: 384, date: "27 Nov 2026", title: "Starts faster, uses less memory", items: [
       "The phone app starts about twice as fast: the game now loads as one packed file instead of hundreds of small ones.",
       "The app and its updates are smaller and lighter on your phone's memory: big paintings and the music come in phone-sized versions (the PC version keeps the full ones).",

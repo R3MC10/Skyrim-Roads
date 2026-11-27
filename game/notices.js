@@ -176,12 +176,14 @@ const NOTICES = (() => {
     const res = stack(its, keys, { top: 0, bottom: innerHeight });
     apply(its, res);
   }
+  /* [perfmap] reading the screen (scr) asks the browser for styles and boxes, which made it restyle the page 6-7 times
+     a second even with nothing waiting: now only when a window waits or one of ours is open, and the stacking runs every
+     4th beat (a new notice still stacks at once through the MutationObserver below) */
+  let beat = 0;
   function pump() {
     if (!DOM) return;
-    const s = scr();
-    const it = C.tick(Date.now(), s);
-    if (it) open(it);
-    try { layout(); } catch (e) { console.warn("notices", e); }
+    if (C.queue.length || C.cur) { const it = C.tick(Date.now(), scr()); if (it) open(it); }
+    if (later.length || beat++ % 4 === 0) try { layout(); } catch (e) { console.warn("notices", e); }
   }
 
   if (DOM) {
