@@ -451,7 +451,7 @@ const FOEFIELD = (() => {
   /* what other phones need to draw the field (tbfight.js shared()) */
   function view(sess) {
     const fd = sess.field; if (!fd) return null;
-    return { cur: fd.cur, tgt: fd.tgt, foes: fd.foes.map((x) => ({ i: x.i, role: x.role, row: x.row, arch: x.arch, n: x.n, hp: r0(Math.max(0, hpOf(sess, x))), max: x.max, down: !!x.down || hpOf(sess, x) <= 0, lb: label(x), nx: nextOf(sess, x) })) };
+    return { cur: fd.cur, tgt: fd.tgt, foes: fd.foes.map((x) => ({ i: x.i, role: x.role, row: x.row, arch: x.arch, n: x.n, hp: hpOf(sess, x) > 0 ? Math.max(1, r0(hpOf(sess, x))) : 0,   /* [fightsync] still standing: never shown as 0 */ max: x.max, down: !!x.down || hpOf(sess, x) <= 0, lb: label(x), nx: nextOf(sess, x) })) };
   }
   /* a teammate's phone: the field as the leader's phone has it (no numbers to swap, just the plates) */
   function mirror(sess, v) {

@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b375-fightsync", build: 375, date: "27 Nov 2026", title: "Party fights stay in step", items: [
+      "Party fights no longer get stuck on someone's turn when a message gets lost on a bad connection: your phone sends your turn again until the leader has it, and the leader's phone keeps telling you it's your turn until you've seen it. Nothing is ever played twice.",
+      "A spell that makes the foe flee or vanish (Turn Undead, Banish) now ends the fight for the whole party, not just on your screen. Before, your next turns did nothing.",
+      "With foes in two rows, your turn no longer hangs when the foe you were aiming at fell just before it: you aim at one still standing.",
+      "If your phone loses touch with the party for a while, you join the fight again when you're back, or you see how it ended and get your share. A short \"Catching up with your party…\" note shows while your screen syncs.",
+    ] },
     { id: "b374-savecopies", build: 374, date: "26 Nov 2026", title: "Fewer save questions", items: [
       "The \"Two copies\" screen no longer pops up by itself. If a save reached your account but the game never heard back (the app went to the background, or the signal dropped), it now recognises its own save and just carries on.",
       "When it does ask, because you really played on another device, each copy shows its level, gold and when it was last played, and the newest one is marked and comes first.",

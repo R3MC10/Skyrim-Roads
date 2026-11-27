@@ -39,7 +39,18 @@ const SHAREDFIGHT = (() => {
       f.hidden = false; f.allies = []; f._downed = [];
       this.sync(d);
     }
-    get over() { return this.done || (!!this.myTurn && (this.f.ehp <= 0 || !!this.f.endWon || this.f.hp <= 0)); }
+    get over() { if (this.myTurn) this.aimLive(); return this.done || (!!this.myTurn && (this.f.ehp <= 0 || !!this.f.endWon || this.f.hp <= 0)); }
+    /* [fightsync] with foes in rows, the one loaded here may already be down while others still stand (a follower or a
+       burn finished it between two records): aim at one still standing, or every move of this turn did nothing and the
+       turn hung until the leader skipped it */
+    aimLive() {
+      const f = this.f, fd = this.field;
+      if (!fd || f.ehp > 0 || !Array.isArray(fd.foes)) return;
+      const live = fd.foes.filter((x) => !x.down && x.hp > 0); if (!live.length) return;
+      const t = live.find((x) => x.i === fd.tgt) || live[0];
+      fd.tgt = t.i; fd.cur = t.i; f.ehp = t.hp;
+      if (this.t0) this.t0.ehp = t.hp;   // the turn's damage counts from this foe's health, not from the one that fell
+    }
     begin() { return this.advance(); }
     advance() {
       if (this.done) return { turn: "done", won: this.f.won };
@@ -47,6 +58,20 @@ const SHAREDFIGHT = (() => {
       const w = this.waitOn;
       return w ? { turn: "wait", who: w.name, until: w.until } : { turn: "them" };
     }
+    /* [fightsync] the leader's phone still waits for a turn we already sent (the reply got lost on the way): send it
+       again. Still hasn't heard we have our turn: say so again. The leader takes a turn once (by its tid), so a repeat
+       can never land twice. */
+    resend(mineT) {
+      const now = Date.now();
+      this.lastMineT = mineT;   // tick() keeps trying between records
+      if (!mineT || !mineT.tid) return;
+      if (this.lastReply && mineT.tid === this.doneTid && now - (this.resentAt || 0) > 2000) {
+        this.resentAt = now; this.resends = (this.resends || 0) + 1;
+        try { this.send && this.send({ ...this.lastReply, again: this.resends, t: now / 1000 }); } catch (e) { /* offline: the next record tries again */ }
+      } else if (this.myTurn && this.myTurn.tid === mineT.tid && !mineT.ack && now - (this.beatAt || 0) > 2000) this.beat();
+    }
+    /* every second (mount): no record came in, but the last one still waited for our turn: send it again */
+    tick() { if (!this.done && this.lastMineT) this.resend(this.lastMineT); }
     /* the leader's phone sent news */
     sync(d) {
       const f = this.f, me = this.me;
@@ -65,6 +90,7 @@ const SHAREDFIGHT = (() => {
         this.ev.push(this.view(e, myName));
       }
       const ts = d.turns || (d.turn ? [d.turn] : []), mineT = ts.find((t) => t.pid === me) || null, other = ts.find((t) => t.pid !== me) || null;   // a shared turn waits for several players at once
+      this.resend(mineT);
       if (this.myTurn && mineT?.tid !== this.myTurn.tid) { this.myTurn = null; this.until = 0; }   // the leader's phone moved on without you (too late)
       const fresh = this.myTurn && !this.moved();   // your turn, no move made yet: the others' moves still show
       if (!this.myTurn || fresh) {
@@ -76,6 +102,7 @@ const SHAREDFIGHT = (() => {
         this.wave = d.wave || 1; this.waves = d.waves || 1; this.ehpMax = d.ehpMax || this.ehpMax; this.kind = d.kind || this.kind;
         if (d.foeE) { if (!f.e || f.e.name !== d.foeE.name || f.e.arch !== d.foeE.arch) this.ehpMax = d.ehpMax || this.ehpMax; TB.syncInPlace(f.e, d.foeE); }
         f.ehp = d.ehp;
+        if (d.endWon) f.endWon = d.endWon; else delete f.endWon;   // [fightsync] a foe your own spell turned or banished: the leader's phone has the last word
         for (const k of TB.FOE_KEYS) if (d.fs && k in d.fs) f[k] = clone(d.fs[k]); else if (k !== "ehp0") delete f[k];
         if (!(f.ehp0 > 0)) f.ehp0 = this.ehpMax;
         if (typeof FOEFIELD !== "undefined") FOEFIELD.mirror(this, d.field);   // [rows] the foes' rows as the leader's phone has them
@@ -98,6 +125,25 @@ const SHAREDFIGHT = (() => {
       }
       else if (d.done) f.ehp = d.ehp;   // it ended while you were mid-turn: the leader's phone has the last word
       if (d.done) this.end(d.won ? (d.escaped ? "escaped" : "won") : "lost");
+      else this.check(d);
+    }
+    /* [fightsync] after taking the leader's record in (and not halfway through a move of ours), our screen should show
+       exactly what the leader's does. If it doesn't, take the whole record in again (and say so on screen for a moment) */
+    mine(d) {
+      const f = this.f, me = this.me;
+      const roster = (d.roster || []).map((r) => {
+        if (r.k === "p:" + me || (r.pid && r.pid === me)) return { k: r.k, hp: this.meDown ? 0 : f.hp, down: this.meDown };
+        const a = this.byKey.get(r.k); return a ? { k: r.k, hp: a.hp, down: !!a.down } : { k: r.k, hp: -1 };
+      });
+      return TB.fingerprint({ ehp: f.ehp, round: this.round, wave: this.wave, endWon: f.endWon, roster });
+    }
+    check(d) {
+      if (!d.fp || !TB.fingerprint || this.done || (this.myTurn && this.moved())) return true;
+      if (this.mine(d) === d.fp) { if (this.resyncing && Date.now() - this.resyncing > 1500) this.resyncing = 0; return true; }
+      this.resyncing = Date.now(); this.desyncs = (this.desyncs || 0) + 1;
+      const keep = this.myTurn; this.myTurn = null; this.lastRound = 0;   // take everything in, as if new
+      try { this.lastT = null; this.sync({ ...d, fp: null }); } finally { if (keep && !this.myTurn && !this.done) this.myTurn = keep; }
+      return this.mine(d) === d.fp;
     }
     /* one of the leader's events, as you see it: "You hit" becomes "Alfa hits", blows on you are yours */
     view(e, myName) {
@@ -152,7 +198,7 @@ const SHAREDFIGHT = (() => {
     timeUp() { if (!this.myTurn) return; this.endTurn(true); this.emit("me", "You hold back and keep your guard up (out of time)", "guard"); this.sendTurn(); }
     passMe() { this.apSet = false; this.meTok++; }   // the leader's phone moves the order on
     /* "I'm here": no timer on a shared turn, so the leader's phone counts 30 s from your last move before it offers to skip you */
-    beat() { if (!this.myTurn || !this.beatTo) return; this.beatN = (this.beatN || 0) + 1; try { this.beatTo({ pid: this.me, bt: this.myTurn.tid, n: this.beatN, t: Date.now() / 1000 }); } catch (e) { /* offline: the reply still goes */ } }   // a timeout only guards, and says so (noautoplay.js)
+    beat() { if (!this.myTurn || !this.beatTo) return; this.beatAt = Date.now(); this.beatN = (this.beatN || 0) + 1; try { this.beatTo({ pid: this.me, bt: this.myTurn.tid, n: this.beatN, t: Date.now() / 1000 }); } catch (e) { /* offline: the reply still goes */ } }   // a timeout only guards, and says so (noautoplay.js)
     /* everything your turn did, for the leader's phone */
     reply() {
       const f = this.f, t0 = this.t0 || { ehp: f.ehp, hp: f.hp, ev: 0, hitters: 0, ward: 0, armor: 0, snap: new Map() };
@@ -173,14 +219,14 @@ const SHAREDFIGHT = (() => {
         hp0: t0.hp, hp: f.hp, hpMax: G.maxHealth(f.s), guard: f.tbGuard || 0, ap: this.myActs || 0,   // ap: what you spent (the leader checks the guard against it)
         self: { ward: (f.ward || 0) > t0.ward ? f.ward : 0, armorRed: armorUp ? Math.min(0.5, f.armorSpell * 0.0012) : 0, armorT: armorUp ? 6 : 0 },   // [Skyrim] 0.12% less damage per armour point
         allies, summon: f.summonTurns > 0 ? { turns: f.summonTurns, dmg: f.summonDmg, name: f.summonName || "summon" } : null,
-        hits: this.hitters - t0.hitters, fled: !!f.ranAway, wt: f.wt,
+        hits: this.hitters - t0.hitters, fled: !!f.ranAway, wt: f.wt, ...(f.endWon ? { endWon: f.endWon } : {}),
         ev: this.ev.slice(t0.ev).filter((e) => e.who === "me").map((e) => ({ text: e.text, a: e.a || null, dmg: e.dmg || 0 })).slice(0, 12), t: Date.now() / 1000 };
     }
     sendTurn() {
       if (!this.myTurn) return null;
       const r = this.reply(), f = this.f;
       if (f.mount && typeof MOUNTFIGHT !== "undefined") r.mt = MOUNTFIGHT.out(f.mount);   // you got on / off your horse this turn
-      this.doneTid = this.myTurn.tid; this.myTurn = null; this.until = 0; this.apSet = false;
+      this.doneTid = this.myTurn.tid; this.lastReply = r; this.myTurn = null; this.until = 0; this.apSet = false;
       this.cur = { id: "me-wait", name: f.s.name || "You" };
       f.tbGuard = 0; f.summonTurns = 0;   // your guard and your summon now live on the leader's phone
       try { this.send && this.send(r); } catch (e) { console.warn("shared fight reply", e); }
@@ -213,12 +259,13 @@ const SHAREDFIGHT = (() => {
   /* the end: your own phone applies your own result */
   function finish(sess) {
     const S = hooks.S ? hooks.S() : null, f = sess.f;
-    closed[sess.fid] = true; if (mir && mir.sess === sess) mir = null;
+    closed[sess.fid] = sess.how === "broke" ? { at: Date.now() } : true; if (mir && mir.sess === sess) mir = null;   // [fightsync] broke off (no word for 2 minutes): if the leader's fight is still going when you're back, you join it again
     if (!S || f.s !== S) return;
     f.allies = []; f._downed = []; f.followerDown = null; f.thrallFought = false;
     let msgs = [];
     // a lost party fight costs nothing (defeat.js): your save never takes its results, so you just get back up as you were
-    if (sess.how !== "lost") { try { msgs = f.apply() || []; } catch (e) { console.warn("shared fight result", e); } }
+    if (sess.how === "broke") msgs = ["You lost touch with your party. Your result comes in when you're back."];   // [fightsync] nothing taken in yet: the real ending, once you hear it, is taken in once
+    else if (sess.how !== "lost") { try { msgs = f.apply() || []; } catch (e) { console.warn("shared fight result", e); } }
     else msgs = ["You lose nothing: the party votes on what to do next."];
     if (hooks.persist) hooks.persist(true);
     const head = sess.how === "won" ? "Victory! " : sess.how === "lost" ? "The party was beaten. " : "";
@@ -234,6 +281,16 @@ const SHAREDFIGHT = (() => {
     TB.play(sess, {}, () => finish(sess));
     if (typeof SOUND !== "undefined" && SOUND.fx) SOUND.fx("hit");
   }
+  /* [fightsync] a small note on the fight screen while this phone catches up with the party (its screen didn't match
+     the leader's and was fixed, or a turn of ours went out again because the first one got lost on the way) */
+  function showSync(sess) {
+    if (typeof document === "undefined") return;
+    const root = document.getElementById("tbf"); if (!root) return;
+    const now = Date.now(), busy = (sess.resyncing && now - sess.resyncing < 2500) || (sess.resentAt && now - sess.resentAt < 2500);
+    let el = document.getElementById("tbresync");
+    if (busy && !el) { el = document.createElement("div"); el.id = "tbresync"; el.className = "tbresync"; el.setAttribute("role", "status"); el.textContent = "Catching up with your party…"; root.appendChild(el); }
+    else if (!busy && el) el.remove();
+  }
   function onDocs(docs) {
     const S = hooks.S ? hooks.S() : null; if (!S) return;
     const me = S.id, nowS = Date.now() / 1000;
@@ -241,11 +298,17 @@ const SHAREDFIGHT = (() => {
       const sess = mir.sess, d = docs.find((x) => x.id === mir.fid);
       if (sess.done) return;
       if (!d) { sess.end("broke"); TB.redraw(sess); return; }
-      sess.sync(d); TB.redraw(sess);
+      // [fightsync] the leader's phone sends its record again while it waits (a lost one used to hang a turn): an
+      // unchanged repeat only refreshes "we heard from the leader" and the repeats; it doesn't redraw the screen under your thumb
+      const { t, _v, _by, ...body } = d, key = JSON.stringify(body);
+      const same = key === mir.key; mir.key = key;
+      sess.sync(d); if (!same || sess.done) TB.redraw(sess); showSync(sess);
       return;
     }
     if (TB.open) return;   // in a fight of your own: the leader's record waits (the heartbeat brings it back)
-    const d = docs.find((x) => x.v >= 2 && x.owner !== me && (x.pids || []).includes(me) && !x.done && nowS - (x.t || 0) < SILENT && !closed[x.id]);
+    const shut = (x) => { const c = closed[x.id]; return c === true || (!!c && !x.done && (x.t || 0) * 1000 <= c.at); };   // broke off: back in when it moves on, or for its ending
+    const brokeOff = (x) => !!closed[x.id] && closed[x.id] !== true;   // we broke off this one: we still want its real ending
+    const d = docs.find((x) => x.v >= 2 && x.owner !== me && (x.pids || []).includes(me) && (!x.done || brokeOff(x)) && (brokeOff(x) || nowS - (x.t || 0) < SILENT) && !shut(x));
     if (d) open(d);
   }
   function mount(h) {
@@ -253,12 +316,13 @@ const SHAREDFIGHT = (() => {
     if (!store?.watch || typeof document === "undefined") return;
     if (!watching) { watching = true; store.watch("tbf", onDocs); }   // once, even if the game mounts again
     clearInterval(watchT);
-    watchT = setInterval(() => {   // the leader went quiet
-      if (!mir || mir.sess.done) return;
+    watchT = setInterval(() => {   // the leader went quiet (checked every second: the "catching up" note clears in time too)
+      if (!mir || mir.sess.done) { document.getElementById("tbresync")?.remove(); return; }
+      mir.sess.tick(); showSync(mir.sess);
       if (Date.now() - mir.sess.heard > SILENT * 1000) { mir.sess.end("broke"); TB.redraw(mir.sess); }
-    }, 5000);
+    }, 1000);
   }
   /* tbfight.js asks: is this record mine to show? (v2 records open the full fight screen instead of the small box) */
   const claims = (x) => !!store && !!x && x.v >= 2;
-  return { Mirror, build, finish, mount, claims, SILENT, get active() { return mir ? mir.sess : null; } };
+  return { Mirror, build, finish, mount, claims, SILENT, _onDocs: (d) => onDocs(d), _closed: closed, get active() { return mir ? mir.sess : null; } };
 })();

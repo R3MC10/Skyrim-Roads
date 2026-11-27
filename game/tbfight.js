@@ -428,6 +428,7 @@ const TB = (() => {
     /* a player's phone dropped out: it never picked up the turn, and it's gone offline (or never answered for a while) */
     dropped(w, now = Date.now()) {
       if (w.ack) return false;
+      if (w.al && w.al.heardAt && now - w.al.heardAt < 90000) return false;   // [fightsync] their phone answered a turn lately: it's the network, not them (the record keeps going out again); the leader can still skip them
       const on = this.remote && this.remote.online ? this.remote.online(w.pid) : null;   // null: we can't tell
       return now - w.t0 >= INIT.CFG.lostAfter * 1000 && on !== true;
     }
@@ -691,6 +692,7 @@ const TB = (() => {
       const moves = (r.ev || []).filter((e) => e && e.a && e.a !== "end" && e.a !== "flee").length;   // every move they report took 1 AP at least
       const spent = Math.max(0, +r.ap || 0, moves), apK = spent > AP ? AP / spent : 1, kept = AP - Math.min(AP, spent);
       if (sameFoe && typeof r.e0 === "number" && typeof r.ehp === "number") f.ehp = b - clamp((r.e0 - r.ehp) * apK, 0, Math.max(0, b));
+      if (sameFoe && r.endWon && !f.endWon && f.ehp > 0) f.endWon = r.endWon;   // [fightsync] their spell turned or banished the foe: it's over here too (it used to stay on their screen only)
       if (typeof r.hp === "number" && typeof r.hp0 === "number") { if (r.hpMax > 0) al.maxHp = r.hpMax; al.hp = clamp((al.hp || 0) + (r.hp - r.hp0), 1, al.maxHp || Math.max(al.hp || 1, r.hp)); }
       al.tbGuard = clamp(+r.guard || 0, 0, al.s ? guardFor(al.s, kept) : Math.min(GUARD_MAX + 0.1, GUARD_AP * kept + Math.min(0.1, 0.05 * kept)));
       if (typeof MOUNTFIGHT !== "undefined") MOUNTFIGHT.fromMate(al, r.mt);   // they got on / off their horse on their phone
@@ -1374,16 +1376,19 @@ const TB = (() => {
      for older phones). No timer: it waits for everyone. A teammate's phone writes tbf/<id>~<pid>~b when it picks up
      its turn and after every move (that's how the leader knows they're there; 30 s of nothing and the leader can skip). */
   const players = (sess) => [...new Set([...(sess.everyone || []), ...sess.f.allies, ...(sess.f._downed || [])])].filter((a) => a && a.player && a.pid && !a.gone);
+  /* [fightsync] a foe with 0.4 health left is still standing: rounded to 0 it looked dead on teammates' screens and
+     their turn hung (every move "did nothing") until the leader skipped them */
+  const liveHp = (h) => (h > 0 ? Math.max(1, Math.round(h)) : 0);
   function fightState(sess) {
     const f = sess.f, w = sess.waiting, ws = sess.gr ? sess.gr.waits.filter((x) => !x.fin) : [];
-    const tw = (x) => ({ pid: x.pid, until: x.until || 0, name: x.name, heals: x.al?.heals || 0, pots: x.al?.pots || 0, tid: x.tid || null });   // until 0: no timer
+    const tw = (x) => ({ pid: x.pid, until: x.until || 0, name: x.name, heals: x.al?.heals || 0, pots: x.al?.pots || 0, tid: x.tid || null, ...(x.ack ? { ack: 1 } : {}) });   // until 0: no timer. ack: their phone said it has the turn (if not, it sends its "I'm here" again)
     return { foe: f.e.name, boss: !!f.e.boss, round: sess.round, wave: sess.wave || 1, waves: sess.waves || 1,
-      ehp: Math.max(0, Math.round(f.ehp)), ehpMax: sess.ehpMax, ownerName: f.s.name, hp: Math.max(0, Math.round(f.hp)), hpMax: G.maxHealth(f.s),
+      ehp: liveHp(f.ehp), ehpMax: sess.ehpMax, ownerName: f.s.name, hp: Math.max(0, Math.round(f.hp)), hpMax: G.maxHealth(f.s),
       pids: players(sess).map((a) => a.pid),   // knocked-down players stay in: they still watch the fight to the end
       allies: f.allies.filter((a) => !a.summon).slice(0, 9).map((a) => ({ name: a.name, pid: a.pid || null, hp: Math.max(0, Math.round(a.hp ?? 0)), hpMax: Math.round(a.hp0 || a.maxHp || a.hp || 1), down: !!a.down })),
       turn: w ? tw(w) : null, turns: ws.map(tw),
       log: sess.ev.filter((e) => e.kind !== "round").slice(-6).map((e) => e.text),
-      done: !!sess.done, won: sess.done ? !!f.won : null, t: Date.now() / 1000, diff: f.diff ? f.diff.id : null, ...shared(sess) };
+      done: !!sess.done, won: sess.done ? !!f.won : null, endWon: f.endWon || null, t: Date.now() / 1000, diff: f.diff ? f.diff.id : null, ...shared(sess) };
   }
   /* v2: everything a teammate's phone needs to show the same fight on its full fight screen and play real turns in it
      (sharedfight.js). Older phones read only the fields above and keep the small "Fighting beside" box. */
@@ -1394,9 +1399,9 @@ const TB = (() => {
     const fs = {}; for (const k of FOE_KEYS) if (f[k] !== undefined) fs[k] = f[k];
     const e = {}; for (const [k, v] of Object.entries(f.e || {})) if (!["loot", "drops", "group"].includes(k) && typeof v !== "function") e[k] = v;
     const look = typeof HEROART !== "undefined" && HEROART.lookOf ? (() => { try { return HEROART.lookOf(f.s); } catch (x) { return null; } })() : null;
-    const roster = [{ k: "host", host: true, player: true, row: typeof FOEFIELD !== "undefined" ? FOEFIELD.myRow(f) : null, name: f.s.name || "Leader", hp: Math.max(0, Math.round(f.hp)), hpMax: G.maxHealth(f.s), down: f.hp <= 0, look, ward: Math.round(f.ward || 0), form: typeof BEASTPATH !== "undefined" ? BEASTPATH.form(f) : null, ...(f.potOT ? { potOT: f.potOT } : {}) },
+    const roster = [{ k: "host", host: true, player: true, row: typeof FOEFIELD !== "undefined" ? FOEFIELD.myRow(f) : null, name: f.s.name || "Leader", hp: liveHp(f.hp), hpMax: G.maxHealth(f.s), down: f.hp <= 0, look, ward: Math.round(f.ward || 0), form: typeof BEASTPATH !== "undefined" ? BEASTPATH.form(f) : null, ...(f.potOT ? { potOT: f.potOT } : {}) },
       ...all.map((a) => { a.tbk = a.tbk || (a.pid ? "p:" + a.pid : "a" + ++kseq);
-        const o = { k: a.tbk, pid: a.pid || null, name: a.name, hp: Math.max(0, Math.round(a.hp || 0)), hpMax: Math.round(a.maxHp || a.hpMax || a._max || a.hp0 || Math.max(1, a.hp || 1)), down: !!a.down || !f.allies.includes(a),
+        const o = { k: a.tbk, pid: a.pid || null, name: a.name, hp: liveHp(a.hp || 0), hpMax: Math.round(a.maxHp || a.hpMax || a._max || a.hp0 || Math.max(1, a.hp || 1)), down: !!a.down || !f.allies.includes(a),
           player: !!a.player, follower: !!(a.follower || a.kind === "follower"), role: a.role || null, row: typeof FOEFIELD !== "undefined" ? FOEFIELD.allyRow(a) : null, look: a.look || null, kind: a.kind || null, fid: a.fid || null };
         for (const k of BUFF_KEYS) if (a[k] != null) o[k] = a[k];
         return o; })];
@@ -1411,7 +1416,8 @@ const TB = (() => {
       for (const k of ["a", "wt", "dmg", "healed", "name", "wave", "by", "hits", "ph"]) if (x[k] != null) o[k] = x[k];
       return o;
     });
-    return { v: 2, foeE: e, fs, kind: sess.kind, hitters: sess.hitters || 0, roster,
+    const fp = fingerprint({ ehp: liveHp(f.ehp), round: sess.round, wave: sess.wave, endWon: f.endWon, roster });   // [fightsync] what every screen should show now (sharedfight.js checks it)
+    return { v: 2, fp, foeE: e, fs, kind: sess.kind, hitters: sess.hitters || 0, roster,
       order: sess.order.map((o) => { const x = { id: o.id, name: o.name, init: o.init, pid: o.al?.pid || null, fid: o.al?.fid || null };
         for (const k of ["side", "u", "uid", "grp", "slot", "moves", "mv", "d", "spd", "gap", "push", "why", "skip", "out", "done"]) if (o[k] != null && o[k] !== false && o[k] !== 0) x[k] = o[k];
         return x; }), idx: sess.idx, gnow: sess.gr ? sess.order[sess.gr.start]?.grp || 0 : 0,
@@ -1420,12 +1426,22 @@ const TB = (() => {
       escaped: sess.done ? !!f.escaped : null, ...(typeof PARTYSPELLS !== "undefined" ? PARTYSPELLS.forRecord(sess) : {}),
       ...(typeof CHANNEL !== "undefined" ? CHANNEL.forRecord(sess) : {}), ...(sess.field && typeof FOEFIELD !== "undefined" ? { field: FOEFIELD.view(sess) } : {}) };   // [channel] the moves being prepared right now (also restores them after a reconnect)   // crafted spells cast in this fight (partyspells.js)
   }
+  /* [fightsync] a short fingerprint of what a fight screen shows: the foe's health, the round, the wave, a foe that
+     turned or fled, and everyone's health. The leader's phone puts it in the record; a teammate's phone works out the
+     same from its own screen after taking the record in, and fixes itself if they differ (sharedfight.js) */
+  function fingerprint(x) {
+    const r = (x.roster || []).map((a) => `${a.k}:${Math.max(0, Math.round(a.hp || 0))}:${a.down ? 1 : 0}`).sort().join(",");
+    const str = `${liveHp(x.ehp || 0)}|${x.round || 0}|${x.wave || 1}|${x.endWon ? 1 : 0}|${r}`;
+    let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return (h >>> 0).toString(36);
+  }
   function remoteFor(store, myId, cards) {
     if (!store || typeof store.put !== "function") return null;
     let fid = null, cur = null, watching = false, last = "", lastT = 0, made = false, timer = null, beat = null, pidsSeen = new Set();
     const push = (force) => {
       const sess = cur; if (!sess || !fid) return;
       const st = fightState(sess); if (!st.pids.length) return;
+      if (force === "again") { last = ""; force = true; }   // [fightsync] the same record once more: a message can get lost on the way
       st.pids.forEach((p) => pidsSeen.add(p));
       const k = JSON.stringify({ ...st, t: 0 });
       if (k === last && Date.now() - lastT < 14000) return;   // nothing new (a heartbeat every ~15 s so teammates know the leader's still there)
@@ -1441,14 +1457,18 @@ const TB = (() => {
         for (const w of s2.gr.waits) {   // everyone in the shared turn
           if (w.fin || w.reply || w.move) continue;
           const rp = docs.find((x) => x.id === `${fid}~${w.pid}`);   // a whole turn played on their own fight screen (sharedfight.js)
-          if (rp && rp.tid && rp.tid === w.tid) { w.reply = rp; continue; }
+          if (rp && rp.tid && rp.tid === w.tid) { w.reply = rp; w.al.heardAt = Date.now(); continue; }
           const bt = docs.find((x) => x.id === `${fid}~${w.pid}~b`);   // they picked up the turn / made a move
-          if (bt && bt.bt === w.tid && bt.n !== w.beatN) { w.beatN = bt.n; w.ack = true; w.seen = Date.now(); }
+          if (bt && bt.bt === w.tid && bt.n !== w.beatN) { w.beatN = bt.n; w.ack = true; w.seen = Date.now(); w.al.heardAt = Date.now(); }
           const d = docs.find((x) => x.id === fid); if (d?.reply && d.reply.pid === w.pid && d.reply.round === s2.round) w.move = d.reply.move;   // an older phone: one simple move
         }
       });
     };
-    const start = (sess) => { cur = sess; fid = fid || `${myId}-${Math.floor(Date.now() / 1000)}`; watchReplies(); if (!beat) beat = setInterval(() => push(), 5000); };
+    /* [fightsync] while we wait for teammates, the record goes out again every few seconds: if the one that gave them
+       their turn (or the one that said "got your turn") was lost on the way, their turn used to hang until the leader
+       skipped them. Their phones answer a repeat the same way (sharedfight.js), so nothing is ever played twice. */
+    const pending = () => { const g = cur && cur.gr; return !!g && g.waits.some((w) => !w.fin && !w.reply); };
+    const start = (sess) => { cur = sess; fid = fid || `${myId}-${Math.floor(Date.now() / 1000)}`; watchReplies(); if (!beat) { let n = 0; beat = setInterval(() => { if (pending() && Date.now() - lastT > 2500) push("again"); else if (++n % 5 === 0) push(); }, 1000); } };   // the plain heartbeat stays every 5 s (building the record isn't free)
     return {
       /* called whenever the fight screen updates */
       sync(sess) { if (!players(sess).length) return; start(sess); push(sess.done); },
@@ -1459,7 +1479,14 @@ const TB = (() => {
       fid: () => fid,   // [channel] the fight record's id (channel.js reads teammates' tbf/<fid>~ch~<pid>)
       end() {
         clearTimeout(timer); clearInterval(beat); beat = null;
-        if (cur && fid) { push(true); const id = fid, ps = [...pidsSeen]; setTimeout(() => { store.remove?.("tbf", id); ps.forEach((p) => { store.remove?.("tbf", `${id}~${p}`); store.remove?.("tbf", `${id}~${p}~b`); }); }, 12000); }   // members see the ending, then it's tidied away
+        if (cur && fid) {
+          push(true);
+          // [fightsync] the ending goes out a few more times (a lost one left a teammate's screen to "break off" after
+          // 2 minutes, without their rewards), and stays a while for a phone that was offline at the end
+          const id = fid, ps = [...pidsSeen];
+          [2000, 5000, 10000, 20000, 40000].forEach((ms) => setTimeout(() => store.change("tbf", id, (x) => (x ? { ...x, t: Date.now() / 1000 } : x)), ms));
+          setTimeout(() => { store.remove?.("tbf", id); ps.forEach((p) => { store.remove?.("tbf", `${id}~${p}`); store.remove?.("tbf", `${id}~${p}~b`); }); }, 600000);   // then it's tidied away
+        }
         fid = null; cur = null; made = false; last = ""; pidsSeen = new Set();
       },
     };
@@ -1506,5 +1533,5 @@ const TB = (() => {
 
   /* sharedfight.js: open a teammate's view of a fight, and redraw it when the leader's phone sends news */
   function redraw(sess, state) { if (ui && ui.sess === sess && open) render(state || sess.advance()); }
-  return { T, sceneLines, stats, dprOf, cost, preview, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, play, redraw, fightState, voice, FOE_KEYS, BUFF_KEYS, costTxt, costHTML, base, close: () => { if (open) close(); }, abort, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, ATK_SP, AP, GUARD_AP, GUARD_MAX, apOf, guardFor, MAX_ACTS, MAX_POTS, REPEAT, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
+  return { fingerprint, liveHp, T, sceneLines, stats, dprOf, cost, preview, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, play, redraw, fightState, voice, FOE_KEYS, BUFF_KEYS, costTxt, costHTML, base, close: () => { if (open) close(); }, abort, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, ATK_SP, AP, GUARD_AP, GUARD_MAX, apOf, guardFor, MAX_ACTS, MAX_POTS, REPEAT, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
 })();
