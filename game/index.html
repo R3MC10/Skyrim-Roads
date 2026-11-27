@@ -5956,6 +5956,10 @@ html.pcmap.pc-full #side>.mn-sub button.on::after{display:none}   /* on a wide P
 #tkadd .tka-t span{font-size:.8em;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #tkadd .btn{min-height:44px}
 @media (prefers-reduced-motion:reduce){#tkadd{transition:none}}
+/* [perfload] phones: no live blur behind always-on bars and popups. backdrop-filter re-blurs whatever moves behind it
+   (the map, the fight) every frame, a big cost on phone GPUs; these panels are nearly opaque anyway. */
+@media (pointer:coarse){.tabs,.favbtn,.title .press,.mo-on:not(.mo-lite) .modal,.mo-on .modal.mo-pop,.dunstrip,.rct,.pausem{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  .tabs{background:linear-gradient(180deg,rgba(10,11,13,.95),rgba(4,5,6,.99))}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -6338,6 +6342,7 @@ html.pcmap.pc-full #side>.mn-sub button.on::after{display:none}   /* on a wide P
 <script src="i18n_netsync.js"></script>
 <script src="i18n_fightsync.js"></script>
 <script src="i18n_npctasks.js"></script>
+<script src="i18n_perfload.js"></script>
 <script src="i18n_netfix.js"></script>
 <script src="i18n_pcmap.js"></script>
 <script src="i18n_partytrain.js"></script>

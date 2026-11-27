@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b383-perfload", build: 383, date: "27 Nov 2026", title: "Starts faster, uses less memory", items: [
+      "The phone app starts about twice as fast: the game now loads as one packed file instead of hundreds of small ones.",
+      "The app and its updates are smaller and lighter on your phone's memory: big paintings and the music come in phone-sized versions (the PC version keeps the full ones).",
+      "The world map opens quicker the first time, and the bars and pop-ups no longer blur what moves behind them on phones, which saves battery and keeps things smoother.",
+    ] },
     { id: "b382-npctasks", build: 382, date: "27 Nov 2026", title: "Every job you take is in the Journal", items: [
       "Every job, rumour and contract you take from someone in the world is in the Journal now: notice-board jobs, odd jobs at farms and camps, rumours from innkeepers and townsfolk, legendary hunts from a Jarl's steward, a Daedric prince's contract, your company's caravan escort and expedition.",
       "Each one shows who gave it and where, what to do next, how far along you are (like 3/5), how long you have left, and the reward. ☆ Track it to steer the compass, the map and the What to do next card, just like a quest.",
