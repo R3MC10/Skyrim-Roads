@@ -19,9 +19,19 @@
    Hands and layers [dollrig2]: the main weapon is always in the RIGHT (near) hand, the off-hand item (shield, a second
    blade, a bow's string hand) in the LEFT (far) hand, each placed by its grip on the fist. Back to front: the off-hand
    group (left arm, a dual-wield blade, the left fist over its grip), legs, torso and head, then the main group (right
-   arm, weapon, right fist over the grip). [riglayers] The shield goes in one of two places: raised in a guard, a block
-   or a bash it is in front of everything (the weapon arm behind it); let down (a swing, a blow, walking, riding,
-   knocked down) it hangs behind the body, under the left arm that holds it. last(who).hands.shield.front says which (0..1).
+   arm, weapon, right fist over the grip). [offhand] The off hand is always the back layer: the shield (and a second
+   blade, a torch, an off-hand spell) is drawn first, behind the left arm, the legs, the body and the head, in every
+   clip and both facings (a mirrored figure is mirrored whole, so its off arm stays the far one). A guard, a block or a
+   bash pushes the left arm out so the shield shows past the chest. last(who).hands.shield.front is always 0 now.
+
+   Layering research [offhand] (2D cut-out / skeletal rigs):
+   - Spine: "draw order" is the slot order, back to front; side-view characters list the far arm (and what it holds)
+     first, then the far leg, torso, head, near leg, near arm, and the near hand's weapon last; clips may key the draw
+     order, but most rigs keep a fixed order and pose around it (fewer pops).
+   - DragonBones: the same, slots back-to-front with z-order keys; "near/far" limbs get a darker tint on the far side.
+   - Side-view RPGs and fighters (Darkest Dungeon, Battle Brothers, Hollow Knight): the weapon arm faces the camera
+     and is drawn on top; the off arm and its shield stay behind the body and read by silhouette (the shield's rim and
+     face show past the torso) rather than by jumping to the front; a darker far side sells the depth.
      PAINTRIG.setOf(sp)   → which painted set a look wears · PAINTRIG.geo(set) → its skeleton in units (tests)
    Gear: light armour, robes and plain clothes → leather; iron (and banded, chain) → iron; steel and heavier → steel;
    women get the women's sets the same way. Dunmer, Khajiit and Argonians wear their own painted head (RIGDATA.HEADS, scaled
@@ -366,7 +376,7 @@ const PAINTRIG = (() => {
       if (P.ride) rideLeg(g, ctx, B, true, P.stir);
       return B;
     }
-    const tintC = sp.r && sp.r !== "nord" && !sp.vamp ? sp.skin : null, sv = (d) => (tintC ? (d ? "dt:" : "t:") + tintC : d ? "d" : "n");
+    const tintC = sp.skOver ? sp.skin : sp.r && sp.r !== "nord" && !sp.vamp ? sp.skin : null, sv = (d) => (tintC ? (d ? "dt:" : "t:") + tintC : d ? "d" : "n");
     const rh = raceHead(sp, sp.fem || String((ctx.r && ctx.r.set) || "").startsWith("nordf"));   // the head matches the body: a woman's body wears a woman's head
     const ranged = RANGED.has(wk), two = TWO_MELEE.has(wk) || wk === "staff" || wk === "spear";
     const tipA = wk && kit && kit.TIP[wk] ? Math.atan2(kit.TIP[wk][1], kit.TIP[wk][0]) : -Math.PI / 4;
@@ -382,7 +392,8 @@ const PAINTRIG = (() => {
       const w = clamp(1 - (o.lunge || 0) * 1.6, 0, 1) * clamp(1 - Math.abs(P.back || 0), 0, 1) * (o.move && o.mu != null ? clamp(Math.abs(o.mu - 0.5) * 4 - 1, 0, 1) : 1)
         * clamp(1 - (P.hk || 0) * 2, 0, 1) * (P.clip === "walk" ? 0 : 1);   // walking (the map): the shield arm swings, the shield hangs at the side   // a swing lowers it (it never covers the face); [riglayers] so does the weapon arm on its own path (the viewer too)
       guard = w;
-      if (w > 0.01) { const R = G.upper + G.fore, gd = add(B.SF, rot(B.sa, [R * 0.2, R * 0.5])), h0 = B.armF.wr; P.farHand = [h0[0] + (gd[0] - h0[0]) * w, h0[1] + (gd[1] - h0[1]) * w]; Object.assign(B, solve(G, P)); }
+      // [offhand] the shield stays in the back layer (behind the body), so the guard holds it well out in front of the chest: its face shows past the torso
+      if (w > 0.01) { const R = G.upper + G.fore, gd = add(B.SF, rot(B.sa, [R * 0.62, R * 0.42])), h0 = B.armF.wr; P.farHand = [h0[0] + (gd[0] - h0[0]) * w, h0[1] + (gd[1] - h0[1]) * w]; Object.assign(B, solve(G, P)); }
     }
     const gear = typeof RIGGEAR !== "undefined" ? RIGGEAR : null;
     const armedN = !!wk && wk !== "fist" && !P.flask, openAll = P.hand === "open";
@@ -423,16 +434,10 @@ const PAINTRIG = (() => {
     const farPart = shieldOn || offW || farOn ? "hand-fist" : "hand-open", farWant = offW ? offA + offTip + Math.PI / 2 : farOn && wk === "bow" ? wa : null;
     const fist = fistAt(ctx, B.armF, farPart, farWant);   // the middle of the left fist: where its grip sits
     // the shield's strap (GRIPDATA shieldGrip: the middle of a round shield) on the left fist
-    /* [riglayers] where the shield goes (sF): raised in front of the chest (a guard, a block, a bash) it is over
-       everything, the weapon arm behind it (no fist floating on its face, the blade showing past its rim); let down (a
-       swing, a blow, walking, riding, knocked down) it hangs on the far side of the body, behind the left forearm that
-       holds it. At the turn the two fade into each other for a moment, so it never pops */
-    let sF = 0;
-    if (shieldOn && !P.ride && !(P.down > 0)) {
-      const dx = fist.grip[0] - B.W[0], dy = fist.grip[1] - B.W[1], fwd = (Math.cos(B.sa) * dx + Math.sin(B.sa) * dy) / m;
-      const up = P.clip === "block" || P.clip === "bash" ? 1 : Math.max(guard, clamp((fwd - 6) / 3, 0, 1)) * (1 - clamp((P.cast || 0) * 4, 0, 1));   // the guard, or the arm pushed well out (a block, a bash); [fightlook] not while casting: the hand that casts reaches out, the shield stays down (it flipped over the chest and back)
-      sF = clamp((up - 0.42) / 0.16, 0, 1);   // a short fade at the turn, so the two never show as a ghost
-    }
+    /* [offhand] Remigiusz: "the off hands should be last in the layer": the shield is part of the off-hand group and is
+       always drawn at the very back, behind the legs, the body and the head, in every clip (it used to come in front of
+       everything while raised: riglayers). A guard, block or bash pushes the arm out so the shield shows past the chest. */
+    const sF = 0;
     const shieldHere = (a) => {
       if (!kit || a < 0.01) return;
       g.save(); if (a < 1) g.globalAlpha *= a;
@@ -440,7 +445,7 @@ const PAINTRIG = (() => {
       if (gear) gear.shield(g, sp, true, st); else kit.shieldAt(g, sp, 0, 0, true, st);
       g.restore();
     };
-    if (shieldOn) { shieldHere(1 - sF); if (sF < 0.5) lay("shield"); rec.hands.shield = { grip: cpx(fist.grip), front: sF }; }
+    if (shieldOn) { shieldHere(1); lay("shield"); rec.hands.shield = { grip: cpx(fist.grip), front: sF }; }
     // the off-hand layer, in shade, behind the body: the left arm, a second blade by its grip, the left fist over it
     armAt(g, ctx, B.armF, "d", null); lay("offArm");
     if (offW) { g.save(); g.translate(fist.grip[0], fist.grip[1]); g.rotate(offA); g.scale(m * WSC, m * WSC); (gear || kit).weapon(g, sp, offW, st, { plain: true, glow: glowC }); g.restore(); lay("offWeapon"); rec.hands.off = { item: offW, grip: cpx(fist.grip) }; }
@@ -453,7 +458,7 @@ const PAINTRIG = (() => {
     // the body: torso (its waist plug hidden), the hips over it, then the head
     const hk = B.sa * 0.55 + (P.tilt || 0), sw = ctx.sway ? ctx.sway.a : 0;
     // the head: the race's own (scaled so its neck fills this set's collar like the Nord neck) or the set's; its braids below the collar go behind the torso
-    const hq = rh ? rh.Q.head : ctx.Q.head, hu = rh ? G.u * (ctx.Q.head.nw || hq.nw) / hq.nw : G.u, himg = rh ? pic(rh, "head", "n", hq.w * hu * ctx.dev) : pic(ctx.r, "head", sv(false), hq.w * hu * ctx.dev);
+    const hq = rh ? rh.Q.head : ctx.Q.head, hu = rh ? G.u * (ctx.Q.head.nw || hq.nw) / hq.nw : G.u, himg = rh ? pic(rh, "head", sp.skOver ? sv(false) : "n", hq.w * hu * ctx.dev) : pic(ctx.r, "head", sv(false), hq.w * hu * ctx.dev);
     const hairK = clamp(sw - hk * 0.4, -0.45, 0.45);   // hair hangs: it keeps to the vertical a little as the head turns
     putR(g, himg, hq, hu, B.N[0], B.N[1], hk, headR(hq, hairK, "back"));
     uprightAt(g, ctx, "torso", "n", B.W, B.sa, ctx.Q.torso.cut);
@@ -476,7 +481,6 @@ const PAINTRIG = (() => {
       TIPS.set(o.who || "me", { x: tp[0], y: tp[1], bx: bs[0], by: bs[1], gx: gp[0], gy: gp[1], n: ++drawN });   // gx,gy: the grip (fightart.js lays an enchanted weapon's glow from here to the tip)
     }
     rec.hands.mainFist = cpx(handAt(g, ctx, B.armN, handPart, sv(false), want)); lay("mainFist");
-    if (shieldOn) { shieldHere(sF); if (sF >= 0.5) lay("shield"); }   // [riglayers] a raised shield: in front of everything
     if (P.flask) flaskAt(g, grip[0], grip[1] - 0.5 * m, P.flask, m * 1.2);
     if (P.cast > 0.05 && kit) kit.glowAt(g, grip[0] + 1.6 * m, grip[1] - 0.6 * m, (3.8 + P.cast * 2.4) * m, castC, 0.5, st);
     return B;

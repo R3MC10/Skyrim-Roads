@@ -1,7 +1,7 @@
 """Fight look (fightart.js draw order, rig layers, fight screen layout): a dungeon fight with a follower on a
 412x915 phone, a 360x780 phone and a 1280x800 PC, played with painted art and stepped frame by frame.
 Checks: the striker is drawn in front of its target (hero melee -> "foe" before "me" in cv.__zo), waiting foes are
-drawn behind the fighters, the shield sits behind the body when lowered and in front when raised (PAINTRIG order),
+drawn behind the fighters, the shield always sits behind the body: the off hand is the back layer (PAINTRIG order) [offhand],
 the hero's lunge never passes the foe's centre and nobody is knocked off the stage, nothing is wider than the screen,
 the main fight buttons are at least 44px on phones, and on PC the rows strip doesn't cover the fighters or the log.
 Screenshots go to $SHOTS/out_fightlook/.
@@ -110,7 +110,7 @@ async def run(b, w, h, phone, errs):
     off = [f["pos"] for f in fr if f["pos"] and any(v[0] < -10 or v[0] > w + 10 for v in f["pos"].values())]
     ok(not off, f"{tag}: nobody knocked off the stage ({off[:1]})")
     rigs = [f["rig"].split(",") for f in fr if f["rig"] and "shield" in f["rig"]]
-    if rigs: ok(all(r.index("shield") in (0, len(r) - 1) for r in rigs), f"{tag}: shield is either behind or in front of the whole body")
+    if rigs: ok(all(r.index("shield") == 0 for r in rigs), f"{tag}: the shield is the back layer, behind the whole body [offhand]")
     # foes' and the follower's turn
     if await wait_turn(pg, 40):
         await pg.evaluate("FIGHTART.manual(true)"); await pg.evaluate("document.querySelector('#tbf [data-tba=end]')?.click()"); await pg.wait_for_timeout(200)

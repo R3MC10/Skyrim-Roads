@@ -152,6 +152,7 @@ const FIGART = (() => {
       amulet: jewel(amulet), ring: jewel(ring),
     };
     if (L.a && typeof APPEAR !== "undefined") appearOn(sp, L, race);   // a look chosen in character creation (appear.js)
+    if (L.sk) { sp.skin = L.sk; sp.skinD = tone(L.sk, -0.22); sp.skOver = true; }   // [offhand] a foe's own skin (foelook.js: draugr grey, dremora ash-red)
     if (SPECS.size > 200) SPECS.delete(SPECS.keys().next().value);
     SPECS.set(key, sp); return sp;
   }
