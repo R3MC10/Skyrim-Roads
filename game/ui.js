@@ -387,6 +387,7 @@
       ${typeof LIGHTFX !== "undefined" ? LIGHTFX.settingsHTML(seg) : ""}
       ${typeof PAINTEDMAP !== "undefined" ? PAINTEDMAP.settingsHTML(seg) : ""}
       ${typeof LOCINTRO !== "undefined" ? LOCINTRO.settingsHTML(seg) : ""}
+      ${typeof DIORAMA !== "undefined" ? DIORAMA.settingsHTML(seg) : ""}
       ${typeof MOTION !== "undefined" ? `<div class="setrow"><span>Motion</span>${seg("motion", [["full", "Full"], ["lite", "Lite"], ["off", "Off"]], MOTION.pref())}</div>` : ""}
       ${typeof TB !== "undefined" ? `<h3>Fights</h3>${typeof GORE !== "undefined" ? GORE.settingsHTML(seg) : typeof COMBATFX !== "undefined" ? `<div class="setrow"><span>Blood</span>${seg("gore", [[true, "On"], [false, "Off"]], getPref("gore", true))}</div>` : ""}` : ""}${typeof FIGHTCTL !== "undefined" && typeof TB !== "undefined" ? FIGHTCTL.settingsHTML(seg) : ""}${typeof COMBAT2 !== "undefined" && typeof TB !== "undefined" ? COMBAT2.settingsHTML(seg) : ""}${typeof FIGHTSET !== "undefined" && typeof TB !== "undefined" ? FIGHTSET.settingsHTML(seg) : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.settingsHTML(seg) : ""}
       ${S && typeof DIFF !== "undefined" ? DIFF.settingsHTML(seg, S) : ""}
@@ -420,7 +421,8 @@
     if (typeof DIFF !== "undefined" && DIFF.pref(k, b.dataset.v, S)) { SOUND.fx("click"); if (S) persist(gameStarted); return true; }   // Fights → Difficulty (difficulty.js)
     if (k === "survival") { if (S) { S.survival = v; if (!v) S.coldV = 0; persist(); try { renderPanel(true); } catch { /* title */ } } SOUND.fx("click"); return true; }
     if (typeof PAINTEDMAP !== "undefined" && PAINTEDMAP.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }   // Graphics → Roads on the map (paintedmap.js)
-    if (typeof LOCINTRO !== "undefined" && LOCINTRO.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Look → Location introductions (locintro.js)
+    if (typeof LOCINTRO !== "undefined" && LOCINTRO.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }
+    if (typeof DIORAMA !== "undefined" && DIORAMA.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Look → Road view: Diorama / Classic (diorama.js)   // Look → Location introductions (locintro.js)
     if (typeof PCMAP !== "undefined" && PCMAP.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Map → Map quality (pcmap.js, mapfx.js)
     if (typeof LIGHTFX !== "undefined" && LIGHTFX.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }   // Graphics → Lighting
     if (k === "motion") { MOTION.setPref(b.dataset.v); SOUND.fx("click"); return true; }

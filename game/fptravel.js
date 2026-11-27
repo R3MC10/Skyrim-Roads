@@ -113,6 +113,7 @@ const FPT = (() => {
   function hide() {
     if (!band && !info) return;   // called every refresh while not travelling: nothing to do
     stop(); io?.disconnect(); io = null;
+    if (typeof DIORAMA !== "undefined") DIORAMA.detach();
     if (band) { band.remove(); band = null; }
     if (wrapEl) { wrapEl.classList.remove("fpt-on"); wrapEl.style.removeProperty("--fpt-h"); }
     if (typeof document !== "undefined") document.documentElement.classList.remove("fpt-on");
@@ -149,7 +150,11 @@ const FPT = (() => {
       if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
       const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); curDpr = dpr;
       anchor(info); step(info, dt);
-      paint(g, w, h, info, ts / 1000);
+      // the painted diorama (diorama.js) draws instead when it can; this canvas stays underneath, hidden
+      let dio = false;
+      try { dio = typeof DIORAMA !== "undefined" && DIORAMA.frame(host, info, dt, ts / 1000, regionOf(info)); } catch (e) { dio = false; }
+      cv.style.visibility = dio ? "hidden" : "";
+      if (!dio) paint(g, w, h, info, ts / 1000);
     }
     if (info.reduce) return;   // reduced motion: one still frame per update
     if (seen) later(gap);
