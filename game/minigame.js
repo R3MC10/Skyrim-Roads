@@ -77,12 +77,12 @@ const MINIGAME = (() => {
     const g = kindBase(f, a);
     if (!g) return null;
     if (!g.id) {
-      if (g.kind === "rune") g.id = g.staff ? "staff" : String(g.school).toLowerCase() + (g.school === "Destruction" ? "-" + ((g.spell && g.spell.element) || "fire") : "") + (g.spell && g.spell.kind === "healally" ? "-ally" : "");
+      if (g.kind === "rune") g.id = g.staff ? "staff" : String(g.school).toLowerCase() + (g.school === "Destruction" ? "-" + ((g.spell && g.spell.element) || "fire") : "") ;
       else if (g.kind === "parry") { g.id = g.shove ? "bash" : "guard"; if (!g.shove) g.foe = incoming(f); }
       else if (g.toss) g.id = "toss";
       else if (g.kind === "shout") g.id = "shout";
       else if (a === "beast:claw" || a === "lord:claw" || a === "beast:maul") g.id = "claw";
-      else if (f.hidden && (a === "attack" || a === "power_attack") && g.kind !== "aim") g.id = "sneak";   // your first strike from hiding
+      else if ((((f.turn || 0) <= 1 && f.hidden) || f.sneakNext) && !(f.mount && f.mount.up) && (a === "attack" || a === "power_attack") && g.kind !== "aim") g.id = "sneak";   // your first strike from hiding
       else if (f.off && (a === "attack" || a === "power_attack") && g.kind !== "aim") g.id = "dual";   // two blades: two lanes
       else g.id = WEAPON_IDS[f.wt] || (g.kind === "aim" ? "bow" : "sword");
     }
@@ -291,7 +291,7 @@ const MINIGAME = (() => {
     if (!DOM || !host) return Promise.resolve(grade(0.5, g));
     const w = width(f, a, g) * (reduced() ? 1.2 : 1);   // reduced motion: a little more time
     if (simple()) return bar(host, Object.assign({}, g, { kind: g.kind === "power" || g.hard ? "power" : g.kind === "parry" ? "parry" : "strike", simple: true }), o, w);   // one tap timing for every move
-    const id = g.dual && REG.dualcast ? "dualcast" : g.id;
+    const id = g.dual && REG.dualcast ? "dualcast" : o && o.ally && g.id === "restoration" && REG["restoration-ally"] ? "restoration-ally" : g.id;   // healing a teammate: drag the light to them
     if (id && REG[id]) { try { const pr = REG[id](host, g, o, w, KIT); if (pr && typeof pr.then === "function") return pr; } catch (e) { console.error("minigame", id, e); } }
     if (g.kind === "shout") return bar(host, Object.assign({}, g, { kind: "strike" }), o, w);
     if (g.kind === "aim") return aim(host, g, o, w);
