@@ -715,6 +715,7 @@ const FOERIG = (() => {
     const src = picSrc(st.pic), meta = R.meta.pic || { mode: "tall" }, hU = st.picH, wU = hU * src.width / src.height, sw = src.width, sh = src.height, N = 10;
     const r0 = R.idx.root * 5;
     g.translate(p[r0 + 1], p[r0 + 2]); g.rotate(p[r0]); g.scale(p[r0 + 3], p[r0 + 4]);
+    if (st.picKey && typeof CREATURERIG !== "undefined" && CREATURERIG.draw(g, R, p, st, src)) return;   // [creaturerig] a painted creature cut into parts on its bones
     const bi = R.idx[meta.breath], breath = bi != null ? p[bi * 5 + 4] : 1;
     if (st.filter) g.filter = st.filter;
     if (meta.mode === "tall") {
