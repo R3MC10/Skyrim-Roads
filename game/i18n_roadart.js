@@ -2,6 +2,8 @@
 var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 (() => {
   Object.assign(I18N_EXTRA.words, {
+    "Portraits for everyone": "Portrety dla wszystkich",
+    "Every race now has a painted portrait for both men and women. Before, half the heroes borrowed a face from another race; now Automatic shows your own race and sex, and all twenty faces are in the portrait picker.": "Każda rasa ma teraz malowany portret zarówno dla mężczyzn, jak i dla kobiet. Wcześniej połowa bohaterów pożyczała twarz od innej rasy; teraz Automatycznie pokazuje twoją rasę i płeć, a w wyborze portretu jest wszystkich dwadzieścia twarzy.",
     "Painted road encounters": "Malowane spotkania na drodze",
     "Almost everything you meet on the road now has its own painting: bandits' tolls, caravans, shipwrecks, avalanches, giants, wisps, hagravens, peddlers, shrines and many more.":
       "Prawie wszystko, co spotkasz na drodze, ma teraz własny obraz: myto bandytów, karawany, wraki, lawiny, olbrzymy, błędne ogniki, wiedźmokruki, domokrążcy, kapliczki i wiele więcej.",

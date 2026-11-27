@@ -1,13 +1,6 @@
 /* avatar.js: your round painted portrait (the "avatar"), and the picker to choose it. [OURS]
-   The painted portraits are the race busts (bust-<race>.webp, bustart.js). There is one per race, of a man or a woman
-   (BUSTART.SEX). Before this, a hero of the other sex got the race's only bust anyway (as a "crest"), so a Breton man saw
-   a Breton woman on his Character sheet.
-
-   Now every portrait goes through AVATAR.of(card):
-     1. the avatar the player chose (s.avatar, sent on the player card as card.avatar), if it's a known portrait id;
-     2. otherwise "Automatic": the race's own bust when it's the hero's sex, else the closest painted portrait of the
-        hero's sex (NEAR below), e.g. a Breton man gets the Nord man until Kacper paints a Breton man.
-   Portrait ids are race ids ("nord", "breton"...) = the bust files. Anything else (old clients, junk) is ignored.
+   Automatic uses the hero's own race and sex. A valid portrait chosen by the player always takes priority.
+   The original race-only IDs still identify the same paintings in saves and multiplayer player cards.
 
    API: AVATAR.IDS                       → every portrait id there is
         AVATAR.valid(id)                 → true for a known portrait id
@@ -39,7 +32,8 @@ const AVATAR = (() => {
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const raceName = (r) => { try { return D.RACES[r]?.name || r; } catch { return r; } };
   const valid = (id) => typeof id === "string" && IDS.includes(id);
-  function raceOf(c) { const r = c?.race || c?.look?.r || c?.r; return valid(r) ? r : "nord"; }
+  function raceOf(c) { const r = c?.race || c?.look?.r || c?.r; return Object.hasOwn(FALLBACK_SEX, r) ? r : "nord"; }
+  const portraitRace = (id) => id.split("-")[0];
   function sexOf(c) {
     if (typeof BUSTART !== "undefined" && BUSTART.sexOf) return BUSTART.sexOf(c);
     const a = c?.app || c?.look?.a || c?.a;
@@ -49,6 +43,8 @@ const AVATAR = (() => {
   const chosen = (c) => { const a = c?.avatar; return valid(a) ? a : ""; };
   function auto(c) {
     const r = raceOf(c), sx = sexOf(c), S = SEX();
+    const exact = typeof BUSTART !== "undefined" ? BUSTART.idFor?.(r, sx) : null;
+    if (exact) return exact;
     if (S[r] === sx) return r;
     const n = NEAR[r]?.[sx]; if (n && S[n] === sx) return n;
     return IDS.find((id) => S[id] === sx) || r;
@@ -60,15 +56,17 @@ const AVATAR = (() => {
     return true;
   }
   function options(c, all) {
-    const r = raceOf(c), sx = sexOf(c), S = SEX(), near = NEAR[r]?.[sx];
-    const fit = (id) => (id === r && S[id] === sx ? "own" : id === near && S[r] !== sx ? "near" : S[id] === sx ? "sex" : "other");
+    const r = raceOf(c), sx = sexOf(c), S = SEX(), exact = auto(c);
+    const fit = (id) => (S[id] !== sx ? "other" : portraitRace(id) === r ? "own" : id === exact ? "near" : "sex");
     const rank = { own: 0, near: 1, sex: 2, other: 3 };
     const out = IDS.map((id, i) => ({ id, fit: fit(id), i })).filter((o) => all || o.fit !== "other");
     return out.sort((a, b) => rank[a.fit] - rank[b.fit] || a.i - b.i).map(({ id, fit }) => ({ id, fit }));
   }
   function missing() {
     const S = SEX(), out = [];
-    for (const r of IDS) for (const sx of ["m", "f"]) if (S[r] !== sx) out.push([r, sx]);
+    for (const r of Object.keys(FALLBACK_SEX)) for (const sx of ["m", "f"]) {
+      if (S[r] !== sx && S[r + "-" + sx] !== sx) out.push([r, sx]);
+    }
     return out;
   }
   const url = (id) => (typeof BUSTART !== "undefined" ? BUSTART.url(id) : "");
@@ -114,13 +112,13 @@ const AVATAR = (() => {
     const tile = (id, label, line, note, on) => {
       const u = url(id || a);
       return `<button class="avtile${on ? " on" : ""}" ${attr(id || "auto")} role="radio" aria-checked="${on}">
-        <span class="bustslot avface${u ? " ok" : ""}" data-bust="${esc(id || a)}" data-bk="avt">${u ? img(id || a, u) : drawn(id ? { race: id, sex: SEX()[id], id: "av-" + id } : c, 64)}</span>
+        <span class="bustslot avface${u ? " ok" : ""}" data-bust="${esc(id || a)}" data-bk="avt">${u ? img(id || a, u) : drawn(id ? { race: portraitRace(id), sex: SEX()[id], id: "av-" + id } : c, 64)}</span>
         <b>${esc(label)}</b><span>${esc(line)}</span>${note ? `<i>${esc(note)}</i>` : ""}</button>`;
     };
     const sexWord = (id) => (SEX()[id] === "f" ? "Woman" : "Man");
     return `<div class="avgrid" role="radiogroup" aria-label="Portrait">
       ${tile("", "Automatic", "Follows your race and sex", "", !cur)}
-      ${list.map(({ id, fit }) => tile(id, raceName(id), sexWord(id), FIT[fit], cur === id)).join("")}
+      ${list.map(({ id, fit }) => tile(id, raceName(portraitRace(id)), sexWord(id), FIT[fit], cur === id)).join("")}
       </div>${all ? "" : `<button class="btn sm avall" ${allAttr}>Show all portraits</button>`}`;
   }
   const cardBits = (s) => ({ avatar: chosen(s) || null });

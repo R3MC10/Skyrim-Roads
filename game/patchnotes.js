@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b386-raceportraits", build: 386, date: "27 Nov 2026", title: "Portraits for everyone", items: [
+      "Every race now has a painted portrait for both men and women. Before, half the heroes borrowed a face from another race; now Automatic shows your own race and sex, and all twenty faces are in the portrait picker.",
+    ] },
     { id: "b385-perfmap", build: 385, date: "27 Nov 2026", title: "Smoother map on phones", items: [
       "The map no longer redraws itself all the time while you just look at it: falling snow now drifts on its own layer over the map, and a quiet map only updates a few times a second, so the map runs about twice as smooth on slow phones.",
       "With Battery saver on, a map you're not touching stays completely still until something on it changes, and the title screen shows a still picture instead of the moving one.",
