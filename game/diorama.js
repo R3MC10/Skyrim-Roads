@@ -139,7 +139,7 @@ const DIORAMA = (() => {
       if (wo > .01) {   // whiteout drifting past in patches, carried by the wind
         vec2 p = vUv * vec2(res.x / res.y, 1.) * 1.6 - woDir * woT * .02;
         float n = sin(p.x * 2.1 + woT * .21) * sin(p.y * 2.7 - woT * .17) + .6 * sin(p.x * 4.3 - p.y * 3.1 + woT * .33);
-        col = mix(col, vec3(.93, .95, .98) * grade, wo * .28 * smoothstep(-.6, 1.3, n));
+        col = mix(col, vec3(.93, .95, .98) * grade, wo * .16 * smoothstep(-.6, 1.3, n));
       }
       vec2 q = vUv - .5; col *= 1. - dot(q * vec2(1., 1.25), q * vec2(1., 1.25)) * (.5 + dark);
       gl_FragColor = vec4(col, 1.);
@@ -472,8 +472,8 @@ const DIORAMA = (() => {
     const st = I.sky || null, tod = TOD[st?.tod] ? st.tod : "day", wx = st?.weather || "clear", L = TOD[tod];
     let fog = new THREE.Color(kit.fog).lerp(new THREE.Color(0x5d7887), 0.45);
     if (tod === "night") fog = new THREE.Color(0x1f2a40); else if (tod === "dusk") fog.lerp(new THREE.Color(0x9a8274), 0.6); else if (tod === "dawn") fog.lerp(new THREE.Color(0xb39a98), 0.35);
-    const thick = { fog: 0.35, blizzard: 0.3, snow: 0.7, rain: 0.7, storm: 0.6, ashstorm: 0.4, cloudy: 0.9 }[wx] || 1;
-    if (wx === "fog" || wx === "blizzard") fog.lerp(new THREE.Color(0xd6dadc), 0.45 * (tod === "night" ? 0.3 : 1));
+    const thick = { fog: 0.35, blizzard: 0.55, snow: 0.7, rain: 0.7, storm: 0.6, ashstorm: 0.4, cloudy: 0.9 }[wx] || 1;
+    if (wx === "fog" || wx === "blizzard") fog.lerp(new THREE.Color(0xd6dadc), (wx === "fog" ? 0.45 : 0.3) * (tod === "night" ? 0.3 : 1));
     const dull = { cloudy: 0.9, rain: 0.78, storm: 0.62, fog: 0.9, snow: 0.92, blizzard: 0.85 }[wx] || 1;
     const t = new THREE.Color(L.tint[0] * dull, L.tint[1] * dull, L.tint[2] * dull);
     return { tod, wx, fog, near: 30 * thick, far: 190 * thick, tint: t, grade: L.grade, dark: L.dark + (wx === "storm" ? 0.15 : 0), snow: ["snow", "blizzard"].includes(wx) };
