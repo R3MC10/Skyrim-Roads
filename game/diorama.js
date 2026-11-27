@@ -303,6 +303,7 @@ const DIORAMA = (() => {
         const x = (i + D.rand(i, j, 11 + n)) * CELL, z = (j + D.rand(i, j, 21 + n)) * CELL;
         const r = D.near(P, x, z); if (r.d < 2.9) continue;
         if (segs.length && D.riverDist(segs, x, z) < 6) continue;   // nothing grows in the river
+        if ((V.bridges || []).some((b) => Math.abs(r.s - b.s) < (b.len || 24) / 2 + 4 && r.d < 7)) continue;   // nor on a bridge or right by its ends
         { let ty = -1; try { ty = TR ? TR.typeAtPos(D.toMap(x, z)) : -1; } catch { /* off the map */ } if (ty === TT.SEA || ty === TT.LAKE) continue; }
         const tall = n === 0 && r.d > 3.8 && (r.side < 0 || r.d > 26) && D.rand(i, j, 31) < kit.trees;
         const small = !tall && D.rand(i, j, 41 + n) < kit.clutter * (r.d < 12 ? 1 : 0.55);
@@ -340,15 +341,29 @@ const DIORAMA = (() => {
       }
       const M = V.bridgeMats, img = TEX[B.file].image;
       for (const c of bridges) {
-        const q = D.at(P, c.s), Hs = B.h, Lb = Math.max(Hs * img.width / img.height, c.len * 0.8), deckY = Hs * B.deck, half = 3.1, thick = 0.55;
-        const grp = new THREE.Group();
-        grp.position.set(c.x, q.y + 0.05 - deckY, c.z); grp.rotation.y = -Math.atan2(c.tz, c.tx);   // local x runs along the road
-        for (const sd of [-1, 1]) {
-          const g = new THREE.BoxGeometry(Lb, Hs, thick); g.translate(0, Hs / 2, sd * (half + thick / 2));
-          grp.add(new THREE.Mesh(g, [M.none, M.none, M.none, M.none, M.face, M.face]));   // the two painted faces, 0.55 m apart
+        // built along the road in short sections: every section takes the road's height and direction there, so both ends
+        // always meet the road and the bridge bends and rises with it in between. Two painted walls (outer and inner
+        // faces, 0.55 m apart) and a stone deck under the road.
+        const Hs = B.h, Lb = Math.max(Hs * img.width / img.height, c.len * 0.8), half = 3.1, thick = 0.55, N = 18;
+        const s0 = c.s - Lb / 2, top = Hs * (1 - B.deck), down = Hs * B.deck;
+        const wall = [], wuv = [], deck = [], duv = [], wi = [], di = [];
+        for (let k = 0; k <= N; k++) {
+          const q = D.at(P, s0 + Lb * k / N), nx = -q.tz, nz = q.tx, y = q.y + 0.05, u = k / N;
+          for (const off of [-(half + thick), -half, half, half + thick]) {   // four wall faces: outer and inner on each side
+            wall.push(q.x + nx * off, y - down, q.z + nz * off, q.x + nx * off, y + top, q.z + nz * off); wuv.push(u, 0, u, 1);
+          }
+          deck.push(q.x + nx * half, y - 0.03, q.z + nz * half, q.x - nx * half, y - 0.03, q.z - nz * half); duv.push(0, u * Lb / 3, 1, u * Lb / 3);
+          if (k) {
+            for (let f = 0; f < 4; f++) { const a = ((k - 1) * 4 + f) * 2, b = (k * 4 + f) * 2; wi.push(a, a + 1, b, a + 1, b + 1, b); }
+            const a = (k - 1) * 2; di.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
+          }
         }
-        const dg = new THREE.BoxGeometry(Lb - 0.3, 0.7, half * 2); dg.translate(0, deckY - 0.37, 0);
-        grp.add(new THREE.Mesh(dg, M.stone));
+        const grp = new THREE.Group();
+        const wg = new THREE.BufferGeometry(); wg.setAttribute("position", new THREE.Float32BufferAttribute(wall, 3)); wg.setAttribute("uv", new THREE.Float32BufferAttribute(wuv, 2)); wg.setIndex(wi);
+        grp.add(new THREE.Mesh(wg, M.faceBoth || (M.faceBoth = new THREE.MeshBasicMaterial({ map: TEX[B.file], alphaTest: 0.45, side: THREE.DoubleSide }))));
+        const dg = new THREE.BufferGeometry(); dg.setAttribute("position", new THREE.Float32BufferAttribute(deck, 3)); dg.setAttribute("uv", new THREE.Float32BufferAttribute(duv, 2)); dg.setIndex(di);
+        grp.add(new THREE.Mesh(dg, M.deck || (M.deck = new THREE.MeshBasicMaterial({ map: M.stone.map, side: THREE.DoubleSide }))));
+        grp.userData = { s0, s1: s0 + Lb };
         V.scene.add(grp); V.bridgeMeshes.push(grp);
       }
     } else if (bridges.length) V.wantBridge = true;
@@ -640,7 +655,7 @@ const DIORAMA = (() => {
     const Lt = light(I, kit);
     V.scene.fog.color.copy(Lt.fog); V.scene.fog.near = Lt.near; V.scene.fog.far = Lt.far; V.farGround.material.color.copy(Lt.fog); V.renderer.setClearColor(Lt.fog);
     const gt = new THREE.Color(Lt.tint.r * kit.ground[0], Lt.tint.g * kit.ground[1], Lt.tint.b * kit.ground[2]);
-    V.ground.material.color.copy(gt); for (const a of V.actors.values()) a.mesh.material.color.setRGB(Math.max(0.7, Lt.tint.r), Math.max(0.72, Lt.tint.g), Math.max(0.8, Lt.tint.b)); if (V.bridgeMats) { V.bridgeMats.face.color.copy(Lt.tint); V.bridgeMats.stone.color.copy(Lt.tint); } V.road.material.color.copy(Lt.tint); V.hero.material.color.setRGB(Math.max(0.78, Lt.tint.r), Math.max(0.8, Lt.tint.g), Math.max(0.86, Lt.tint.b)); V.sky.material.color.copy(Lt.tint);   // you stay easy to see
+    V.ground.material.color.copy(gt); for (const a of V.actors.values()) a.mesh.material.color.setRGB(Math.max(0.7, Lt.tint.r), Math.max(0.72, Lt.tint.g), Math.max(0.8, Lt.tint.b)); if (V.bridgeMats) for (const m of Object.values(V.bridgeMats)) if (m.color) m.color.copy(Lt.tint); V.road.material.color.copy(Lt.tint); V.hero.material.color.setRGB(Math.max(0.78, Lt.tint.r), Math.max(0.8, Lt.tint.g), Math.max(0.86, Lt.tint.b)); V.sky.material.color.copy(Lt.tint);   // you stay easy to see
     V.backs.forEach((b) => b.material.color.setRGB(Lt.tint.r * kit.far[0], Lt.tint.g * kit.far[1], Lt.tint.b * kit.far[2]));
     for (const m of [...Object.values(V.cards), ...Object.values(V.places)]) { const u = m.material.uniforms; u.tint.value.copy(Lt.tint); u.camRight.value.copy(right); u.heroPos.value.set(here.x, here.y, here.z); u.camPos.value.copy(V.camera.position); u.fogColor.value.copy(Lt.fog); u.fogNear.value = Lt.near; u.fogFar.value = Lt.far; }
     V.post.uniforms.grade.value.set(...Lt.grade); V.post.uniforms.dark.value = Lt.dark;
