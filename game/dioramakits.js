@@ -35,7 +35,7 @@ const DIOKITS = (() => {
   const PLACES = {
     city: { file: "dio-place-city", h: 34 }, town: { file: "dio-place-town", h: 15 }, fort: { file: "dio-place-fort", h: 20 },
     camp: { file: "dio-place-camp", h: 9 }, farm: { file: "dio-place-farm", h: 10 }, stone: { file: "dio-place-stone", h: 6 },
-    shrine: { file: "dio-place-shrine", h: 4.2 }, lair: { file: "dio-place-lair", h: 16 }, landmark: { file: "dio-place-tower", h: 20 },
+    shrine: { file: "dio-place-shrine", h: 4.2 }, lair: { file: "dio-place-lair", h: 16 }, landmark: { file: "dio-place-tower", h: 13 },
     dungeon: { file: "dio-place-barrow", h: 10 }, college: { file: "dio-place-city", h: 30 },
   };
   const BRIDGE = { file: "dio-place-bridge", h: 3.8, deck: 0.86 };   // deck: where the road runs, as a share of the height from the bottom

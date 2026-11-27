@@ -205,7 +205,7 @@ const DIORAMA = (() => {
     scene.fog = new THREE.Fog(0x8e9fae, 30, 190);
     // the finish
     const rt = new THREE.WebGLRenderTarget(2, 2, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat });
-    const post = new THREE.ShaderMaterial({ uniforms: { t: { value: rt.texture }, res: { value: new THREE.Vector2(1, 1) }, focus: { value: 0.38 }, band: { value: 0.14 }, blur: { value: 8 }, taps: { value: 14 }, grade: { value: new THREE.Vector3(1, 1, 1) }, dark: { value: 0 } },
+    const post = new THREE.ShaderMaterial({ uniforms: { t: { value: rt.texture }, res: { value: new THREE.Vector2(1, 1) }, focus: { value: 0.38 }, band: { value: 0.18 }, blur: { value: 8 }, taps: { value: 14 }, grade: { value: new THREE.Vector3(1, 1, 1) }, dark: { value: 0 } },
       vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }", fragmentShader: POST_FS, depthTest: false, depthWrite: false });
     const postScene = new THREE.Scene(), postCam = new THREE.Camera(); postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), post));
     return { canvas, renderer, scene, camera, sky, backs, farGround, gGeo, ground, road, shadows, cards, hero, hg, heroTex, heroShadow, snow, rt, post, postScene, postCam, river, waterTex, lake, lakeTex, places, placeList: [], labels: new Map(),
@@ -268,7 +268,7 @@ const DIORAMA = (() => {
     };
     V.wet = wet;
     // bridges where the road crosses a river on a real bridge (a ford stays a ford)
-    const bridges = D.crossings(P, segs).filter((c) => { try { return !TR || TR.typeAtPos(D.toMap(c.x, c.z)) !== TT.RIVER; } catch { return true; } });   // the map grid is coarse: any crossing that isn't a ford gets a bridge
+    const bridges = (V.bridges || []).filter((c) => Math.hypot(c.x - cx, c.z - cz) < 160);   // the map grid is coarse: any crossing that isn't a ford gets a bridge
     V.dbg.bridges = bridges.length;
     p.needsUpdate = true; uv.needsUpdate = true; V.gGeo.computeBoundingSphere();
     // road: the profile points within reach, a ribbon 5.2 m wide
@@ -341,9 +341,9 @@ const DIORAMA = (() => {
       }
       const M = V.bridgeMats, img = TEX[B.file].image;
       for (const c of bridges) {
-        const q = D.at(P, c.s), Hs = B.h, Lb = Hs * img.width / img.height, deckY = Hs * B.deck, half = 3.1, thick = 0.55;
+        const q = D.at(P, c.s), Hs = B.h, Lb = Math.max(Hs * img.width / img.height, c.len * 0.8), deckY = Hs * B.deck, half = 3.1, thick = 0.55;
         const grp = new THREE.Group();
-        grp.position.set(c.x, q.y + 0.05 - deckY, c.z); grp.rotation.y = -Math.atan2(q.tz, q.tx);   // local x runs along the road
+        grp.position.set(c.x, q.y + 0.05 - deckY, c.z); grp.rotation.y = -Math.atan2(c.tz, c.tx);   // local x runs along the road
         for (const sd of [-1, 1]) {
           const g = new THREE.BoxGeometry(Lb, Hs, thick); g.translate(0, Hs / 2, sd * (half + thick / 2));
           grp.add(new THREE.Mesh(g, [M.stone, M.stone, M.stone, M.stone, M.face, M.face]));
@@ -407,7 +407,15 @@ const DIORAMA = (() => {
     const kit = K().of(region), D = R();
     // the route
     const pk = (I.origin || "") + ">" + (I.dest || "") + "|" + I.path.length;
-    if (pk !== V.profKey) { V.prof = D.profile(I.path, hAt); V.profKey = pk; V.sDisp = null; V.patch = null; V.hint = null; if (!V.prof) return false; }
+    if (pk !== V.profKey) {
+      V.prof = D.profile(I.path, hAt); V.profKey = pk; V.sDisp = null; V.patch = null; V.hint = null; if (!V.prof) return false;
+      // bridges for the whole trip, found once: the road is straightened and levelled across each one
+      const TR = typeof Terrain !== "undefined" ? Terrain : null, TT = TR?.T || {}, pts = V.prof.pts;
+      let bx0 = Infinity, bx1 = -Infinity, bz0 = Infinity, bz1 = -Infinity; for (const q of pts) { bx0 = Math.min(bx0, q.x); bx1 = Math.max(bx1, q.x); bz0 = Math.min(bz0, q.z); bz1 = Math.max(bz1, q.z); }
+      const segsAll = TR ? D.riverSegs(TR.rivers, (bx0 + bx1) / 2, (bz0 + bz1) / 2, Math.max(bx1 - bx0, bz1 - bz0) / 2 + 20) : [];
+      const cross = D.crossings(V.prof, segsAll).filter((c) => { try { return !TR || TR.typeAtPos(D.toMap(c.x, c.z)) !== TT.RIVER; } catch { return true; } });   // fords stay fords
+      V.bridges = D.straighten(V.prof, cross);
+    }
     const P = V.prof, [hx0, hz0] = D.toWorld(I.pos);
     const nr = D.near(P, hx0, hz0, V.hint); V.hint = nr.i;
     // where you are along the road, eased so the trip's updates glide instead of jumping
@@ -427,7 +435,7 @@ const DIORAMA = (() => {
       V.w = w; V.h = h; V.pr = pr; V.renderer.setPixelRatio(pr); V.renderer.setSize(w, h, false);
       V.camera.aspect = w / Math.max(1, h); V.camera.fov = V.camera.aspect < 1.2 ? 44 : 30; V.camera.updateProjectionMatrix();
       V.rt.setSize(Math.round(w * pr), Math.round(h * pr)); V.post.uniforms.res.value.set(w * pr, h * pr);
-      V.post.uniforms.taps.value = phone() ? 10 : 16; V.post.uniforms.blur.value = (phone() ? 6 : 8) * pr;
+      V.post.uniforms.taps.value = phone() ? 10 : 16; V.post.uniforms.blur.value = (phone() ? 4.5 : 6) * pr;
     }
     // the camera: beside the road, looking across it, a little behind you, turning gently with the road
     const ahead = D.at(P, V.sDisp + 14), back = D.at(P, V.sDisp - 14);

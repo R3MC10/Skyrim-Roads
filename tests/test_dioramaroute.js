@@ -55,5 +55,13 @@ for (let k = 0; k < 300; k++) {
   if (R.near(P, x, z).i !== bi || R.near(P, x, z, 0).i !== bi) bad++;
 }
 ok(bad === 0, `near() matches a full scan for 300 random points (${bad} differ)`);
+// straight across bridges: a bending route gets a straight, level stretch over the crossing
+const bend = []; for (let i = 0; i <= 40; i++) { const a = i / 40 * 1.2; bend.push([0.5 + Math.sin(a) * 0.03, 0.5 - Math.cos(a) * 0.04 + 0.04]); }
+const PB = R.profile(bend, () => 0.2), mid2 = PB.pts[Math.floor(PB.pts.length / 2)];
+const br = R.straighten(PB, [{ s: mid2.s, x: mid2.x, z: mid2.z }]);
+ok(br.length === 1 && Number.isFinite(br[0].tx), "straighten returns the bridge with its direction");
+let dev = 0; for (const p of PB.pts) if (Math.abs(p.s - br[0].s) < 11) dev = Math.max(dev, Math.abs((p.x - br[0].x) * -br[0].tz + (p.z - br[0].z) * br[0].tx));
+ok(dev < 0.15, `the road is straight across the bridge (off by ${dev.toFixed(3)} m)`);
+ok(PB.pts.every((p) => [p.x, p.z, p.s, p.tx, p.tz].every(Number.isFinite)), "no NaN after straightening");
 console.log(fails ? `${fails} FAILED of ${n}` : `dioramaroute: all ok · ${n} checks`);
 process.exit(fails ? 1 : 0);

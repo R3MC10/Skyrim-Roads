@@ -14,12 +14,13 @@
      DIOROUTE.land(prof, x, z, hFn, hint) → ground height in metres: the map's land, pulled onto the road's shelf near it
      DIOROUTE.riverSegs(rivers, cx, cz, r) → river lines near a point as world segments · riverDist(segs, x, z)
      DIOROUTE.crossings(prof, segs)    → where the road crosses a river: [{ s, x, z }] (a bridge goes there)
+     DIOROUTE.straighten(prof, cross)  → pulls the road straight and level across each crossing; → bridges [{ s, x, z, tx, tz, len }]
      DIOROUTE.rand(a, b, salt)         → 0..1, the same every time for the same cell (so a stretch of road always grows
                                          the same trees, on every trip and for everyone in a party)
    Pure functions, no DOM: tests/test_dioramaroute.js. */
 const DIOROUTE = (() => {
   const MW = 1000, MH = 700;
-  const S = 3.5, HS = 70, GRADE = 0.1, STEP = 2, SMOOTH_XZ = 6, SMOOTH_Y = 60;
+  const S = 3.5, HS = 70, GRADE = 0.1, STEP = 2, SMOOTH_XZ = 6, SMOOTH_Y = 60, RELIEF = 0.45;
   const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
   const toWorld = (p) => [p[0] * MW * S, p[1] * MH * S];
   const toMap = (x, z) => [x / (MW * S), z / (MH * S)];
@@ -119,6 +120,7 @@ const DIOROUTE = (() => {
     let h = 0; try { h = (+hFn(toMap(x, z)) || 0) * HS; } catch { h = 0; }
     const road = prof.pts[r.i], delta = road.y - road.h;           // how far the road was lifted or cut here
     const sm = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return 1 - t * t * (3 - 2 * t); };
+    h = road.h + (h - road.h) * RELIEF;                             // the land's rise and fall beside the road, toned down
     const base = h + delta * sm(4, 44, r.d);                       // the land, shifted with the road and easing back
     return base + (road.y - base) * sm(4, 12, r.d);                // a flat shelf right by the road
   }
@@ -151,11 +153,34 @@ const DIOROUTE = (() => {
     }
     return out;
   }
+  /* roads run straight across bridges: around each crossing the line is pulled onto the straight chord through it
+     (H metres each way, easing back over 10 m), then distances and directions are worked out again. Returns the
+     bridges: [{ s, x, z, tx, tz }] (centre, along the road). */
+  function straighten(prof, cross, H = 12) {
+    const P = prof.pts, out = [];
+    for (const c of cross) {
+      const a = at(prof, c.s - H), b = at(prof, c.s + H), L = Math.hypot(b.x - a.x, b.z - a.z) || 1;
+      for (const p of P) {
+        const off = Math.abs(p.s - c.s); if (off > H + 10) continue;
+        const w0 = off <= H ? 1 : 1 - (off - H) / 10, w = w0 * w0 * (3 - 2 * w0);
+        const u = clamp((p.s - (c.s - H)) / (2 * H), 0, 1);
+        p.x += (a.x + (b.x - a.x) * u - p.x) * w; p.z += (a.z + (b.z - a.z) * u - p.z) * w;
+        if (off <= H) p.y = a.y + (b.y - a.y) * u;   // and level with the deck
+      }
+      out.push({ x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, tx: (b.x - a.x) / L, tz: (b.z - a.z) / L, len: L });
+    }
+    let s = 0;
+    P.forEach((p, i) => { if (i) s += Math.hypot(p.x - P[i - 1].x, p.z - P[i - 1].z); p.s = s; });
+    P.forEach((p, i) => { const a = P[Math.max(0, i - 2)], b = P[Math.min(P.length - 1, i + 2)], L = Math.hypot(b.x - a.x, b.z - a.z) || 1; p.tx = (b.x - a.x) / L; p.tz = (b.z - a.z) / L; });
+    prof.len = s; prof._g = null;
+    out.forEach((o) => { o.s = near(prof, o.x, o.z).s; });
+    return out;
+  }
   function rand(a, b, salt = 0) {
     let h = (Math.imul(a | 0, 73856093) ^ Math.imul(b | 0, 19349663) ^ Math.imul(salt | 0, 83492791)) >>> 0;
     h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0; h = Math.imul(h ^ (h >>> 13), 3266489909) >>> 0;
     return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
   }
-  return { S, HS, GRADE, STEP, toWorld, toMap, profile, near, at, land, rand, riverSegs, riverDist, crossings };
+  return { S, HS, GRADE, RELIEF, STEP, toWorld, toMap, profile, near, at, land, rand, riverSegs, riverDist, crossings, straighten };
 })();
 if (typeof module !== "undefined") module.exports = DIOROUTE;
