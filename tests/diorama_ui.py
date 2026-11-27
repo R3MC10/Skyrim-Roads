@@ -75,6 +75,35 @@ async def main():
             if r["moved"] <= 0.3 and f0 < 0.9: fails.append((tag, "you didn't move along the road", r["moved"]))
             if r["worst"] > 0.1001: fails.append((tag, "road too steep", r["worst"]))
             if dbg.get("riding") != riding: fails.append((tag, "riding flag", dbg.get("riding")))
+        # nothing moves when the land is rebuilt: draw at one spot, then 40 m further on, and compare every cut-out and
+        # place in the overlap; and no place ever stands in water
+        STAB = """async ([o, d, region, fa, fb]) => {
+          const S = window.__dbg.save(), look = HEROART.lookOf(S), A = WORLD.places[o], B = WORLD.places[d];
+          const path = Terrain.route([A[0], A[1]], [B[0], B[1]]);
+          let box = document.getElementById('diobox'); if (box) box.remove();
+          box = document.createElement('div'); box.id = 'diobox'; box.style.cssText = 'position:fixed;left:0;top:0;width:960px;height:310px;z-index:99999'; document.body.appendChild(box);
+          const snapAt = async (f) => { const i = Math.floor(path.length * f), info = { pos: path[i], path, idx: i, look, sky: null, dest: d, origin: o, known: () => true, id: 'me' };
+            DIORAMA.detach(); for (let k = 0; k < 200 && !DIORAMA.frame(box, info, 0, 0, region); k++) await new Promise((r) => setTimeout(r, 30));
+            for (let k = 0; k < 5; k++) { DIORAMA.frame(box, info, 0, 0, region); await new Promise((r) => setTimeout(r, 30)); }
+            return DIORAMA._snap(); };
+          const a = await snapAt(fa), b = await snapAt(fb);
+          const mx = (a.patch[0] + b.patch[0]) / 2, mz = (a.patch[1] + b.patch[1]) / 2, gap = Math.hypot(a.patch[0] - b.patch[0], a.patch[1] - b.patch[1]);
+          const inBox = (p) => Math.abs(p[1] - mx) < 45 && Math.abs(p[3] - mz) < 45;
+          const key = (p) => p[0] + ':' + p[1].toFixed(2) + ',' + p[2].toFixed(2) + ',' + p[3].toFixed(2);
+          const A1 = new Set(a.props.filter(inBox).map(key)), B1 = new Set(b.props.filter(inBox).map(key));
+          const onlyA = [...A1].filter((k) => !B1.has(k)), onlyB = [...B1].filter((k) => !A1.has(k));
+          const pb = Object.fromEntries(b.places.map((p) => [p.name, p]));
+          const moved = a.places.filter((p) => pb[p.name] && Math.hypot(p.x - pb[p.name].x, p.y - pb[p.name].y, p.z - pb[p.name].z) > 0.01).map((p) => p.name);
+          const wet = [...a.places, ...b.places].filter((p) => p.wet).map((p) => p.name);
+          return { gap, n: A1.size, onlyA: onlyA.length, onlyB: onlyB.length, moved, wet, lakes: [a.lake, b.lake] };
+        }"""
+        for (o, d, region, fa, fb) in [("Riverwood", "Whiterun", "valley", 0.05, 0.16), ("Whiterun", "Riverwood", "tundra", 0.7, 0.82), ("Riften", "Ivarstead", "autumn", 0.3, 0.38), ("Solitude", "Morthal", "valley", 0.35, 0.42)]:
+            r = await pg.evaluate(STAB, [o, d, region, fa, fb])
+            print("stable", o, d, r)
+            if r["n"] < 20: fails.append(("stable " + o, "too few cut-outs to compare", r["n"]))
+            if r["onlyA"] or r["onlyB"]: fails.append(("stable " + o, "cut-outs moved or popped when the land was rebuilt", r["onlyA"], r["onlyB"]))
+            if r["moved"]: fails.append(("stable " + o, "places moved", r["moved"]))
+            if r["wet"]: fails.append(("stable " + o, "places standing in water", r["wet"]))
         # no kit for the marsh, and Road view: Classic → the classic view draws
         r = await pg.evaluate(RUN, ["Morthal", "Solitude", "marsh", False, 390, 150, "day", "clear", 1, 0.3])
         if r["drew"]: fails.append(("marsh", "should keep the classic view"))

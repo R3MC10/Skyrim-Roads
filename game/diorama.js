@@ -54,7 +54,8 @@ const DIORAMA = (() => {
     if (!I.pos || !Array.isArray(I.path) || I.path.length < 2) return no("no route");
     if (!R() || !K() || !K().of(region)) return no("no kit for " + region);
     if (typeof PERFMODE !== "undefined" && PERFMODE.saver && PERFMODE.saver()) return no("battery saver");
-    if (slow > 6 && !/[?&]diorama\b/.test(location.search)) return no("too slow");   // ?diorama (tests): always draw if (threeState === "failed") return no("three.js failed"); if (!hasWebGL()) return no("no WebGL");
+    if (slow > 6 && !/[?&]diorama\b/.test(location.search)) return no("too slow");   /* ?diorama (tests): always draw */
+    if (threeState === "failed") return no("three.js failed"); if (!hasWebGL()) return no("no WebGL");
     if (typeof navigator !== "undefined" && navigator.webdriver && !/[?&](assets|diorama)\b/.test(location.search)) return no("screen test");   // screen tests keep the classic view unless they ask
     why = ""; return true;
   }
@@ -147,15 +148,17 @@ const DIORAMA = (() => {
     const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(32, 2, 0.5, 2600);
     const fogU = []; // every material that follows the fog
     const basic = (map, o = {}) => new THREE.MeshBasicMaterial({ map, ...o });
-    // sky and two ridges: wide bands that turn with the camera (they're "infinitely" far), sliding a little as you move
-    const sky = new THREE.Mesh(new THREE.PlaneGeometry(2600, 1200), basic(tex("dio-sky", true), { depthWrite: false, fog: false })); sky.renderOrder = -10; scene.add(sky);
-    const band = (file, dist, worldW, h, base) => {
-      const t = tex(file, true); t.repeat.set(3, 1);
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(worldW * 3, h), basic(t, { transparent: true, depthWrite: false, fog: false }));
-      m.userData = { dist, worldW, base, t }; m.renderOrder = -9; scene.add(m); return m;
+    // sky and two ridges: rings round the camera, far enough to count as the horizon. They move with you but never
+    // turn: turning the camera simply looks round at them, like the real horizon (no sliding or racing)
+    const ring = (file, r, h, base, repeat, order) => {
+      const t = tex(file, true); t.repeat.set(repeat, 1);
+      const g = new THREE.CylinderGeometry(r, r, h, 96, 1, true); g.translate(0, h / 2, 0);
+      const m = new THREE.Mesh(g, basic(t, { transparent: true, depthWrite: false, fog: false, side: THREE.BackSide }));
+      m.userData = { base }; m.renderOrder = order; m.frustumCulled = false; scene.add(m); return m;
     };
-    const backs = [band("dio-far", 900, 1400, 1400 * 0.2, -14), band("dio-mid", 430, 620, 620 * 0.168, -26)];
-    const farGround = new THREE.Mesh(new THREE.PlaneGeometry(9000, 3200).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x8e9fae, depthWrite: false })); farGround.renderOrder = -11;   // never hides the ridges behind it scene.add(farGround);
+    const sky = ring("dio-sky", 1500, 1500, -300, 3, -10);
+    const backs = [ring("dio-far", 900, 1400 * 0.2 * 1.1, -16, 4, -9), ring("dio-mid", 430, 620 * 0.168 * 1.1, -28, 4, -8)];
+    const farGround = new THREE.Mesh(new THREE.PlaneGeometry(8000, 8000).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x8e9fae, depthWrite: false })); farGround.renderOrder = -11; scene.add(farGround);   // never hides the ridges behind it
     // the ground patch round you (rebuilt as you go) and the road ribbon
     const gGeo = new THREE.PlaneGeometry(240, 240, 96, 96); gGeo.rotateX(-Math.PI / 2);
     const ground = new THREE.Mesh(gGeo, basic(tex("dio-floor", true))); ground.frustumCulled = false; scene.add(ground);
@@ -211,7 +214,7 @@ const DIORAMA = (() => {
 
   // ---------------------------------------------------------------- the world round you
   const hAt = (p) => { try { return typeof FPREAL !== "undefined" ? FPREAL.heightAt(p) : 0; } catch { return 0; } };
-  const CELL = 6, RAD = 115;
+  const CELL = 6, RAD = 115, LAKE_LEVEL = new Map();
   /* the ground patch, the road ribbon and what grows, round (cx, cz); rebuilt every ~25 m */
   function rebuild(cx, cz, kit) {
     const P = V.prof, D = R();
@@ -223,16 +226,26 @@ const DIORAMA = (() => {
     const TR = typeof Terrain !== "undefined" ? Terrain : null, TT = TR?.T || {};
     const segs = TR ? D.riverSegs(TR.rivers, cx, cz, 170) : [];
     const lakeH = [];
+    const tile = Math.floor(cx / 600) + "," + Math.floor(cz / 600);
+    let level = LAKE_LEVEL.get(tile);
+    if (level === undefined && TR) {
+      const hs = [];
+      for (let x = Math.floor(cx / 600) * 600 - 300; x < Math.floor(cx / 600) * 600 + 900; x += 15) for (let z = Math.floor(cz / 600) * 600 - 300; z < Math.floor(cz / 600) * 600 + 900; z += 15) {
+        let ty = -1; try { ty = TR.typeAtPos(D.toMap(x, z)); } catch { /* off the map */ }
+        if (ty === TT.SEA || ty === TT.LAKE) hs.push(hAt(D.toMap(x, z)) * D.HS);
+      }
+      hs.sort((a, c) => a - c); level = hs.length > 4 ? hs[Math.floor(hs.length * 0.1)] - 0.6 : null; LAKE_LEVEL.set(tile, level);
+    }
     for (let i = 0; i < p.count; i++) {
       const x = b[i * 3] + cx, z = b[i * 3 + 2] + cz;
       let y = D.land(P, x, z, hAt, hint);
       // water: the river's channel and lake or sea beds sink below the banks
       if (segs.length) { const rd = D.riverDist(segs, x, z); if (rd < 8) { const k = rd < 3.5 ? 1 : 1 - (rd - 3.5) / 4.5; y -= 2.2 * k * k * (3 - 2 * k); } }
-      if (TR) { let ty = -1; try { ty = TR.typeAtPos(D.toMap(x, z)); } catch { /* off the map */ } if (ty === TT.SEA || ty === TT.LAKE) { lakeH.push(y); y -= 2.6; } }
+      if (TR) { let ty = -1; try { ty = TR.typeAtPos(D.toMap(x, z)); } catch { /* off the map */ } if (ty === TT.SEA || ty === TT.LAKE) { lakeH.push(y); y = level != null ? Math.min(y - 2.6, level - 1.6) : y - 2.6; } }
       p.setXYZ(i, x, y, z); uv.setXY(i, x / 9, -z / 9);
     }
     // the lake / sea sheet sits a little under the lowest shore round it
-    if (lakeH.length > 6) { lakeH.sort((a, c) => a - c); V.lake.visible = true; V.lake.position.set(cx, lakeH[Math.floor(lakeH.length * 0.1)] - 0.5, cz); } else V.lake.visible = false;
+    if (lakeH.length > 6 && level != null) { V.lake.visible = true; V.lake.position.set(cx, level, cz); } else V.lake.visible = false;
     // river ribbons, 9 m wide, a metre under the banks
     { const pos = [], uvs = [], idx = []; let k = 0;
       for (const [ax, az, bx, bz] of segs) {
@@ -248,6 +261,12 @@ const DIORAMA = (() => {
       const rg = new THREE.BufferGeometry(); rg.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); rg.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2)); if (idx.length) rg.setIndex(idx);
       V.river.geometry.dispose(); V.river.geometry = rg; V.river.material.side = THREE.DoubleSide; V.river.visible = idx.length > 0; }
     V.dbg.rivers = segs.length; V.dbg.lake = V.lake.visible;
+    const wet = (x, z) => {
+      let ty = -1; try { ty = TR ? TR.typeAtPos(D.toMap(x, z)) : -1; } catch { /* off the map */ }
+      if (ty === TT.SEA || ty === TT.LAKE || ty === TT.RIVER) return true;
+      return TR ? D.riverDist(D.riverSegs(TR.rivers, x, z, 40), x, z) < 10 : false;
+    };
+    V.wet = wet;
     // bridges where the road crosses a river on a real bridge (a ford stays a ford)
     const bridges = D.crossings(P, segs).filter((c) => { try { return !TR || TR.typeAtPos(D.toMap(c.x, c.z)) !== TT.RIVER; } catch { return true; } });   // the map grid is coarse: any crossing that isn't a ford gets a bridge
     V.dbg.bridges = bridges.length;
@@ -271,7 +290,9 @@ const DIORAMA = (() => {
     for (let i = c0x; i <= c1x; i++) for (let j = c0z; j <= c1z; j++) {
       for (let n = 0; n < 2; n++) {
         const x = (i + D.rand(i, j, 11 + n)) * CELL, z = (j + D.rand(i, j, 21 + n)) * CELL;
-        const r = D.near(P, x, z, hint); if (r.d < 2.9) continue;
+        const r = D.near(P, x, z); if (r.d < 2.9) continue;
+        if (segs.length && D.riverDist(segs, x, z) < 6) continue;   // nothing grows in the river
+        { let ty = -1; try { ty = TR ? TR.typeAtPos(D.toMap(x, z)) : -1; } catch { /* off the map */ } if (ty === TT.SEA || ty === TT.LAKE) continue; }
         const tall = n === 0 && r.d > 3.8 && (r.side < 0 || r.d > 26) && D.rand(i, j, 31) < kit.trees;
         const small = !tall && D.rand(i, j, 41 + n) < kit.clutter * (r.d < 12 ? 1 : 0.55);
         if (!tall && !small) continue;
@@ -287,31 +308,49 @@ const DIORAMA = (() => {
       for (let q = 0; q < n; q++) { const [x, y, z, hh, fl] = arr[q]; ip[q * 3] = x; ip[q * 3 + 1] = y; ip[q * 3 + 2] = z; is[q * 2] = hh * asp; is[q * 2 + 1] = hh; iff[q] = fl; }
       g.instanceCount = n; g.attributes.iPos.needsUpdate = g.attributes.iSize.needsUpdate = g.attributes.iFlip.needsUpdate = true;
     }
-    // places: where they really are, pushed off the road to its far side; far ones stand on the far ground
+    // places: where they really are on the land, never on the road or in water
     const B = K().BRIDGE, PL = K().PLACES, Wd = typeof WORLD !== "undefined" ? WORLD.places || {} : {}, byFile = {};
     const list = [];
     for (const [name, pp] of Object.entries(Wd)) {
       if (!pp) continue; const kind = pp[2] || "town", art = PL[kind]; if (!art) continue;
       let [x, z] = D.toWorld(pp); const dd = Math.hypot(x - cx, z - cz); if (dd > 900) continue;
-      const r = D.near(P, x, z, null), q = P.pts[r.i], minD = 9 + art.h * 0.7;
-      if (r.d < minD) { x = q.x + q.tz * minD; z = q.z - q.tx * minD; }   // its far side (the camera looks from the other)
-      const y = dd < 115 ? D.land(P, x, z, hAt, r.i) - 0.4 : Math.min(q.y, D.at(P, D.near(P, cx, cz, hint).s).y) - 0.6;
+      const r = D.near(P, x, z), q = P.pts[r.i], minD = 9 + art.h * 0.7;
+      // on the road, or standing in water: move it back from the road on the far side (the camera looks from the other)
+      // until it stands on dry land clear of the road; if there's none within 90 m it isn't shown
+      const wetAt = (px, pz) => wet(px, pz) || D.near(P, px, pz).d < minD;
+      if (wetAt(x, z)) {
+        let ok = false;
+        for (let k = minD; k <= minD + 90 && !ok; k += 6) { const nx = q.x + q.tz * k, nz = q.z - q.tx * k; if (!wetAt(nx, nz)) { x = nx; z = nz; ok = true; } }
+        if (!ok) continue;
+      }
+      const y = D.land(P, x, z, hAt) - 0.4;
       list.push({ name, kind, x, y, z, h: art.h, file: art.file });
       (byFile[art.file] ||= []).push([x, y, z, art.h, 1]);
     }
-    // bridges lie along the road (not turned to face you): seen from the side when the road crosses the view
-    for (const m of new Set(V.bridgeMeshes || [])) { V.scene.remove(m); }
-    for (const g of new Set((V.bridgeMeshes || []).map((m) => m.geometry))) g.dispose();
+    // bridges: built in 3D along the road. Two stone side walls with real thickness, painted with the bridge's arches and
+    // parapet on their outer faces; a stone deck between them under the road; stone on the ends and tops
+    for (const grp of V.bridgeMeshes || []) { V.scene.remove(grp); grp.traverse((o) => o.geometry && o.geometry.dispose()); }
     V.bridgeMeshes = [];
     tex(B.file);
-    if (LOADED.has(B.file)) for (const c of bridges) {
-      const q = D.at(P, c.s), img = TEX[B.file].image, w = B.h * img.width / img.height;
-      const g = new THREE.PlaneGeometry(w, B.h); g.translate(0, B.h / 2, 0);
-      // two side walls, one on each edge of the road: from the side you see the arches, along the road the parapets
-      for (const sd of [-1, 1]) {
-        const m = new THREE.Mesh(g, V.bridgeMat || (V.bridgeMat = new THREE.MeshBasicMaterial({ map: TEX[B.file], alphaTest: 0.45, side: THREE.DoubleSide })));
-        m.position.set(c.x - q.tz * 2.9 * sd, q.y + 0.05 - B.h * B.deck, c.z + q.tx * 2.9 * sd); m.rotation.y = -Math.atan2(q.tz, q.tx);
-        V.scene.add(m); V.bridgeMeshes.push(m);
+    if (LOADED.has(B.file)) {
+      if (!V.bridgeMats) {
+        const img = TEX[B.file].image, c = document.createElement("canvas"); c.width = c.height = 128;
+        c.getContext("2d").drawImage(img, img.width * 0.43, img.height * 0.4, img.width * 0.12, img.height * 0.3, 0, 0, 128, 128);   // a patch of the painted stonework
+        const st = new THREE.CanvasTexture(c); st.wrapS = st.wrapT = THREE.RepeatWrapping;
+        V.bridgeMats = { face: new THREE.MeshBasicMaterial({ map: TEX[B.file], alphaTest: 0.45 }), stone: new THREE.MeshBasicMaterial({ map: st }) };
+      }
+      const M = V.bridgeMats, img = TEX[B.file].image;
+      for (const c of bridges) {
+        const q = D.at(P, c.s), Hs = B.h, Lb = Hs * img.width / img.height, deckY = Hs * B.deck, half = 3.1, thick = 0.55;
+        const grp = new THREE.Group();
+        grp.position.set(c.x, q.y + 0.05 - deckY, c.z); grp.rotation.y = -Math.atan2(q.tz, q.tx);   // local x runs along the road
+        for (const sd of [-1, 1]) {
+          const g = new THREE.BoxGeometry(Lb, Hs, thick); g.translate(0, Hs / 2, sd * (half + thick / 2));
+          grp.add(new THREE.Mesh(g, [M.stone, M.stone, M.stone, M.stone, M.face, M.face]));
+        }
+        const dg = new THREE.BoxGeometry(Lb - 0.3, 0.7, half * 2); dg.translate(0, deckY - 0.37, 0);
+        grp.add(new THREE.Mesh(dg, M.stone));
+        V.scene.add(grp); V.bridgeMeshes.push(grp);
       }
     } else if (bridges.length) V.wantBridge = true;
     for (const m of Object.values(V.places)) m.geometry.instanceCount = 0;
@@ -417,16 +456,15 @@ const DIORAMA = (() => {
     const Lt = light(I, kit);
     V.scene.fog.color.copy(Lt.fog); V.scene.fog.near = Lt.near; V.scene.fog.far = Lt.far; V.farGround.material.color.copy(Lt.fog); V.renderer.setClearColor(Lt.fog);
     const gt = new THREE.Color(Lt.tint.r * kit.ground[0], Lt.tint.g * kit.ground[1], Lt.tint.b * kit.ground[2]);
-    V.ground.material.color.copy(gt); if (V.bridgeMat) V.bridgeMat.color.copy(Lt.tint); V.road.material.color.copy(Lt.tint); V.hero.material.color.setRGB(Math.max(0.78, Lt.tint.r), Math.max(0.8, Lt.tint.g), Math.max(0.86, Lt.tint.b)); V.sky.material.color.copy(Lt.tint);   // you stay easy to see
+    V.ground.material.color.copy(gt); if (V.bridgeMats) { V.bridgeMats.face.color.copy(Lt.tint); V.bridgeMats.stone.color.copy(Lt.tint); } V.road.material.color.copy(Lt.tint); V.hero.material.color.setRGB(Math.max(0.78, Lt.tint.r), Math.max(0.8, Lt.tint.g), Math.max(0.86, Lt.tint.b)); V.sky.material.color.copy(Lt.tint);   // you stay easy to see
     V.backs.forEach((b) => b.material.color.setRGB(Lt.tint.r * kit.far[0], Lt.tint.g * kit.far[1], Lt.tint.b * kit.far[2]));
     for (const m of [...Object.values(V.cards), ...Object.values(V.places)]) { const u = m.material.uniforms; u.tint.value.copy(Lt.tint); u.camRight.value.copy(right); u.heroPos.value.set(here.x, here.y, here.z); u.camPos.value.copy(V.camera.position); u.fogColor.value.copy(Lt.fog); u.fogNear.value = Lt.near; u.fogFar.value = Lt.far; }
     V.post.uniforms.grade.value.set(...Lt.grade); V.post.uniforms.dark.value = Lt.dark;
     // sky and ridges sit far off along the camera's view, turning with it
-    const cpos = V.camera.position, along = cpos.x * cx + cpos.z * cz;
-    const place = (m, dist, y) => { m.position.set(cpos.x + fx * dist, y, cpos.z + fz * dist); m.rotation.y = -camYaw; };
-    place(V.sky, 1400, 230 + V.camY * 0.2); V.sky.material.map.offset.x = camYaw / (2 * Math.PI) * 0.6 + along * 0.00004;
-    for (const b of V.backs) { const u = b.userData; place(b, u.dist, here.y + u.base + b.geometry.parameters.height / 2); u.t.offset.x = camYaw / (2 * Math.PI) * (2 * Math.PI * u.dist / u.worldW) + along / u.worldW; }
-    V.farGround.position.set(cpos.x + fx * 1700, Math.min(here.y, V.camY) - 0.8, cpos.z + fz * 1700); V.farGround.rotation.y = -camYaw;
+    const cpos = V.camera.position;
+    V.sky.position.set(cpos.x, V.camY + V.sky.userData.base, cpos.z);
+    for (const b of V.backs) { b.position.set(cpos.x, V.camY + b.userData.base, cpos.z); }
+    V.farGround.position.set(cpos.x, Math.min(here.y, V.camY) - 0.8, cpos.z);
     // snow
     V.snow.visible = Lt.snow && !I.reduce;
     if (V.snow.visible) {
@@ -474,6 +512,9 @@ const DIORAMA = (() => {
     try { V.renderer.dispose(); V.rt.dispose(); } catch { /* gone */ }
     V.canvas.remove(); for (const el of V.labels.values()) el.remove(); V = null;
   }
-  return { frame, detach, mode, setMode, settingsHTML, pref, usable, debug: () => (V ? V.dbg : null), why: () => why || (threeState !== "ready" ? "loading three.js" : V && !ready() ? "loading paintings" : ""), _slow: () => slow };
+  return { frame, detach, mode, setMode, settingsHTML, pref, usable, debug: () => (V ? V.dbg : null),
+    /* tests: every cut-out and place as it stands now, and whether a spot is in water */
+    _snap: () => V && { props: Object.entries(V.cards).flatMap(([k, m]) => { const a = m.geometry.attributes.iPos.array, n = m.geometry.instanceCount, out = []; for (let i = 0; i < n; i++) out.push([k, a[i * 3], a[i * 3 + 1], a[i * 3 + 2]]); return out; }),
+      places: V.placeList.map((o) => ({ name: o.name, x: o.x, y: o.y, z: o.z, wet: V.wet ? V.wet(o.x, o.z) : null })), patch: V.patch, lake: V.lake.visible ? V.lake.position.y : null }, why: () => why || (threeState !== "ready" ? "loading three.js" : V && !ready() ? "loading paintings" : ""), _slow: () => slow };
 })();
 if (typeof module !== "undefined") module.exports = DIORAMA;

@@ -9,7 +9,7 @@
      DIOROUTE.toWorld(p)               map position [0..1, 0..1(or 2..3)] → [x, z] metres
      DIOROUTE.profile(path, hFn)       → { pts: [{ x, z, y, s, tx, tz }], len } every STEP metres along the route;
                                          hFn(mapPos) → map height (0..1+); y is the graded road height in metres
-     DIOROUTE.near(prof, x, z, hint)   → { i, s, d, side, y }: the closest road point (d metres away; side +1 = left of travel)
+     DIOROUTE.near(prof, x, z)         → { i, s, d, side, y }: the closest road point (d metres away; side +1 = left of travel), exact
      DIOROUTE.at(prof, s)              → the road point at distance s (interpolated)
      DIOROUTE.land(prof, x, z, hFn, hint) → ground height in metres: the map's land, pulled onto the road's shelf near it
      DIOROUTE.riverSegs(rivers, cx, cz, r) → river lines near a point as world segments · riverDist(segs, x, z)
@@ -72,13 +72,32 @@ const DIOROUTE = (() => {
     return { pts, len: s };
   }
 
-  /* the closest road point; hint = an index to search around (fast while walking), else a full scan */
-  function near(prof, x, z, hint) {
-    const P = prof.pts, n = P.length;
-    let lo = 0, hi = n - 1;
-    if (hint != null && hint >= 0 && hint < n) { lo = Math.max(0, hint - 90); hi = Math.min(n - 1, hint + 90); }
+  /* the closest road point, exact for any point (a bucket grid of the road points, searched ring by ring), so the
+     answer never depends on where you are: the same spot always gets the same tree, height and side of the road.
+     (The old hint argument is ignored.) */
+  const GB = 24;
+  function grid(prof) {
+    if (prof._g) return prof._g;
+    const g = new Map();
+    prof.pts.forEach((p, i) => { const k = Math.floor(p.x / GB) + "," + Math.floor(p.z / GB); let a = g.get(k); if (!a) g.set(k, (a = [])); a.push(i); });
+    let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
+    for (const p of prof.pts) { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); z0 = Math.min(z0, p.z); z1 = Math.max(z1, p.z); }
+    prof._g = { g, x0, x1, z0, z1 }; return prof._g;
+  }
+  function near(prof, x, z) {
+    const P = prof.pts, G = grid(prof), cx = Math.floor(x / GB), cz = Math.floor(z / GB);
+    // how far out the road can possibly be: the ring count to reach its bounding box
+    const reach = Math.ceil(Math.max(G.x0 - x, x - G.x1, G.z0 - z, z - G.z1, 0) / GB) + 1;
     let best = 0, bd = Infinity;
-    for (let i = lo; i <= hi; i++) { const d = (P[i].x - x) ** 2 + (P[i].z - z) ** 2; if (d < bd) { bd = d; best = i; } }
+    for (let r = 0; r < 100000; r++) {
+      if (r > reach && bd <= ((r - 1) * GB) ** 2) break;   // nothing in a further ring can be closer
+      for (let i = -r; i <= r; i++) for (let j = -r; j <= r; j++) {
+        if (Math.max(Math.abs(i), Math.abs(j)) !== r) continue;
+        const a = G.g.get((cx + i) + "," + (cz + j)); if (!a) continue;
+        for (const k of a) { const d = (P[k].x - x) ** 2 + (P[k].z - z) ** 2; if (d < bd || (d === bd && k < best)) { bd = d; best = k; } }
+      }
+      if (r > reach + 400) break;
+    }
     const p = P[best], dx = x - p.x, dz = z - p.z;
     // project onto the segment for a smooth distance along
     const along = dx * p.tx + dz * p.tz, side = Math.sign(p.tx * dz - p.tz * dx) || 1;

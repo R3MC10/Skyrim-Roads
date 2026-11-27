@@ -47,5 +47,13 @@ const cr = R.crossings(P, segs);
 ok(cr.length === 1 && Math.abs(cr[0].x - 0.31 * 1000 * R.S) < 1, "one crossing where the road meets the river");
 ok(Math.abs(R.riverDist(segs, 0.31 * 1000 * R.S + 5, 0.40 * 700 * R.S) - 5) < 0.01, "distance to the river in metres");
 ok(R.riverSegs(rv, 0, 0, 50).length === 0, "far rivers are skipped");
+// near() is exact and the same from anywhere: compare with a brute-force scan
+let bad = 0;
+for (let k = 0; k < 300; k++) {
+  const x = P.pts[0].x - 200 + R.rand(k, 1, 9) * (P.len + 400), z = P.pts[0].z - 200 + R.rand(k, 2, 9) * 400;
+  let bi = 0, bd = Infinity; P.pts.forEach((p, i) => { const d = (p.x - x) ** 2 + (p.z - z) ** 2; if (d < bd) { bd = d; bi = i; } });
+  if (R.near(P, x, z).i !== bi || R.near(P, x, z, 0).i !== bi) bad++;
+}
+ok(bad === 0, `near() matches a full scan for 300 random points (${bad} differ)`);
 console.log(fails ? `${fails} FAILED of ${n}` : `dioramaroute: all ok · ${n} checks`);
 process.exit(fails ? 1 : 0);
