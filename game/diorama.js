@@ -26,10 +26,10 @@ const DIORAMA = (() => {
   const setMode = (m) => store.set(KEY, m === "classic" ? "classic" : "diorama");
   const phone = () => DOM && (matchMedia("(pointer: coarse)").matches || innerWidth < 760);
   function settingsHTML(seg) { return `<div class="setrow"><span>Road view</span>${seg("roadView", [["diorama", "Diorama"], ["classic", "Classic"]], mode())}</div>`; }
-  function pref(k, v) { if (k !== "roadView") return false; setMode(v); if (v === "classic") detach(); slow = 0; return true; }
+  function pref(k, v) { if (k !== "roadView") return false; setMode(v); if (v === "classic") detach(); slow = 0; avgDt = 0; return true; }
 
   // ---------------------------------------------------------------- can it run?
-  let webgl = null, threeState = "none", slow = 0;   // slow: frames in a row that took too long
+  let webgl = null, threeState = "none", slow = 0, avgDt = 0;   // slow: seconds spent running too slowly
   function hasWebGL() {
     if (webgl !== null) return webgl;
     try { const c = document.createElement("canvas"); webgl = !!(c.getContext("webgl") || c.getContext("experimental-webgl")); } catch { webgl = false; }
@@ -46,13 +46,17 @@ const DIORAMA = (() => {
     }
     return false;
   }
+  let why = "";
   function usable(I, region) {
-    if (!DOM || mode() !== "diorama" || !I || I.boat || I.carriage || !I.pos || !Array.isArray(I.path) || I.path.length < 2) return false;
-    if (!R() || !K() || !K().of(region)) return false;
-    if (typeof PERFMODE !== "undefined" && PERFMODE.saver && PERFMODE.saver()) return false;
-    if (slow > 90 || threeState === "failed" || !hasWebGL()) return false;
-    if (typeof navigator !== "undefined" && navigator.webdriver && !/[?&](assets|diorama)\b/.test(location.search)) return false;   // screen tests keep the classic view unless they ask
-    return true;
+    const no = (r) => { why = r; return false; };
+    if (!DOM || mode() !== "diorama") return no("classic chosen");
+    if (!I || I.boat || I.carriage) return no("ship or carriage");
+    if (!I.pos || !Array.isArray(I.path) || I.path.length < 2) return no("no route");
+    if (!R() || !K() || !K().of(region)) return no("no kit for " + region);
+    if (typeof PERFMODE !== "undefined" && PERFMODE.saver && PERFMODE.saver()) return no("battery saver");
+    if (slow > 6 && !/[?&]diorama\b/.test(location.search)) return no("too slow");   // ?diorama (tests): always draw if (threeState === "failed") return no("three.js failed"); if (!hasWebGL()) return no("no WebGL");
+    if (typeof navigator !== "undefined" && navigator.webdriver && !/[?&](assets|diorama)\b/.test(location.search)) return no("screen test");   // screen tests keep the classic view unless they ask
+    why = ""; return true;
   }
 
   // ---------------------------------------------------------------- the scene
@@ -318,10 +322,10 @@ const DIORAMA = (() => {
     const cx = Math.cos(V.yaw), cz = Math.sin(V.yaw);       // the way you're going, on screen: to the right
     const fx = cz, fz = -cx;                               // the camera looks across the road
     if (V.camY == null || I.reduce) V.camY = here.y; else V.camY += (here.y - V.camY) * Math.min(1, dt * 1.5);
-    const tall = V.camera.aspect < 1.2, short = V.h < 200, away = tall ? 11 : short ? 10.5 : 16, up = tall ? 3.6 : short ? 3.2 : 4.2, lead = tall ? 0.8 : 2;
+    const tall = V.camera.aspect < 1.2, short = V.h < 200, away = tall ? 11 : short ? 8.5 : 16, up = tall ? 3.6 : short ? 2.8 : 4.2, lead = tall || short ? 0.7 : 2;
     const lx = here.x + cx * lead, lz = here.z + cz * lead;
     V.camera.position.set(lx - fx * away, V.camY + up, lz - fz * away);
-    V.camera.lookAt(lx + cx * (tall ? 0.4 : 1) + fx * 1.5, V.camY + 2.9, lz + cz * (tall ? 0.4 : 1) + fz * 1.5);
+    V.camera.lookAt(lx + cx * (tall ? 0.4 : 1) + fx * 1.5, V.camY + (short ? 2.1 : 2.9), lz + cz * (tall ? 0.4 : 1) + fz * 1.5);
     const right = new THREE.Vector3(cx, 0, cz);
     // you
     if (moving) V.stride += speed * dt / (I.riding ? 2.6 : 0.84);
@@ -355,7 +359,8 @@ const DIORAMA = (() => {
     V.renderer.setRenderTarget(V.rt); V.renderer.render(V.scene, V.camera);
     V.renderer.setRenderTarget(null); V.renderer.render(V.postScene, V.postCam);
     // too slow for this phone? frames that keep taking long hand back to the classic view
-    if (dt > 0.042 && !I.reduce) slow++; else slow = Math.max(0, slow - 2);
+    // too slow for this phone? an average under ~18 pictures a second for 6 s hands back to the classic view
+    if (dt > 0 && !I.reduce) { avgDt = avgDt ? avgDt * 0.95 + Math.min(dt, 0.25) * 0.05 : dt; if (avgDt > 0.055) slow += dt; else slow = Math.max(0, slow - dt); }
     V.dbg = { ...V.dbg, region, s: V.sDisp, len: P.len, moving, riding: !!I.riding, tod: Lt.tod, wx: Lt.wx, ms: (typeof performance !== "undefined" ? performance.now() : 0) - t0, y: here.y };
     return true;
   }
@@ -364,6 +369,6 @@ const DIORAMA = (() => {
     try { V.renderer.dispose(); V.rt.dispose(); } catch { /* gone */ }
     V.canvas.remove(); V = null;
   }
-  return { frame, detach, mode, setMode, settingsHTML, pref, usable, debug: () => (V ? V.dbg : null), _slow: () => slow };
+  return { frame, detach, mode, setMode, settingsHTML, pref, usable, debug: () => (V ? V.dbg : null), why: () => why || (threeState !== "ready" ? "loading three.js" : V && !ready() ? "loading paintings" : ""), _slow: () => slow };
 })();
 if (typeof module !== "undefined") module.exports = DIORAMA;
