@@ -297,6 +297,7 @@ const TB = (() => {
       return me + al;
     }
     emit(who, text, kind, extra = {}) {
+      if (typeof text === "string" && text.includes("(−0 ")) text = text.replace(/ \(−0 [^)]*\)/g, "");   // [fight-logic] "(−0 stamina)" when there was nothing left to lose says nothing
       const e = { who, text, kind, round: this.round, hp: Math.max(0, Math.round(this.f.hp)), ehp: Math.max(0, Math.round(this.f.ehp)), ...extra };
       if (this.cur && this.cur.u && e.u == null && kind !== "round") e.u = this.cur.u;   // which slot it came from: the roster lights that portrait (initroster.js)
       if (this.remote && this.players && !this.mirror) { const ph = {}; for (const a of this.everyone) if (a.pid) ph[a.pid] = Math.max(0, Math.round(a.hp || 0)); e.ph = ph; }   // every player's health at this moment, for their own screens
@@ -323,7 +324,11 @@ const TB = (() => {
     rollOrder() {
       const f = this.f;
       // the foe acts 1–3 times a round (whole actions, the fraction is a chance), more with a big party (T.party.acts per extra player)
-      let n = T.acts[this.kind] + T.party.acts * this.players; const whole = Math.floor(n); n = whole + (Math.random() < n - whole ? 1 : 0);
+      // [fight-logic] next round's count is rolled a round early (this._nextN) so the "next round" preview (initiative.js
+      // predict, fightread.js intents) shows the moves and targets that really come, not a guess that the dice then change
+      const rollN = () => { const b = T.acts[this.kind] + T.party.acts * this.players, w = Math.floor(b); return w + (Math.random() < b - w ? 1 : 0); };
+      let n = this._nextN != null ? this._nextN : rollN();
+      this._nextN = rollN();
       const nb = typeof ENCH2 !== "undefined" ? ENCH2.numb(f) : { acts: 0 }; n -= nb.acts;   // Numbing Cold: a move lost (it also slows it: initiative.js)
       return INIT.build(this, Math.max(1, n));
     }
@@ -333,10 +338,17 @@ const TB = (() => {
       this.lines = { me: [], them: [], a: null };
       this.emit("round", `Round ${this.round}`, "round", { order: this.order.map((o) => ({ id: o.id, name: o.name, init: o.init, u: o.u, slot: o.slot })) });
       if (this.field && typeof FOEFIELD !== "undefined") FOEFIELD.plan(this);   // [rows] the foe side's moves spread over every foe standing, each with its own plan
-      else {
+      else if (this._pre && this._pre.round === this.round - 1 && this._pre.wave === this.wave && typeof FIGHTREAD !== "undefined" && FIGHTREAD.foeLeft(this) === this._pre.n && !this.f.dStance) {
+        // [fight-logic] last round's screen already showed these moves and targets (fightread.js preplan): keep them, so
+        // what the chips promised is what happens. Someone knocked down meanwhile gets a fresh roll (foeintent.js refresh).
+        if (this.f.kit) this.f.kit.plan = this._pre.plan.slice();
+        this.f.foeTgts = this._pre.tgts.map((t) => ({ ...t }));
+        if (typeof FOEINTENT !== "undefined") FOEINTENT.refresh(this);
+      } else {
         if (typeof FIGHTREAD !== "undefined") FIGHTREAD.plan(this);   // the foe's intents for this round (fightread.js)
         if (typeof FOEINTENT !== "undefined") FOEINTENT.plan(this);   // and who each one goes for (foeintent.js)
       }
+      this._pre = null;
       if (this.f.bf && typeof BOSSFIGHT !== "undefined") BOSSFIGHT.plan(this);   // a boss shows its big attacks a turn ahead
       if (typeof REACT !== "undefined" && !this.field) REACT.retarget(this);   // covering your friends: its blows come to you (foefield.js plan does it per foe)
     }
@@ -773,11 +785,11 @@ const TB = (() => {
       if (FI) { FI.done(this); t = FI.say(this, t); }   // "takes aim at Lydia"
       if (typeof STACKS !== "undefined") {   // Chill and Weak stacks soften its blows (stacks.js)
         const so = STACKS.foeSoften(f), l0 = hpB - f.hp;
-        if (so > 0 && l0 > 0) { f.hp += l0 * so; t += ` (−${Math.round(l0 * so)} chilled/weak)`; }
+        if (so > 0 && l0 > 0) { f.hp += l0 * so; if (Math.round(l0 * so) >= 1) t += ` (−${Math.round(l0 * so)} chilled/weak)`; }   // [fight-logic] no "(−0 ...)" lines
         STACKS.sync(f);
       }
       const loss = hpB - f.hp;
-      if (loss > 0 && f.tbGuard) { const back = loss * f.tbGuard; f.hp += back; t += ` (guard −${Math.round(back)})`; }
+      if (loss > 0 && f.tbGuard) { const back = loss * f.tbGuard; f.hp += back; if (Math.round(back) >= 1) t += ` (guard −${Math.round(back)})`; }
       if (typeof REACT !== "undefined") t += REACT.foePost(this, hpB);
       const mh = G.maxHealth(f.s), cap = HIT_CAP * mh, loss2 = hpB - f.hp;
       if (loss2 > cap && hpB > cap) { f.hp = hpB - cap; t += " (you stay on your feet)"; }
@@ -989,6 +1001,7 @@ const TB = (() => {
   /* a healing spell, potion or scroll you dragged onto a teammate instead of yourself */
   function onAlly(f, a, al) {
     const [k, arg] = a.split(":");
+    if (typeof al.hp !== "number" || !isFinite(al.hp)) return null;   // [fight-logic] a called ally with no health bar (Odahviing, a hero of Sovngarde, a wild animal): the heal goes to you, it used to turn their health into NaN
     const mx = al.maxHp || al.hpMax || al._max || Math.max(al.hp, 60), b = al.hp;
     if (k === "potion") {
       const r = f.findPotion(arg); if (!r) return null;

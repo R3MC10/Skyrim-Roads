@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <link rel="preload" href="title-poster.webp" as="image" media="(orientation: portrait)">
+<link rel="preload" href="title-wide-poster.webp" as="image" media="(orientation: landscape)">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Skyrim: Roads of the North</title>
@@ -5799,7 +5800,9 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 /* phones held upright: the title background is a looping painted video (titlevideo.js), over the drawn panorama */
 .title video.tvid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:32% 50%;pointer-events:none;opacity:0;transition:opacity 1.2s ease;-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.55) 0%,#000 40%);mask-image:linear-gradient(to bottom,rgba(0,0,0,.55) 0%,#000 40%)}
 .title video.tvid.on{opacity:.9;transition:none}   /* the still first frame is up at once; no fade from the drawn stand-in */
-@media (orientation:portrait){.title{background:#0b0d10 url(title-poster.webp) 32% 50%/cover no-repeat}}   /* phones: the video's first frame is there from the very first paint */
+@media (orientation:portrait){.title{background:#0b0d10 url(title-poster.webp) 32% 50%/cover no-repeat}}
+@media (orientation:landscape){.title{background:#0b0d10 url(title-wide-poster.webp) 50% 50%/cover no-repeat}}   /* wide screens: the wide video's first frame */
+.title video.tvid.wide{object-position:30% 50%;-webkit-mask-image:none;mask-image:none}.title video.tvid.wide.on{opacity:1}   /* keep the hero in view when a very wide screen crops the sides */   /* phones: the video's first frame is there from the very first paint */
 .title:has(video.tvid.on) .mo-amb .emb{display:none}   /* the video has its own snow */
 
 /* [uiframes] painted Nordic 9-slice frame (ui-frame-panel: 3×3 grid of 160 px; corners stay, rails stretch) on title
@@ -5916,6 +5919,25 @@ html.pcmap.pc-full #side>.mn-sub button.on::after{display:none}   /* on a wide P
 @keyframes tbresyncIn{from{opacity:0;transform:translate(-50%,-4px)}to{opacity:1;transform:translate(-50%,0)}}
 @keyframes tbresyncSpin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.tbf .tbresync,.tbf .tbresync::before{animation:none}}
+/* [fightlook] PC: the rows sit under the foe's card in the right column, one foe per half-line, never over the fighters */
+#tbf .rowfield.c2r.c2side{transform:none}
+#tbf .rowfield.c2r.c2side .rfside{flex-direction:column;gap:4px}
+#tbf .rowfield.c2r.c2side .rfrow{flex-wrap:wrap}
+#tbf .rowfield.c2r.c2side .rfrow.back{border-left:0;padding-left:0;border-top:1px dashed #3a3f46;padding-top:4px}
+#tbf .rowfield.c2r.c2side .rfrow>em{flex:0 0 100%}
+#tbf .rowfield.c2r.c2side .rfp{flex:1 1 calc(50% - 4px);max-width:none}
+/* [fightlook] phone tap targets: an ally's order buttons, the foe card's ⋯ and the whole-turn-order button are 44px */
+#tbf.c2:not(.c2wide) .c2ord .c2o{height:44px;min-width:44px;line-height:42px;font-size:16px}
+#tbf.c2 .fdc-mb{width:44px;height:44px}
+#tbf.c2:not(.c2wide) .inimore{min-width:44px}
+/* [fightlook] a phone with a crowded row: each foe is a 44px tile with its role icon, its number and its health (no cut-off "S...") */
+.rowfield .rfk{display:none;font-style:normal;font-weight:700}
+@media (max-width:560px){#tbf .rowfield.c2r .rfrow.many{flex:1 0 auto}
+  #tbf .rowfield.c2r .rfrow.many .rfp{min-width:44px;min-height:44px;padding:3px}
+  #tbf .rowfield.c2r .rfrow.many .rfn{justify-content:center;gap:3px}
+  #tbf .rowfield.c2r .rfrow.many .rfn b,#tbf .rowfield.c2r .rfrow.many .rfp small{display:none}
+  #tbf .rowfield.c2r .rfrow.many .rfk{display:inline}
+  #tbf .rowfield.c2r .rfp{min-height:44px}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>

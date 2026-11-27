@@ -3,11 +3,26 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b375-fightsync", build: 375, date: "27 Nov 2026", title: "Party fights stay in step", items: [
+    { id: "b378-fightsync", build: 378, date: "27 Nov 2026", title: "Party fights stay in step", items: [
       "Party fights no longer get stuck on someone's turn when a message gets lost on a bad connection: your phone sends your turn again until the leader has it, and the leader's phone keeps telling you it's your turn until you've seen it. Nothing is ever played twice.",
       "A spell that makes the foe flee or vanish (Turn Undead, Banish) now ends the fight for the whole party, not just on your screen. Before, your next turns did nothing.",
       "With foes in two rows, your turn no longer hangs when the foe you were aiming at fell just before it: you aim at one still standing.",
       "If your phone loses touch with the party for a while, you join the fight again when you're back, or you see how it ended and get your share. A short \"Catching up with your party…\" note shows while your screen syncs.",
+    ] },
+    { id: "b377-fightlook", build: 377, date: "27 Nov 2026", title: "Fights look right", items: [
+      "Whoever is striking is now drawn in front of the one they hit, so your blade no longer vanishes behind the foe, and Lydia's or your summon's attacks show up properly too.",
+      "On phones your hero steps just up to the foe instead of walking through them, and a hard hit can no longer knock someone off the edge of the screen.",
+      "Your shield stays down at your side while you cast a spell, instead of flipping in front of your chest.",
+      "On a computer the foe rows sit under the foe's card on the right instead of covering everyone's heads. On phones each foe in the rows strip is a bigger tile with a number, and the small order and menu buttons are easier to tap.",
+    ] },
+    { id: "b376-fightlogic", build: 376, date: "27 Nov 2026", title: "Fight fixes: foes, spells and helpers", items: [
+      "What a foe shows it will do next round is now what it really does: the moves and the \"→ you / → Lydia\" targets on its intent chips no longer change when the round starts.",
+      "Courage, Rally and Call to Arms no longer stack again and again on each cast, and no longer push your health above its maximum.",
+      "Healing a hero of Sovngarde, Odahviing or a wild animal you called with a shout no longer breaks their health; the heal goes to you instead.",
+      "No more \"(−0 stamina)\" lines in the fight log.",
+    ] },
+    { id: "b375-titlewide", build: 375, date: "27 Nov 2026", title: "Moving main menu on PC", items: [
+      "On computers, tablets and phones turned sideways, the main menu painting now moves too: the northern lights ripple, clouds drift, snow falls and the hero's cloak stirs in the wind, just like on phones held upright. The dragon has flown off this one as well.",
     ] },
     { id: "b374-savecopies", build: 374, date: "26 Nov 2026", title: "Fewer save questions", items: [
       "The \"Two copies\" screen no longer pops up by itself. If a save reached your account but the game never heard back (the app went to the background, or the signal dropped), it now recognises its own save and just carries on.",

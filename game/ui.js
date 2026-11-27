@@ -233,7 +233,7 @@
         let done = false; const show = () => { if (done) return; done = true; el.classList.remove("tloading"); el.classList.add("tin"); };
         const waits = [];
         try { if (document.fonts?.ready) waits.push(document.fonts.ready); } catch { /* old WebView */ }
-        try { if (matchMedia("(orientation: portrait)").matches) { const im = new Image(); im.src = "title-poster.webp"; waits.push(im.decode ? im.decode().catch(() => {}) : new Promise((r) => { im.onload = im.onerror = r; })); } } catch { /* fine */ }
+        try { if (typeof TITLEVIDEO !== "undefined") { const im = new Image(); im.src = TITLEVIDEO.pick().poster; waits.push(im.decode ? im.decode().catch(() => {}) : new Promise((r) => { im.onload = im.onerror = r; })); } } catch { /* fine */ }
         Promise.all(waits).then(() => requestAnimationFrame(show), show);
         setTimeout(show, reduceMotion ? 0 : 1200);
       })();

@@ -216,7 +216,7 @@ const SPELLBOOK = (() => {
   /* the best teammate for this kind of spell (null if no one fits) */
   function pickAlly(f, kind) {
     const t = f.tbTarget;   // [OURS] the fight screen: you dragged the spell onto this teammate (tbfight.js)
-    if (t && (kind === "allyrescue" ? (f._downed || []).includes(t) : (f.allies || []).includes(t) && !t.down)) return t;
+    if (t && (kind === "allyrescue" ? (f._downed || []).includes(t) : (f.allies || []).includes(t) && !t.down && (kind !== "healally" || typeof t.hp === "number"))) return t;   // [fight-logic] no healing an ally with no health bar (Odahviing, a Sovngarde hero): it used to give them NaN health
     if (kind === "allyrescue") return (f._downed || [])[0] || null;
     const live = (f.allies || []).filter((a) => !a.down);
     const hurt = (list) => list.filter((a) => a.hp != null).sort((a, b) => ratio(a) - ratio(b))[0] || null;

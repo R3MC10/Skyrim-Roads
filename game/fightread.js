@@ -85,6 +85,16 @@ const FIGHTREAD = (() => {
       return nx.filter((o) => o.side === "foe" || String(o.id).startsWith("foe")).reduce((t, o) => t + (o.moves || 1), 0);
     } catch (e) { return 0; }
   }
+  /* [fight-logic] the foe's moves this round are over and the screen shows next round's: plan them now (moves and
+     targets), once, so the round that comes plays exactly what was shown (tbfight.js startRound keeps them) */
+  function preplan(sess, n) {
+    const f = sess.f;
+    if (!n || sess.mirror || sess.field || sess.done || f.dStance || !sess.ini) return;
+    if (sess._pre && sess._pre.round === sess.round && sess._pre.wave === sess.wave && sess._pre.n === n) { if (f.kit) f.kit.plan = sess._pre.plan.slice(); f.foeTgts = sess._pre.tgts.map((t) => ({ ...t })); return; }
+    if (f.kit && typeof FOEKIT !== "undefined") FOEKIT.plan(f, n);
+    const tgts = typeof FOEINTENT !== "undefined" ? FOEINTENT.plan(sess, Math.random, n) : [];
+    sess._pre = { round: sess.round, wave: sess.wave, n, plan: (f.kit?.plan || []).slice(), tgts: tgts.map((t) => ({ ...t })) };
+  }
   function plan(sess) {
     const f = sess.f;
     if (typeof FOEKIT === "undefined" || !f.kit || f.dStance) return [];
@@ -111,7 +121,7 @@ const FIGHTREAD = (() => {
     // [rows] several foes on the field: each one's moves, in the order they come (foefield.js)
     if (nOv === undefined && sess.field && !sess.field.view && typeof FOEFIELD !== "undefined") return FOEFIELD.intents(sess, (ss, k) => intents(ss, k == null ? -1 : k));
     let n = foeLeft(sess);
-    if (!n && sess.ini) n = nextFoe(sess);
+    if (!n && sess.ini) { n = nextFoe(sess); if (nOv === undefined) preplan(sess, n); }
     if (nOv != null && nOv >= 0) n = nOv;   // [initiative] its turns this round are over; the order is fixed a whole fight, so show next round's
     if (!n) return [];
     const ini = !!sess.ini;   // [initiative] the turn order already took the lost slots out (initiative.js); a stagger only moves a slot back

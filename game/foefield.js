@@ -492,13 +492,14 @@ const FOEFIELD = (() => {
       const pc = Math.max(0, Math.min(100, (100 * x.hp) / Math.max(1, x.max)));
       const nx = x.nx ? intentTxt(x.nx, fd) : "";
       return `<button class="rfp ${x.row} ${x.down ? "down" : ""} ${out ? "far" : ""} ${x.i === fd.tgt ? "tgt" : ""} ${x.i === fd.cur && !fd.view ? "cur" : ""}" data-rf="${x.i}" ${x.down ? "disabled" : ""} aria-label="${esc(x.lb)}${tip ? ": " + esc(tip) : ""}"${tip ? ` data-tip="${esc(tr("Your melee can't reach it yet") + ": " + tip)}"` : ""}>
-        <span class="rfn">${icon(x.role)}<b>${esc(x.lb)}</b></span><span class="rfb"><i style="width:${pc.toFixed(1)}%"></i></span>${out ? `<small class="rfwhy">${esc(tip)}</small>` : nx ? `<small class="rfnx">${esc(nx)}</small>` : ""}</button>`;
+        <span class="rfn">${icon(x.role)}<b>${esc(x.lb)}</b><i class="rfk">${esc((String(x.lb).match(/\d+$/) || [x.i + 1])[0])}</i></span><span class="rfb"><i style="width:${pc.toFixed(1)}%"></i></span>${out ? `<small class="rfwhy">${esc(tip)}</small>` : nx ? `<small class="rfnx">${esc(nx)}</small>` : ""}</button>`;
     };
     const row = (k) => v.filter((x) => x.row === k).map(one).join("");
+    const many = (k) => (v.filter((x) => x.row === k).length >= 3 ? " many" : "");   // [fightlook] a crowded row on a phone: number tags, not "S..."
     const heroes = standing(f).map((a) => ({ a, row: rowOf(f, a), n: a ? String(a.name || "Ally").split(" ")[0] : tr("You") }));
     const hrow = (k) => heroes.filter((h) => h.row === k).map((h) => `<span class="rfh ${h.a ? "" : "me"}">${esc(h.n)}</span>`).join("") || `<span class="rfh none">—</span>`;
     return `<div class="rowfield" role="group" aria-label="${esc(tr("Rows"))}">
-      <div class="rfside foes"><div class="rfrow back"><em>${esc(tr("Back"))}</em>${row("back") || `<span class="rfh none">—</span>`}</div><div class="rfrow front"><em>${esc(tr("Front"))}</em>${row("front") || `<span class="rfh none">—</span>`}</div></div>
+      <div class="rfside foes"><div class="rfrow back${many("back")}"><em>${esc(tr("Back"))}</em>${row("back") || `<span class="rfh none">—</span>`}</div><div class="rfrow front${many("front")}"><em>${esc(tr("Front"))}</em>${row("front") || `<span class="rfh none">—</span>`}</div></div>
       ${f.allies && f.allies.length ? `<div class="rfside heroes"><div class="rfrow front"><em>${esc(tr("Front"))}</em>${hrow("front")}</div><div class="rfrow back"><em>${esc(tr("Back"))}</em>${hrow("back")}</div></div>` : `<div class="rfside heroes solo"><span class="rfh me">${esc(fmt("You: {0} row", tr(myRow(f) === "back" ? "back" : "front")))}</span></div>`}
     </div>`;
   }
@@ -528,6 +529,21 @@ const FOEFIELD = (() => {
       const strip = el.querySelector(".rowfield"); strip.classList.add("c2r");
       const place = () => {
         if (!strip.isConnected) return;
+        /* [fightlook] a wide screen (PC): under the foe's card in the right column, not across the middle of the stage
+           (it covered the fighters' heads and weapons there) */
+        const card = el.classList.contains("c2wide") ? [...el.querySelectorAll(".c2ov .tbu.foe")].find((n) => n.getClientRects().length) : null, op = strip.offsetParent;
+        if (card && op) {
+          const cr = card.getBoundingClientRect(), pr = op.getBoundingClientRect();
+          if (cr.width >= 200 && cr.left > pr.left + pr.width * 0.55) {
+            let bot = cr.bottom;   // and under the one-line fight feed that hangs below the card
+            for (const n of el.querySelectorAll(".tblog, .c2feed")) { const r = n.getBoundingClientRect(); if (r.height && r.height < 120 && r.left < cr.right && r.right > cr.left && r.top >= cr.bottom - 4 && r.top < cr.bottom + 40) bot = Math.max(bot, r.bottom); }
+            strip.classList.add("c2side");
+            const k = op.offsetWidth ? pr.width / op.offsetWidth : 1;   // a big PC screen scales the stage: screen px -> the parent's own px
+            Object.assign(strip.style, { left: Math.round((cr.left - pr.left) / k) + "px", width: Math.round(cr.width / k) + "px", right: "auto", top: Math.round((bot - pr.top) / k + 6) + "px" });
+            return;
+          }
+        }
+        strip.classList.remove("c2side"); strip.style.left = strip.style.width = strip.style.right = "";
         const tb = tin ? tin.getBoundingClientRect().top : 0, sr = strip.getBoundingClientRect();
         let top = 0;
         for (const n of el.querySelectorAll(".tbtop, .c2ov .tbu.foe, .bfwrap, .c2feed, .tblog")) {
