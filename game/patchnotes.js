@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b376-fightlook", build: 376, date: "27 Nov 2026", title: "Fights look right", items: [
+      "Whoever is striking is now drawn in front of the one they hit, so your blade no longer vanishes behind the foe, and Lydia's or your summon's attacks show up properly too.",
+      "On phones your hero steps just up to the foe instead of walking through them, and a hard hit can no longer knock someone off the edge of the screen.",
+      "Your shield stays down at your side while you cast a spell, instead of flipping in front of your chest.",
+      "On a computer the foe rows sit under the foe's card on the right instead of covering everyone's heads. On phones each foe in the rows strip is a bigger tile with a number, and the small order and menu buttons are easier to tap.",
+    ] },
     { id: "b375-titlewide", build: 375, date: "27 Nov 2026", title: "Moving main menu on PC", items: [
       "On computers, tablets and phones turned sideways, the main menu painting now moves too: the northern lights ripple, clouds drift, snow falls and the hero's cloak stirs in the wind, just like on phones held upright. The dragon has flown off this one as well.",
     ] },

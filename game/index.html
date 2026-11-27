@@ -5913,6 +5913,25 @@ html.pcmap.pc-full #side>.mn-sub button.on::after{display:none}   /* on a wide P
 .title .press{animation:tpulse 2.6s ease-in-out infinite}
 @media (prefers-reduced-motion:reduce){.title .inner{transition:none}}
 .accmp span{display:block}.accmp>div.on{border-color:rgba(214,178,94,.85);box-shadow:inset 0 0 0 1px rgba(214,178,94,.35)}.acnew{font-style:normal;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#1a140c;background:#d6b25e;border-radius:3px;padding:1px 5px;margin-left:4px;vertical-align:1px}
+/* [fightlook] PC: the rows sit under the foe's card in the right column, one foe per half-line, never over the fighters */
+#tbf .rowfield.c2r.c2side{transform:none}
+#tbf .rowfield.c2r.c2side .rfside{flex-direction:column;gap:4px}
+#tbf .rowfield.c2r.c2side .rfrow{flex-wrap:wrap}
+#tbf .rowfield.c2r.c2side .rfrow.back{border-left:0;padding-left:0;border-top:1px dashed #3a3f46;padding-top:4px}
+#tbf .rowfield.c2r.c2side .rfrow>em{flex:0 0 100%}
+#tbf .rowfield.c2r.c2side .rfp{flex:1 1 calc(50% - 4px);max-width:none}
+/* [fightlook] phone tap targets: an ally's order buttons, the foe card's ⋯ and the whole-turn-order button are 44px */
+#tbf.c2:not(.c2wide) .c2ord .c2o{height:44px;min-width:44px;line-height:42px;font-size:16px}
+#tbf.c2 .fdc-mb{width:44px;height:44px}
+#tbf.c2:not(.c2wide) .inimore{min-width:44px}
+/* [fightlook] a phone with a crowded row: each foe is a 44px tile with its role icon, its number and its health (no cut-off "S...") */
+.rowfield .rfk{display:none;font-style:normal;font-weight:700}
+@media (max-width:560px){#tbf .rowfield.c2r .rfrow.many{flex:1 0 auto}
+  #tbf .rowfield.c2r .rfrow.many .rfp{min-width:44px;min-height:44px;padding:3px}
+  #tbf .rowfield.c2r .rfrow.many .rfn{justify-content:center;gap:3px}
+  #tbf .rowfield.c2r .rfrow.many .rfn b,#tbf .rowfield.c2r .rfrow.many .rfp small{display:none}
+  #tbf .rowfield.c2r .rfrow.many .rfk{display:inline}
+  #tbf .rowfield.c2r .rfp{min-height:44px}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
