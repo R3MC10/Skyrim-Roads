@@ -1323,6 +1323,30 @@ const FIGHTART = (() => {
       }
     }
     // ---- drawing
+    /* [webgl] the painted backdrop on the GPU (glrender.js): drawn into its own WebGL picture by the same code
+       (battlescene.js back + fightcam.js rows, through GLR's 2D-like context), then put at the bottom of the stage with
+       one drawImage, so everything drawn over it blends exactly as before. While nothing in the backdrop moves (same
+       camera, no swaying props) the GPU picture is reused. Anything the GPU layer can't draw → the old 2D path. */
+    let glBack = null, glKey = "";
+    function gpuBack(art, artO, V, shx, shy, tt, flat) {
+      if (typeof GLR === "undefined" || !GLR.on()) { if (glBack) { glBack.dispose(); glBack = null; } if (cv.dataset.gl) cv.dataset.gl = "0"; return false; }
+      if (!glBack) { glBack = GLR.layer(cv); if (!glBack.ok) { glBack = null; return false; } glKey = ""; }
+      const anim = !rm && BSCENE.animated(rec.art);
+      const key = [work.width, work.height, k, shx, shy, V ? [V.z, V.cx, V.cy, V.ax, V.ay, V.rot || 0].join(",") : "-", rec.art, rec.sky ? rec.sky.key : "", anim ? tt : 0].join("|");
+      if (key === glKey) GLR.reused();
+      else {
+        if (!glBack.begin(work.width, work.height, flat ? null : "#1c2128")) { glBack = null; cv.dataset.gl = "0"; return false; }
+        const LYg = FC.layers(glBack.ctx, k, V || FC.NEUTRAL(W, Hh), shx, shy);
+        try { BSCENE.back(glBack.ctx, art, { ...artO, lay: LYg }); } catch (e) { glBack.bad = true; }
+        if (!glBack.end()) { glBack.dispose(); glBack = null; glKey = ""; cv.dataset.gl = "0"; return false; }
+        glKey = key;
+      }
+      wg.save(); wg.setTransform(1, 0, 0, 1, 0, 0); wg.globalAlpha = 1; wg.globalCompositeOperation = "source-over";
+      wg.drawImage(glBack.canvas, 0, 0);
+      wg.restore();
+      if (cv.dataset.gl !== "1") cv.dataset.gl = "1";   // screen tests: the GPU backdrop is on
+      return true;
+    }
     function draw(now) {
       const t0 = performance.now();
       const b = phase === "play" ? beats[bi] : null, m = b ? MOVES[b.move] || MOVES.wait : null, u = b ? Math.min(1, lt / b.dur) : 1;
@@ -1337,10 +1361,18 @@ const FIGHTART = (() => {
       const V = cam && camMine() ? cam.view() : FC ? FC.NEUTRAL(W, Hh) : null;
       const LY = FC ? FC.layers(wg, k, V, shx, shy) : { flat: true, set: () => wg.setTransform(k, 0, 0, k, 0, 0), paint: (im, ...a) => wg.drawImage(im, ...a.slice(0, 8)), toScreen: (x, y) => [x, y], toStage: (qx, qy) => [qx / k, qy / k] };
       wg.setTransform(1, 0, 0, 1, 0, 0); wg.imageSmoothingEnabled = true;
-      if (!LY.flat) { wg.fillStyle = "#1c2128"; wg.fillRect(0, 0, work.width, work.height); }
       const art = rec.art && typeof BSCENE !== "undefined" ? BSCENE.ready(rec.art) : null;   // [OURS] the painted scene once its pictures are in, else the drawn one
       const artO = art ? { W, Hh, t: rm ? 0 : tt, sky: rec.sky, lay: LY } : null;   // [paintclean] no drawn wagon over the painted plate
-      if (art) BSCENE.back(wg, art, artO); else { bg = bg || bgFor(rec.scene, W, Hh, rec.wagon, rec.sky); LY.paint(bg, 0, 0, bg.width, bg.height, 0, 0, W, Hh, { top: true, bottom: true }); }
+      // [webgl] the painted backdrop drawn by the graphics chip (glrender.js), put on the stage in one go — on phones where
+      // that is really quicker: the first frames are timed both ways and the faster one is kept (GLR.pick / GLR.took)
+      const glOk = !!(art && FC) && typeof GLR !== "undefined" && GLR.on(), glWay = glOk ? GLR.pick("fight") : "cpu";
+      const onGpu = glWay === "gpu" && gpuBack(art, artO, V, shx, shy, tt, LY.flat);
+      if (!onGpu && glBack) { glBack.dispose(); glBack = null; glKey = ""; }   // 2D won, turned off, or the GPU gave up: free the GPU picture
+      if (!onGpu && cv.dataset.gl === "1") cv.dataset.gl = "0";
+      if (glOk) GLR.tick("fight", onGpu ? "gpu" : "cpu", now);
+      if (!onGpu && !LY.flat) { wg.fillStyle = "#1c2128"; wg.fillRect(0, 0, work.width, work.height); }
+      if (onGpu) { /* already on the stage */ }
+      else if (art) BSCENE.back(wg, art, artO); else { bg = bg || bgFor(rec.scene, W, Hh, rec.wagon, rec.sky); LY.paint(bg, 0, 0, bg.width, bg.height, 0, 0, W, Hh, { top: true, bottom: true }); }
       LY.set(1);   // the fighters and the ground they stand on
       cv.__cam = LY.flat ? null : LY.toScreen;   // fightpos.js screenOf: where a fighter shows now
       camFollow(LY);
