@@ -865,7 +865,9 @@ const FIGHTART = (() => {
       for (const w of LAY.waiting) {
         wg.save(); wg.translate(w.x, w.y); wg.scale(-s * w.sc, s * w.sc); wg.globalAlpha = 0.86;
         if (!RIGW || pic) feetShadow(wg, 2, (foeK === "dragon" ? 60 : 20) * Math.min(1.8, fSize), 4.2 * Math.min(1.8, fSize), 0.6);   // [fightfeel] its feet on the ground
-        if (RIGW) { RIGWST.t = rm ? 0 : tt + w.x * 0.013; RIGWST.pose = isPerson || foeK === "player" ? waitP : null; RIGWST.pic = pic; RIGWST.picH = pic ? picH : 0; RIGW.draw(wg, RIGWST); }
+        const FLw = typeof FOELOOK !== "undefined" && typeof PAINTRIG !== "undefined" && rigged() ? FOELOOK.of(rec, 1 + LAY.waiting.indexOf(w)) : null;
+        if (FLw && PAINTRIG.can(FLw)) { if (FLw.sc) wg.scale(FLw.sc, FLw.sc); HEROART.fightFigure(wg, { look: FLw }, { t: rm ? 0 : tt + w.x * 0.013, shield: !!FLw.eq.shield, shieldOut: true, who: "foew" }); }   // [offhand] a waiting person, rigged too
+        else if (RIGW) { RIGWST.t = rm ? 0 : tt + w.x * 0.013; RIGWST.pose = isPerson || foeK === "player" ? waitP : null; RIGWST.pic = pic; RIGWST.picH = pic ? picH : 0; RIGW.draw(wg, RIGWST); }
         else if (pic) { const wU = picH * pic.naturalWidth / pic.naturalHeight; wg.drawImage(pic, -wU / 2, -picH, wU, picH); }
         else foeFig(wg, foeK, 0, tt + w.x * 0.013, isPerson ? waitP : null);
         wg.restore();
@@ -880,6 +882,7 @@ const FIGHTART = (() => {
     const WFX = typeof WEAPONFX !== "undefined" ? WEAPONFX : null, WLOG = [];
     const wlog = (e) => { if (WLOG.length < 300) WLOG.push(e); };
     let heroTip = null, heroTipBi = -1, trW = -1, foePicOn = false;
+    let foeWtSeen = null;   // [offhand] the weapon a painted foe swings (from its moves)
     const swingOn = (m, u, show) => WFX ? WFX.swingAt(m.hits, u, show) : (u > m.hits[0] - 0.18 && u < m.hits[0] + (show ? 0.22 : 0.1) ? 0 : -1);
     function trailWin(w, b, u) { if (w !== trW) { TRL.length = 0; trW = w; if (w >= 0 && b) wlog({ k: "trail", b: bi, u, i: w, who: b.who }); } }
     let seatLift = 0, muteFx = false;   // how high you sit in the saddle (shots leave from there); muteFx: movefx draws this impact, the shared bursts stay quiet
@@ -1302,7 +1305,9 @@ const FIGHTART = (() => {
       foeP.wt = b && b.who === "them" && b.wt ? b.wt : null;
       const mine = !!(b && b.who === "me" && m);   // [OURS] the painted figure (rig.js) plays the body of the move, its blow landing on the hit frame
       heroP.move = mine ? b.move : null; heroP.mu = mine ? poseU : null; heroP.hitU = mine && m.hits ? m.hits[0] : null; heroP.power = mine && !!b.power;
-      if (!mine && CHAN) CHAN.heroPose(heroP, rec.hero.wt);   // [channel] preparing a move: the cast / wind-up / draw pose while the minigame runs
+      if (!mine && CHAN) CHAN.heroPose(heroP, rec.hero.wt);
+      const theirs = !!(b && b.who === "them" && m);   // [offhand] a painted foe (foelook.js) plays its move on the same clock
+      foeP.move = theirs ? b.move : null; foeP.mu = theirs ? poseU : null; foeP.hitU = theirs && m.hits ? m.hits[0] : null; foeP.power = theirs && !!b.power;   // [channel] preparing a move: the cast / wind-up / draw pose while the minigame runs
     }
     function sampleTrail(b, m, u) {   // the weapon tip, every step, so the trail follows the real arc
       if (!m.trail) return;
@@ -1520,7 +1525,21 @@ const FIGHTART = (() => {
       if (foePic && RL && !curDragon?.air) RL.shadow(wg, foeK === "dragon" ? -10 : 2, 0.4, (foeK === "dragon" ? 60 : 20) * Math.min(1.8, fSize) * picK0(), 4.2 * Math.min(1.8, fSize), foeDown ? 0.4 : 0.75);   // its contact shadow
       const picK = picK0(); foePicOn = !!foePic;
       if (foePic0 && !fitSeen) { fitSeen = true; try { replace(); } catch (e) { /* laid out on the next resize */ } }   // [fightnums] the picture just loaded: lay out with its real width
-      if (RIG) {   // [OURS] the rig picks its clip from the beat: an attack locked to the move's timing, the fall, a gloat, a stagger...
+      const FLk = !curDragon && typeof FOELOOK !== "undefined" && typeof PAINTRIG !== "undefined" && rigged() ? FOELOOK.of(rec) : null;
+      if (FLk && PAINTRIG.can(FLk)) {   // [offhand] a person: the same painted, rigged fighter as the heroes (rig.js), off hand at the back
+        foePicOn = true;   // its blade isn't the ink figure's: no drawn smear (the painted rig reports its own tip as "foe")
+        if (RL) RL.shadow(wg, 2, 0.4, 20 * (FLk.sc || 1), 4.2, foeDown ? 0.4 : 0.75);
+        wg.save(); if (FLk.sc) wg.scale(FLk.sc, FLk.sc);
+        if (foeP.wt) foeWtSeen = foeP.wt; else if (foeWtSeen == null) { const fb = beats.find((x) => x && x.who === "them" && x.wt); foeWtSeen = fb ? fb.wt : false; }
+        const wtF = foeP.wt || foeWtSeen || undefined;   // the weapon it fights with, also while it waits (its look only guessed one)
+        HEROART.fightFigure(wg, { look: FLk }, { t: tt, wt: wtF, shield: !!FLk.eq.shield && !TWO_HANDED.has(wtF || ""), shieldOut: true, lunge,
+          aim: foeP.aim, back: foeP.back, hunch: foeP.lean || 0, draw: foeP.draw, move: foeP.move, mu: foeP.mu, hitU: foeP.hitU, power: foeP.power,
+          knock: foeKnock || 0, down: foeDown ? fallE : 0, who: "foe" });
+        wg.restore();
+        const pst = foeDown ? "death" : (foeKnock || 0) > 0.3 ? "hit" : foeP.move ? "attack" : "idle";   // which clip is on (screen tests), like the foe rigs report
+        if (cv.dataset.rig !== pst) cv.dataset.rig = pst;
+        if (cv.dataset.painted !== "1") cv.dataset.painted = "1";
+      } else if (RIG) {   // [OURS] the rig picks its clip from the beat: an attack locked to the move's timing, the fall, a gloat, a stagger...
         const R = RIGST, them = b && b.who === "them";
         R.t = rm ? 0 : tt; R.clip = null; R.u = 0; R.hitU = null; R.jitter = false; R.still = !!rm;
         R.pose = isPerson || foeK === "player" ? foeP : null; R.dragon = curDragon;
