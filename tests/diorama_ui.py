@@ -134,6 +134,26 @@ async def main():
             if extra.get("company") and dbg.get("company") != ["+Beta", "Gamma", "Lydia"]: fails.append((tag, "company not drawn", dbg.get("company")))
             if extra.get("pets") and dbg.get("pets") != ["Meeko"]: fails.append((tag, "pet not drawn", dbg.get("pets")))
             if need and need not in (dbg.get("cast") or []): fails.append((tag, "the road event's cast is missing", dbg.get("cast")))
+            if extra.get("stop") and dbg.get("moving"): fails.append((tag, "stopped on the road but still walking or riding"))
+        # the game moves you about once a second: you keep walking between updates, and stand still once they stop
+        r = await pg.evaluate("""async () => { const A = WORLD.places.Falkreath, B = WORLD.places.Riverwood, path = Terrain.route([A[0], A[1]], [B[0], B[1]]);
+          const box = document.getElementById('diobox'); DIORAMA.detach(); let i = Math.floor(path.length * 0.4), pos = path[i];
+          const info = () => ({ pos, path, idx: i, look: HEROART.lookOf(window.__dbg.save()), dest: 'Riverwood', origin: 'Falkreath', id: 'me', company: [{ name: 'Lydia', follower: true, look: { r: 'nord', eq: {} } }] });
+          for (let k = 0; k < 200 && !DIORAMA.frame(box, info(), 0, 0, 'pine'); k++) await new Promise((r) => setTimeout(r, 30));
+          let walkFrames = 0, total = 0, stillAfter = null;
+          for (let f = 0; f < 30 * 7; f++) {
+            if (f < 30 * 4 && f % 30 === 0) { const mv = Terrain.moveAlong(path, i, pos, 1, 0.5); pos = mv.pos; i = mv.idx; }   // updates for 4 s, then none
+            DIORAMA.frame(box, info(), 1 / 30, f / 30, 'pine');
+            const m = DIORAMA.debug().moving;
+            if (f > 35 && f < 30 * 4) { total++; if (m) walkFrames++; }
+            if (f >= 30 * 4 && !m && stillAfter == null) stillAfter = (f - 30 * 4) / 30;
+            await new Promise((r) => setTimeout(r, 5));
+          }
+          return { walkShare: walkFrames / total, stillAfter, end: DIORAMA.debug().moving };
+        }""")
+        print("pace", r)
+        if r["walkShare"] < 0.95: fails.append(("pace", "you stop and start between the game's position updates", r["walkShare"]))
+        if r["end"] or r["stillAfter"] is None or r["stillAfter"] > 2.5: fails.append(("pace", "you keep walking after the trip stopped", r))
         # no kit for the marsh, and Road view: Classic → the classic view draws
         r = await pg.evaluate(RUN, ["Morthal", "Solitude", "marsh", False, 390, 150, "day", "clear", 1, 0.3, None])
         if r["drew"]: fails.append(("marsh", "should keep the classic view"))

@@ -520,7 +520,7 @@ const DIORAMA = (() => {
     (I.company || []).slice(0, 7).forEach((c, i) => {
       back += c.riding ? 4.4 : 2.8;
       const a = actor("co:" + c.name, figureActor);
-      if (a.frame < 0 || (moving && fr % 2 === i % 2) || a.wasMoving !== moving) {
+      if (a.frame < 0 || fr % (moving ? 2 : 4) === i % (moving ? 2 : 4)) {   // walking: every other frame; standing: every 4th (they settle and breathe)
         drawFigure(a, c.look || null, !!c.riding, c.horse, moving, c.riding ? 2.3 : 1, t, (V.stride + 0.37 * (i + 1)) % 1, false, c.name);
         a.frame = fr; a.wasMoving = moving;
       }
@@ -591,11 +591,15 @@ const DIORAMA = (() => {
     // where you are along the road, eased so the trip's updates glide instead of jumping
     const target = nr.s;
     if (V.sDisp == null || Math.abs(target - V.sDisp) > 80) { V.sDisp = target; V.vEst = 0; }
-    if (V.sTarget != null && dt > 0) { const v = (target - V.sTarget) / Math.max(dt, 1e-3); if (target !== V.sTarget) V.vEst = V.vEst * 0.8 + clamp(v, 0, 12) * 0.2; }
+    // how fast the trip is really moving: distance between two updates of your position over the time between them (the
+    // game moves you about once a second). No update for 1.6 s, or something stopping you, means you've stopped.
+    V.since = (V.since || 0) + dt;
+    if (V.sTarget != null && target !== V.sTarget) { const v = clamp((target - V.sTarget) / Math.max(V.since, 1 / 30), 0, 12); V.vEst = V.vEst ? V.vEst * 0.6 + v * 0.4 : v; V.since = 0; }
+    if (V.since > 1.6 || I.stop) V.vEst = 0;
     V.sTarget = target;
     const before = V.sDisp, gap = target - V.sDisp, vmax = Math.max(0.6, V.vEst * 1.6 + 0.5);
     if (!I.reduce) V.sDisp += clamp(gap, -vmax * dt, vmax * dt); else V.sDisp = target;
-    const speed = dt > 0 ? (V.sDisp - before) / dt : 0, moving = !I.reduce && (speed > 0.15 || V.vEst > 0.15);
+    const speed = dt > 0 ? (V.sDisp - before) / dt : 0, moving = !I.reduce && !I.stop && (speed > 0.15 || V.vEst > 0.15);
     const here = D.at(P, V.sDisp);
     // rebuild the land when you've moved on
     if (!V.patch || Math.hypot(here.x - V.patch[0], here.z - V.patch[1]) > 25) rebuild(here.x, here.z, kit);
