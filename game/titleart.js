@@ -188,7 +188,7 @@ const TITLEART = (() => {
     let tmo = 0;
     /* [perfmap] the title only moves slowly (a push-in over two minutes, the aurora's sway): 12 pictures a second look the same
        as 30 and leave the phone mostly idle; 6 with Battery saver. Hidden or covered: one look every half second */
-    const every = () => (typeof PERFMODE !== "undefined" && PERFMODE.saver() ? 160 : 80);
+    const every = () => (typeof PERFMODE !== "undefined" && PERFMODE.saver() ? 160 : 33);   // full rate as before; Battery saver (player's choice) slower
     const later = (ms) => { tmo = setTimeout(() => { tmo = 0; if (!stopped) raf = requestAnimationFrame(frame); }, ms); };
     function frame(ts) {
       if (stopped || !cv.isConnected) return;

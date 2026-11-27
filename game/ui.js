@@ -1225,7 +1225,7 @@
     return c;
   }
   function drawSnow(c, m, wx) {
-    const dpr = Math.min(typeof PERFMODE !== "undefined" ? PERFMODE.dprCap(2) : 2, window.devicePixelRatio || 1), cw = m.clientWidth, ch = m.clientHeight;
+    const dpr = Math.min(typeof PERFMODE !== "undefined" ? PERFMODE.dprCap(3) : 3, window.devicePixelRatio || 1), cw = m.clientWidth, ch = m.clientHeight;
     if (c.width !== Math.round(cw * dpr) || c.height !== Math.round(ch * dpr)) { c.width = Math.round(cw * dpr); c.height = Math.round(ch * dpr); }
     const g = c.getContext("2d"); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, c.width, c.height);
     const lite = typeof MOTION !== "undefined" && MOTION.lite && MOTION.lite();
@@ -1252,9 +1252,7 @@
     const fxNow = typeof FXART !== "undefined" && S ? FXART.state(S) : null;   // spell and shout effects on the map
     const PC = typeof PCMAP !== "undefined" && PCMAP.on();   // PC map home screen (pcmap.js): smooth pan and zoom, living map (mapfx.js)
     const snowing = !reduceMotion && typeof SNOWFX !== "undefined" && (["snow", "blizzard"].includes(wx) || SNOWFX.live() > 0);   // falling snow wants smooth frames
-    // [perf] while the road view is showing the trip, the map under it only moves your marker: 20 pictures a second do
-    const fpOpen = S?.trip?.status === "travel" && performance.now() - mapTouchedAt > 1500 && !!document.querySelector(".fpt-view canvas");
-    const gap0 = PC && performance.now() - mapTouchedAt < 400 ? 16 : fpOpen && !mapAnim ? 50 : moving || mapAnim || (snowing && (!snowLayerOn() || moving || mapAnim)) ? 33 : PC && typeof MAPFX !== "undefined" && MAPFX.busy(reduceMotion) ? 50 : (weatherAnim && !snowLayerOn()) || (raidNow && !reduceMotion) || (fxNow?.anim && !reduceMotion) ? 66 : 125;
+    const gap0 = PC && performance.now() - mapTouchedAt < 400 ? 16 : moving || mapAnim || (snowing && (!snowLayerOn() || moving || mapAnim)) ? 33 : PC && typeof MAPFX !== "undefined" && MAPFX.busy(reduceMotion) ? 50 : (weatherAnim && !snowLayerOn()) || (raidNow && !reduceMotion) || (fxNow?.anim && !reduceMotion) ? 66 : 125;
     /* [perfmap] a map left alone: only the slow ambience moves (water glints, cloud shadows, birds). After 4 s of no touch
        it is drawn 4 times a second, and with Battery saver or reduced motion it is not redrawn at all until something on it
        changes (the picture is still checked twice a second, and redrawn at least every 10 s for the time of day) */
@@ -1267,7 +1265,7 @@
     else if (snowShown) { snowShown = false; const sc = document.getElementById("mapsnow"); if (sc) sc.getContext("2d").clearRect(0, 0, sc.width, sc.height); }
     const still = !moving && !mapAnim && !(snowing && !snowLayer) && !(weatherAnim && !snowLayer) && !(raidNow && !reduceMotion) && !(fxNow?.anim && !reduceMotion) && !(PC && typeof MAPFX !== "undefined" && MAPFX.busy(reduceMotion));
     const quietFor = performance.now() - mapTouchedAt, saver = typeof PERFMODE !== "undefined" && PERFMODE.saver();
-    const gap1 = still && quietFor > 4000 ? Math.max(gap0, 250) : gap0;
+    const gap1 = gap0;   // full rate whenever anything on the map moves (the old "quiet map" slow-down was a visible quality drop)
     const gap = typeof PERFMODE !== "undefined" && quietFor > 400 ? PERFMODE.gap(gap1) : gap1;   // Battery saver: fewer map pictures (not while your finger is on it)
     if (!mapResized && ts - lastFrame < gap - 4) return Math.min(snowWait, gap - (ts - lastFrame));
     const frozen = still && quietFor > 1500 && (saver || reduceMotion);   // the ambience stands still: draw only on a change

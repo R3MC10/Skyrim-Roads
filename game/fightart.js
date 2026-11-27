@@ -1822,7 +1822,7 @@ x - 0.5, y - 0.5, bw + 1, bh + 1);
         if (!seen) { idleT = setTimeout(tick, 300); return; }
         if (!MANUAL && !(typeof document !== "undefined" && document.hidden) && ok && (!rm || !idleDrawn)) { draw(performance.now()); idleDrawn = true; }
         if ((!bs || (ok && (rm || !BSCENE.animated(rec.art))) || (!ok && BSCENE.failed(rec.art))) && !rigLive) { IDLE.delete(tick); return; }
-        idleT = setTimeout(tick, ok ? (rigLive ? (typeof PERFMODE !== "undefined" ? PERFMODE.gap(PERFMODE.phone() ? 66 : 50) : 50) : 83) : 300);   // [perf] a standing figure's breathing needs ~15 pictures a second on a phone
+        idleT = setTimeout(tick, ok ? (rigLive ? (typeof PERFMODE !== "undefined" ? PERFMODE.gap(50) : 50) : 83) : 300);   // Battery saver (player's choice) slows it a little
       };
       IDLE.add(tick); while (IDLE.size > 2) IDLE.delete(IDLE.values().next().value);
       idleT = setTimeout(tick, 83);
