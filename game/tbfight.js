@@ -323,7 +323,11 @@ const TB = (() => {
     rollOrder() {
       const f = this.f;
       // the foe acts 1–3 times a round (whole actions, the fraction is a chance), more with a big party (T.party.acts per extra player)
-      let n = T.acts[this.kind] + T.party.acts * this.players; const whole = Math.floor(n); n = whole + (Math.random() < n - whole ? 1 : 0);
+      // [fight-logic] next round's count is rolled a round early (this._nextN) so the "next round" preview (initiative.js
+      // predict, fightread.js intents) shows the moves and targets that really come, not a guess that the dice then change
+      const rollN = () => { const b = T.acts[this.kind] + T.party.acts * this.players, w = Math.floor(b); return w + (Math.random() < b - w ? 1 : 0); };
+      let n = this._nextN != null ? this._nextN : rollN();
+      this._nextN = rollN();
       const nb = typeof ENCH2 !== "undefined" ? ENCH2.numb(f) : { acts: 0 }; n -= nb.acts;   // Numbing Cold: a move lost (it also slows it: initiative.js)
       return INIT.build(this, Math.max(1, n));
     }
@@ -333,10 +337,17 @@ const TB = (() => {
       this.lines = { me: [], them: [], a: null };
       this.emit("round", `Round ${this.round}`, "round", { order: this.order.map((o) => ({ id: o.id, name: o.name, init: o.init, u: o.u, slot: o.slot })) });
       if (this.field && typeof FOEFIELD !== "undefined") FOEFIELD.plan(this);   // [rows] the foe side's moves spread over every foe standing, each with its own plan
-      else {
+      else if (this._pre && this._pre.round === this.round - 1 && this._pre.wave === this.wave && typeof FIGHTREAD !== "undefined" && FIGHTREAD.foeLeft(this) === this._pre.n && !this.f.dStance) {
+        // [fight-logic] last round's screen already showed these moves and targets (fightread.js preplan): keep them, so
+        // what the chips promised is what happens. Someone knocked down meanwhile gets a fresh roll (foeintent.js refresh).
+        if (this.f.kit) this.f.kit.plan = this._pre.plan.slice();
+        this.f.foeTgts = this._pre.tgts.map((t) => ({ ...t }));
+        if (typeof FOEINTENT !== "undefined") FOEINTENT.refresh(this);
+      } else {
         if (typeof FIGHTREAD !== "undefined") FIGHTREAD.plan(this);   // the foe's intents for this round (fightread.js)
         if (typeof FOEINTENT !== "undefined") FOEINTENT.plan(this);   // and who each one goes for (foeintent.js)
       }
+      this._pre = null;
       if (this.f.bf && typeof BOSSFIGHT !== "undefined") BOSSFIGHT.plan(this);   // a boss shows its big attacks a turn ahead
       if (typeof REACT !== "undefined" && !this.field) REACT.retarget(this);   // covering your friends: its blows come to you (foefield.js plan does it per foe)
     }
