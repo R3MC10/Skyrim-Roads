@@ -430,7 +430,7 @@ const PAINTRIG = (() => {
     let sF = 0;
     if (shieldOn && !P.ride && !(P.down > 0)) {
       const dx = fist.grip[0] - B.W[0], dy = fist.grip[1] - B.W[1], fwd = (Math.cos(B.sa) * dx + Math.sin(B.sa) * dy) / m;
-      const up = P.clip === "block" || P.clip === "bash" ? 1 : Math.max(guard, clamp((fwd - 6) / 3, 0, 1));   // the guard, or the arm pushed well out (a block, a bash)
+      const up = P.clip === "block" || P.clip === "bash" ? 1 : Math.max(guard, clamp((fwd - 6) / 3, 0, 1)) * (1 - clamp((P.cast || 0) * 4, 0, 1));   // the guard, or the arm pushed well out (a block, a bash); [fightlook] not while casting: the hand that casts reaches out, the shield stays down (it flipped over the chest and back)
       sF = clamp((up - 0.42) / 0.16, 0, 1);   // a short fade at the turn, so the two never show as a ghost
     }
     const shieldHere = (a) => {
