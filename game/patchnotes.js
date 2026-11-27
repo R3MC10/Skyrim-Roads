@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b382-npctasks", build: 382, date: "27 Nov 2026", title: "Every job you take is in the Journal", items: [
+      "Every job, rumour and contract you take from someone in the world is in the Journal now: notice-board jobs, odd jobs at farms and camps, rumours from innkeepers and townsfolk, legendary hunts from a Jarl's steward, a Daedric prince's contract, your company's caravan escort and expedition.",
+      "Each one shows who gave it and where, what to do next, how far along you are (like 3/5), how long you have left, and the reward. ☆ Track it to steer the compass, the map and the What to do next card, just like a quest.",
+      "Taking a new task pops up a small \"Quest added\" card with a Track button. Tasks you finish move to Completed, and you can give one up from the Journal (tap Abandon twice).",
+    ] },
     { id: "b381-offhand", build: 381, date: "27 Nov 2026", title: "Every person in a fight really moves", items: [
       "Your off hand is now always behind your body: the shield, a second blade and the arm that holds them stay at the back, and your weapon arm is in front, in every move. When you guard or block, the shield is held further out so you still see it past your chest.",
       "Bandits, draugr, Forsworn, Falmer, vampires, necromancers, mages, Thalmor, dremora, soldiers and assassins are no longer still paintings: they are full painted fighters like you, with arms, legs and their own weapons, winding up, swinging, flinching and falling. Draugr are grey, dremora ash-red and Falmer pale, and chiefs and deathlords stand a little taller.",

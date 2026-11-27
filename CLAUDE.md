@@ -10,6 +10,7 @@ Owners: Remigiusz (R3MC10) and Kacper (Kacper297). Neither writes code by hand �
 - `scripts/build.mjs` — copies `game/` into `www/` for the app.
 - `tests/` — node tests (`test_*.js`) and Playwright screen tests (`*_ui.py`). Node tests read the game from `game/` (or `W=/path/to/game/`).
 - `art/` (branch `art`) — raw generated pictures; they are converted to WebP and dropped flat into `game/` (see `game/assets.js` for names and sizes).
+- `game/npctasks.js` — **NPC tasks in the Journal**: any job/contract/errand a player takes from someone registers a provider with `NPCTASKS.register(id, S => entries)`; it then shows in the Journal, is trackable (`S.trackQ = "task:<key>"`) and gets the "Quest added" card automatically.
 - `ROADMAP.md` — what's done, what's next, **who is working on what**, and standing rules.
 
 ## How to work
