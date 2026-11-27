@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <link rel="preload" href="title-poster.webp" as="image" media="(orientation: portrait)">
+<link rel="preload" href="title-wide-poster.webp" as="image" media="(orientation: landscape)">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Skyrim: Roads of the North</title>
@@ -5799,7 +5800,9 @@ img.ico.rar-epic{outline:2px solid var(--q-epic);outline-offset:-2px}img.ico.rar
 /* phones held upright: the title background is a looping painted video (titlevideo.js), over the drawn panorama */
 .title video.tvid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:32% 50%;pointer-events:none;opacity:0;transition:opacity 1.2s ease;-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.55) 0%,#000 40%);mask-image:linear-gradient(to bottom,rgba(0,0,0,.55) 0%,#000 40%)}
 .title video.tvid.on{opacity:.9;transition:none}   /* the still first frame is up at once; no fade from the drawn stand-in */
-@media (orientation:portrait){.title{background:#0b0d10 url(title-poster.webp) 32% 50%/cover no-repeat}}   /* phones: the video's first frame is there from the very first paint */
+@media (orientation:portrait){.title{background:#0b0d10 url(title-poster.webp) 32% 50%/cover no-repeat}}
+@media (orientation:landscape){.title{background:#0b0d10 url(title-wide-poster.webp) 50% 50%/cover no-repeat}}   /* wide screens: the wide video's first frame */
+.title video.tvid.wide{object-position:30% 50%;-webkit-mask-image:none;mask-image:none}.title video.tvid.wide.on{opacity:1}   /* keep the hero in view when a very wide screen crops the sides */   /* phones: the video's first frame is there from the very first paint */
 .title:has(video.tvid.on) .mo-amb .emb{display:none}   /* the video has its own snow */
 
 /* [uiframes] painted Nordic 9-slice frame (ui-frame-panel: 3×3 grid of 160 px; corners stay, rails stretch) on title
