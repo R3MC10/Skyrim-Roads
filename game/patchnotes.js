@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b387-perfdeep", build: 387, date: "27 Nov 2026", title: "Smoother without lowering graphics", items: [
+      "Full graphics are back everywhere: fights on phones start on High at full frame rate again, the map and compass are as sharp as your screen allows, and the title screen moves at full speed. Only Battery saver (off unless you turn it on) lowers anything.",
+      "The fog over the map and the clans' colours are now kept as a ready picture and slid along when you drag or walk, like the land under them, instead of being painted again every frame. Same picture, less work.",
+      "The soft blurred background behind a fight is now blurred once every half second instead of by the phone's graphics every frame. It looks the same.",
+      "Phones no longer turn off the frosted-glass look on menus."] },
     { id: "b386-raceportraits", build: 386, date: "27 Nov 2026", title: "Portraits for everyone", items: [
       "Every race now has a painted portrait for both men and women. Before, half the heroes borrowed a face from another race; now Automatic shows your own race and sex, and all twenty faces are in the portrait picker.",
     ] },

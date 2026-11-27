@@ -555,7 +555,7 @@ const WorldMap = (() => {
     if (boxes) boxes.push([x - 20 * s, y - 25 * s, 40 * s, 29 * s]);
   }
   /* [perf] finished layers of the map kept between frames (see draw): the ground and the fog, each the canvas's size */
-  const GC = { key: "", last: "", vkey: "", vlast: "", ground: null, veil: null, ox: 0, oy: 0 };
+  const GC = { key: "", last: "", vkey: "", vlast: "", ground: null, veil: null, ox: 0, oy: 0, vox: 0, voy: 0 };
   const GM = 128;   // device px of ground kept beyond each edge of the screen
   const ids = new WeakMap(); let idN = 0;
   const idOf = (o) => (!o ? 0 : ids.get(o) || (ids.set(o, ++idN), idN));
@@ -580,7 +580,7 @@ const WorldMap = (() => {
     // the canvas holds one pixel per device pixel (phones up to 3×), so lines and words are as sharp as the screen
     // [perfmap] at most 2 device pixels per CSS pixel (1.6 with Battery saver): a 3x phone otherwise fills 2.25x as many
     // pixels every picture for a difference hard to see on a map
-    const dpr = Math.min(typeof PERFMODE !== "undefined" ? PERFMODE.dprCap(2) : 2, window.devicePixelRatio || 1);
+    const dpr = Math.min(typeof PERFMODE !== "undefined" ? PERFMODE.dprCap(3) : 3, window.devicePixelRatio || 1);
     const cw = canvas.clientWidth, ch = canvas.clientHeight;
     if (canvas.width !== Math.round(cw * dpr) || canvas.height !== Math.round(ch * dpr)) { canvas.width = Math.round(cw * dpr); canvas.height = Math.round(ch * dpr); }
     const g = canvas.getContext("2d");
@@ -651,13 +651,17 @@ const WorldMap = (() => {
       gx.drawImage(veilImg, 0, 0, W, H);
       if (rulers) { gx.globalAlpha = 0.26; for (const r of rulers) gx.drawImage(tintFor(r.hold, r.color), 0, 0, W, H); gx.globalAlpha = 1; }   // holds ruled by a clan
     };
-    // [perf] the fog and the clans' colours: kept as one picture too, while the view, the fog and your cone hold still
-    const vkey = `${gkey}|${ox}|${oy}|${fogKey}|${VI ? VI.veilKey : ""}|${rulers ? rulers.map((r) => r.hold + r.color).join() : ""}`;
-    if (steady && vkey === GC.vkey) blit(g, GC.veil);
+    // [perf] the fog and the clans' colours: kept as one picture too, GM px bigger than the screen on every side like the
+    // ground, so a pan or a walk slides it by whole pixels (the same shift as the ground under it) instead of scaling the
+    // whole fog picture up again every frame with high-quality smoothing
+    const vkey = `${gkey}|${fogKey}|${VI ? VI.veilKey : ""}|${rulers ? rulers.map((r) => r.hold + r.color).join() : ""}`;
+    const vnear = Math.abs(ox - GC.vox) <= GM && Math.abs(oy - GC.voy) <= GM;
+    const over = (c, x, y) => { g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = false; g.drawImage(c, x, y); g.restore(); };
+    if (steady && vkey === GC.vkey && vnear) over(GC.veil, Math.round(ox - GC.vox - GM), Math.round(oy - GC.voy - GM));
     else if (steady && vkey === GC.vlast) {
-      const vg = fit(GC, "veil", cw0, ch0);
-      vg.setTransform(1, 0, 0, 1, 0, 0); vg.clearRect(0, 0, canvas.width, canvas.height); vg.setTransform(k, 0, 0, k, ox, oy); vg.imageSmoothingEnabled = true; vg.imageSmoothingQuality = "high";
-      veil(vg); GC.vkey = vkey; blit(g, GC.veil);
+      const vw = cw0 + 2 * GM, vh = ch0 + 2 * GM, vg = fit(GC, "veil", vw, vh);
+      vg.setTransform(1, 0, 0, 1, 0, 0); vg.clearRect(0, 0, vw, vh); vg.setTransform(k, 0, 0, k, ox + GM, oy + GM); vg.imageSmoothingEnabled = true; vg.imageSmoothingQuality = "high";
+      veil(vg); GC.vkey = vkey; GC.vox = ox; GC.voy = oy; over(GC.veil, -GM, -GM);
     } else { veil(g); GC.vkey = ""; }
     GC.vlast = vkey;
     const FX = !SV && typeof MAPFX !== "undefined" && MAPFX.on() ? MAPFX : null;

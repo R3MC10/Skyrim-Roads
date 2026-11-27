@@ -231,4 +231,5 @@ async def main():
         print(f"\ncold start x{RATE:g}: DOMContentLoaded {c['domContentLoaded']} ms, load {c['load']} ms, title {c['title']} ms; Continue -> map {c['continue_to_map']} ms (settled {c['continue_settled']} ms, long tasks {c['continue_long_ms']} ms); heap after GC {out['heap_after_gc_MB']} MB")
         await b.close()
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())

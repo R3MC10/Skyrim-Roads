@@ -18,11 +18,11 @@ const FIGHTSET = (() => {
 
   const QUALITY = ["low", "med", "high"], FPS = [30, 60, 0];
   const PM = () => (typeof PERFMODE !== "undefined" ? PERFMODE : null);
-  /* [perf] phones start lighter (Medium, 30 fps) until you pick something; Battery saver caps both */
-  const quality = () => { const q = QUALITY.includes(prefs().fsQuality) ? prefs().fsQuality : PM()?.phone() ? "med" : "high"; return PM()?.saver() && q === "high" ? "med" : q; };
+  /* [perf] Battery saver (only when the player turns it on) caps quality and frame rate; otherwise full quality everywhere */
+  const quality = () => { const q = QUALITY.includes(prefs().fsQuality) ? prefs().fsQuality : "high"; return PM()?.saver() && q === "high" ? "med" : q; };
   const cam = () => clamp(numOr(prefs().fsCam, 1), 0, 1);            // 0 … 1
   const uiScale = () => clamp(numOr(prefs().fsUi, 1), 0.8, 1.3);     // 0.8 … 1.3
-  const fps = () => { const f = FPS.includes(prefs().fsFps) ? prefs().fsFps : PM()?.phone() ? 30 : 0; return PM()?.saver() && (f === 0 || f > 30) ? 30 : f; };
+  const fps = () => { const f = FPS.includes(prefs().fsFps) ? prefs().fsFps : 0; return PM()?.saver() && (f === 0 || f > 30) ? 30 : f; };
   const CAMS = ["cin", "calm", "off"];
   const camMode = () => (CAMS.includes(prefs().fsCamMode) ? prefs().fsCamMode : "cin");   // the chosen one; FIGHTCAM.mode() is the one in force
   /* backing pixels per drawing unit the fight picture may use */
