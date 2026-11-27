@@ -28,7 +28,7 @@ const FPWORLD = (() => {
   const NIGHT = "#0c1424";
 
   // ---------------------------------------------------------------- the camera: bends, hills, pitch
-  function camera(w, h, hz, travel, curveS, R, shp) {
+  function camera(w, h, hz, travel, curveS, R, shp, bend) {
     const H = h - hz, half0 = w * 0.3, hl = R.hills, B = shp.b, E = shp.e;
     const wan = (d) => 16 * Math.sin(d / 60 + B[0]) + 6 * Math.sin(d / 25 + B[1]) + 2 * Math.sin(d / 11 + B[2]);
     const wanD = (d) => 16 / 60 * Math.cos(d / 60 + B[0]) + 6 / 25 * Math.cos(d / 25 + B[1]) + 2 / 11 * Math.cos(d / 11 + B[2]);
@@ -36,7 +36,8 @@ const FPWORLD = (() => {
     const eleD = (d) => hl * (2.4 / 70 * Math.cos(d / 70 + E[0]) + 1 / 29 * Math.cos(d / 29 + E[1]));
     const w0 = wan(travel), yaw = wanD(travel) * 0.9, e0 = ele(travel), pitch = eleD(travel) * 0.7;
     const hzE = hz + H * pitch;
-    const lat = (z) => wan(travel + z) - w0 - z * yaw + curveS * 0.016 * z * z;
+    // the road's bends: the real road ahead from the map when we have it (fpreal.js), plus a little wander so it isn't ruler-straight
+    const lat = bend ? (z) => bend(z) + 0.25 * (wan(travel + z) - w0 - z * yaw) : (z) => wan(travel + z) - w0 - z * yaw + curveS * 0.016 * z * z;
     const cx = (z) => w / 2 + half0 * lat(z) / z;
     const gy = (z) => hzE + H * (1 - (ele(travel + z) - e0)) / z;
     return { w, h, hz, hzE, H, half0, travel, lat, cx, gy, X: (z, u) => cx(z) + u * half0 / z, s: (z) => H / z, pitch };
@@ -56,6 +57,36 @@ const FPWORLD = (() => {
     const per = (x, f, ph) => Math.sin((x / SW) * TAU * f + ph);
     const snowStart = P.snowy ? 0.32 : R.snow;
     const snowCol = P.tod === "night" ? "#9aa6ba" : P.tod === "dusk" ? "#f0cdb8" : P.tod === "dawn" ? "#f4d8d2" : "#f4f6f8";
+    // ---- far land: the real skyline from the map's heights (fpreal.js) when we know where you are, else made-up peaks
+    if (P.relief) {
+      const el = P.relief.el, sn = P.relief.snow, n = el.length, at = (x) => { const f = ((x / SW) * n % n + n) % n, i = Math.floor(f), k = f - i; return el[i] * (1 - k) + el[(i + 1) % n] * k; };
+      const yOf = (x) => hzPx - Math.max(0, at(x)) * hzPx * 0.92 - hzPx * 0.015 * Math.sin(x * 0.37) * (at(x) > 0.08 ? 1 : 0);
+      const pl = P.paintedFar;   // a painted distant strip (tv-far-<region>) replaces the drawn one, lifted to the real skyline's height
+      g.beginPath(); g.moveTo(0, hzPx + 4); for (let x = 0; x <= SW; x += 2) g.lineTo(x, yOf(x)); g.lineTo(SW, hzPx + 4); g.closePath();
+      if (pl) { g.save(); g.clip(); const ih = hzPx * 0.95, iw = pl.width * ih / pl.height; for (let x = 0; x < SW; x += iw) g.drawImage(pl, x, hzPx - ih + 2, iw, ih); g.restore(); }
+      else { const relC = tone(R.far, R.haze * 0.6 + 0.12), relShade = tone(mix(R.far, "#2a3040", 0.35), R.haze * 0.6 + 0.1); g.fillStyle = relC; g.fill();
+        // the shaded slopes facing away from the sun: one polygon per run, no per-column stripes
+        for (let x0 = 0; x0 < SW;) {
+          const away = (x) => { const d = yOf(x + 2) - yOf(x); return relDeg(P.sunAz - deg(x)) > 0 ? d < -0.4 : d > 0.4; };
+          if (!away(x0) || yOf(x0) > hzPx - 3) { x0 += 2; continue; }
+          let x1 = x0; while (x1 < SW && away(x1)) x1 += 2;
+          g.beginPath(); g.moveTo(x0, hzPx + 2); for (let x = x0; x <= x1 + 2; x += 2) g.lineTo(x, yOf(x)); g.lineTo(x1 + 2, hzPx + 2); g.closePath(); g.fillStyle = relShade; g.fill(); x0 = x1 + 2;
+        }
+        g.beginPath(); g.moveTo(0, hzPx + 4); for (let x = 0; x <= SW; x += 2) g.lineTo(x, yOf(x)); g.lineTo(SW, hzPx + 4); g.closePath(); g.save(); g.clip();
+        // snow caps: a soft band down from the crest wherever the land is high, its lower edge ragged
+        const snowy = (x) => { const i = Math.floor(((x / SW) * n) % n), hh = hzPx - yOf(x); return (sn[i] || (P.snowy && hh > hzPx * 0.18)) && hh > hzPx * 0.1; };
+        g.fillStyle = tone(snowCol, R.haze * 0.6 + 0.1);
+        for (let x0 = 0; x0 < SW;) {
+          if (!snowy(x0)) { x0 += 2; continue; }
+          let x1 = x0; while (x1 < SW && snowy(x1)) x1 += 2;
+          g.beginPath(); g.moveTo(x0, yOf(x0));
+          for (let x = x0; x <= x1; x += 2) g.lineTo(x, yOf(x) - 0.5);
+          for (let x = x1; x >= x0; x -= 3) { const hh = hzPx - yOf(x), edge = Math.min(1, (x - x0) / 10, (x1 - x) / 10); g.lineTo(x, yOf(x) + hh * (0.18 + 0.12 * Math.sin(x * 0.21) + 0.06 * Math.sin(x * 0.67)) * edge); }
+          g.closePath(); g.fill(); x0 = x1 + 2;
+        }
+        g.restore();
+        g.strokeStyle = rgba("#1c2230", 0.18); g.lineWidth = 0.8; g.beginPath(); for (let x = 0; x <= SW; x += 2) { const y = yOf(x); x ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); }
+    } else {
     // ---- far peaks, lit on the side that faces the sun
     const N = R.steep ? 22 : 18, farC = tone(R.far, R.haze + 0.3), farShade = tone(mix(R.far, "#2a3040", 0.3), R.haze + 0.28);
     const peaks = [];
@@ -84,6 +115,7 @@ const FPWORLD = (() => {
           }
         }
       });
+    }
     }
     if (R.volcano) {   // Red Mountain in the east
       const x = (95 / 360) * SW, s = hzPx * 0.78;
@@ -166,9 +198,10 @@ const FPWORLD = (() => {
     const dpr = ctx.dpr || 1, k = Math.min(dpr, 4096 / SW, 2);
     const hour = ctx.sky?.hour ?? 13, sunAz = L.tod === "night" ? 90 + ((hour + 6) % 24) * 15 : 90 + (hour - 6) * 15;
     const seaBear = R.sea && sv && sv.seaBear != null ? Math.round(sv.seaBear / 10) * 10 : R.sea ? 270 : null;
-    const key = [R.name, Math.round(SW), hzPx, below, k.toFixed(2), L.tod, L.wx, snowy, seaBear, Math.round(sunAz / 30), ctx.horizon].join("|");
+    const relief = ctx.relief || null, paintedFar = ctx.paint ? ctx.paint("tv-far-" + R.name) : null;
+    const key = [R.name, Math.round(SW), hzPx, below, k.toFixed(2), L.tod, L.wx, snowy, seaBear, Math.round(sunAz / 30), ctx.horizon, relief?.id || "", paintedFar ? 1 : 0].join("|");
     if (!strip || strip.key !== key) {
-      try { strip = { key, ...makeStrip(R, { SW, hzPx, below, k, horizon: ctx.horizon, hazeAdd: L.hazeAdd, nightK, snowy, tod: L.tod, seaBear, sunAz }) }; } catch { strip = null; return; }
+      try { strip = { key, ...makeStrip(R, { SW, hzPx, below, k, horizon: ctx.horizon, hazeAdd: L.hazeAdd, nightK, snowy, tod: L.tod, seaBear, sunAz, relief, paintedFar }) }; } catch { strip = null; return; }
     }
     const S = strip, y0 = cam.hzE - S.hzPx;
     let x0 = w / 2 - headS * pxDeg; x0 = ((x0 % SW) + SW) % SW - SW;
@@ -235,6 +268,81 @@ const FPWORLD = (() => {
     g.strokeStyle = c.tone("#3a3028", it.z); g.lineWidth = Math.max(0.6, r * 0.05); g.beginPath(); g.moveTo(x - r * 0.3, y - r * 1.1); g.lineTo(x - r * 0.4, y - r * 1.4); g.stroke();
     for (let i = 0; i < 7; i++) { const a = i / 7 * TAU; g.fillStyle = c.tone("#6a645c", it.z); g.beginPath(); g.ellipse(x + r * 1.3 + Math.cos(a) * r * 0.3, y + Math.sin(a) * r * 0.08, r * 0.08, r * 0.05, 0, 0, TAU); g.fill(); }
     g.fillStyle = c.tone("#2a2420", it.z); g.fillRect(x + r * 1.1, y - r * 0.05, r * 0.4, r * 0.05); };
+  const coatId = (hex) => { try { const c = HORSES.COATS.find((k) => k[2] === hex || k[0] === hex); return c ? c[0] : "bay"; } catch { return "bay"; } };
+  /* a real place on the map, standing by the road where it really is (fpreal.js); a painted tv-landmark-<place> replaces the drawing */
+  const slug = (n) => String(n || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+  P.place = (g, x, y, s, it, c) => {
+    const pl = it.place, wide = pl.kind === "city" ? 26 : pl.kind === "town" || pl.kind === "fort" || pl.kind === "college" ? 15 : pl.kind === "farm" || pl.kind === "camp" ? 9 : 10, px = s * wide;
+    if (px < 3) return;
+    const img = c.paint ? (c.paint("tv-landmark-" + slug(pl.name)) || c.paint("tv-landmark-" + (pl.kind || "town"))) : null;
+    if (img) { const ih = px * img.height / img.width; g.drawImage(img, x - px / 2, y - ih * 0.94, px, ih); }
+    else {
+      const D = DR(); if (!D || !D.destination) return;
+      const k = px / 110;   // the town drawing is ~110 units wide at its nearest
+      g.save(); g.translate(x, y); g.scale(k, k); g.translate(-(360 * 0.84 - 8), -76);
+      try { D.destination(g, { dest: pl.name }, 1, { B: c.B || { hill: c.R.hill || "#6a6a5a" }, L: c.L || { horizon: "#e8dcc0", hazeAdd: 0, glow: 0 }, ink: true, st: c.sky }, c.lightsLocal, c.t); } catch { /* no picture */ }
+      g.restore();
+    }
+    if (pl.known && it.z < 16 && px > 18) {   // its name when you're close
+      g.font = `600 ${Math.max(9, Math.min(13, px * 0.12))}px Cinzel, serif`; g.textAlign = "center"; g.fillStyle = "rgba(20,16,12,0.55)";
+      g.fillText(pl.name, x + 0.6, y - px * 0.55 + 0.6); g.fillStyle = "rgba(255,244,220,0.92)"; g.fillText(pl.name, x, y - px * 0.55);
+    }
+  };
+  /* your company on the road, seen from behind: riders on their own horses, people walking, a dog trotting */
+  const NIGHTC = (col, c) => mix(col, NIGHT, c.night ? 0.45 : 0);
+  P.mate = (g, x, y, s, it, c) => {
+    const m = it.mate, k = s * 0.9; if (k < 2) return;
+    const ph = (c.t || 0) * (m.riding ? 5.2 : m.pet ? 9 : 6.2) + it.seed * 1.7, bob = Math.abs(Math.sin(ph)) * k * (m.riding ? 0.05 : 0.04);
+    const ink = "rgba(30,22,14,0.55)", lw = Math.max(0.6, k * 0.02);
+    const shape = (pts, col) => { g.beginPath(); pts.forEach(([a, b], i) => (i ? g.lineTo(x + a * k, y + b * k) : g.moveTo(x + a * k, y + b * k))); g.closePath(); g.fillStyle = col; g.fill(); g.strokeStyle = ink; g.lineWidth = lw; g.stroke(); };
+    const img = c.paint ? c.paint(m.pet ? "tv-pet-back-" + (m.kind || "dog") : m.riding ? "tv-mount-back-" + coatId(m.coat) : null) : null;
+    if (m.pet) {
+      if (img) { const w = k * 0.5, h = w * img.height / img.width; g.drawImage(img, x - w / 2, y - h - bob, w, h); return; }
+      const col = NIGHTC(m.coat || "#6a4a30", c), leg = Math.sin(ph) * k * 0.04;
+      shape([[-0.12, -0.05 - bob / k], [-0.1, -0.24 - bob / k], [0.1, -0.24 - bob / k], [0.12, -0.05 - bob / k]], col);
+      g.fillStyle = col; g.fillRect(x - 0.1 * k, y - 0.08 * k + leg, 0.05 * k, 0.08 * k); g.fillRect(x + 0.05 * k, y - 0.08 * k - leg, 0.05 * k, 0.08 * k);
+      shape([[-0.07, -0.24 - bob / k], [-0.06, -0.34 - bob / k], [0.06, -0.34 - bob / k], [0.07, -0.24 - bob / k]], col);   // head from behind
+      shape([[-0.06, -0.33 - bob / k], [-0.08, -0.4 - bob / k], [-0.02, -0.34 - bob / k]], col); shape([[0.06, -0.33 - bob / k], [0.08, -0.4 - bob / k], [0.02, -0.34 - bob / k]], col);   // ears
+      g.strokeStyle = col; g.lineWidth = k * 0.03; g.beginPath(); g.moveTo(x, y - 0.1 * k - bob); g.quadraticCurveTo(x + Math.sin(ph * 1.3) * 0.08 * k, y - 0.02 * k, x + Math.sin(ph * 1.3) * 0.1 * k, y + 0.02 * k); g.stroke();   // tail
+      return;
+    }
+    const arm = NIGHTC(m.armour || "#5e5446", c), skin = NIGHTC(m.skin || "#e2b894", c), hair = NIGHTC(m.hair || "#3a2a1c", c);
+    let base = 0;   // where the rider's seat is, in body units above the ground
+    if (m.riding) {
+      if (img) { const w = k * 0.95, h = w * img.height / img.width; g.drawImage(img, x - w / 2, y - h - bob, w, h); base = 0.9; }
+      else {
+        const coat = NIGHTC(m.coat || "#7a4a2a", c), dark = mix(coat, "#000000", 0.35), leg = Math.sin(ph) * 0.06;
+        for (const [lx, o] of [[-0.12, -leg * 0.7], [0.06, leg * 0.7]]) shape([[lx, -0.6], [lx + 0.06, -0.6], [lx + 0.06, -0.04 + o], [lx, -0.04 + o]], mix(dark, "#000000", 0.25));   // the forelegs, between the hind ones
+        for (const [lx, o] of [[-0.27, leg], [0.18, -leg]]) shape([[lx, -0.66], [lx + 0.09, -0.66], [lx + 0.09, -0.32], [lx + 0.07, -0.05 + o], [lx + 0.02, 0.0 + o], [lx, -0.05 + o]], dark);   // hind legs
+        g.fillStyle = "#2a2018"; for (const lx of [-0.27, 0.18]) g.fillRect(x + lx * k, y - 0.04 * k, 0.09 * k, 0.04 * k);   // hooves
+        shape([[-0.36, -0.6 - bob / k], [-0.4, -0.88 - bob / k], [-0.26, -1.06 - bob / k], [0.26, -1.06 - bob / k], [0.4, -0.88 - bob / k], [0.36, -0.6 - bob / k], [0.14, -0.52 - bob / k], [-0.14, -0.52 - bob / k]], coat);   // rump
+        shape([[-0.26, -1.0 - bob / k], [-0.3, -1.12 - bob / k], [0.3, -1.12 - bob / k], [0.26, -1.0 - bob / k]], NIGHTC("#5a3e26", c));   // saddle blanket edge
+        g.strokeStyle = dark; g.lineWidth = Math.max(0.6, k * 0.012); g.beginPath(); g.moveTo(x, y - 1.0 * k - bob); g.lineTo(x, y - 0.6 * k - bob); g.stroke();
+        g.fillStyle = mix(coat, "#1a1410", 0.6); g.beginPath(); g.moveTo(x - 0.03 * k, y - 0.86 * k - bob); g.quadraticCurveTo(x + Math.sin(ph) * 0.07 * k, y - 0.62 * k - bob, x + Math.sin(ph) * 0.05 * k, y - 0.5 * k - bob); g.lineTo(x + 0.04 * k, y - 0.86 * k - bob); g.fill();   // tail
+        base = 1.1;
+      }
+    } else {
+      const leg = Math.sin(ph) * 0.05, boots = NIGHTC("#3a2a1c", c);
+      shape([[-0.1, -0.5], [-0.02, -0.5], [-0.03, -0.02 + leg], [-0.11, -0.02 + leg]], mix(arm, "#2a2420", 0.35));
+      shape([[0.02, -0.5], [0.1, -0.5], [0.11, -0.02 - leg], [0.03, -0.02 - leg]], mix(arm, "#2a2420", 0.35));
+      g.fillStyle = boots; g.fillRect(x - 0.12 * k, y - 0.06 * k + leg * k, 0.1 * k, 0.06 * k); g.fillRect(x + 0.02 * k, y - 0.06 * k - leg * k, 0.1 * k, 0.06 * k);
+      base = 0.5;
+    }
+    const b0 = base + bob / k, sw = m.riding ? 0 : Math.sin(ph) * 0.04;
+    // body from behind: a cape if they wear one, else their armour; arms swinging (or on the reins)
+    shape([[-0.16, -b0], [-0.19, -b0 - 0.42], [-0.1, -b0 - 0.5], [0.1, -b0 - 0.5], [0.19, -b0 - 0.42], [0.16, -b0]], arm);
+    if (m.cape) shape([[-0.15, -b0 - 0.46], [0.15, -b0 - 0.46], [0.18 + sw, -b0 + (m.riding ? -0.04 : 0.12)], [-0.18 + sw, -b0 + (m.riding ? -0.04 : 0.12)]], NIGHTC(m.cape, c));
+    for (const sd of [-1, 1]) shape([[sd * 0.17, -b0 - 0.44], [sd * 0.23, -b0 - 0.42], [sd * (m.riding ? 0.16 : 0.24) + (m.riding ? 0 : sd * sw), -b0 - 0.14], [sd * (m.riding ? 0.11 : 0.19) + (m.riding ? 0 : sd * sw), -b0 - 0.16]], arm);
+    if (m.weapon && !m.riding) { g.strokeStyle = NIGHTC("#8a8a90", c); g.lineWidth = Math.max(0.7, k * 0.03); g.beginPath(); g.moveTo(x - 0.12 * k, y - (b0 + 0.46) * k); g.lineTo(x + 0.14 * k, y - (b0 + 0.06) * k); g.stroke(); }   // the blade across the back
+    if (m.shield) { g.fillStyle = NIGHTC("#6a5034", c); g.beginPath(); g.arc(x, y - (b0 + 0.26) * k, 0.13 * k, 0, TAU); g.fill(); g.strokeStyle = ink; g.lineWidth = lw; g.stroke(); }
+    // head: the back of a helmet or hair, the nape of the neck
+    g.fillStyle = skin; g.fillRect(x - 0.04 * k, y - (b0 + 0.56) * k, 0.08 * k, 0.07 * k);
+    g.fillStyle = m.helm ? NIGHTC(m.helm, c) : hair; g.beginPath(); g.ellipse(x, y - (b0 + 0.63) * k, 0.1 * k, 0.11 * k, 0, 0, TAU); g.fill(); g.strokeStyle = ink; g.lineWidth = lw; g.stroke();
+    if (it.label && k > 26) {   // a small name over teammates
+      g.font = `600 ${Math.max(8, Math.min(12, k * 0.13))}px "Barlow Semi Condensed", sans-serif`; g.textAlign = "center";
+      g.fillStyle = "rgba(10,10,12,0.55)"; g.fillText(m.name, x + 0.5, y - (b0 + 0.82) * k + 0.5); g.fillStyle = m.player ? "rgba(255,232,170,0.9)" : "rgba(235,235,235,0.8)"; g.fillText(m.name, x, y - (b0 + 0.82) * k);
+    }
+  };
   P.bridge = (g, x, y, s, it, c) => { /* the parapets, drawn by the road at the crossing (the water band is part of the ground) */
     const cam = c.cam; for (const sd of [-1, 1]) { const z0 = Math.max(ZN, it.z - 1.1), z1 = it.z + 1.1; const xa = cam.X(z0, sd * 1.15), xb = cam.X(z1, sd * 1.15), ya = cam.gy(z0), yb = cam.gy(z1), ha = cam.s(z0) * 0.28, hb = cam.s(z1) * 0.28;
       g.fillStyle = c.tone("#8c8678", it.z); g.beginPath(); g.moveTo(xa, ya); g.lineTo(xb, yb); g.lineTo(xb, yb - hb); g.lineTo(xa, ya - ha); g.closePath(); g.fill();
@@ -357,17 +465,27 @@ const FPWORLD = (() => {
   function paint(g, w, h, hz, I, t, ctx) {
     const S = SC(); if (!S) return null;
     const region = ctx.region, R = S.REGIONS[region] || S.REGIONS.tundra, shp = S.shape(ctx.route);
-    const cam = camera(w, h, hz, ctx.travel, ctx.curveS, R, shp), { L, nightK } = ctx, snowy = ctx.snowy || !!R.snowy;
+    const cam = camera(w, h, hz, ctx.travel, ctx.curveS, R, shp, ctx.bend), { L, nightK } = ctx, snowy = ctx.snowy || !!R.snowy;
     const dbg = { region, hzE: cam.hzE, objects: 0, kinds: {}, pitch: cam.pitch, fog: 0, sea: null, items: 0 };
     // haze toward the horizon, deeper at night, by distance
     const hazeK = R.haze + L.hazeAdd, horizon = ctx.horizon;
     const toneC = (col, z) => mix(mix(col, horizon, clamp((z - 2) / 44, 0, 1) * hazeK), NIGHT, nightK);
     const seaBear = drawStrip(g, cam, R, ctx); dbg.sea = seaBear ?? null;
     const seaSide = seaBear != null ? (() => { const rel = relDeg(seaBear - ctx.headS); return Math.abs(rel) < 150 ? Math.sign(rel) || 1 : 0; })() : 0;
-    const c = { R, cam, t, tone: toneC, snowy, season: ctx.sky?.season || "summer", wind: I.reduce ? 0 : 0.6 + (ctx.sky?.wind ?? 0.3), night: L.tod === "night", lights: ctx.lights, lightsLocal: [], water: mix(mix(ctx.sky0 || "#93b2c6", horizon, 0.5), "#2e4a5a", 0.35), seaSide };
+    const c = { R, cam, t, tone: toneC, snowy, season: ctx.sky?.season || "summer", wind: I.reduce ? 0 : 0.6 + (ctx.sky?.wind ?? 0.3), night: L.tod === "night", lights: ctx.lights, lightsLocal: [], water: mix(mix(ctx.sky0 || "#93b2c6", horizon, 0.5), "#2e4a5a", 0.35), seaSide, paint: ctx.paint || null, L, sky: ctx.sky || null, B: { hill: R.hill || "#6a6a5a" } };
     // the plan for what is in view
     const plan = S.plan(ctx.route, region, ctx.travel - 25, ctx.travel + ZF * 0.95, ctx.trip);
     const items = [], sky = [];
+    // the real places round you (fpreal.js): the ones close enough stand on the land where they really are
+    const PXU = typeof FPREAL !== "undefined" ? FPREAL.PX : 1.6;
+    for (const pl of ctx.places || []) { const z = pl.fwd / PXU, u = pl.lat / PXU; if (z < 1.2 || z > ZF * 0.98) continue; items.push({ kind: "place", z, d: ctx.travel + z, u: Math.abs(u) < 2.2 ? Math.sign(u || 1) * 2.2 : u, place: pl, seed: pl.name.length, h: 1 }); }
+    // your company walking and riding with you: staggered beside and just ahead (followers close, teammates further)
+    (ctx.mates || []).forEach((m, i) => {
+      const row = Math.floor(i / 2), sd = i % 2 ? 1 : -1, sway = I.reduce ? 0 : Math.sin(t * 0.35 + i * 1.9) * 0.15;
+      const z = (m.pet ? 2.0 : m.follower ? 2.6 : 3.4) + row * 1.5 + sway, u = sd * (m.pet ? 0.6 : 0.75 + (row % 2) * 0.35);
+      items.push({ kind: "mate", z, d: ctx.travel + z, u, mate: m, seed: i + 1, label: !m.pet && (m.player || m.follower), h: m.riding ? 1.6 : 1.1 });
+    });
+
     let fog = 0;
     const bctx = { travel: ctx.travel, seaSide, hold: ctx.sky?.hold || "" };
     for (const ev of plan) {

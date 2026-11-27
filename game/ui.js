@@ -1147,6 +1147,14 @@
     if (tr.boat && typeof SOLART !== "undefined") { const tv = el.querySelector(".tripvig"); if (tv && !tv.dataset.sea) { tv.dataset.sea = 1; tv.innerHTML = SOLART.sea(); } }   // at sea (solart.js)
     else if (typeof FXART !== "undefined") FXART.vignette(el.querySelector(".tripvig"), { ground, progress: p / 100, dest: tr.destName, origin: tr.origin, riding: HORSES.riding(S), carriage: !!tr.carriage, boat: !!tr.boat, horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, led: typeof RIDING !== "undefined" ? RIDING.led(S) : null, look: myLook(), company: typeof PARTY !== "undefined" ? PARTY.companions(S, party, others, here, (o) => otherPos(o), MP.NEAR_PX) : [], reduce: reduceMotion, sky: typeof SKY !== "undefined" ? SKY.state(here) : null });
   }
+  /* pets on the road with you in the road view: yours and your nearby teammates' (pets.js cards) */
+  function fptPets(here) {
+    const out = [], kindOf = (id) => { try { return (typeof PETS !== "undefined" && PETS.LIST?.[id]?.kind) || "dog"; } catch { return "dog"; } };
+    if (S.pet?.id) out.push({ name: S.pet.name || (typeof PETS !== "undefined" && PETS.nameOf ? PETS.nameOf(S.pet.id) : S.pet.id), pet: true, kind: kindOf(S.pet.id) });
+    if (S.follower?.id === "meeko") out.push({ name: "Meeko", pet: true, kind: "dog" });
+    try { if (party && typeof PARTY !== "undefined") for (const c of others) if (c.pet && PARTY.isMember(party, c.id) && G.pxDist(otherPos(c), here) <= MP.NEAR_PX * 1.5) out.push({ name: c.pet.n || c.pet.id, pet: true, kind: kindOf(c.pet.id) }); } catch { /* no cards */ }
+    return out.slice(0, 6);
+  }
   /* what the first-person travel band needs (fptravel.js): route, time, stops on the way, mount, company, sky, heading */
   let fptStops = { key: "", list: [] };
   function fptInfo(tr, here, ground, pace, mins) {
@@ -1180,8 +1188,8 @@
       riding: riding && !tr.carriage && !tr.boat, canRide: !tr.carriage && !tr.boat && hp && !downed, horse: hp ? { name: S.horse.name, coat: HORSES.coat(S.horse.coat)[2] } : null, downed,
       heavy: G.overweight(S), carriage: !!tr.carriage, boat: !!tr.boat, ship: tr.ship, follow: !!tr.follow, weather: wx && wx.id !== "clear" ? wx.name : "",
       sky: typeof SKY !== "undefined" ? SKY.state(here) : null, heading, turn, destBear: tr.dest ? brg(here, tr.dest) : null, look: myLook(),
-      company: typeof PARTY !== "undefined" ? PARTY.companions(S, party, others, here, (o) => otherPos(o), MP.NEAR_PX).map((c) => ({ name: c.name, player: !!c.player, riding: !!c.riding })) : [],
-      pet: S.pet ? (S.pet.name || S.pet.id || "") : "", say, reduce: reduceMotion, pos: here };   // pos: the road view reads the land around you (fpscene.js)
+      company: typeof PARTY !== "undefined" ? PARTY.companions(S, party, others, here, (o) => otherPos(o), MP.NEAR_PX).map((c) => ({ name: c.name, player: !!c.player, follower: !!c.follower, riding: !!c.riding, horse: c.horse || null, look: c.look || null })) : [],
+      pets: fptPets(here), pet: S.pet ? (S.pet.name || S.pet.id || "") : "", say, reduce: reduceMotion, pos: here, path, idx, known };   // pos/path: the road view reads the real land, places and bends round you (fpreal.js)   // pos: the road view reads the land around you (fpscene.js)
   }
   function renderTabs() {
     tabsEl.querySelectorAll(".tab").forEach((b) => {
