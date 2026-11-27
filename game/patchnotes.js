@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b383-perf", build: 383, date: "27 Nov 2026", title: "Smoother on phones", items: [
+      "Fights run much smoother on phones: the blurred picture behind the fight was being redrawn by the phone every single frame. Now it's made once and simply stretched, which roughly tripled the frame rate on a slow phone in our tests.",
+      "On phones fights now start at Medium quality and 30 frames a second (you can still pick High or No cap in Settings → Fights).",
+      "Travelling is lighter: while the road view shows your trip, the map under it draws fewer pictures, so the road and the map both move more evenly.",
+      "Opening the Hero tab is quicker: your character's picture is measured once instead of every time.",
+      "New in Settings → Performance: Battery saver (draws the map, the road and fights less often and less sharp, and thins out snow and rain) and Show performance (a small readout of frames per second and slow moments).",
+    ] },
     { id: "b382-npctasks", build: 382, date: "27 Nov 2026", title: "Every job you take is in the Journal", items: [
       "Every job, rumour and contract you take from someone in the world is in the Journal now: notice-board jobs, odd jobs at farms and camps, rumours from innkeepers and townsfolk, legendary hunts from a Jarl's steward, a Daedric prince's contract, your company's caravan escort and expedition.",
       "Each one shows who gave it and where, what to do next, how far along you are (like 3/5), how long you have left, and the reward. ☆ Track it to steer the compass, the map and the What to do next card, just like a quest.",

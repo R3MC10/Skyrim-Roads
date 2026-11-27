@@ -391,16 +391,31 @@ const DOLLFRONT = (() => {
   // ---------------------------------------------------------------- fitting it in a box
   /* scale and place so the figure stands at the bottom, as big as fits, and nothing (a raised staff, a cape, a wide
      shield) ever touches the edge: the drawn bounds are measured once off screen */
-  const FITS = new Map();
+  const FITS = new Map(), BOUNDS = new Map();
+  /* [perf] the figure's drawn bounds depend only on the look, not the box: measured once per look at 2 px per unit
+     (was 4, and again for every box size: ~0.8 M pixels scanned in script each time the Hero tab opened) */
+  function boundsOf(F) {
+    const bkey = JSON.stringify([F.L.r, F.L.eq, F.L.sx || "", F.set, F.bust.img.width]);
+    let b = BOUNDS.get(bkey); if (b) return b;
+    const k0 = 2, X = 110, Y0 = 210, cv = mk(X * 2 * k0, (Y0 + 8) * k0), g = cv.getContext("2d", { willReadFrequently: true });
+    g.setTransform(k0, 0, 0, k0, X * k0, Y0 * k0); for (const n of LAYERS) { g.save(); drawLayer(g, F, n); g.restore(); }
+    const W = cv.width, H = cv.height, d = new Uint32Array(g.getImageData(0, 0, W, H).data.buffer);
+    const opaque = (v) => (v >>> 24) > 24;   // alpha (little-endian RGBA)
+    let y0 = 0, y1 = H - 1, x0 = W, x1 = -1;
+    rows: for (; y0 < H; y0++) for (let x = 0; x < W; x++) if (opaque(d[y0 * W + x])) break rows;
+    rows2: for (; y1 > y0; y1--) for (let x = 0; x < W; x++) if (opaque(d[y1 * W + x])) break rows2;
+    for (let y = y0; y <= y1; y++) { const r = y * W;
+      for (let x = 0; x < x0; x++) if (opaque(d[r + x])) { x0 = x; break; }
+      for (let x = W - 1; x > x1; x--) if (opaque(d[r + x])) { x1 = x; break; } }
+    if (x1 < 0) { x0 = 0; x1 = W - 1; y0 = 0; y1 = H - 1; }
+    const bw = F.sp.bw || 1, bh = F.sp.bh || 1;   // the race's build stretches the figure after the fit, so the bounds are stretched too
+    b = [(x0 / k0 - X) * bw, (y0 / k0 - Y0) * bh, ((x1 + 1) / k0 - X) * bw, ((y1 + 1) / k0 - Y0) * bh];
+    if (BOUNDS.size > 100) BOUNDS.delete(BOUNDS.keys().next().value); BOUNDS.set(bkey, b); return b;
+  }
   function fitOf(F, w, h) {
     const key = JSON.stringify([F.L.r, F.L.eq, F.L.sx || "", F.set, w, h, F.bust.img.width]);
     let f = FITS.get(key); if (f) return f;
-    const k0 = 4, X = 110, Y0 = 210, cv = mk(X * 2 * k0, (Y0 + 8) * k0), g = cv.getContext("2d", { willReadFrequently: true });
-    g.setTransform(k0, 0, 0, k0, X * k0, Y0 * k0); for (const n of LAYERS) { g.save(); drawLayer(g, F, n); g.restore(); }
-    const d = g.getImageData(0, 0, cv.width, cv.height).data; let x0 = cv.width, x1 = -1, y0 = cv.height, y1 = -1;
-    for (let y = 0; y < cv.height; y++) for (let x = 0; x < cv.width; x++) if (d[(y * cv.width + x) * 4 + 3] > 24) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
-    const bw = F.sp.bw || 1, bh = F.sp.bh || 1;   // the race's build stretches the figure after the fit, so the bounds are stretched too
-    const ux0 = (x0 / k0 - X) * bw, ux1 = ((x1 + 1) / k0 - X) * bw, uy0 = (y0 / k0 - Y0) * bh, uy1 = ((y1 + 1) / k0 - Y0) * bh;
+    const [ux0, uy0, ux1, uy1] = boundsOf(F), bh = F.sp.bh || 1;
     const mg = Math.max(2, Math.min(w, h) * 0.035), fy = h * 0.95;
     let k = (h * 0.86) / (F.H * bh);
     k = Math.min(k, (fy - mg) / Math.max(1, -uy0), (h - mg - fy) / Math.max(0.1, uy1), (w - 2 * mg) / Math.max(1, ux1 - ux0));
