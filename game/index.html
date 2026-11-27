@@ -5913,6 +5913,12 @@ html.pcmap.pc-full #side>.mn-sub button.on::after{display:none}   /* on a wide P
 .title .press{animation:tpulse 2.6s ease-in-out infinite}
 @media (prefers-reduced-motion:reduce){.title .inner{transition:none}}
 .accmp span{display:block}.accmp>div.on{border-color:rgba(214,178,94,.85);box-shadow:inset 0 0 0 1px rgba(214,178,94,.35)}.acnew{font-style:normal;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#1a140c;background:#d6b25e;border-radius:3px;padding:1px 5px;margin-left:4px;vertical-align:1px}
+/* [fightsync] a teammate's phone catching up with the party's fight (sharedfight.js) */
+.tbf .tbresync{position:absolute;top:calc(env(safe-area-inset-top,0px) + 56px);left:50%;transform:translateX(-50%);z-index:30;padding:5px 12px;border-radius:999px;background:rgba(14,16,20,.86);border:1px solid rgba(214,178,94,.55);color:#e9dcc0;font-size:12.5px;letter-spacing:.02em;pointer-events:none;animation:tbresyncIn .25s ease-out}
+.tbf .tbresync::before{content:"";display:inline-block;width:8px;height:8px;margin-right:7px;border-radius:50%;border:2px solid #d6b25e;border-right-color:transparent;vertical-align:-1px;animation:tbresyncSpin .8s linear infinite}
+@keyframes tbresyncIn{from{opacity:0;transform:translate(-50%,-4px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes tbresyncSpin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.tbf .tbresync,.tbf .tbresync::before{animation:none}}
 /* [fightlook] PC: the rows sit under the foe's card in the right column, one foe per half-line, never over the fighters */
 #tbf .rowfield.c2r.c2side{transform:none}
 #tbf .rowfield.c2r.c2side .rfside{flex-direction:column;gap:4px}
@@ -6307,6 +6313,7 @@ html.pcmap.pc-full #side>.mn-sub button.on::after{display:none}   /* on a wide P
 <script src="i18n_deepdelve.js"></script>
 <script src="i18n_dunevents.js"></script>
 <script src="i18n_netsync.js"></script>
+<script src="i18n_fightsync.js"></script>
 <script src="i18n_netfix.js"></script>
 <script src="i18n_pcmap.js"></script>
 <script src="i18n_partytrain.js"></script>

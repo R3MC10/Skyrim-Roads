@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b378-fightsync", build: 378, date: "27 Nov 2026", title: "Party fights stay in step", items: [
+      "Party fights no longer get stuck on someone's turn when a message gets lost on a bad connection: your phone sends your turn again until the leader has it, and the leader's phone keeps telling you it's your turn until you've seen it. Nothing is ever played twice.",
+      "A spell that makes the foe flee or vanish (Turn Undead, Banish) now ends the fight for the whole party, not just on your screen. Before, your next turns did nothing.",
+      "With foes in two rows, your turn no longer hangs when the foe you were aiming at fell just before it: you aim at one still standing.",
+      "If your phone loses touch with the party for a while, you join the fight again when you're back, or you see how it ended and get your share. A short \"Catching up with your party…\" note shows while your screen syncs.",
+    ] },
     { id: "b377-fightlook", build: 377, date: "27 Nov 2026", title: "Fights look right", items: [
       "Whoever is striking is now drawn in front of the one they hit, so your blade no longer vanishes behind the foe, and Lydia's or your summon's attacks show up properly too.",
       "On phones your hero steps just up to the foe instead of walking through them, and a hard hit can no longer knock someone off the edge of the screen.",
