@@ -101,15 +101,22 @@ const COMBAT2 = (() => {
     let bd = stage.querySelector(".c2bd");
     if (typeof FIGHTSET !== "undefined" && !FIGHTSET.backdrop()) { clearInterval(bdT); bd?.remove(); return; }   // Fight quality: Low
     if (!bd) { bd = document.createElement("canvas"); bd.className = "c2bd"; bd.width = 24; bd.height = 16; bd.setAttribute("aria-hidden", "true"); stage.prepend(bd); }
+    const small = document.createElement("canvas"); small.width = 48; small.height = 32;   // the scene, shrunk (as it always was)
     clearInterval(bdT);
     const copy = () => {
       const el = document.getElementById("tbf");
       if (!el || !bd.isConnected) { clearInterval(bdT); return; }
       if (document.hidden) return;
       const cv = el.querySelector(".tbscene .fscene canvas"); if (!cv || !cv.width) return;
-      // [perf] darkened and softened once here, on a tiny canvas the screen stretches smoothly: a CSS blur(24px) over the
-      // whole screen was redone by the phone's graphics every single frame of the fight (the main cause of fight stutter)
-      try { const g = bd.getContext("2d"); g.filter = "brightness(0.5) saturate(1.2)"; g.drawImage(cv, 0, 0, bd.width, bd.height); g.filter = "none"; bd.classList.add("on"); } catch { /* not ready */ }
+      // [perf] blurred, darkened and saturated once here, at a quarter of its size on screen (the screen stretches it):
+      // the same picture as the old CSS blur(24px) (within 3/255 per pixel), which the phone redid every single frame
+      try {
+        small.getContext("2d").drawImage(cv, 0, 0, 48, 32);
+        const bw = Math.max(8, Math.ceil((bd.clientWidth || 440) / 4)), bh = Math.max(8, Math.ceil((bd.clientHeight || 720) / 4));   // its size on screen
+        if (bd.width !== bw || bd.height !== bh) { bd.width = bw; bd.height = bh; }
+        const g = bd.getContext("2d"); g.clearRect(0, 0, bw, bh); g.imageSmoothingEnabled = true;
+        g.filter = "blur(6px) brightness(0.5) saturate(1.2)"; g.drawImage(small, 0, 0, bw, bh); g.filter = "none"; bd.classList.add("on");
+      } catch { /* not ready */ }
     };
     copy(); setTimeout(copy, 120);
     bdT = setInterval(copy, reduce() ? 2000 : 450);

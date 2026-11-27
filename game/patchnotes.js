@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b386-perfdeep", build: 386, date: "27 Nov 2026", title: "Smoother without lowering graphics", items: [
+      "Full graphics are back everywhere: fights on phones start on High at full frame rate again, the map and compass are as sharp as your screen allows, and the title screen moves at full speed. Only Battery saver (off unless you turn it on) lowers anything.",
+      "The fog over the map and the clans' colours are now kept as a ready picture and slid along when you drag or walk, like the land under them, instead of being painted again every frame. Same picture, less work.",
+      "The soft blurred background behind a fight is now blurred once every half second instead of by the phone's graphics every frame. It looks the same.",
+      "Phones no longer turn off the frosted-glass look on menus."] },
     { id: "b385-perfmap", build: 385, date: "27 Nov 2026", title: "Smoother map on phones", items: [
       "The map no longer redraws itself all the time while you just look at it: falling snow now drifts on its own layer over the map, and a quiet map only updates a few times a second, so the map runs about twice as smooth on slow phones.",
       "With Battery saver on, a map you're not touching stays completely still until something on it changes, and the title screen shows a still picture instead of the moving one.",

@@ -2,14 +2,13 @@
    Owner: "the game is performing poorly on mobile" (stutter, low FPS, taps react late on the map, while travelling, in fights, in menus).
 
    - Battery saver (Settings → Performance): the map, the road view and the fight picture are drawn less often and with
-     fewer backing pixels, and weather/ambient particles are thinned. Off by default; on phones the normal settings are
-     already lighter than on PCs (fightset.js picks Medium quality and 30 fps there until you choose otherwise).
+     fewer backing pixels, and weather/ambient particles are thinned. Off by default: without it every device gets full quality.
    - Show performance: a small corner readout (frames per second, slow moments in the last 10 s, memory) to see what a
      phone copes with. Its own counting runs only while it's shown.
 
    Other modules ask:
      PERFMODE.saver()        → Battery saver on?
-     PERFMODE.phone()        → a phone-sized touch screen (the lighter defaults)
+     PERFMODE.phone()        → a phone-sized touch screen
      PERFMODE.gap(ms)        → the gap between two pictures to use instead of ms (longer with Battery saver)
      PERFMODE.dprCap(cap)    → the highest pixel density a big canvas may use (lower with Battery saver)
      PERFMODE.particles()    → 1, or less to thin out falling snow, rain, leaves, sparks */

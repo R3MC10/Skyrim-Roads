@@ -5956,10 +5956,6 @@ html.pcmap.pc-full #side>.mn-sub button.on::after{display:none}   /* on a wide P
 #tkadd .tka-t span{font-size:.8em;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #tkadd .btn{min-height:44px}
 @media (prefers-reduced-motion:reduce){#tkadd{transition:none}}
-/* [perfload] phones: no live blur behind always-on bars and popups. backdrop-filter re-blurs whatever moves behind it
-   (the map, the fight) every frame, a big cost on phone GPUs; these panels are nearly opaque anyway. */
-@media (pointer:coarse){.tabs,.favbtn,.title .press,.mo-on:not(.mo-lite) .modal,.mo-on .modal.mo-pop,.dunstrip,.rct,.pausem{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
-  .tabs{background:linear-gradient(180deg,rgba(10,11,13,.95),rgba(4,5,6,.99))}}
 /* [perf] Settings → Performance → Show performance: a small readout in the top corner (perfmode.js) */
 #perfhud{position:fixed;left:6px;top:calc(env(safe-area-inset-top,0px) + 4px);z-index:9999;pointer-events:none;padding:2px 7px;border-radius:6px;background:rgba(10,12,16,.78);color:#9fe0a0;font:600 11px/1.5 ui-monospace,monospace;letter-spacing:.2px}
 #perfhud.bad{color:#ffb070}
