@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b379-creaturerigs", build: 379, date: "27 Nov 2026", title: "Creatures come alive", items: [
+      "Beasts and monsters in fights now really move their bodies instead of the whole painting bending: wolves, sabre cats and skeevers snap with their jaws and paw at you, bears swipe, mammoths swing their trunks, and horkers rear their heads.",
+      "Trolls, giants, Dwarven Centurions and atronachs swing their arms and step on their legs, spiders and chauruses move their legs and fangs, mudcrabs pinch with their big claw, ice wraiths whip their tails, and dragons beat their wings and lash their tails and necks.",
+      "Legs and wings on the far side stay behind the body, and the near ones in front, so nothing pokes through the wrong way.",
+    ] },
     { id: "b378-fightsync", build: 378, date: "27 Nov 2026", title: "Party fights stay in step", items: [
       "Party fights no longer get stuck on someone's turn when a message gets lost on a bad connection: your phone sends your turn again until the leader has it, and the leader's phone keeps telling you it's your turn until you've seen it. Nothing is ever played twice.",
       "A spell that makes the foe flee or vanish (Turn Undead, Banish) now ends the fight for the whole party, not just on your screen. Before, your next turns did nothing.",

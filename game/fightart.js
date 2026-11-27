@@ -861,11 +861,12 @@ const FIGHTART = (() => {
     function drawWaiting(tt) {
       const pic0 = foeK !== "player" && typeof ASSETS !== "undefined" ? ASSETS.img(ASSETS.foeKey(rec.foeName, foeK, rec.f?.e?.arch)) : null;
       const pic = pic0 && typeof RIGLOOK !== "undefined" ? RIGLOOK.graded(pic0) : pic0, picH = (foeK === "dragon" ? 120 : 66) * Math.min(1.8, fSize);
+      const picKey = pic0 ? ASSETS.foeKey(rec.foeName, foeK, rec.f?.e?.arch) : null;
       curFoeLook = rec.foeLook; curArchLook = typeof FOEGROUPS !== "undefined" ? FOEGROUPS.look(rec.f?.e) : null; curDragon = null;
       for (const w of LAY.waiting) {
         wg.save(); wg.translate(w.x, w.y); wg.scale(-s * w.sc, s * w.sc); wg.globalAlpha = 0.86;
         if (!RIGW || pic) feetShadow(wg, 2, (foeK === "dragon" ? 60 : 20) * Math.min(1.8, fSize), 4.2 * Math.min(1.8, fSize), 0.6);   // [fightfeel] its feet on the ground
-        if (RIGW) { RIGWST.t = rm ? 0 : tt + w.x * 0.013; RIGWST.pose = isPerson || foeK === "player" ? waitP : null; RIGWST.pic = pic; RIGWST.picH = pic ? picH : 0; RIGW.draw(wg, RIGWST); }
+        if (RIGW) { RIGWST.t = rm ? 0 : tt + w.x * 0.013; RIGWST.pose = isPerson || foeK === "player" ? waitP : null; RIGWST.pic = pic; RIGWST.picKey = picKey; RIGWST.picH = pic ? picH : 0; RIGW.draw(wg, RIGWST); }
         else if (pic) { const wU = picH * pic.naturalWidth / pic.naturalHeight; wg.drawImage(pic, -wU / 2, -picH, wU, picH); }
         else foeFig(wg, foeK, 0, tt + w.x * 0.013, isPerson ? waitP : null);
         wg.restore();
@@ -1528,7 +1529,7 @@ const FIGHTART = (() => {
         else if (meDown) R.clip = "taunt";
         else if (them && b.status) { if (b.status === "stagger") R.clip = "stagger", R.u = u; else if (b.status === "para") R.clip = "para", R.u = 0.3, R.jitter = true; else if (b.status === "fear") R.clip = "cower"; }
         else if (them && m && b.move !== "wait") { R.clip = RIG.clipFor(b.move); R.u = poseU; R.hitU = m.hits?.[0] ?? null; }
-        R.pic = foePic; R.picH = foePic ? (foeK === "dragon" ? 120 : 66) * Math.min(1.8, fSize) * picK : 0; R.filter = curDragon?.filter || (lhP && foePic ? lhP.filter : null);
+        R.pic = foePic; R.picKey = foePic ? (lhP ? lhP.key : ASSETS.foeKey(rec.foeName, foeK, rec.f?.e?.arch)) : null; R.picH = foePic ? (foeK === "dragon" ? 120 : 66) * Math.min(1.8, fSize) * picK : 0; R.filter = curDragon?.filter || (lhP && foePic ? lhP.filter : null);
         RIG.draw(wg, R);
         if (cv.dataset.rig !== RIG.state) cv.dataset.rig = RIG.state;   // which clip is on (screen tests)
       } else if (foePic) {   // a painted foe: stands on the ground line, breathes, leans into its attacks
