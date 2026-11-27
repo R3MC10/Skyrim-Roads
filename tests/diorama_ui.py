@@ -12,7 +12,7 @@ OUT = sys.argv[2] if len(sys.argv) > 2 else os.path.join(tempfile.gettempdir(), 
 os.makedirs(OUT, exist_ok=True)
 CHROME = os.environ.get("CHROME")
 
-RUN = """async ([o, d, region, riding, w, h, tod, weather, secs, f0]) => {
+RUN = """async ([o, d, region, riding, w, h, tod, weather, secs, f0, extra]) => {
   const S = window.__dbg.save(), look = HEROART.lookOf(S), A = WORLD.places[o], B = WORLD.places[d];
   const path = Terrain.route([A[0], A[1]], [B[0], B[1]]);
   let box = document.getElementById('diobox'); if (box) box.remove();
@@ -20,7 +20,7 @@ RUN = """async ([o, d, region, riding, w, h, tod, weather, secs, f0]) => {
   document.body.appendChild(box);
   const sky = SKY.make({ tod, weather, season: 'autumn', north: true });
   let i = Math.floor(path.length * (f0 ?? 0.3)), pos = path[i], t = 0, drew = 0, s0 = null;
-  const info = () => ({ pos, path, idx: i, look, sky, dest: d, origin: o, known: () => true, riding, horse: { name: 'Plotka', coat: '#9b9b97' }, id: 'me', reduce: false });
+  const info = () => ({ ...(extra || {}), pos, path, idx: i, look, sky, dest: d, origin: o, known: () => true, riding, horse: { name: 'Plotka', coat: '#9b9b97' }, id: 'me', reduce: false });
   for (let f = 0; f < secs * 30; f++) {
     // the trip moves on like the game does (≈ 0.5 map px a second on foot, more riding)
     const mv = Terrain.moveAlong(path, i, pos, 1 / 30, riding ? 1.2 : 0.5); pos = mv.pos; i = mv.idx;
@@ -61,7 +61,7 @@ async def main():
                   ("Riverwood", "Whiterun", "valley", True, 960, 310, "day", "clear", 0.1), ("Solitude", "Morthal", "valley", False, 960, 310, "day", "clear", 0.4)]   # the White River and its bridge
         for c in CASES:
             (o, d, region, riding, w, h, tod, weather), f0 = c[:8], (c[8] if len(c) > 8 else 0.3)
-            r = await pg.evaluate(RUN, [o, d, region, riding, w, h, tod, weather, 4, f0])
+            r = await pg.evaluate(RUN, [o, d, region, riding, w, h, tod, weather, 4, f0, None])
             tag = f"{region}_{'ride' if riding else 'walk'}_{tod}_{weather}_{w}_{int(f0*100)}"
             if r["url"]:
                 with open(os.path.join(OUT, tag + ".png"), "wb") as f: f.write(base64.b64decode(r["url"].split(",")[1]))
@@ -119,11 +119,26 @@ async def main():
             if r["moved"]: fails.append(("stable " + o, "places moved", r["moved"]))
             if r["wet"]: fails.append(("stable " + o, "places standing in water", r["wet"]))
             if r["overlap"]: fails.append(("stable " + o, "places overlapping", r["overlap"][:5]))
+        # travelling together: a party (one riding), a follower and a dog behind you; then something stops you on the road
+        PARTY = {"company": [{"name": "Beta", "player": True, "riding": True, "horse": "#ebe6da", "look": {"r": "redguard", "eq": {"chest": "steel_armor", "weapon": "steel_sword"}}},
+                             {"name": "Gamma", "player": True, "riding": False, "look": {"r": "dunmer", "eq": {"chest": "leather_armor", "weapon": "hunting_bow"}}},
+                             {"name": "Lydia", "follower": True, "look": {"r": "nord", "eq": {"chest": "steel_armor", "weapon": "steel_sword"}}}],
+                 "pets": [{"name": "Meeko", "pet": True, "kind": "dog"}]}
+        for (tag, extra, need) in [("party", PARTY, None), ("toll", {**PARTY, "stop": {"id": "toll"}}, "foe-bandit"), ("wolves", {"stop": {"foe": "Wolf", "kind": "wolf", "n": 2}}, "foe-wolf"),
+                                   ("pilgrims", {"stop": {"id": "pilgrims"}}, "nord")]:
+            r = await pg.evaluate(RUN, ["Falkreath", "Riverwood", "pine", False, 960, 310, "day", "clear", 3, 0.4, extra])
+            dbg = r["dbg"] or {}
+            if r["url"]:
+                with open(os.path.join(OUT, "company_" + tag + ".png"), "wb") as f: f.write(base64.b64decode(r["url"].split(",")[1]))
+            print("company", tag, dbg.get("company"), dbg.get("pets"), dbg.get("cast"))
+            if extra.get("company") and dbg.get("company") != ["+Beta", "Gamma", "Lydia"]: fails.append((tag, "company not drawn", dbg.get("company")))
+            if extra.get("pets") and dbg.get("pets") != ["Meeko"]: fails.append((tag, "pet not drawn", dbg.get("pets")))
+            if need and need not in (dbg.get("cast") or []): fails.append((tag, "the road event's cast is missing", dbg.get("cast")))
         # no kit for the marsh, and Road view: Classic → the classic view draws
-        r = await pg.evaluate(RUN, ["Morthal", "Solitude", "marsh", False, 390, 150, "day", "clear", 1, 0.3])
+        r = await pg.evaluate(RUN, ["Morthal", "Solitude", "marsh", False, 390, 150, "day", "clear", 1, 0.3, None])
         if r["drew"]: fails.append(("marsh", "should keep the classic view"))
         await pg.evaluate("DIORAMA.setMode('classic')")
-        r = await pg.evaluate(RUN, ["Falkreath", "Riverwood", "pine", False, 390, 150, "day", "clear", 1, 0.3])
+        r = await pg.evaluate(RUN, ["Falkreath", "Riverwood", "pine", False, 390, 150, "day", "clear", 1, 0.3, None])
         if r["drew"]: fails.append(("classic", "Road view: Classic should keep the classic view"))
         await pg.evaluate("DIORAMA.setMode('diorama')")
         # the setting is in Settings → Look
