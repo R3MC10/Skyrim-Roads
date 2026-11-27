@@ -195,10 +195,29 @@ const DIORAMA = (() => {
     wg.fillStyle = "#4d6d7c"; wg.fillRect(0, 0, 256, 256);
     for (let i = 0; i < 140; i++) { const y = R().rand(i, 1, 5) * 256, x = R().rand(i, 2, 5) * 256, l = 20 + R().rand(i, 3, 5) * 70; wg.strokeStyle = `rgba(${R().rand(i, 4, 5) < 0.5 ? "214,228,232" : "40,62,74"},${0.12 + R().rand(i, 6, 5) * 0.25})`; wg.lineWidth = 1 + R().rand(i, 7, 5) * 2; wg.beginPath(); wg.moveTo(x, y); wg.lineTo(x + l, y + (R().rand(i, 8, 5) - 0.5) * 4); wg.stroke(); }
     const waterTex = new THREE.CanvasTexture(wc); waterTex.wrapS = waterTex.wrapT = THREE.RepeatWrapping;
-    const waterMat = new THREE.MeshBasicMaterial({ map: waterTex, transparent: true, opacity: 0.93, depthWrite: false });
-    const river = new THREE.Mesh(new THREE.BufferGeometry(), waterMat); river.renderOrder = 0.5; river.frustumCulled = false; scene.add(river);
-    const lakeTex = waterTex.clone(); lakeTex.needsUpdate = true; lakeTex.repeat.set(24, 24);
-    const lake = new THREE.Mesh(new THREE.PlaneGeometry(240, 240).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: lakeTex, transparent: true, opacity: 0.94, depthWrite: false }));
+    // water: deeper and darker in the middle, the sky's colour near the banks, two layers of ripples drifting with the
+    // current, a faint pale line where it meets the bank, edges that fade into the ground; fog and time of day apply
+    const waterMat = (lakeMode) => new THREE.ShaderMaterial({ transparent: true, depthWrite: false,
+      uniforms: { map: { value: waterTex }, t: { value: 0 }, deep: { value: new THREE.Color(0x2c4652) }, shallow: { value: new THREE.Color(0x8fa6b2) }, tint: { value: new THREE.Color(1, 1, 1) },
+        fogColor: { value: new THREE.Color(0x8e9fae) }, fogNear: { value: 30 }, fogFar: { value: 190 }, lake: { value: lakeMode ? 1 : 0 } },
+      vertexShader: "varying vec2 vUv; varying vec3 vW; varying float vFog; void main(){ vUv = uv; vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vec4 mv = viewMatrix * w; vFog = -mv.z; gl_Position = projectionMatrix * mv; }",
+      fragmentShader: `uniform sampler2D map; uniform float t, fogNear, fogFar, lake; uniform vec3 deep, shallow, tint, fogColor; varying vec2 vUv; varying vec3 vW; varying float vFog;
+        void main(){
+          float e = lake > 0.5 ? 1.0 : min(vUv.x, 1.0 - vUv.x) * 2.0;           // 0 at the banks, 1 mid-stream
+          vec2 p = lake > 0.5 ? vW.xz / 22.0 : vec2(vUv.x, vUv.y);
+          vec2 f1 = lake > 0.5 ? vec2(t * 0.004, t * 0.002) : vec2(0.0, -t * 0.12), f2 = lake > 0.5 ? vec2(-t * 0.003, t * 0.005) : vec2(0.3, -t * 0.21);
+          float r = dot(texture2D(map, p + f1).rgb, vec3(0.333)) * 0.5 + dot(texture2D(map, p * 1.7 + f2).rgb, vec3(0.333)) * 0.5;
+          vec3 col = mix(shallow, deep, smoothstep(0.15, 0.95, e));
+          col += (r - 0.36) * 0.45;
+          float foam = lake > 0.5 ? 0.0 : smoothstep(0.06, 0.13, e) * (1.0 - smoothstep(0.13, 0.24, e)) * 0.3;
+          col = mix(col, vec3(0.86, 0.9, 0.92), foam);
+          col *= tint;
+          col = mix(col, fogColor, smoothstep(fogNear, fogFar, vFog));
+          gl_FragColor = vec4(col, (lake > 0.5 ? 0.93 : smoothstep(0.0, 0.32, e) * 0.95));
+        }` });
+    const river = new THREE.Mesh(new THREE.BufferGeometry(), waterMat(false)); river.renderOrder = 0.5; river.frustumCulled = false; scene.add(river);
+    const lakeTex = waterTex;
+    const lake = new THREE.Mesh(new THREE.PlaneGeometry(240, 240).rotateX(-Math.PI / 2), waterMat(true));
     lake.renderOrder = 0.5; lake.visible = false; scene.add(lake);
     // places and bridges: cut-outs made when first needed
     const places = {};
@@ -235,6 +254,7 @@ const DIORAMA = (() => {
     const segs = TR ? D.riverSegs(TR.rivers, cx, cz, 170) : [];
     // the road wins over the river away from bridges: no channel or water under it (the map's river can brush a road)
     const nearBridge = (x, z) => (V.bridges || []).some((b) => Math.hypot(b.x - x, b.z - z) < (b.len || 24) / 2 + 6);
+    const underBridge = (x, z) => (V.bridges || []).some((b) => Math.hypot(b.x - x, b.z - z) < 10);   // the span itself
     const roadKeep = (x, z) => { const d = D.near(P, x, z).d; if (d > 9 || nearBridge(x, z)) return 1; return d < 5 ? 0 : (d - 5) / 4; };
     const lakeH = [];
     const tile = Math.floor(cx / 600) + "," + Math.floor(cz / 600);
@@ -251,7 +271,7 @@ const DIORAMA = (() => {
       const x = b[i * 3] + cx, z = b[i * 3 + 2] + cz;
       let y = D.land(P, x, z, hAt, hint);
       // water: the river's channel and lake or sea beds sink below the banks
-      if (segs.length) { const rd = D.riverDist(segs, x, z); if (rd < 8) { const k = rd < 3.5 ? 1 : 1 - (rd - 3.5) / 4.5, keep = roadKeep(x, z); y -= 2.2 * k * k * (3 - 2 * k) * keep; } }
+      if (segs.length) { const rd = D.riverDist(segs, x, z); if (rd < 8) { const k = rd < 3.5 ? 1 : 1 - (rd - 3.5) / 4.5, keep = roadKeep(x, z); y -= (underBridge(x, z) ? 3.8 : 2.2) * k * k * (3 - 2 * k) * keep; } }
       if (TR) { let ty = -1; try { ty = TR.typeAtPos(D.toMap(x, z)); } catch { /* off the map */ } if (ty === TT.SEA || ty === TT.LAKE) { lakeH.push(y); y = level != null ? Math.min(y - 2.6, level - 1.6) : y - 2.6; } }
       p.setXYZ(i, x, y, z); uv.setXY(i, x / 9, -z / 9);
     }
@@ -263,7 +283,7 @@ const DIORAMA = (() => {
         const L = Math.hypot(bx - ax, bz - az); if (L < 0.5) continue;
         const nx = -(bz - az) / L * 4.5, nz = (bx - ax) / L * 4.5, steps = Math.max(1, Math.ceil(L / 3));
         for (let q = 0; q <= steps; q++) {
-          const x = ax + (bx - ax) * q / steps, z = az + (bz - az) * q / steps, y = D.land(P, x, z, hAt, hint) - 1.0 - (1 - roadKeep(x, z)) * 3, v = q * 3 / 9;   // under the road the water sinks out of sight
+          const x = ax + (bx - ax) * q / steps, z = az + (bz - az) * q / steps, y = D.land(P, x, z, hAt, hint) - (underBridge(x, z) ? 2.7 : 1.0) - (1 - roadKeep(x, z)) * 3, v = q * 3 / 9;   // under the road the water sinks out of sight
           pos.push(x + nx, y, z + nz, x - nx, y, z - nz); uvs.push(0, v, 1, v);
           if (q) { const a = (k - 1) * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
           k++;
@@ -690,7 +710,9 @@ const DIORAMA = (() => {
     // a place's picture just arrived: put it in
     if (V.placeList.some((o) => LOADED.has(o.file) && !V.places[o.file]) || (V.wantBridge && LOADED.has(K().BRIDGE.file))) { V.patch = null; V.wantBridge = false; }
     // the current drifts down the river; the lake ripples slowly
-    if (!I.reduce) { V.waterTex.offset.y -= dt * 0.12; V.lakeTex.offset.x += dt * 0.004; }
+    { V.waterT = (V.waterT || 0) + (I.reduce ? 0 : dt);
+      for (const m of [V.river.material, V.lake.material]) { const u = m.uniforms; u.t.value = V.waterT; u.tint.value.copy(Lt.tint); u.fogColor.value.copy(Lt.fog); u.fogNear.value = Lt.near; u.fogFar.value = Lt.far;
+        u.shallow.value.setRGB(0.36, 0.48, 0.52).lerp(Lt.fog, 0.35); u.deep.value.setRGB(0.1, 0.17, 0.21).lerp(Lt.fog, 0.15); } }
     labels(host, I, here);
     V.lastDrew = performance.now();
     // draw: the scene, then the finish
