@@ -1,4 +1,4 @@
-/* i18n_perfload.js: Polish for the "Starts faster" patch notes (b383). Loaded before i18n.js; exact lines go in I18N_EXTRA.words. */
+/* i18n_perfload.js: Polish for the "Starts faster" patch notes (b384). Loaded before i18n.js; exact lines go in I18N_EXTRA.words. */
 var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 Object.assign(I18N_EXTRA.words, {
   "Starts faster, uses less memory": "Szybszy start, mniej pamięci",

@@ -100,14 +100,16 @@ const COMBAT2 = (() => {
   function backdrop(stage) {
     let bd = stage.querySelector(".c2bd");
     if (typeof FIGHTSET !== "undefined" && !FIGHTSET.backdrop()) { clearInterval(bdT); bd?.remove(); return; }   // Fight quality: Low
-    if (!bd) { bd = document.createElement("canvas"); bd.className = "c2bd"; bd.width = 48; bd.height = 32; bd.setAttribute("aria-hidden", "true"); stage.prepend(bd); }
+    if (!bd) { bd = document.createElement("canvas"); bd.className = "c2bd"; bd.width = 24; bd.height = 16; bd.setAttribute("aria-hidden", "true"); stage.prepend(bd); }
     clearInterval(bdT);
     const copy = () => {
       const el = document.getElementById("tbf");
       if (!el || !bd.isConnected) { clearInterval(bdT); return; }
       if (document.hidden) return;
       const cv = el.querySelector(".tbscene .fscene canvas"); if (!cv || !cv.width) return;
-      try { const g = bd.getContext("2d"); g.drawImage(cv, 0, 0, bd.width, bd.height); bd.classList.add("on"); } catch { /* not ready */ }
+      // [perf] darkened and softened once here, on a tiny canvas the screen stretches smoothly: a CSS blur(24px) over the
+      // whole screen was redone by the phone's graphics every single frame of the fight (the main cause of fight stutter)
+      try { const g = bd.getContext("2d"); g.filter = "brightness(0.5) saturate(1.2)"; g.drawImage(cv, 0, 0, bd.width, bd.height); g.filter = "none"; bd.classList.add("on"); } catch { /* not ready */ }
     };
     copy(); setTimeout(copy, 120);
     bdT = setInterval(copy, reduce() ? 2000 : 450);
