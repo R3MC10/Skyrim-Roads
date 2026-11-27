@@ -40,8 +40,39 @@ const DIOKITS = (() => {
     lair: { file: "dio-place-lair", h: 16, w: 1.79, rank: 4 }, landmark: { file: "dio-place-tower", h: 13, w: 0.66, rank: 3 },
     dungeon: { file: "dio-place-barrow", h: 10, w: 1.78, rank: 2 },
   };
+  /* the big places have their own painting (made with ChatGPT from the place-art brief): name → { file, h, w }; every
+     other place uses its kind's painting above */
+  const NAMED = {
+    "Markarth": { file: "dio-city-markarth", h: 36, w: 2.492 },
+    "Riften": { file: "dio-city-riften", h: 30, w: 2.899 },
+    "Solitude": { file: "dio-city-solitude", h: 38, w: 2.676 },
+    "Whiterun": { file: "dio-city-whiterun", h: 34, w: 2.606 },
+    "Windhelm": { file: "dio-city-windhelm", h: 34, w: 2.45 },
+    "Dawnstar": { file: "dio-town-dawnstar", h: 15, w: 2.963 },
+    "Dragon Bridge": { file: "dio-town-dragon-bridge", h: 13, w: 3.125 },
+    "Falkreath": { file: "dio-town-falkreath", h: 15, w: 2.419 },
+    "Helgen": { file: "dio-town-helgen", h: 15, w: 2.679 },
+    "Ivarstead": { file: "dio-town-ivarstead", h: 15, w: 2.733 },
+    "Morthal": { file: "dio-town-morthal", h: 15, w: 2.885 },
+    "Riverwood": { file: "dio-town-riverwood", h: 15, w: 2.83 },
+    "Rorikstead": { file: "dio-town-rorikstead", h: 15, w: 3.209 },
+    "Winterhold": { file: "dio-town-winterhold", h: 15, w: 2.83 },
+    "High Hrothgar": { file: "dio-landmark-high-hrothgar", h: 26, w: 2.113 },
+    "Sky Haven Temple": { file: "dio-landmark-sky-haven-temple", h: 20, w: 1.964 },
+    "Darkwater Crossing": { file: "dio-town-darkwater-crossing", h: 15, w: 2.715 },
+    "Dushnikh Yal": { file: "dio-town-dushnikh-yal", h: 15, w: 3.191 },
+    "Karthwasten": { file: "dio-town-karthwasten", h: 15, w: 2.637 },
+    "Kynesgrove": { file: "dio-town-kynesgrove", h: 15, w: 3.023 },
+    "Largashbur": { file: "dio-town-largashbur", h: 15, w: 2.715 },
+    "Mor Khazgur": { file: "dio-town-mor-khazgur", h: 15, w: 3.085 },
+    "Narzulbur": { file: "dio-town-narzulbur", h: 15, w: 2.592 },
+    "Old Hroldan": { file: "dio-town-old-hroldan", h: 10, w: 2.243 },
+    "Shor's Stone": { file: "dio-town-shors-stone", h: 15, w: 2.892 },
+    "Soljund's Sinkhole": { file: "dio-town-soljunds-sinkhole", h: 11, w: 2.358 },
+    "Stonehills": { file: "dio-town-stonehills", h: 15, w: 3.008 },
+  };
   const BRIDGE = { file: "dio-place-bridge", h: 3.8, deck: 0.86 };   // deck: where the road runs, as a share of the height from the bottom
   const FILES = ["dio-sky", "dio-far", "dio-mid", "dio-floor", "dio-road", ...new Set(Object.values(PROPS).map((p) => p.file))];
-  return { PROPS, KITS, PLACES, BRIDGE, FILES, of: (r) => KITS[r] || null };
+  return { PROPS, KITS, PLACES, NAMED, BRIDGE, FILES, of: (r) => KITS[r] || null };
 })();
 if (typeof module !== "undefined") module.exports = DIOKITS;

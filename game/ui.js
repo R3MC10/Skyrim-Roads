@@ -929,7 +929,8 @@
   function cueThenOpen(status, open) {
     if (!(typeof DIORAMA !== "undefined" && DIORAMA.showing && DIORAMA.showing())) return open();
     renderTrip();
-    setTimeout(() => { if (S.trip?.status === status && !$("#modal")) open(); }, 2200);
+    const ms = DIORAMA.cueMs ? DIORAMA.cueMs(!!(HORSES.riding && HORSES.riding(S))) : 2200;   // as long as it takes to ride or walk up to them
+    setTimeout(() => { if (S.trip?.status === status && !$("#modal")) open(); }, ms);
   }
   /* caravans on the road (caravanroad.js): your road brings you alongside one, or you tap its wagon on the map */
   function meetCaravan(cid, auto) {

@@ -402,7 +402,8 @@ const DIORAMA = (() => {
     };
     const cand = [];
     for (const [name, pp] of Object.entries(Wd)) {
-      if (!pp) continue; const kind = pp[2] || "town", art = PL[kind]; if (!art) continue;
+      if (!pp) continue; const kind = pp[2] || "town", own = K().NAMED[name], base = PL[kind] || (own ? PL.town : null); if (!base) continue;
+      const art = own ? { ...base, ...own } : base;   // its own painting when it has one
       const [x, z] = D.toWorld(pp), r = D.near(P, x, z); if (r.d > 1000) continue;
       cand.push({ name, kind, art, x0: x, z0: z, rad: art.h * art.w / 2 });
     }
@@ -458,6 +459,10 @@ const DIORAMA = (() => {
     return { tod, wx, fog, near: 30 * thick, far: 190 * thick, tint: t, grade: L.grade, dark: L.dark + (wx === "storm" ? 0.15 : 0), snow: ["snow", "blizzard"].includes(wx) };
   }
 
+  /* walking up to whoever stops you: how far back they first stand (just out of view) and at what pace; the event card
+     waits about as long (DIORAMA.cueMs, used by ui.js) */
+  const APPROACH = { gap: 7, walk: { dist: 9, v: 1.8 }, ride: { dist: 16, v: 3.2 } };
+  const cueMs = (riding) => { const p = riding ? APPROACH.ride : APPROACH.walk; return Math.round(p.dist / p.v * 1000 + 600); };
   // ---------------------------------------------------------------- your company and who's on the road ahead
   /* who stands on the road for each road event (events.js) and encounter (encounters.js): painted foes (foe-*.webp)
      or people drawn with the hero figure; a shrine or a camp is a place painting by the road */
@@ -552,7 +557,7 @@ const DIORAMA = (() => {
     // who's on the road ahead when something stops you
     const cast = castOf(I.stop);
     cast.forEach((c, k) => {
-      const key = "cast:" + (I.stop.id || I.stop.foe) + ":" + k, ahead = S0 + (c.far ? 22 : 8) + k * 2.4, lat = c.side != null ? -c.side : k % 2 ? 1.1 : -1.1;
+      const key = "cast:" + (I.stop.id || I.stop.foe) + ":" + k, ahead = (V.stopAt != null ? V.stopAt : S0 + 8) + (c.far ? 14 : 0) + k * 2.4, lat = c.side != null ? -c.side : k % 2 ? 1.1 : -1.1;
       if (c.foe || c.pet) {
         const file = c.foe || c.pet, h = c.pet ? 0.85 : FOE_H[file] || 1.85;
         const a = V.actors.get(key) || (pictureActor(file, h) && actor(key, () => pictureActor(file, h))); if (!a) return; a.seen = true;
@@ -612,9 +617,19 @@ const DIORAMA = (() => {
     if (V.sTarget != null && target !== V.sTarget) { const v = clamp((target - V.sTarget) / Math.max(V.since, 1 / 30), 0, 12); V.vEst = V.vEst ? V.vEst * 0.6 + v * 0.4 : v; V.since = 0; }
     if (V.since > 1.6 || I.stop) V.vEst = 0;
     V.sTarget = target;
-    const before = V.sDisp, gap = target - V.sDisp, vmax = Math.max(0.6, V.vEst * 1.6 + 0.5);
-    if (!I.reduce) V.sDisp += clamp(gap, -vmax * dt, vmax * dt); else V.sDisp = target;
-    const speed = dt > 0 ? (V.sDisp - before) / dt : 0, moving = !I.reduce && !I.stop && (speed > 0.15 || V.vEst > 0.15);
+    // something stops you: the game stops the trip at once, but here they stand a little further down the road, just out
+    // of view, and you ride (or walk) up to them first. Afterwards the road view is that much ahead of the trip, and
+    // eases back by walking a touch slower until they match (never a jump back).
+    const stopKey = I.stop ? String(I.stop.id || I.stop.foe) : null, appr = I.riding ? APPROACH.ride : APPROACH.walk;
+    if (stopKey && V.stopKey !== stopKey) { V.stopKey = stopKey; V.stopAt = Math.min(V.sDisp + appr.dist + APPROACH.gap, P.len); }
+    if (!stopKey && V.stopKey) { V.stopKey = null; V.ahead = Math.max(0, V.sDisp - target); }
+    if (!stopKey && V.ahead > 0) V.ahead = Math.max(0, V.ahead - (0.18 * V.vEst + 0.04) * dt);
+    const before = V.sDisp;
+    if (I.reduce) V.sDisp = stopKey ? V.stopAt - APPROACH.gap : target;
+    else if (stopKey) V.sDisp += clamp(V.stopAt - APPROACH.gap - V.sDisp, 0, appr.v * dt);
+    else { const goal = target + (V.ahead || 0), gap = goal - V.sDisp, vmax = Math.max(0.6, V.vEst * 1.6 + 0.5); V.sDisp += clamp(gap, -vmax * dt, vmax * dt); }
+    const speed = dt > 0 ? (V.sDisp - before) / dt : 0;
+    const moving = !I.reduce && (stopKey ? speed > 0.15 : speed > 0.15 || V.vEst > 0.15);
     const here = D.at(P, V.sDisp);
     // rebuild the land when you've moved on
     if (!V.patch || Math.hypot(here.x - V.patch[0], here.z - V.patch[1]) > 25) rebuild(here.x, here.z, kit);
@@ -685,7 +700,7 @@ const DIORAMA = (() => {
     // too slow for this phone? frames that keep taking long hand back to the classic view
     // too slow for this phone? an average under ~18 pictures a second for 6 s hands back to the classic view
     if (dt > 0 && !I.reduce) { avgDt = avgDt ? avgDt * 0.95 + Math.min(dt, 0.25) * 0.05 : dt; if (avgDt > 0.055) slow += dt; else slow = Math.max(0, slow - dt); }
-    V.dbg = { ...V.dbg, region, s: V.sDisp, len: P.len, moving, riding: !!I.riding, tod: Lt.tod, wx: Lt.wx, ms: (typeof performance !== "undefined" ? performance.now() : 0) - t0, y: here.y };
+    V.dbg = { ...V.dbg, region, ahead: V.ahead || 0, stopAt: V.stopKey ? V.stopAt : null, s: V.sDisp, len: P.len, moving, riding: !!I.riding, tod: Lt.tod, wx: Lt.wx, ms: (typeof performance !== "undefined" ? performance.now() : 0) - t0, y: here.y };
     return true;
   }
   /* names over the places you know (and the one you're heading for); an arrow at the edge while it's still off screen */
@@ -713,9 +728,9 @@ const DIORAMA = (() => {
     try { V.renderer.dispose(); V.rt.dispose(); } catch { /* gone */ }
     V.canvas.remove(); for (const el of V.labels.values()) el.remove(); V = null;
   }
-  return { frame, detach, mode, setMode, settingsHTML, pref, usable, showing: () => !!(V && V.canvas.isConnected && V.lastDrew && performance.now() - V.lastDrew < 1500), debug: () => (V ? V.dbg : null),
+  return { frame, detach, mode, setMode, settingsHTML, pref, usable, cueMs, showing: () => !!(V && V.canvas.isConnected && V.lastDrew && performance.now() - V.lastDrew < 1500), debug: () => (V ? V.dbg : null),
     /* tests: every cut-out and place as it stands now, and whether a spot is in water */
     _snap: () => V && { props: Object.entries(V.cards).flatMap(([k, m]) => { const a = m.geometry.attributes.iPos.array, n = m.geometry.instanceCount, out = []; for (let i = 0; i < n; i++) out.push([k, a[i * 3], a[i * 3 + 1], a[i * 3 + 2]]); return out; }),
-      places: V.placeList.map((o) => ({ name: o.name, x: o.x, y: o.y, z: o.z, rad: o.rad, s: o.s, d: o.d * o.side, wet: V.wet ? footWet(V.prof, o.x, o.z, o.rad, V.wet) : null })), patch: V.patch, lake: V.lake.visible ? V.lake.position.y : null }, why: () => why || (threeState !== "ready" ? "loading three.js" : V && !ready() ? "loading paintings" : ""), _slow: () => slow };
+      places: V.placeList.map((o) => ({ name: o.name, file: o.file, x: o.x, y: o.y, z: o.z, rad: o.rad, s: o.s, d: o.d * o.side, wet: V.wet ? footWet(V.prof, o.x, o.z, o.rad, V.wet) : null })), patch: V.patch, lake: V.lake.visible ? V.lake.position.y : null }, why: () => why || (threeState !== "ready" ? "loading three.js" : V && !ready() ? "loading paintings" : ""), _slow: () => slow };
 })();
 if (typeof module !== "undefined") module.exports = DIORAMA;

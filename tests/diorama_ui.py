@@ -106,8 +106,9 @@ async def main():
           for (let k = 0; k < 200 && !DIORAMA.frame(box, info, 0, 0, 'valley'); k++) await new Promise((r) => setTimeout(r, 30));
           const pl = DIORAMA._snap().places, rw = pl.find((p) => p.name === 'Riverwood'), [mx, mz] = DIOROUTE.toWorld(A);
           const P = DIOROUTE.profile(path, (q) => FPREAL.heightAt(q)), camSide = pl.filter((p) => { const n = DIOROUTE.near(P, p.x, p.z); return n.side > 0 && n.d < p.rad + 44; }).map((p) => p.name);
-          return { names: pl.map((p) => p.name), off: rw ? Math.hypot(rw.x - mx, rw.z - mz) : null, camSide }; }""")
+          return { names: pl.map((p) => p.name), off: rw ? Math.hypot(rw.x - mx, rw.z - mz) : null, camSide, file: rw && rw.file }; }""")
         if r["camSide"]: fails.append(("ends", "places close by on the camera's side of the road", r["camSide"]))
+        if r["file"] != "dio-town-riverwood": fails.append(("ends", "Riverwood should use its own painting", r["file"]))
         if "Riverwood" not in r["names"]: fails.append(("ends", "Riverwood should be shown at the start of the trip", r["names"][:8]))
         elif r["off"] > 60: fails.append(("ends", "Riverwood moved too far from where it is on the map", round(r["off"])))
         print("Riverwood stands", r["off"] and round(r["off"]), "m from its map spot")
@@ -126,7 +127,7 @@ async def main():
                  "pets": [{"name": "Meeko", "pet": True, "kind": "dog"}]}
         for (tag, extra, need) in [("party", PARTY, None), ("toll", {**PARTY, "stop": {"id": "toll"}}, "foe-bandit"), ("wolves", {"stop": {"foe": "Wolf", "kind": "wolf", "n": 2}}, "foe-wolf"),
                                    ("pilgrims", {"stop": {"id": "pilgrims"}}, "nord")]:
-            r = await pg.evaluate(RUN, ["Falkreath", "Riverwood", "pine", False, 960, 310, "day", "clear", 3, 0.4, extra])
+            r = await pg.evaluate(RUN, ["Falkreath", "Riverwood", "pine", False, 960, 310, "day", "clear", 7 if extra.get("stop") else 3, 0.4, extra])   # time to walk up to them
             dbg = r["dbg"] or {}
             if r["url"]:
                 with open(os.path.join(OUT, "company_" + tag + ".png"), "wb") as f: f.write(base64.b64decode(r["url"].split(",")[1]))
@@ -135,6 +136,24 @@ async def main():
             if extra.get("pets") and dbg.get("pets") != ["Meeko"]: fails.append((tag, "pet not drawn", dbg.get("pets")))
             if need and need not in (dbg.get("cast") or []): fails.append((tag, "the road event's cast is missing", dbg.get("cast")))
             if extra.get("stop") and dbg.get("moving"): fails.append((tag, "stopped on the road but still walking or riding"))
+        # something stops you: they stand down the road out of view at first, and you walk (or ride) up to them
+        for riding in (False, True):
+            r = await pg.evaluate("""async (riding) => { const A = WORLD.places.Falkreath, B = WORLD.places.Riverwood, path = Terrain.route([A[0], A[1]], [B[0], B[1]]);
+              const box = document.getElementById('diobox'); DIORAMA.detach(); const i = Math.floor(path.length * 0.4), pos = path[i];
+              const info = (stop) => ({ pos, path, idx: i, look: HEROART.lookOf(window.__dbg.save()), dest: 'Riverwood', origin: 'Falkreath', id: 'me', riding, horse: { coat: '#999' }, stop });
+              for (let k = 0; k < 200 && !DIORAMA.frame(box, info(null), 0, 0, 'pine'); k++) await new Promise((r) => setTimeout(r, 30));
+              for (let k = 0; k < 10; k++) DIORAMA.frame(box, info(null), 1 / 30, k / 30, 'pine');
+              DIORAMA.frame(box, info({ id: 'toll' }), 1 / 30, 1, 'pine'); const d0 = DIORAMA.debug(), first = d0.stopAt - d0.s, cue = DIORAMA.cueMs(riding);
+              let f = 0; for (; f < 30 * 12 && DIORAMA.debug().stopAt - DIORAMA.debug().s > 7.05; f++) DIORAMA.frame(box, info({ id: 'toll' }), 1 / 30, 1 + f / 30, 'pine');
+              const reached = f / 30;
+              for (let k = 0; k < 30; k++) DIORAMA.frame(box, info(null), 1 / 30, 20 + k / 30, 'pine');   // let go: nothing jumps back
+              const after = DIORAMA.debug();
+              return { first, reached, cue, ahead: after.ahead, sBack: after.s - d0.s };
+            }""", riding)
+            print("approach", "ride" if riding else "walk", r)
+            if r["first"] < 15: fails.append(("approach", "the cast should start out of view, further down the road", r))
+            if abs(r["reached"] * 1000 - r["cue"]) > 1200: fails.append(("approach", "the card should open about when you reach them", r))
+            if r["sBack"] < 0: fails.append(("approach", "you jumped back after the stop", r))
         # the game moves you about once a second: you keep walking between updates, and stand still once they stop
         r = await pg.evaluate("""async () => { const A = WORLD.places.Falkreath, B = WORLD.places.Riverwood, path = Terrain.route([A[0], A[1]], [B[0], B[1]]);
           const box = document.getElementById('diobox'); DIORAMA.detach(); let i = Math.floor(path.length * 0.4), pos = path[i];
