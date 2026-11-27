@@ -998,6 +998,7 @@ const TB = (() => {
   /* a healing spell, potion or scroll you dragged onto a teammate instead of yourself */
   function onAlly(f, a, al) {
     const [k, arg] = a.split(":");
+    if (typeof al.hp !== "number" || !isFinite(al.hp)) return null;   // [fight-logic] a called ally with no health bar (Odahviing, a hero of Sovngarde, a wild animal): the heal goes to you, it used to turn their health into NaN
     const mx = al.maxHp || al.hpMax || al._max || Math.max(al.hp, 60), b = al.hp;
     if (k === "potion") {
       const r = f.findPotion(arg); if (!r) return null;

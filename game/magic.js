@@ -176,7 +176,7 @@ const MAGIC = (() => {
       if ((f.e.level ?? 1) > sp.max_level + (G.P(f.s, "rage") && !fx ? 8 : fx)) return `${sp.name}: no effect (level too high)`;
       f.fearTurns = Math.round(sp.amount) + (G.P(f.s, "aspect_of_terror") ? 1 : 0); return `${sp.name}: the ${f.e.name.toLowerCase()} cowers`;
     },
-    courage(f, sp) { const k = 1 + sp.amount / 100; f.allies.forEach((a) => { a.dmg *= k; }); f.summonDmg *= k; f.braveHp = sp.amount; f.hp += sp.amount / 2; return `${sp.name}: ${f.allies.length || f.summonTurns ? "your allies fight harder" : "you feel bold"}`; },
+    courage(f, sp) { const prev = f.braveHp || 0, k = Math.max(1, (1 + sp.amount / 100) / (1 + prev / 100));   /* [fight-logic] a second Courage tops the boost up instead of stacking it again and again */ f.allies.forEach((a) => { a.dmg *= k; }); f.summonDmg *= k; f.braveHp = Math.max(prev, sp.amount); f.hp = Math.min(G.maxHealth(f.s), f.hp + sp.amount / 2);   /* never above your max health */ return `${sp.name}: ${f.allies.length || f.summonTurns ? "your allies fight harder" : "you feel bold"}`; },
     invisibility(f, sp) { f.unseen = 2; f.sneakNext = true; return `${sp.name}: you vanish. Your next blow is a sneak attack`; },
     bound(f, sp) { f.bound = { dmg: sp.amount * (1 + (typeof PFX !== "undefined" ? PFX.sum(f.s, "bound", f, {}) : 0)), skill: sp.skill, wt: sp.wt, name: sp.name.replace("Bound ", "bound ") }; f.wt = sp.wt; return `${sp.name}: a weapon of light forms in your hand`; },
     soultrap(f, sp) { f.soulTrap = true; return `${sp.name}: a purple glow surrounds the ${f.e.name.toLowerCase()}`; },
