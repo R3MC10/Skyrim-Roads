@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b388-gpu", build: 388, date: "27 Nov 2026", title: "Fights drawn by your graphics chip", items: [
+      "The big painted backdrop behind a fight can now be drawn by your phone's graphics chip. It looks the same (we checked it pixel by pixel against the old way).",
+      "In the first seconds of a fight the game times both ways on your phone and keeps the quicker one, so it never gets slower. If something goes wrong it quietly goes back to the old way.",
+      "Want to try it yourself? Settings → Performance → Graphics engine: Auto (default), GPU (always the graphics chip) or Classic (never).",
+      "The map, the road view and the title screen move over next.",
+    ] },
     { id: "b387-perfdeep", build: 387, date: "27 Nov 2026", title: "Smoother without lowering graphics", items: [
       "Full graphics are back everywhere: fights on phones start on High at full frame rate again, the map and compass are as sharp as your screen allows, and the title screen moves at full speed. Only Battery saver (off unless you turn it on) lowers anything.",
       "The fog over the map and the clans' colours are now kept as a ready picture and slid along when you drag or walk, like the land under them, instead of being painted again every frame. Same picture, less work.",

@@ -390,7 +390,7 @@
       ${typeof MOTION !== "undefined" ? `<div class="setrow"><span>Motion</span>${seg("motion", [["full", "Full"], ["lite", "Lite"], ["off", "Off"]], MOTION.pref())}</div>` : ""}
       ${typeof TB !== "undefined" ? `<h3>Fights</h3>${typeof GORE !== "undefined" ? GORE.settingsHTML(seg) : typeof COMBATFX !== "undefined" ? `<div class="setrow"><span>Blood</span>${seg("gore", [[true, "On"], [false, "Off"]], getPref("gore", true))}</div>` : ""}` : ""}${typeof FIGHTCTL !== "undefined" && typeof TB !== "undefined" ? FIGHTCTL.settingsHTML(seg) : ""}${typeof COMBAT2 !== "undefined" && typeof TB !== "undefined" ? COMBAT2.settingsHTML(seg) : ""}${typeof FIGHTSET !== "undefined" && typeof TB !== "undefined" ? FIGHTSET.settingsHTML(seg) : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.settingsHTML(seg) : ""}
       ${S && typeof DIFF !== "undefined" ? DIFF.settingsHTML(seg, S) : ""}
-      ${typeof PERFMODE !== "undefined" ? PERFMODE.settingsHTML(seg) : ""}
+      ${typeof PERFMODE !== "undefined" ? PERFMODE.settingsHTML(seg) : ""}${typeof GLR !== "undefined" ? GLR.settingsHTML(seg) : ""}
       ${typeof ACCESS !== "undefined" ? ACCESS.settingsHTML(seg) : ""}
       ${typeof ONBOARD !== "undefined" ? ONBOARD.settingsHTML(seg) : ""}
       ${typeof BUGREPORT !== "undefined" ? BUGREPORT.settingsHTML() : ""}
@@ -413,7 +413,8 @@
     if (typeof I18N !== "undefined" && I18N.pref(k, b.dataset.v)) return true;
     if (typeof ACCESS !== "undefined" && ACCESS.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }
     if (typeof ONBOARD !== "undefined" && ONBOARD.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title */ } } return true; }
-    if (typeof PERFMODE !== "undefined" && PERFMODE.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Performance → Battery saver, Show performance (perfmode.js)
+    if (typeof PERFMODE !== "undefined" && PERFMODE.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }
+    if (typeof GLR !== "undefined" && GLR.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Performance → Graphics engine GPU / Classic (glrender.js)   // Performance → Battery saver, Show performance (perfmode.js)
     if (typeof FIGHTSET !== "undefined" && FIGHTSET.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Fights → Fight quality, Fight camera, Frame rate (fightset.js)
     if (typeof GORE !== "undefined" && GORE.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Fights → Blood and gore: Off / Low / Full (gore.js)
     if (typeof FASTQOL !== "undefined" && FASTQOL.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // replay speed, carry on after road events
