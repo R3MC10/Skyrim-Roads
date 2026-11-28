@@ -264,7 +264,14 @@ const DIORAMA = (() => {
     const farGround = new THREE.Mesh(new THREE.PlaneGeometry(8000, 8000).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x8e9fae, depthWrite: false }));   // the land beyond the patch: the forest floor, fading into the fog farGround.renderOrder = -11; scene.add(farGround);   // never hides the ridges behind it
     // the ground patch round you (rebuilt as you go) and the road ribbon
     const gGeo = new THREE.PlaneGeometry(240, 240, 96, 96); gGeo.rotateX(-Math.PI / 2);
+    // the land further out: a coarse disc of the real ground, 400 m round you, under the detailed patch, so distant
+    // towns stand on their real hills; its rim eases down to the flat sheet beyond, inside the painted ridges (430 m)
+    const dGeo = (() => { const NR = 24, NS = 64, pos = [], idx = [];
+      for (let k = 0; k <= NR; k++) { const r = 400 * Math.pow(k / NR, 1.3); for (let q = 0; q < NS; q++) { const a = q / NS * Math.PI * 2; pos.push(Math.cos(a) * r, 0, Math.sin(a) * r); } }
+      for (let k = 0; k < NR; k++) for (let q = 0; q < NS; q++) { const a = k * NS + q, b = k * NS + (q + 1) % NS, c = a + NS, d = b + NS; idx.push(a, b, c, b, d, c); }
+      const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.userData.base = Float32Array.from(pos); return g; })();
     const ground = new THREE.Mesh(gGeo, groundMat(tex("dio-floor", true))); ground.frustumCulled = false; scene.add(ground);
+    const farLand = new THREE.Mesh(dGeo, ground.material); farLand.frustumCulled = false; farLand.visible = false; scene.add(farLand);
     const edge = document.createElement("canvas"); edge.width = 64; edge.height = 4; const eg = edge.getContext("2d");
     const gr = eg.createLinearGradient(0, 0, 64, 0); gr.addColorStop(0, "#000"); gr.addColorStop(0.2, "#fff"); gr.addColorStop(0.8, "#fff"); gr.addColorStop(1, "#000"); eg.fillStyle = gr; eg.fillRect(0, 0, 64, 4);
     const road = new THREE.Mesh(new THREE.BufferGeometry(), basic(tex("dio-road", true), { alphaMap: new THREE.CanvasTexture(edge), transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }));
@@ -325,7 +332,7 @@ const DIORAMA = (() => {
     const post = new THREE.ShaderMaterial({ uniforms: { t: { value: rt.texture }, res: { value: new THREE.Vector2(1, 1) }, focus: { value: 0.38 }, band: { value: 0.18 }, blur: { value: 8 }, taps: { value: 14 }, grade: { value: new THREE.Vector3(1, 1, 1) }, dark: { value: 0 }, wo: { value: 0 }, woT: { value: 0 }, woDir: { value: new THREE.Vector2(0, 0) } },
       vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }", fragmentShader: POST_FS, depthTest: false, depthWrite: false });
     const postScene = new THREE.Scene(), postCam = new THREE.Camera(); postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), post));
-    return { haze, shadowTex, actors: new Map(), canvas, renderer, scene, camera, sky, backs, farGround, gGeo, ground, road, shadows, cards, hero, hg, heroTex, heroShadow, snow, rt, post, postScene, postCam, river, waterTex, lake, lakeTex, places, placeList: [], labels: new Map(),
+    return { haze, shadowTex, actors: new Map(), canvas, renderer, scene, camera, sky, backs, farGround, gGeo, ground, dGeo, farLand, road, shadows, cards, hero, hg, heroTex, heroShadow, snow, rt, post, postScene, postCam, river, waterTex, lake, lakeTex, places, placeList: [], labels: new Map(),
       w: 0, h: 0, prof: null, profKey: "", sDisp: null, sTarget: null, vEst: 0, lastS: null, hint: null, patch: null, yaw: null, camY: null, rideSt: {}, stride: 0, dbg: {} };
   }
 
@@ -394,16 +401,38 @@ const DIORAMA = (() => {
       hs.sort((a, c) => a - c); level = hs.length > 4 ? hs[Math.floor(hs.length * 0.1)] - 0.6 : null; LAKE_LEVEL.set(tile, level);
     }
     const SP = V.gScratch || (V.gScratch = new Float32Array(p.array.length)), SU = V.uScratch || (V.uScratch = new Float32Array(uv.array.length));
+    // the ground is shaped to the places, not the places to the ground: a level pad under each one's footprint that
+    // eases back into the land around it (never on the road's shelf)
+    const pads = (V.placed || []).filter((o) => Math.abs(o.x - cx) < RAD + o.rad * 1.6 + 8 && Math.abs(o.z - cz) < RAD + o.rad * 1.6 + 8);
     for (let i = 0; i < p.count; i++) {
       if ((i & 63) === 63 && over()) yield;
       const x = b[i * 3] + cx, z = b[i * 3 + 2] + cz;
       let y = D.land(P, x, z, hAt, hint);
+      for (const o of pads) {
+        const d = Math.hypot(x - o.x, z - o.z), R1 = o.rad * 0.75 + 3, R2 = o.rad * 1.5 + 8; if (d >= R2) continue;
+        let k = d < R1 ? 1 : 1 - (d - R1) / (R2 - R1); k = k * k * (3 - 2 * k) * clamp((D.near(P, x, z).d - 4) / 6, 0, 1);
+        y += (o.y + 0.4 - y) * k;
+      }
       // water: the river's channel and lake or sea beds sink below the banks
       if (segs.length) { const rd = D.riverDist(segs, x, z); if (rd < 8) { const k = rd < 3.5 ? 1 : 1 - (rd - 3.5) / 4.5, keep = roadKeep(x, z); y -= (underBridge(x, z) ? 3.8 : 2.2) * k * k * (3 - 2 * k) * keep; } }
       if (TR) { let ty = -1; try { ty = TR.typeAtPos(D.toMap(x, z)); } catch { /* off the map */ } if (ty === TT.SEA || ty === TT.LAKE) { lakeH.push(y); y = level != null ? Math.min(y - 2.6, level - 1.6) : y - 2.6; } }
       SP[i * 3] = x; SP[i * 3 + 1] = y; SP[i * 3 + 2] = z; SU[i * 2] = x / 9; SU[i * 2 + 1] = -z / 9;
     }
+    // the far disc: real ground, with the same pads under places; under the detailed patch it sits lower so the patch
+    // always shows; at its rim it eases to the flat sheet
+    const dg = V.dGeo, dbase = dg.userData.base, dpos = dg.attributes.position, FS = V.fScratch || (V.fScratch = new Float32Array(dpos.array.length)), farY = V.farGround.position.y;
+    const fpads = (V.placed || []).filter((o) => Math.hypot(o.x - cx, o.z - cz) < 430);
+    for (let i = 0; i < dpos.count; i++) {
+      if ((i & 31) === 31 && over()) yield;
+      const ox = dbase[i * 3], oz = dbase[i * 3 + 2], rr = Math.hypot(ox, oz), x = ox + cx, z = oz + cz;
+      let y = D.land(P, x, z, hAt);
+      for (const o of fpads) { const d = Math.hypot(x - o.x, z - o.z), R1 = o.rad * 0.75 + 3, R2 = o.rad * 1.5 + 12; if (d < R2) { const k = d < R1 ? 1 : 1 - (d - R1) / (R2 - R1); y += (o.y + 0.4 - y) * k * k * (3 - 2 * k); } }
+      const e = clamp((rr - 280) / 120, 0, 1); y += (farY - y) * e * e * (3 - 2 * e);
+      y -= rr < 112 ? 3 : 0.6;
+      FS[i * 3] = x; FS[i * 3 + 1] = y; FS[i * 3 + 2] = z;
+    }
     p.array.set(SP); uv.array.set(SU);   // all at once: the ground never shows half old, half new
+    dpos.array.set(FS); dpos.needsUpdate = true; dg.computeVertexNormals(); dg.computeBoundingSphere(); V.farLand.visible = true;
     V.gGeo.computeVertexNormals();   // the ground shader picks top or side projection by slope
     // the lake / sea sheet sits a little under the lowest shore round it
     if (lakeH.length > 6 && level != null) { V.lake.visible = true; V.lake.position.set(cx, level, cz); } else V.lake.visible = false;
