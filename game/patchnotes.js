@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b389-gpumap", build: 389, date: "27 Nov 2026", title: "The map drawn by your graphics chip", items: [
+      "The world map can now be drawn by your phone's graphics chip too: the painted land, the fog and the clans' colours, the drifting cloud shadows, birds and water sparkles, and the light over it all. It looks the same (checked pixel by pixel against the old way).",
+      "Dragging the map or walking just moves the finished picture along instead of copying it again every frame, so a map you look at takes less work.",
+      "As with fights, the game times both ways on your phone and keeps the quicker one (Settings → Performance → Graphics engine). While you zoom, on Solstheim, or if the graphics chip has a hiccup, the map is drawn the old way.",
+    ] },
     { id: "b388-gpu", build: 388, date: "27 Nov 2026", title: "Fights drawn by your graphics chip", items: [
       "The big painted backdrop behind a fight can now be drawn by your phone's graphics chip. It looks the same (we checked it pixel by pixel against the old way).",
       "In the first seconds of a fight the game times both ways on your phone and keeps the quicker one, so it never gets slower. If something goes wrong it quietly goes back to the old way.",

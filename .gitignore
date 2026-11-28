@@ -69,3 +69,4 @@ tests/out_combos/
 tests/out_fighttips/
 desktop/dist/
 tests/out_glfight/
+__pycache__/

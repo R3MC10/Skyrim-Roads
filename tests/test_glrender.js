@@ -103,6 +103,40 @@ GLR.pref("gfxEngine", "auto"); ok(!GLR._t.race.t2 && GLR.pick("t2") === "gpu", "
 
 const st = GLR.stats(); ok(st.frames === 0 && st.fallbacks === 0, "nothing drawn in node");
 
+// ---- the map on the GPU (glmap.js): off without a browser, its ambience recorder and colour parser
+global.GLR = GLR;
+const GLMAP = require(path.join(W0, "glmap.js"));
+GLR.pref("gfxEngine", "auto");
+ok(GLMAP.use() === false, "map: no GPU drawing without a browser");
+ok(GLMAP.stats().frames === 0 && GLMAP.stats().on === false, "map: nothing drawn, no layers");
+ok(GLMAP.colour("rgba(235,248,255,.8)").map((v) => +v.toFixed(3)).join() === "0.922,0.973,1,0.8", "map: rgba() colour");
+ok(GLMAP.colour("#fff0cd").map((v) => +v.toFixed(3)).join() === "1,0.941,0.804,1", "map: #hex colour");
+ok(GLMAP.colour("hsl(0,0%,0%)") === null, "map: unknown colour forms are refused (the stroke is then not GPU-safe)");
+{
+  const r = GLMAP.recorder();
+  r.strokeStyle = "rgba(30,22,14,.75)"; r.lineCap = "round"; r.lineWidth = 2; r.beginPath();
+  r.moveTo(0, 0); r.quadraticCurveTo(5, -5, 10, 0); r.moveTo(20, 0); r.lineTo(30, 0); r.stroke();
+  const op = r.ops[0];
+  ok(r.ops.length === 1 && op.line.length === 9, "recorder: a curve becomes 8 segments, plus the straight one");
+  const end = op.line[7]; ok(near(end[2], 10, 1e-9) && near(end[3], 0, 1e-9), "recorder: the curve ends where it should");
+  const mid = op.line[3]; ok(near(mid[3], -2.5, 1e-9), "recorder: the curve's middle is half the control height (quadratic Bezier)");
+  ok(op.line[8].join() === "20,0,30,0" && !r.bad, "recorder: moveTo starts a new piece");
+  r.globalAlpha = 0.4; r.drawImage({ width: 4, height: 4 }, 1, 2, 3, 4);
+  ok(r.ops[1].a === 0.4 && r.ops[1].w === 3, "recorder: sprites keep their alpha and size");
+  r.fillRect(0, 0, 1, 1); ok(r.bad, "recorder: anything it can't draw marks it unusable");
+  const r2 = GLMAP.recorder(); r2.globalCompositeOperation = "lighter"; ok(r2.bad, "recorder: only source-over");
+  const r3 = GLMAP.recorder(); r3.lineCap = "butt"; r3.strokeStyle = "#000000"; r3.moveTo(0, 0); r3.lineTo(1, 1); r3.stroke(); ok(r3.bad, "recorder: only round caps");
+}
+// the ambience MAPART draws on the map goes through the recorder without anything unsupported
+{
+  global.window = global.window || {};
+  let MA = null; try { MA = require(path.join(W0, "mapart.js")); } catch { /* needs the DOM */ }
+  if (MA && MA.ambient) {
+    const r = GLMAP.recorder();
+    try { MA.ambient(r, { t: 12.3, weather: "clear", close: 0 }, 1, 6000, 4000, [0, 0, 6000, 4000]); ok(!r.bad, "recorder: MAPART.ambient uses only what the GPU draws"); } catch { /* sprites need a canvas */ }
+  }
+}
+
 console.log(`${checks - fails}/${checks} checks ok`);
 if (fails) { console.log("FAILED"); process.exit(1); }
 console.log("OK");
