@@ -224,6 +224,12 @@ const DIORAMA = (() => {
           // so it eases toward the painting's soft average colour (a blurrier level of the same texture)
           float sharp = smoothstep(.05, .32, abs(dot(normalize(vDioW - dfCam), tn)));
           vec4 t1 = mix(texture2D(map, ua, 5.) * tw.y + texture2D(map, ub, 5.) * tw.z + texture2D(map, uc, 5.) * tw.x, texture2D(map, ua) * tw.y + texture2D(map, ub) * tw.z + texture2D(map, uc) * tw.x, sharp);
+          // no visible tiling: a second copy of the painting, turned and at another scale, blended in by patches, and
+          // a slow change of colour over tens of metres (damper hollows, drier rises)
+          vec2 ur = mat2(.8, -.6, .6, .8) * vDioW.xz / 13.7;
+          t1 = mix(t1, mix(texture2D(map, ur, 5.), texture2D(map, ur), sharp), smoothstep(.3, .7, dfN(vDioW.xz / 23.)) * tw.y * .8);
+          float macro = dfN(vDioW.xz / 41.) * .6 + dfN(vDioW.xz / 13. + 7.) * .4;
+          t1.rgb *= .86 + .28 * macro;
           diffuseColor *= mapTexelToLinear(t1);
           if (edgeOn > 0.) {
             vec4 t0 = mix(texture2D(map2, ua, 5.) * tw.y + texture2D(map2, ub, 5.) * tw.z + texture2D(map2, uc, 5.) * tw.x, texture2D(map2, ua) * tw.y + texture2D(map2, ub) * tw.z + texture2D(map2, uc) * tw.x, sharp);
@@ -273,7 +279,10 @@ const DIORAMA = (() => {
       for (let k = 0; k < NR; k++) for (let q = 0; q < NS; q++) { const a = k * NS + q, b = k * NS + (q + 1) % NS, c = a + NS, d = b + NS; idx.push(a, b, c, b, d, c); }
       const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.userData.base = Float32Array.from(pos); return g; })();
     const ground = new THREE.Mesh(gGeo, groundMat(tex("dio-floor", true))); ground.frustumCulled = false; scene.add(ground);
-    const farLand = new THREE.Mesh(dGeo, ground.material); farLand.frustumCulled = false; farLand.visible = false; scene.add(farLand);
+    // the far land shares the ground's painting and region blend, with a lighter fog (it would otherwise go pale and
+    // plain at 200-400 m, where the painted ridges carry their own haze)
+    const farMat = groundMat(ground.material.map); farMat.userData.tri = ground.material.userData.tri; farMat.userData.dfMul = 0.55;
+    const farLand = new THREE.Mesh(dGeo, farMat); farLand.frustumCulled = false; farLand.visible = false; scene.add(farLand);
     const edge = document.createElement("canvas"); edge.width = 64; edge.height = 4; const eg = edge.getContext("2d");
     const gr = eg.createLinearGradient(0, 0, 64, 0); gr.addColorStop(0, "#000"); gr.addColorStop(0.2, "#fff"); gr.addColorStop(0.8, "#fff"); gr.addColorStop(1, "#000"); eg.fillStyle = gr; eg.fillRect(0, 0, 64, 4);
     const road = new THREE.Mesh(new THREE.BufferGeometry(), basic(tex("dio-road", true), { alphaMap: new THREE.CanvasTexture(edge), transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }));
@@ -386,11 +395,15 @@ const DIORAMA = (() => {
     const b = V.gGeo.userData.base;
     let hint = V.hint;
     const TR = typeof Terrain !== "undefined" ? Terrain : null, TT = TR?.T || {};
-    const segs = TR ? D.riverSegs(TR.rivers, cx, cz, 170) : [];
+    let segs = TR ? D.riverSegs(TR.rivers, cx, cz, 170) : [];
     // the road wins over the river away from bridges: no channel or water under it (the map's river can brush a road)
     const nearBridge = (x, z) => (V.bridges || []).some((b) => Math.hypot(b.x - x, b.z - z) < (b.len || 24) / 2 + 6);
     const underBridge = (x, z) => (V.bridges || []).some((b) => Math.hypot(b.x - x, b.z - z) < 10);   // the span itself
     const roadKeep = (x, z) => { const d = D.near(P, x, z).d; if (d > 9 || nearBridge(x, z)) return 1; return d < 5 ? 0 : (d - 5) / 4; };
+    // a river the map draws right beside the road (away from bridges) would vanish under it: its course is eased out
+    // to run alongside, ~11 m off, on its own side
+    { const off = (x, z) => { if (nearBridge(x, z)) return [x, z]; const r = D.near(P, x, z); if (r.d >= 11) return [x, z]; const q = P.pts[r.i], k = 11 - r.d; return [x - q.tz * r.side * k, z + q.tx * r.side * k]; };
+      segs = segs.map(([ax, az, bx, bz]) => [...off(ax, az), ...off(bx, bz)]); }
     const lakeH = [];
     const tile = Math.floor(cx / 600) + "," + Math.floor(cz / 600);
     let level = LAKE_LEVEL.get(tile);
@@ -894,6 +907,7 @@ const DIORAMA = (() => {
       F.dfSun.value.copy(Lt.sun); F.dfSunDir.value.set(-right.x * 0.7 + fwd.x * 0.6, 0.35, -right.z * 0.7 + fwd.z * 0.6).normalize();   // the light comes from the upper left, as in every painting
     }
     V.ground.material.color.copy(gt);
+    { const fm = V.farLand.material; if (fm.map !== V.ground.material.map) { fm.map = V.ground.material.map; fm.needsUpdate = true; } fm.color.copy(gt); }
     { const T = V.ground.material.userData.tri, f0 = B && (B.before.floor || "dio-floor");   // the ground blends across the border, fixed on the land
       T.edgeOn.value = B && LOADED.has(f0) ? 1 : 0;
       if (T.edgeOn.value) { T.map2.value = TEX[f0]; T.edge.value.set(B.x, B.z, B.tx, B.tz); T.oldTint.value.setRGB(Lt.tint.r * B.before.ground[0], Lt.tint.g * B.before.ground[1], Lt.tint.b * B.before.ground[2]); } } for (const a of V.actors.values()) a.mesh.material.color.setRGB(Math.max(0.7, Lt.tint.r), Math.max(0.72, Lt.tint.g), Math.max(0.8, Lt.tint.b)); if (V.bridgeMats) for (const m of Object.values(V.bridgeMats)) if (m.color) m.color.copy(Lt.tint); V.road.material.color.copy(Lt.tint); V.hero.material.color.setRGB(Math.max(0.78, Lt.tint.r), Math.max(0.8, Lt.tint.g), Math.max(0.86, Lt.tint.b)); V.sky.material.color.copy(Lt.tint);   // you stay easy to see
