@@ -5963,6 +5963,44 @@ html.pcmap.pc-full #side>.mn-sub button.on::after{display:none}   /* on a wide P
 .fpt-view .dio-lbl{position:absolute;left:0;top:0;pointer-events:none;white-space:nowrap;font:600 11px/1 var(--display,"Cinzel",serif);letter-spacing:.06em;color:#f3e6c2;text-shadow:0 1px 2px #000,0 0 6px rgba(0,0,0,.8);line-height:1.2}
 .fpt-view .dio-lbl.dest{color:#ffd88a;font-size:12px}
 .fpt-view .dio-lbl.edge{transform-origin:right;color:#ffd88a;font-size:12px}
+/* [mgunique] a fight minigame of its own per weapon, school and move (mg_games.js) */
+.mgx{touch-action:none}.mgx *{vector-effect:non-scaling-stroke}
+.mgx .mgx-line,.mgx .mgx-arc{fill:none;stroke:#6f6656;stroke-width:3;stroke-linecap:round}
+.mgx .mgx-arc{stroke-dasharray:4 4;stroke:#9a8c70}
+.mgx .mgx-beat,.mgx .mgx-end,.mgx .mgx-zone,.mgx .mgx-ball,.mgx .mgx-ring,.mgx .mgx-crys,.mgx .mgx-me,.mgx .mgx-ally,.mgx .mgx-dst,.mgx .mgx-ghost,.mgx .mgx-gold,.mgx .mgx-zonering,.mgx .mgx-echo{fill:rgba(20,18,15,.8);stroke:#e2bb64;stroke-width:2}
+.mgx .on{fill:#e2bb64;filter:drop-shadow(0 0 6px #ffd36a)}.mgx .done{fill:rgba(226,187,100,.4)}
+.mgx .mgx-glint,.mgx .mgx-light,.mgx .mgx-finger{fill:#fff3c4;filter:drop-shadow(0 0 5px #fff3c4)}
+.mgx .mgx-blade,.mgx .mgx-spear,.mgx .mgx-head path,.mgx .mgx-bl{fill:#cfd6dc;stroke:#6f7a84;stroke-width:1.5}
+.mgx .mgx-tube{fill:rgba(20,18,15,.85);stroke:#3c372e;stroke-width:2}
+.mgx .mgx-fill{fill:#e2bb64}.mgx .mgx-band{fill:rgba(226,187,100,.35);stroke:#fff3c4;stroke-width:1}.mgx .mgx-hot{fill:#c23a2c}
+.mgx .mgx-peak,.mgx .mgx-zoneh{stroke:#e2bb64;stroke-width:3;stroke-dasharray:4 3;fill:none}.mgx .mgx-peak.on,.mgx .mgx-zoneh.on{stroke:#fff3c4;filter:drop-shadow(0 0 5px #ffd36a)}
+.mgx .mgx-pin{fill:#6f6656}.mgx .mgx-ham rect{fill:#8a8f96;stroke:#4c5157;stroke-width:2}.mgx .mgx-ham path{stroke:#7a5a3a;stroke-width:4}
+.mgx .mgx-wall{fill:#5a4a36;stroke:#2c241a;stroke-width:2}.mg.lined .mgx-spear{fill:#fff3c4}
+.mgx .mgx-wind{fill:none;stroke:rgba(235,229,214,.5);stroke-width:2;stroke-linecap:round}
+.mgx .mg-tg{fill:none;stroke:#fff3c4;stroke-width:1.5}.mgx .mg-tgw{fill:none;stroke:rgba(226,187,100,.35)}.mgx .mg-ret{fill:none;stroke:#ebe5d6;stroke-width:2.5;stroke-dasharray:6 4}.mgx .mg-x{stroke:#ebe5d6;stroke-width:1.5}
+.mgx .mgx-side{fill:rgba(20,18,15,.8);stroke:#6f6656;stroke-width:2}.mgx .mgx-side.on{fill:rgba(226,187,100,.55);stroke:#fff3c4}
+.mgx .mgx-t,.mgx .mgx-wt,.mgx .mg-pt text,.mgx .mgx-src text{text-anchor:middle;font-weight:700;fill:#ebe5d6;font-size:14px;pointer-events:none}
+.mgx .mgx-wt{font-size:7px;fill:#10100c}.mgx .mg-pt text,.mgx .mgx-src text{font-size:8px;fill:#10100c}
+.mgx .mgx-mk,.mgx .mgx-ball{fill:#cfd6dc;stroke:#6f7a84;stroke-width:2}
+.mgx .mg-shield{fill:rgba(226,187,100,.25);stroke:#e2bb64;stroke-width:4}.mgx .mgx-zonering{fill:none;stroke-dasharray:3 3}
+.mgx .mgx-arrow,.mgx .mgx-claw,.mgx .mgx-bl{fill:none;stroke:#ff6a4a;stroke-width:3;stroke-linecap:round;filter:drop-shadow(0 0 4px #ff6a4a)}
+.mgx .mgx-orb{fill:#b48cff;filter:drop-shadow(0 0 6px #b48cff)}
+.mgx .mgx-shieldb{fill:#8a6a3a;stroke:#e2bb64;stroke-width:2}.mgx .mgx-foe{fill:#5a3a32;stroke:#ff6a4a;stroke-width:1.5}
+.mgx .mgx-lid{fill:rgba(20,18,15,.85);stroke:#ff6a4a;stroke-width:2}.mgx .mgx-iris{fill:#ff6a4a;transition:transform .15s}
+.mg.away .mgx-lid{stroke:#6f6656}.mg.away .mgx-iris{fill:#6f6656;transform:translateX(18px)}
+.mgx .mg-clock{fill:none;stroke:var(--mgc,#e2bb64);stroke-width:2.5;stroke-dasharray:295;opacity:.7;transform:rotate(-90deg);transform-origin:50% 50%}
+.mgx .mgx-crys,.mgx .mgx-ghost,.mgx .mgx-gold,.mgx .mgx-dst,.mgx .mgx-me,.mgx .mgx-ally{stroke:var(--mgc,#e2bb64)}.mg.onit .mgx-crys{fill:var(--mgc,#9cc4ff);filter:drop-shadow(0 0 6px var(--mgc,#9cc4ff))}
+.mgx .mgx-ghost{fill:none;stroke-dasharray:2 3;opacity:.5}.mgx .mgx-piece{fill:none;stroke:var(--mgc,#e2bb64);stroke-width:7;stroke-linecap:round;opacity:.6}.mgx .mgx-piece.ok{opacity:1;filter:drop-shadow(0 0 5px var(--mgc,#e2bb64))}
+.mgx .mg-path{fill:none;stroke:var(--mgc,#e2bb64);stroke-width:1.5;opacity:.45;stroke-dasharray:3 3}
+.mgx .mg-pt circle,.mgx .mgx-src circle{fill:rgba(20,18,15,.85);stroke:var(--mgc,#e2bb64);stroke-width:2}.mgx .mg-pt.on circle,.mgx .mgx-src.on circle{fill:var(--mgc,#e2bb64);filter:drop-shadow(0 0 6px var(--mgc,#e2bb64))}.mgx .mg-pt.done circle{fill:var(--mgc,#e2bb64);opacity:.45}
+.mgx .mgx-gold{fill:none;stroke-dasharray:3 3}.mgx .mgx-portal{fill:none;stroke:var(--mgc,#e2bb64);stroke-width:3;filter:drop-shadow(0 0 6px var(--mgc,#e2bb64))}
+.mgx .mgx-mirror{stroke:var(--mgc,#e2bb64);stroke-width:2;stroke-dasharray:2 4;opacity:.7}.mgx .mgx-dst.done{fill:var(--mgc,#e2bb64)}
+.mg.hard .mgx .mgx-line,.mg.hard .mgx .mgx-tube{stroke:#8a3b22}.mg.hard .mgx .mgx-fill,.mg.hard .mgx .on{fill:#ff8a4a}.mg.hard .mgx .mgx-band{fill:rgba(255,120,70,.4)}
+.mg.overheat .mgx-fill{fill:#c23a2c}.mg.overheat .mgx-tube{stroke:#c23a2c}
+.mg .mg-hint{max-width:88vw;text-align:center}
+.mgx .mgx-word circle{fill:rgba(20,18,15,.85);stroke:#e2bb64;stroke-width:2}.mgx .mgx-word.on circle{fill:#e2bb64}.mgx .mgx-word text{fill:#ebe5d6}.mgx .mgx-word.on text{fill:#10100c}.mgx .mgx-dst{stroke-dasharray:3 2}.mgx .mgx-src circle{opacity:.6}.mgx .mgx-src.on circle{opacity:1}.mgx .mgx-src text{fill:#ebe5d6}.mgx .mgx-src.on text{fill:#10100c}
+.mgx .mgx-lock{fill:var(--mgc,#e2bb64);opacity:.8}.mgx .mgx-piece{stroke-width:6}
+@media (prefers-reduced-motion:reduce){.mgx .on,.mgx .mgx-glint{filter:none}.mgx .mgx-iris{transition:none}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -6046,6 +6084,7 @@ html.pcmap.pc-full #side>.mn-sub button.on::after{display:none}   /* on a wide P
 <script src="aiset.js"></script>
 <script src="difficulty.js"></script>
 <script src="minigame.js"></script>
+<script src="mg_games.js"></script>
 <script src="tbradial.js"></script>
 <script src="initiative.js"></script>
 <script src="tbfight.js"></script>
@@ -6071,7 +6110,7 @@ html.pcmap.pc-full #side>.mn-sub button.on::after{display:none}   /* on a wide P
 <script src="foeintent.js"></script>
 <script src="fxicons.js"></script>
 <script src="strategy.js"></script>
-<script src="perfmode.js"></script><script src="fightset.js"></script>
+<script src="perfmode.js"></script><script src="glrender.js"></script><script src="glmap.js"></script><script src="fightset.js"></script>
 <script src="combat2.js"></script>
 <script src="fightfit.js"></script>
 <script src="fightdeclutter.js"></script>

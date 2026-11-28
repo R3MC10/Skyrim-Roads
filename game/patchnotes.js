@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b388-diorama", build: 388, date: "27 Nov 2026", title: "A painted road", items: [
+    { id: "b392-diorama", build: 392, date: "28 Nov 2026", title: "A painted road", items: [
       "While you travel, the road view above the map is now a small painted world: the real road you're on bending over gentle hills, hand-painted trees, ferns and rocks along it, misty ridges and sky behind, and you on the road on foot or on your horse.",
       "What grows depends on where you are: thick pine forest, open tundra with lichen-covered boulders, rocky hills, snow-laden spruces in the mountains, driftwood and dune grass on the coast, river valleys, the Rift's golden birches and red bushes, dead trees and reeds in the marshes, and burnt trees and steaming vents in the ash lands. Each region has its own ground too. The same stretch of road always looks the same, for everyone in a party.",
       "Hills stay believable: roads never climb steeper than a real mountain road would.",
@@ -12,6 +12,29 @@ const PATCHNOTES = (() => {
       "You don't travel alone: your party, your follower and your pet walk or ride behind you on the road. When something stops you, bandits at a toll, a patrol, wolves, pilgrims, you see them on the road ahead for a moment before the choice comes up.",
       "Time of day and the weather change the light. When it snows, you get the same snow as on the map: soft clumps and little crystals drifting and tumbling in a gusting wind, and in a blizzard hard grains blown sideways with white-outs rolling past. Fog is new too: mist lies low in hollows and on the ground while hilltops rise above it, faraway hills fade to a soft blue, the haze glows warmer toward the sun, and thicker wisps drift by on the wind. If your phone struggles, or you prefer the old view, set Settings → Look → Road view to Classic.",
       "On phones the road view now starts in a few seconds, downloads less than half as much, never stutters as the land ahead is built, and leaves a clearing beyond the road in the small travel strip so you can see past the trees. If your phone struggles, it first lowers its own quality before falling back to the classic view.",
+    ] },
+    { id: "b391-snappyfights", build: 391, date: "28 Nov 2026", title: "Snappier fights on phones", items: [
+      "Opening Magic or Items and going back during a fight does a lot less behind-the-scenes work, so slower phones react quicker and stutter less. Nothing looks different.",
+      "Fixed a rare freeze where the fight screen could get stuck rearranging itself for many seconds after you opened a menu.",
+      "The first-fight tips no longer keep re-measuring the screen four times a second while nothing moves.",
+    ] },
+    { id: "b390-mgunique", build: 390, date: "28 Nov 2026", title: "A fight minigame for every weapon, school and move", items: [
+      "Every weapon now plays its own way: stab twice with a dagger, slash along the arc with a sword, let go at the top of a war axe's wind-up, hit the downbeat of a swinging mace, wind up and follow through with a greatsword, charge a battleaxe without overheating it, drop a warhammer onto the ring, thrust a spear through the gap, draw a bow while the wind sways the target, wait for a crossbow's crosshair to settle, throw left-right combos with your fists, or strike with both blades in two lanes. Power attacks play the same game, but faster and tighter.",
+      "Spells too: fire traces a flame, frost holds steady on a drifting crystal, shock is a quick zigzag. Healing a teammate means dragging the light over to them, Alteration turns a ward's pieces into place, Conjuration opens a star and then holds the portal, Mysticism mirrors a pattern, and casting with both hands uses both thumbs.",
+      "Guarding shows what's coming (an arrow, claws, a spell or a blade), a shield bash is a shove forward, a sneak strike waits for the foe to look away, and shouts now get a game: hold on the first word, let go on the last. A perfect shout gives you +1 Might.",
+      "How much a Perfect or a Miss changes the hit is the same as before, and your skill and timing perks still make every game easier.",
+      "Prefer the old one-tap bar? Settings → Fights → Minigame style → Simple. With reduced motion turned on in your phone, the games also give you a bit more time.",
+    ] },
+    { id: "b389-gpumap", build: 389, date: "27 Nov 2026", title: "The map drawn by your graphics chip", items: [
+      "The world map can now be drawn by your phone's graphics chip too: the painted land, the fog and the clans' colours, the drifting cloud shadows, birds and water sparkles, and the light over it all. It looks the same (checked pixel by pixel against the old way).",
+      "Dragging the map or walking just moves the finished picture along instead of copying it again every frame, so a map you look at takes less work.",
+      "As with fights, the game times both ways on your phone and keeps the quicker one (Settings → Performance → Graphics engine). While you zoom, on Solstheim, or if the graphics chip has a hiccup, the map is drawn the old way.",
+    ] },
+    { id: "b388-gpu", build: 388, date: "27 Nov 2026", title: "Fights drawn by your graphics chip", items: [
+      "The big painted backdrop behind a fight can now be drawn by your phone's graphics chip. It looks the same (we checked it pixel by pixel against the old way).",
+      "In the first seconds of a fight the game times both ways on your phone and keeps the quicker one, so it never gets slower. If something goes wrong it quietly goes back to the old way.",
+      "Want to try it yourself? Settings → Performance → Graphics engine: Auto (default), GPU (always the graphics chip) or Classic (never).",
+      "The map, the road view and the title screen move over next.",
     ] },
     { id: "b387-perfdeep", build: 387, date: "27 Nov 2026", title: "Smoother without lowering graphics", items: [
       "Full graphics are back everywhere: fights on phones start on High at full frame rate again, the map and compass are as sharp as your screen allows, and the title screen moves at full speed. Only Battery saver (off unless you turn it on) lowers anything.",

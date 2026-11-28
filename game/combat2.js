@@ -134,7 +134,19 @@ const COMBAT2 = (() => {
     if (typeof FIGHTZONES !== "undefined" && FIGHTZONES.on()) return null;   // [fightscreen] the zones size the picture (0.66, clipped to the centre on a PC)
     return W && H && wideOf(W, H) ? shapeOf(W, H) : null;
   }
-  function place(el, late) {
+  /* [perf] place() can come back into itself (the scene lays everyone out again, which places the cards again): one
+     level of that is all it needs. Two layouts that kept nudging each other used to bounce until the phone gave up. */
+  let depth = 0, arRaf = 0;
+  /* [perf] one passage moves the picture several times in a row: the arrow is drawn again once, just before the screen
+     shows it (it used to be redrawn, and the whole screen measured, at every step) */
+  function arrowSoon(el) {
+    if (arRaf) return;
+    const go = () => { arRaf = 0; if (!el.isConnected || !el.querySelector(".fitarrow") || !mem.sess || typeof FOEINTENT === "undefined") return; try { FOEINTENT.decorate(el, mem.sess, true); } catch { /* the arrow is a nicety */ } };
+    if (typeof requestAnimationFrame === "function") arRaf = requestAnimationFrame(go); else go();
+  }
+  let gen = 0;   // how many layout passes so far (onboard.js: its tips only need placing again after one)
+  function place(el, late) { depth++; gen++; try { place1(el, late); } finally { depth--; } }
+  function place1(el, late) {
     const tin = el.querySelector(".tbin"); if (!tin || !el.classList.contains("c2")) return;
     const W = tin.clientWidth, H = tin.clientHeight; if (!W || !H) return;
     const wide = wideOf(W, H);
@@ -180,9 +192,8 @@ const COMBAT2 = (() => {
     const geo = [cx, cy, cw].map((v) => Math.round(v)).join();
     if (geo !== mem.geo || late) {
       mem.geo = geo;
-      try { tin.querySelector(".fscene canvas")?.__fpRe?.(); } catch { /* the scene lays out on its next frame */ }
-      const ar = el.querySelector(".fitarrow");
-      if (ar && mem.sess && typeof FOEINTENT !== "undefined") { try { FOEINTENT.decorate(el, mem.sess); } catch { /* the arrow is a nicety */ } }
+      if (depth < 3) try { tin.querySelector(".fscene canvas")?.__fpRe?.(); } catch { /* the scene lays out on its next frame */ }
+      if (el.querySelector(".fitarrow")) arrowSoon(el);
     }
     // the foe's plate: over its head, inside the screen, under the ribbon (and the boss bar)
     const plate = typeof FOEPANEL !== "undefined" || Z ? null : el.querySelector(".c2ov .tbu.foe");   // [foepanel] places it (below)
@@ -365,6 +376,6 @@ const COMBAT2 = (() => {
     later.t = [setTimeout(() => place(el, true), 140), setTimeout(() => place(el, true), 450)];   // the scene draws its canvas a moment later; the boss bar lands after this
   }
 
-  return { on, settingsHTML, layout, place, portraitOf, aspect, wideOf, shapeOf, tally };
+  return { on, settingsHTML, layout, place, gen: () => gen, portraitOf, aspect, wideOf, shapeOf, tally };
 })();
 if (typeof module !== "undefined") module.exports = COMBAT2;

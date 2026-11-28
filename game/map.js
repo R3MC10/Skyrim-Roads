@@ -555,7 +555,7 @@ const WorldMap = (() => {
     if (boxes) boxes.push([x - 20 * s, y - 25 * s, 40 * s, 29 * s]);
   }
   /* [perf] finished layers of the map kept between frames (see draw): the ground and the fog, each the canvas's size */
-  const GC = { key: "", last: "", vkey: "", vlast: "", ground: null, veil: null, ox: 0, oy: 0, vox: 0, voy: 0 };
+  const GC = { key: "", last: "", vkey: "", vlast: "", ground: null, veil: null, ox: 0, oy: 0, vox: 0, voy: 0, gv: 0, vv: 0 };   // gv / vv: rebuild counters (the GPU re-uploads a kept picture only when it changes)
   const GM = 128;   // device px of ground kept beyond each edge of the screen
   const ids = new WeakMap(); let idN = 0;
   const idOf = (o) => (!o ? 0 : ids.get(o) || (ids.set(o, ++idN), idN));
@@ -583,7 +583,8 @@ const WorldMap = (() => {
     const dpr = Math.min(typeof PERFMODE !== "undefined" ? PERFMODE.dprCap(3) : 3, window.devicePixelRatio || 1);
     const cw = canvas.clientWidth, ch = canvas.clientHeight;
     if (canvas.width !== Math.round(cw * dpr) || canvas.height !== Math.round(ch * dpr)) { canvas.width = Math.round(cw * dpr); canvas.height = Math.round(ch * dpr); }
-    const g = canvas.getContext("2d");
+    const g0 = canvas.getContext("2d");
+    let g = g0;   // [glmap] on a GPU frame the middle layers go on #mapgl2 and only the places on this canvas
     const k = Math.max(canvas.width / W, canvas.height / H) * v.zoom;
     let ox = canvas.width / 2 - v.center[0] * W * k, oy = canvas.height / 2 - (v.center[1] - OY) * H * k;
     // zoomed out past the edges: the map sits in the middle (on a matching surround, below)
@@ -630,10 +631,26 @@ const WorldMap = (() => {
     const gkey = [cw0, ch0, k, pa, idOf(bimg), idOf(painted), roadsOn, season, UI, dpr, MT ? MT.version() : -1, ROAD_STYLE].join("|");
     const steady = (!MT || MT.settled()) && !(IK && pa < 1 && IK.pending()) && !(PM && PM.pending());
     const near = Math.abs(ox - GC.ox) <= GM && Math.abs(oy - GC.oy) <= GM;
-    if (steady && gkey === GC.key && near) slide(g, GC.ground, Math.round(ox - GC.ox - GM), Math.round(oy - GC.oy - GM), cw0, ch0);
+    /* [glmap] the map on the GPU (glmap.js): the kept ground and fog become textures on a WebGL canvas under this one.
+       Only a settled view: while you zoom or tiles load, and on Solstheim, the PC map's weather or with lighting off,
+       the frame is drawn the classic way */
+    const fxOn = !SV && typeof MAPFX !== "undefined" && MAPFX.on(), lightOn = typeof LIGHTFX !== "undefined" && LIGHTFX.on();
+    const gpuWant = steady && !SV && !fxOn && lightOn && typeof GLMAP !== "undefined" && GLMAP.use();
+    const gpu = gpuWant ? GLMAP.begin(canvas, cw0, ch0) : null;
+    if (gpu && !gpu.ok) { stats.gl = 0; }
+    let GPU = gpu && gpu.ok ? gpu : null;
+    if (!GPU && typeof GLMAP !== "undefined") GLMAP.hide();
+    stats.gl = GPU ? 1 : 0; stats.t = v.t; stats.tf = v.transform;
+    let gground = null;
+    if (GPU) {
+      if (!(gkey === GC.key && near)) { ground(fit(GC, "ground", cw0 + 2 * GM, ch0 + 2 * GM), cw0 + 2 * GM, ch0 + 2 * GM, ox + GM, oy + GM); GC.key = gkey; GC.ox = ox; GC.oy = oy; GC.gv++; }
+      gground = { c: GC.ground, ver: GC.gv, x: Math.round(ox - GC.ox - GM), y: Math.round(oy - GC.oy - GM) };
+      g0.setTransform(1, 0, 0, 1, 0, 0); g0.clearRect(0, 0, cw0, ch0);
+      g = GPU.b2;
+    } else if (steady && gkey === GC.key && near) slide(g, GC.ground, Math.round(ox - GC.ox - GM), Math.round(oy - GC.oy - GM), cw0, ch0);
     else if (steady && gkey === GC.last) {
       ground(fit(GC, "ground", cw0 + 2 * GM, ch0 + 2 * GM), cw0 + 2 * GM, ch0 + 2 * GM, ox + GM, oy + GM);
-      GC.key = gkey; GC.ox = ox; GC.oy = oy; slide(g, GC.ground, -GM, -GM, cw0, ch0);
+      GC.key = gkey; GC.ox = ox; GC.oy = oy; GC.gv++; slide(g, GC.ground, -GM, -GM, cw0, ch0);
     } else { ground(g, cw0, ch0, ox, oy); GC.key = ""; }
     GC.last = gkey; stats.groundKept = GC.key === gkey ? 1 : 0;
     g.setTransform(k, 0, 0, k, ox, oy);
@@ -641,7 +658,8 @@ const WorldMap = (() => {
     const MA = typeof MAPART !== "undefined" ? MAPART : null;
     const viewBox = [-ox / k, -oy / k, (canvas.width - ox) / k, (canvas.height - oy) / k];
     g.save(); g.beginPath(); g.rect(0, 0, W, H); g.clip();   // clouds, mist and light stay on the map itself
-    const dark = SV ? SV.ambient(g, v, s, W, H, viewBox) : MA ? MA.ambient(g, v, s, W, H, viewBox) : 0;   // water glints, cloud shadows, birds (under the fog)
+    const rec = GPU ? GLMAP.recorder() : null;   // [glmap] the ambience is recorded and drawn by the GPU, under the fog
+    const dark = SV ? SV.ambient(g, v, s, W, H, viewBox) : MA ? MA.ambient(rec || g, v, s, W, H, viewBox) : 0;   // water glints, cloud shadows, birds (under the fog)   // water glints, cloud shadows, birds (under the fog)
     const seen = [...v.explored, ...v.discovered.map((n) => WORLD.places[n])].filter((p) => p && WORLD.isSol(p) === !!SV);
     const VI = typeof VISION !== "undefined" && v.cones?.length ? VISION : null;
     const fogImg = fogFor(OY ? seen.map((p) => [p[0], p[1] - OY]) : seen, SV ? "sol" : "");
@@ -657,14 +675,32 @@ const WorldMap = (() => {
     const vkey = `${gkey}|${fogKey}|${VI ? VI.veilKey : ""}|${rulers ? rulers.map((r) => r.hold + r.color).join() : ""}`;
     const vnear = Math.abs(ox - GC.vox) <= GM && Math.abs(oy - GC.voy) <= GM;
     const over = (c, x, y) => { g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = false; g.drawImage(c, x, y); g.restore(); };
-    if (steady && vkey === GC.vkey && vnear) over(GC.veil, Math.round(ox - GC.vox - GM), Math.round(oy - GC.voy - GM));
+    let gveil = null;
+    if (GPU && vkey !== GC.vlast && !(vkey === GC.vkey && vnear)) {
+      /* the fog changes every frame (your cone of sight sweeping as you walk): the classic path draws it straight from
+         the fog picture without keeping it, and so does this frame, on the map canvas (a full-screen texture upload per
+         frame would cost more than it saves) */
+      g.restore(); GLMAP.hide(); GPU = null; g = g0; stats.gl = 0;
+      slide(g, GC.ground, gground.x, gground.y, cw0, ch0);
+      g.setTransform(k, 0, 0, k, ox, oy); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
+      g.save(); g.beginPath(); g.rect(0, 0, W, H); g.clip();
+      if (MA) MA.ambient(g, v, s, W, H, viewBox);
+    }
+    if (GPU) {
+      if (!(vkey === GC.vkey && vnear)) {
+        const vw = cw0 + 2 * GM, vh = ch0 + 2 * GM, vg = fit(GC, "veil", vw, vh);
+        vg.setTransform(1, 0, 0, 1, 0, 0); vg.clearRect(0, 0, vw, vh); vg.setTransform(k, 0, 0, k, ox + GM, oy + GM); vg.imageSmoothingEnabled = true; vg.imageSmoothingQuality = "high";
+        veil(vg); GC.vkey = vkey; GC.vox = ox; GC.voy = oy; GC.vv++;
+      }
+      gveil = { c: GC.veil, ver: GC.vv, x: Math.round(ox - GC.vox - GM), y: Math.round(oy - GC.voy - GM) };
+    } else if (steady && vkey === GC.vkey && vnear) over(GC.veil, Math.round(ox - GC.vox - GM), Math.round(oy - GC.voy - GM));
     else if (steady && vkey === GC.vlast) {
       const vw = cw0 + 2 * GM, vh = ch0 + 2 * GM, vg = fit(GC, "veil", vw, vh);
       vg.setTransform(1, 0, 0, 1, 0, 0); vg.clearRect(0, 0, vw, vh); vg.setTransform(k, 0, 0, k, ox + GM, oy + GM); vg.imageSmoothingEnabled = true; vg.imageSmoothingQuality = "high";
-      veil(vg); GC.vkey = vkey; GC.vox = ox; GC.voy = oy; over(GC.veil, -GM, -GM);
+      veil(vg); GC.vkey = vkey; GC.vox = ox; GC.voy = oy; GC.vv++; over(GC.veil, -GM, -GM);
     } else { veil(g); GC.vkey = ""; }
     GC.vlast = vkey;
-    const FX = !SV && typeof MAPFX !== "undefined" && MAPFX.on() ? MAPFX : null;
+    const FX = fxOn ? MAPFX : null;
     if (FX) FX.draw(g, v, dpr / k, W, H, [-ox / k, -oy / k, (canvas.width - ox) / k, (canvas.height - oy) / k]);   // PC map: each hold's weather, chimney smoke (mapfx.js)
     g.restore();   // (the clip to the map)
     if (OY) g.setTransform(k, 0, 0, k, ox, oy - OYH * k);   // from here on: world coordinates
@@ -759,7 +795,16 @@ const WorldMap = (() => {
     const small = v.zoom < 1.5 && shown.length > 60 ? 0.72 : 1;
     // light and atmosphere over the painted ground, under the markers (lightfx.js; Settings → Graphics → Lighting)
     let lit = false;
-    if (typeof LIGHTFX !== "undefined" && LIGHTFX.on()) { g.save(); g.beginPath(); g.rect(0, OYH, W, H); g.clip(); lit = LIGHTFX.map(g, canvas, v, { s, W, H, shown, view: viewBox, dpr, sol: !!SV, close: v.close }); g.restore(); }
+    const lout = GPU ? {} : null;   // [glmap] the light layers come back as buffers for the compositor
+    if (lightOn) { g.save(); g.beginPath(); g.rect(0, OYH, W, H); g.clip(); lit = LIGHTFX.map(g, canvas, v, { s, W, H, shown, view: viewBox, dpr, sol: !!SV, close: v.close, out: lout }); g.restore(); }
+    if (GPU) {
+      const clip = [ox, oy, W * k, H * k];
+      GLMAP.frame({ ground: gground, veil: gveil, clip, k, ox, oy, rec });
+      GLMAP.light(lout, clip, dpr);
+      g0.setTransform(g.getTransform()); g0.imageSmoothingEnabled = true; g0.imageSmoothingQuality = "high"; g0.font = g.font;
+      g = g0;   // the places, names and heroes: on the map canvas, over everything
+    }
+    if (gpuWant || (typeof GLR !== "undefined" && steady && !SV && !fxOn && lightOn && GLR.on())) GLR.tick("map", GPU ? "gpu" : "cpu", performance.now());   // the Auto race (glrender.js): frame to frame time, each way
     if (MA) {
       if (OY) { g.save(); g.translate(0, OYH); MA.night(g, v, s, W, H, dark, shown.map(([n, x, y, kd]) => [n, x, y - OY, kd])); g.restore(); }
       else if (!lit) MA.night(g, v, s, W, H, dark, shown);

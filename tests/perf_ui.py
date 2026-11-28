@@ -4,7 +4,8 @@ Chromium at 360x800 with the CPU slowed down x4 (a mid/low-end phone). Prints:
   - for each scene (title idle, compass home screen, map idle, map panning, travelling, fight screen idle):
       main-thread busy % (Chrome's TaskDuration), script/layout/style ms per second, long tasks (count and total ms),
       map draws per second, all measured in a quiet window; then fps seen by requestAnimationFrame and frame-gap p50/p95
-Options (environment): PERF_RATE (CPU slowdown, 4), PERF_SECS, PERF_GPU=1 (installed Chrome with the real GPU: closer to a phone
+Options (environment): PERF_RATE (CPU slowdown, 4), PERF_DPR (2 = 360x800, 3 = 412x915), PERF_ENGINE (auto/gpu/classic),
+PERF_ARGS (extra Chromium flags), PERF_SECS, PERF_GPU=1 (installed Chrome with the real GPU: closer to a phone
 than software drawing), PERF_PROFILE=1 (top functions per scene), PERF_TRACE=1 (main-thread time by browser event).
   - JS heap after each scene and after a forced GC.
 Numbers wobble ~10% run to run; compare runs on the same machine. Screenshots of each scene go to SHOTS_DIR when given
@@ -117,8 +118,12 @@ async def main():
         kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if CHROME and os.path.exists(CHROME) else {}
         if os.environ.get("PERF_GPU"):   # use the machine's real GPU (closer to a phone than software drawing); uses installed Google Chrome
             kw = {**kw, "channel": os.environ.get("PERF_GPU") if os.environ.get("PERF_GPU") in ("chrome", "msedge", "chromium") else "chrome","args": kw.get("args", []) + ["--enable-gpu", "--ignore-gpu-blocklist", "--enable-gpu-rasterization"]}
+        if os.environ.get("PERF_ARGS"): kw = {**kw, "args": kw.get("args", ["--no-sandbox"]) + os.environ["PERF_ARGS"].split()}   # e.g. --use-angle=swiftshader
         b = await p.chromium.launch(**kw)
-        ctx = await b.new_context(viewport={"width": 360, "height": 800}, device_scale_factor=2, has_touch=True)
+        dpr = float(os.environ.get("PERF_DPR", "2")); vw, vh = (412, 915) if dpr >= 3 else (360, 800)
+        ctx = await b.new_context(viewport={"width": vw, "height": vh}, device_scale_factor=dpr, has_touch=True)
+        if os.environ.get("PERF_ENGINE"):   # Graphics engine: auto / gpu / classic (Settings -> Performance)
+            await ctx.add_init_script(f"""try {{ const p = JSON.parse(localStorage.getItem('rotn_prefs') || '{{}}'); p.gfxEngine = '{os.environ["PERF_ENGINE"]}'; localStorage.setItem('rotn_prefs', JSON.stringify(p)); }} catch (e) {{}}""")
         errs = []
         # ---- 1. make a saved test character (not timed)
         pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))

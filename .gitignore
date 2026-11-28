@@ -10,6 +10,7 @@ android/keystore.properties
 # screen test screenshots
 tests/fh_*.png
 tests/tbf/
+tests/mg/
 tests/gore/
 tests/acct/
 tests/fread/
@@ -68,3 +69,5 @@ tests/out_deepdelve/
 tests/out_combos/
 tests/out_fighttips/
 desktop/dist/
+tests/out_glfight/
+__pycache__/

@@ -46,8 +46,10 @@ PROBE = PINIT + r"""
 """
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(args=["--no-sandbox"])
+        b = await p.chromium.launch(args=["--no-sandbox"] + os.environ.get("PERF_ARGS", "").split())
         ctx = await b.new_context(viewport={"width": VW, "height": VH}, device_scale_factor=DPR, has_touch=True)
+        if os.environ.get("PERF_ENGINE"):   # Graphics engine: auto / gpu / classic
+            await ctx.add_init_script(f"""try {{ const p = JSON.parse(localStorage.getItem('rotn_prefs') || '{{}}'); p.gfxEngine = '{os.environ["PERF_ENGINE"]}'; localStorage.setItem('rotn_prefs', JSON.stringify(p)); }} catch (e) {{}}""")
         pg = await ctx.new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e)))
         await pg.add_init_script(PINIT)
         await pg.goto(URL); await pg.wait_for_selector(".press")
