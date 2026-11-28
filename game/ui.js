@@ -387,6 +387,7 @@
       ${typeof LIGHTFX !== "undefined" ? LIGHTFX.settingsHTML(seg) : ""}
       ${typeof PAINTEDMAP !== "undefined" ? PAINTEDMAP.settingsHTML(seg) : ""}
       ${typeof LOCINTRO !== "undefined" ? LOCINTRO.settingsHTML(seg) : ""}
+      ${typeof DIORAMA !== "undefined" ? DIORAMA.settingsHTML(seg) : ""}
       ${typeof MOTION !== "undefined" ? `<div class="setrow"><span>Motion</span>${seg("motion", [["full", "Full"], ["lite", "Lite"], ["off", "Off"]], MOTION.pref())}</div>` : ""}
       ${typeof TB !== "undefined" ? `<h3>Fights</h3>${typeof GORE !== "undefined" ? GORE.settingsHTML(seg) : typeof COMBATFX !== "undefined" ? `<div class="setrow"><span>Blood</span>${seg("gore", [[true, "On"], [false, "Off"]], getPref("gore", true))}</div>` : ""}` : ""}${typeof FIGHTCTL !== "undefined" && typeof TB !== "undefined" ? FIGHTCTL.settingsHTML(seg) : ""}${typeof COMBAT2 !== "undefined" && typeof TB !== "undefined" ? COMBAT2.settingsHTML(seg) : ""}${typeof FIGHTSET !== "undefined" && typeof TB !== "undefined" ? FIGHTSET.settingsHTML(seg) : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.settingsHTML(seg) : ""}
       ${S && typeof DIFF !== "undefined" ? DIFF.settingsHTML(seg, S) : ""}
@@ -421,7 +422,8 @@
     if (typeof DIFF !== "undefined" && DIFF.pref(k, b.dataset.v, S)) { SOUND.fx("click"); if (S) persist(gameStarted); return true; }   // Fights → Difficulty (difficulty.js)
     if (k === "survival") { if (S) { S.survival = v; if (!v) S.coldV = 0; persist(); try { renderPanel(true); } catch { /* title */ } } SOUND.fx("click"); return true; }
     if (typeof PAINTEDMAP !== "undefined" && PAINTEDMAP.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }   // Graphics → Roads on the map (paintedmap.js)
-    if (typeof LOCINTRO !== "undefined" && LOCINTRO.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Look → Location introductions (locintro.js)
+    if (typeof LOCINTRO !== "undefined" && LOCINTRO.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }
+    if (typeof DIORAMA !== "undefined" && DIORAMA.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Look → Road view: Diorama / Classic (diorama.js)   // Look → Location introductions (locintro.js)
     if (typeof PCMAP !== "undefined" && PCMAP.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Map → Map quality (pcmap.js, mapfx.js)
     if (typeof LIGHTFX !== "undefined" && LIGHTFX.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }   // Graphics → Lighting
     if (k === "motion") { MOTION.setPref(b.dataset.v); SOUND.fx("click"); return true; }
@@ -921,7 +923,15 @@
     if (typeof PARTYPLAY !== "undefined" && !PARTYPLAY.canDecide(S)) return;   // following the party leader: road events happen to them
     lastEventAt = Date.now();
     [S.x, S.y] = livePos();
-    if (G.startEvent(S)) { persist(); openEvent(); ppUI?.leaderHalt("event", "something by the road", S.trip?.event?.text || ""); }
+    if (G.startEvent(S)) { persist(); cueThenOpen("event", openEvent); ppUI?.leaderHalt("event", "something by the road", S.trip?.event?.text || ""); }
+  }
+  /* [road-view] with the painted road view showing (diorama.js), you stop and see who's on the road ahead for a moment
+     before the card opens; otherwise the card opens at once, as before */
+  function cueThenOpen(status, open) {
+    if (!(typeof DIORAMA !== "undefined" && DIORAMA.showing && DIORAMA.showing())) return open();
+    renderTrip();
+    const ms = DIORAMA.cueMs ? DIORAMA.cueMs(!!(HORSES.riding && HORSES.riding(S))) : 2200;   // as long as it takes to ride or walk up to them
+    setTimeout(() => { if (S.trip?.status === status && !$("#modal")) open(); }, ms);
   }
   /* caravans on the road (caravanroad.js): your road brings you alongside one, or you tap its wagon on the map */
   function meetCaravan(cid, auto) {
@@ -989,7 +999,7 @@
         if (out.bag) Store.addBag(out.bag);
         persist(true);
         if (out.died) { SOUND.fx("death"); showMessage("Knocked down", out.died, true); }
-        else if (out.encounter) { openEncounter(); ppUI?.leaderHalt("encounter", out.encounter.name, out.encounter.text); }
+        else if (out.encounter) { cueThenOpen("encounter", openEncounter); ppUI?.leaderHalt("encounter", out.encounter.name, out.encounter.text); }
         else if (out.arrived) {
           SOUND.fx("arrive"); tally("arrivals"); festCount("arrive"); if (typeof EXPEDITION !== "undefined") EXPEDITION.hook("arrive", { place: out.arrived });
           if (typeof IMM !== "undefined") IMM.bark(S, out.arrived);
@@ -1123,12 +1133,13 @@
     if (typeof RIDING !== "undefined") RIDING.sync(S);   // cheap: only toggles classes on the map's ride button
     const put =(html) => { if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; } };   // only redraw on change, so taps don't get lost
     const fpt = typeof FPT !== "undefined" && $("#mapwrap");   // fptravel.js: on the road the trip is a first-person band at the top of the map
-    if (fpt && !(tr && tr.status === "travel" && !S.dungeon)) FPT.hide();
+    if (fpt && !(tr && /^(travel|event|encounter)$/.test(tr.status) && !S.dungeon)) FPT.hide();   // [road-view] the band stays while something stops you on the road
+    const bandNow = () => { if (!fpt) return; const mins = tripMinutesLeft(), here = livePos(), ground = Terrain.NAMES[Terrain.typeAtPos(here)]; FPT.show($("#mapwrap"), fptInfo(tr, here, ground, "", mins), onPanelClick); };
     if (S.dungeon) { put(`<div class="trip enc"><div class="row"><b> You're inside ${esc(S.dungeon.place)}</b><button class="btn danger sm" data-act="dun">Go back in</button></div></div>`); return; }
     if (!tr) { put(""); return; }
     if (tr.status === "event") {
       put(`<div class="trip"><div class="row"><b> Something by the road</b><button class="btn pri sm" data-act="openev">Look</button></div></div>`);
-      return;
+      bandNow(); return;
     }
     if (tr.status === "hold") {   // following the party leader, who has stopped for something (partyplay.js)
       put(`<div class="trip enc"><div class="row"><b>⚑ ${esc(party?.leaderName || "Your leader")} stops: ${esc(party?.halt?.name || "something on the road")}</b></div><div class="sub">Their call. You fight beside them if it comes to blows.</div></div>`);
@@ -1136,7 +1147,7 @@
     }
     if (tr.status === "encounter") {
       put(`<div class="trip enc"><div class="row"><b>${tr.encounter.hunt ? ` ${tr.encounter.prey ? "Game spotted" : "Hunted"}: ${esc(tr.encounter.name)}` : ` ${esc(tr.encounter.name)} blocks the road`}</b><button class="btn danger sm" data-act="openenc">${tr.encounter.prey ? "Hunt it" : "Face it"}</button></div></div>`);
-      return;
+      bandNow(); return;
     }
     const mins = tripMinutesLeft(), total = Math.max(mins, tr.total || mins), p = pct(total - mins, total);
     const here = livePos(), ground = Terrain.NAMES[Terrain.typeAtPos(here)], sp = Terrain.speedAt(here);
@@ -1193,7 +1204,8 @@
       heavy: G.overweight(S), carriage: !!tr.carriage, boat: !!tr.boat, ship: tr.ship, follow: !!tr.follow, weather: wx && wx.id !== "clear" ? wx.name : "",
       sky: typeof SKY !== "undefined" ? SKY.state(here) : null, heading, turn, destBear: tr.dest ? brg(here, tr.dest) : null, look: myLook(),
       company: typeof PARTY !== "undefined" ? PARTY.companions(S, party, others, here, (o) => otherPos(o), MP.NEAR_PX).map((c) => ({ name: c.name, player: !!c.player, follower: !!c.follower, riding: !!c.riding, horse: c.horse || null, look: c.look || null })) : [],
-      pets: fptPets(here), pet: S.pet ? (S.pet.name || S.pet.id || "") : "", say, reduce: reduceMotion, pos: here, path, idx, known };   // pos/path: the road view reads the real land, places and bends round you (fpreal.js)   // pos: the road view reads the land around you (fpscene.js)
+      pets: fptPets(here), pet: S.pet ? (S.pet.name || S.pet.id || "") : "", say, reduce: reduceMotion, pos: here, path, idx, known,
+      stop: tr.status === "event" && tr.event ? { id: tr.event.id, enc: !!tr.event.enc } : tr.status === "encounter" && tr.encounter ? { foe: tr.encounter.name, kind: tr.encounter.kind, arch: tr.encounter.arch, n: tr.encounter.count || tr.encounter.n || 1 } : null };   // [road-view] who's on the road ahead (diorama.js)   // pos/path: the road view reads the real land, places and bends round you (fpreal.js)   // pos: the road view reads the land around you (fpscene.js)
   }
   function renderTabs() {
     tabsEl.querySelectorAll(".tab").forEach((b) => {

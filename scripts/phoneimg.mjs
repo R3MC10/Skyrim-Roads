@@ -15,6 +15,11 @@ const RULES = [
   [/^foe-/, 900],                    // foe paintings (1254; a foe is ~300 css px tall on a phone)
   [/^(road|room|biome|place|fest|heist|gev|wev|exp|raid|longhouse)-/, 1280],   // full-width scene cards
   [/^title-wide-2x\./, 1774],        // the wide title's 2x copy (3548): a phone turned sideways never needs more
+  // the road view (diorama.js): a tree is at most ~300 real px tall in the phone band, a town ~900 wide; the ground tile
+  // repeats every 9 m. The sky and ridge strips wrap round the horizon and keep their size, as does the road.
+  [/^dio-(city|town|landmark|place)-/, 900],
+  [/^dio-floor/, 768],
+  [/^dio-(?!sky|far|mid|road|floor)/, 512],
 ];
 const dir = process.argv[2] || "www";
 let before = 0, after = 0, n = 0;

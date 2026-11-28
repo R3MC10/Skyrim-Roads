@@ -3,6 +3,16 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b392-diorama", build: 392, date: "28 Nov 2026", title: "A painted road", items: [
+      "While you travel, the road view above the map is now a small painted world: the real road you're on bending over gentle hills, hand-painted trees, ferns and rocks along it, misty ridges and sky behind, and you on the road on foot or on your horse.",
+      "What grows depends on where you are: thick pine forest, open tundra with lichen-covered boulders, rocky hills, snow-laden spruces in the mountains, driftwood and dune grass on the coast, river valleys, the Rift's golden birches and red bushes, dead trees and reeds in the marshes, and burnt trees and steaming vents in the ash lands. Each region has its own ground too. The same stretch of road always looks the same, for everyone in a party.",
+      "Hills stay believable: roads never climb steeper than a real mountain road would.",
+      "The five cities, twenty towns and villages, High Hrothgar and Sky Haven Temple each have their own painting, so you can tell Riverwood's water wheel, Solitude's great arch and Dragon Bridge's dragon-head bridge as you ride past.",
+      "Towns, cities, forts, farms, camps, shrines and standing stones stand by the road where they really are on the map, with their names over the ones you know. Rivers wind past and you cross them on stone bridges, and as you near the end of the trip the view turns to show the place you're arriving at.",
+      "You don't travel alone: your party, your follower and your pet walk or ride behind you on the road. When something stops you, bandits at a toll, a patrol, wolves, pilgrims, you see them on the road ahead for a moment before the choice comes up.",
+      "Time of day and the weather change the light. When it snows, you get the same snow as on the map: soft clumps and little crystals drifting and tumbling in a gusting wind, and in a blizzard hard grains blown sideways with white-outs rolling past. Fog is new too: mist lies low in hollows and on the ground while hilltops rise above it, faraway hills fade to a soft blue, the haze glows warmer toward the sun, and thicker wisps drift by on the wind. If your phone struggles, or you prefer the old view, set Settings → Look → Road view to Classic.",
+      "On phones the road view now starts in a few seconds, downloads less than half as much, never stutters as the land ahead is built, and leaves a clearing beyond the road in the small travel strip so you can see past the trees. If your phone struggles, it first lowers its own quality before falling back to the classic view.",
+    ] },
     { id: "b391-snappyfights", build: 391, date: "28 Nov 2026", title: "Snappier fights on phones", items: [
       "Opening Magic or Items and going back during a fight does a lot less behind-the-scenes work, so slower phones react quicker and stutter less. Nothing looks different.",
       "Fixed a rare freeze where the fight screen could get stuck rearranging itself for many seconds after you opened a menu.",
