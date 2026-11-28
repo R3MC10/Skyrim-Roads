@@ -426,7 +426,7 @@ const DIORAMA = (() => {
       for (const o of pads) {
         const d = Math.hypot(x - o.x, z - o.z), R1 = o.rad * 0.75 + 3, R2 = o.rad * 1.5 + 8; if (d >= R2) continue;
         let k = d < R1 ? 1 : 1 - (d - R1) / (R2 - R1); k = k * k * (3 - 2 * k) * clamp((D.near(P, x, z).d - 4) / 6, 0, 1);
-        y += (o.y + 0.4 - y) * k;
+        y += clamp(o.y + 0.4 - y, -4, 4) * k;   // at most 4 m up or down: never a cliff
       }
       // water: the river's channel and lake or sea beds sink below the banks
       if (segs.length) { const rd = D.riverDist(segs, x, z); if (rd < 8) { const k = rd < 3.5 ? 1 : 1 - (rd - 3.5) / 4.5, keep = roadKeep(x, z); y -= (underBridge(x, z) ? 3.8 : 2.2) * k * k * (3 - 2 * k) * keep; } }
@@ -441,7 +441,7 @@ const DIORAMA = (() => {
       if ((i & 31) === 31 && over()) yield;
       const ox = dbase[i * 3], oz = dbase[i * 3 + 2], rr = Math.hypot(ox, oz), x = ox + cx, z = oz + cz;
       let y = D.land(P, x, z, hAt);
-      for (const o of fpads) { const d = Math.hypot(x - o.x, z - o.z), R1 = o.rad * 0.75 + 3, R2 = o.rad * 1.5 + 12; if (d < R2) { const k = d < R1 ? 1 : 1 - (d - R1) / (R2 - R1); y += (o.y + 0.4 - y) * k * k * (3 - 2 * k); } }
+      for (const o of fpads) { const d = Math.hypot(x - o.x, z - o.z), R1 = o.rad * 0.75 + 3, R2 = o.rad * 1.5 + 12; if (d < R2) { const k = d < R1 ? 1 : 1 - (d - R1) / (R2 - R1); y += clamp(o.y + 0.4 - y, -4, 4) * k * k * (3 - 2 * k); } }
       const e = clamp((rr - 280) / 120, 0, 1); y += (farY - y) * e * e * (3 - 2 * e);
       y -= rr < 112 ? 3 : 0.6;
       FS[i * 3] = x; FS[i * 3 + 1] = y; FS[i * 3 + 2] = z;
@@ -612,7 +612,8 @@ const DIORAMA = (() => {
       near = TR ? D.riverSegs(TR.rivers, c.x0, c.z0, c.rad + 170) : [];
       const fits = (x, z) => {
         const rn = D.near(P, x, z);
-        if (rn.d < c.rad * 0.45 + 5) return false;                                          // the road stays clear (a cut-out faces you: half its width is enough)
+        if (rn.d < c.rad * 0.9 + 8) return false;                                           // the road stays clear, with room for the ground to settle round it
+        if (c.art.h >= 20 && rn.d < c.art.h * 1.5) return false;                            // a big city or landmark stands back far enough to fit in the view
         if (rn.side > 0 && rn.d < c.rad + 45) return false;                                 // never close by on the camera's side (it would block the view or go unseen)
         if (out.some((o) => Math.hypot(o.x - x, o.z - z) < (o.rad + c.rad) * 0.8 + 3)) return false;  // so do the other places
         // and they don't stand behind one another as seen from the road (that reads as a tower growing out of a house)
