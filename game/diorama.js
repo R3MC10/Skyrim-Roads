@@ -818,11 +818,19 @@ const DIORAMA = (() => {
     const nr = D.near(P, hx0, hz0, V.hint); V.hint = nr.i;
     // where you are along the road, eased so the trip's updates glide instead of jumping
     const target = nr.s;
-    if (V.sDisp == null || Math.abs(target - V.sDisp) > 80) { V.sDisp = target; V.vEst = 0; }
+    if (V.sDisp == null || Math.abs(target - V.sDisp) > 80) { V.sDisp = target; V.vEst = 0; V.anchor = null; }
     // how fast the trip is really moving: distance between two updates of your position over the time between them (the
     // game moves you about once a second). No update for 1.6 s, or something stopping you, means you've stopped.
     V.since = (V.since || 0) + dt;
-    if (V.sTarget != null && target !== V.sTarget) { const v = clamp((target - V.sTarget) / Math.max(V.since, 1 / 30), 0, 12); V.vEst = V.vEst ? V.vEst * 0.6 + v * 0.4 : v; V.since = 0; }
+    V.clock = (V.clock || 0) + dt;
+    if (V.sTarget != null && target !== V.sTarget) {
+      V.since = 0;
+      // the speed over at least half a second between updates: two updates a frame apart (as when the view first opens)
+      // would read as a wild speed and send you racing ahead, then waiting
+      if (V.anchor == null || Math.abs(target - V.anchor[0]) > 80) V.anchor = [V.sTarget, V.clock - 1];
+      const el = V.clock - V.anchor[1];
+      if (el >= 0.5) { const v = clamp((target - V.anchor[0]) / el, 0, 12); V.vEst = V.vEst ? V.vEst * 0.5 + v * 0.5 : v; V.anchor = [target, V.clock]; }
+    }
     if (V.since > 1.6 || I.stop) V.vEst = 0;
     V.sTarget = target;
     // something stops you: the game stops the trip at once, but here they stand a little further down the road, just out
@@ -838,7 +846,7 @@ const DIORAMA = (() => {
     else {   // glide at the trip's own pace, nudged toward where the game says you are: steady walking between its once-a-second
              // updates, never a quick burst and a wait
       const goal = target + (V.ahead || 0), gap = goal - V.sDisp;
-      if (V.vEst > 0.02) { const rate = clamp(V.vEst + gap * 0.8, V.vEst * 0.35, V.vEst * 2 + 1); V.sDisp += Math.min(rate * dt, Math.max(0, gap + V.vEst * 0.6)); }
+      if (V.vEst > 0.02) { const rate = clamp(V.vEst + gap * 0.8, V.vEst * 0.35, V.vEst * 2 + 1); V.sDisp += Math.min(rate * dt, Math.max(0, gap + Math.min(V.vEst * 0.6, 1.5))); }
       else { const vmax = 0.6 + Math.abs(gap) * 0.8; V.sDisp += clamp(gap, -vmax * dt, vmax * dt); } }
     const speed = dt > 0 ? (V.sDisp - before) / dt : 0;
     const moving = !I.reduce && (stopKey ? speed > 0.15 : speed > 0.15 || V.vEst > 0.15);
