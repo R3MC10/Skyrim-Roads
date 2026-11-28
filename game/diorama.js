@@ -131,17 +131,13 @@ const DIORAMA = (() => {
 
   /* cut-outs that turn to face you: one instanced quad per kind; position, size and mirror per instance */
   const CARD_VS = `
-    attribute vec3 iPos; attribute vec2 iSize; attribute float iFlip; attribute vec2 iT;
-    uniform vec3 camRight; uniform vec3 heroPos; uniform vec3 camPos; uniform float fogMul, now;
-    varying vec2 vUv; varying vec3 vW; varying float vFade; varying float vGrow;
+    attribute vec3 iPos; attribute vec2 iSize; attribute float iFlip;
+    uniform vec3 camRight; uniform vec3 heroPos; uniform vec3 camPos; uniform float fogMul;
+    varying vec2 vUv; varying vec3 vW; varying float vFade;
     void main() {
       vUv = uv;
       vec3 r = normalize(vec3(camRight.x, 0.0, camRight.z));
-      // iT: when it began to grow in (or < -5: always there) and when it began to go (0: staying). New ones grow up out
-      // of the ground and fade in over ~1 s, leaving ones sink and fade out, so a change of region morphs instead of popping
-      float gi = iT.x < -5. ? 1. : clamp((now - iT.x) / 1.1, 0., 1.), go = iT.y > 0. ? 1. - clamp((now - iT.y) / 1.1, 0., 1.) : 1.;
-      float g = gi * go, gs = 0.35 + 0.65 * g * g * (3. - 2. * g); vGrow = g;
-      vec3 wp = iPos + r * position.x * iSize.x * iFlip * gs + vec3(0.0, position.y * iSize.y * gs, 0.0);
+      vec3 wp = iPos + r * position.x * iSize.x * iFlip + vec3(0.0, position.y * iSize.y, 0.0);
       vec4 mv = viewMatrix * vec4(wp, 1.0);
       vW = wp;
       // see-through: something tall standing between you and the camera fades so it never hides you
@@ -152,11 +148,10 @@ const DIORAMA = (() => {
     }`;
   const CARD_FS = `
     uniform sampler2D map; uniform vec3 tint; uniform float fogMul;
-    varying vec2 vUv; varying vec3 vW; varying float vFade; varying float vGrow;${FOG_GLSL}
+    varying vec2 vUv; varying vec3 vW; varying float vFade;${FOG_GLSL}
     void main() {
       vec4 c = texture2D(map, vUv);
       if (c.a < 0.45) discard;
-      if (vGrow < 1.0 && fract(sin(dot(floor(gl_FragCoord.xy), vec2(12.9898, 78.233))) * 43758.5453) > vGrow) discard;   // a dithered fade
       if (vFade < 1.0) { vec2 p = floor(gl_FragCoord.xy); if (mod(p.x + p.y, 2.0) < 1.0 || mod(p.y, 2.0) < 1.0) discard; }
       vec3 col = c.rgb * tint;
       col = dioFog(col, vW, fogMul);
@@ -165,7 +160,7 @@ const DIORAMA = (() => {
   function cardMaterial(map) {
     return new THREE.ShaderMaterial({ vertexShader: CARD_VS, fragmentShader: CARD_FS, side: THREE.DoubleSide,
       uniforms: { map: { value: map }, tint: { value: new THREE.Color(1, 1, 1) }, camRight: { value: new THREE.Vector3(1, 0, 0) }, heroPos: { value: new THREE.Vector3() }, camPos: { value: new THREE.Vector3() },
-        fogMul: { value: 1 }, now: { value: 0 }, ...fogU() } });
+        fogMul: { value: 1 }, ...fogU() } });
   }
   function cardMesh(kind, max, file) {
     const map = tex(file || K().PROPS[kind].file), img = map.image, aspect = img && img.width ? img.width / img.height : 0.6;
@@ -174,7 +169,6 @@ const DIORAMA = (() => {
     g.setAttribute("iPos", new THREE.InstancedBufferAttribute(new Float32Array(max * 3), 3));
     g.setAttribute("iSize", new THREE.InstancedBufferAttribute(new Float32Array(max * 2), 2));
     g.setAttribute("iFlip", new THREE.InstancedBufferAttribute(new Float32Array(max), 1));
-    { const a = new Float32Array(max * 2); for (let q = 0; q < max; q++) a[q * 2] = -10; g.setAttribute("iT", new THREE.InstancedBufferAttribute(a, 2)); }   // always there, staying
     g.instanceCount = 0;
     const m = new THREE.Mesh(g, cardMaterial(map)); m.frustumCulled = false; m.userData = { kind, aspect, max };
     return m;
@@ -231,8 +225,8 @@ const DIORAMA = (() => {
           diffuseColor *= mapTexelToLinear(t1);
           if (edgeOn > 0.) {
             vec4 t0 = mix(texture2D(map2, ua, 5.) * tw.y + texture2D(map2, ub, 5.) * tw.z + texture2D(map2, uc, 5.) * tw.x, texture2D(map2, ua) * tw.y + texture2D(map2, ub) * tw.z + texture2D(map2, uc) * tw.x, sharp);
-            float f = smoothstep(-30., 30., dot(vDioW.xz - edge.xy, edge.zw));
-            diffuseColor.rgb = mix(oldTint * mapTexelToLinear(t0).rgb, diffuseColor.rgb, f * edgeOn);
+            float f = smoothstep(-25., 25., dot(vDioW.xz - edge.xy, edge.zw) + (texture2D(map, vDioW.xz / 61.).g - .5) * 30.);   // a ragged line
+            diffuseColor.rgb = mix(oldTint * mapTexelToLinear(t0).rgb, diffuseColor.rgb, f);
           }`);
     };
     m.customProgramCacheKey = () => "dio-ground";
@@ -339,6 +333,37 @@ const DIORAMA = (() => {
   const hAt = (p) => { try { return typeof FPREAL !== "undefined" ? FPREAL.heightAt(p) : 0; } catch { return 0; } };
   const CELL = 6, RAD = 115, LAKE_LEVEL = new Map();
   /* the ground patch, the road ribbon and what grows, round (cx, cz); rebuilt every ~25 m */
+  /* the regions along the road, worked out once per trip from the map with the same survey the game uses for where
+     you are, so each region begins at a fixed place on the land and you see it coming as you travel. Stretches under
+     60 m merge into the land round them. If the game names a region that the map doesn't show here (or there's no map),
+     that region holds for the whole trip. */
+  function regionsAlong(P, region, pos) {
+    const S = typeof FPSCENE !== "undefined" ? FPSCENE : null, D = R(), want = K().of(region);
+    let start = null; try { start = S && pos ? S.survey(pos) : null; } catch { start = null; }
+    if (!S || !start || start.region !== region) return [{ s0: -1e9, s1: 1e9, kit: want }];
+    const step = 15, segs = [];
+    for (let s = 0; s <= P.len; s += step) {
+      const a = D.at(P, s); let k = null; try { const sv = S.survey(D.toMap(a.x, a.z)); k = sv ? K().of(sv.region) : null; } catch { k = null; }
+      k = k || (segs.length ? segs[segs.length - 1].kit : want);
+      if (segs.length && segs[segs.length - 1].kit === k) segs[segs.length - 1].s1 = s + step; else segs.push({ s0: s, s1: s + step, kit: k });
+    }
+    for (let i = 0; i < segs.length && segs.length > 1;) {   // a short stretch joins the one before it (or after, at the start)
+      const g = segs[i]; if (g.s1 - g.s0 >= 60) { i++; continue; }
+      const nb = segs[i - 1] || segs[i + 1]; nb.s0 = Math.min(nb.s0, g.s0); nb.s1 = Math.max(nb.s1, g.s1); segs.splice(i, 1);
+      for (let j = segs.length - 1; j > 0; j--) if (segs[j].kit === segs[j - 1].kit) { segs[j - 1].s1 = segs[j].s1; segs.splice(j, 1); }
+      i = 0;
+    }
+    segs[0].s0 = -1e9; segs[segs.length - 1].s1 = 1e9;
+    return segs;
+  }
+  const kitAt = (s) => { const g = (V.regs || []).find((q) => s >= q.s0 && s < q.s1); return g ? g.kit : null; };
+  // the border nearest you (within 400 m), as a line across the road: the ground blends across it
+  function borderNear(s) {
+    const rs = V.regs || []; let best = null;
+    for (let i = 1; i < rs.length; i++) { const b = rs[i].s0; if (Math.abs(b - s) < 400 && (!best || Math.abs(b - s) < Math.abs(best.s - s))) best = { s: b, before: rs[i - 1].kit, after: rs[i].kit }; }
+    if (best && !best.x) { const D = R(), a = D.at(V.prof, best.s - 2), c = D.at(V.prof, best.s + 2), l = Math.hypot(c.x - a.x, c.z - a.z) || 1; Object.assign(best, { x: (a.x + c.x) / 2, z: (a.z + c.z) / 2, tx: (c.x - a.x) / l, tz: (c.z - a.z) / l }); }
+    return best;
+  }
   function rebuild(cx, cz, kit) {
     const P = V.prof, D = R();
     // ground
@@ -422,36 +447,24 @@ const DIORAMA = (() => {
         if (segs.length && D.riverDist(segs, x, z) < 6) continue;   // nothing grows in the river
         if ((V.bridges || []).some((b) => Math.abs(r.s - b.s) < (b.len || 24) / 2 + 4 && r.d < 7)) continue;   // nor on a bridge or right by its ends
         { let ty = -1; try { ty = TR ? TR.typeAtPos(D.toMap(x, z)) : -1; } catch { /* off the map */ } if (ty === TT.SEA || ty === TT.LAKE) continue; }
-        // across a region border the new region's plants take over gradually, over ~60 m along the road
-        const E = V.edge, kk = E && r.s < E.s + 30 && D.rand(i, j, 97) >= Math.min(1, Math.max(0, (r.s - E.s) / 60 + 0.5)) ? E.old : kit;
+        // each spot grows what its region grows; the border is a ragged band ~50 m wide, fixed on the land
+        const kk = kitAt(r.s + (D.rand(i, j, 97) - 0.5) * 50) || kit;
         const tall = n === 0 && r.d > 3.8 && (r.side < 0 || r.d > 26) && D.rand(i, j, 31) < kk.trees;
         const small = !tall && D.rand(i, j, 41 + n) < kk.clutter * (r.d < 12 ? 1 : 0.55);
         if (!tall && !small) continue;
         const kind = tall ? pickFrom(kk.treeMix, D.rand(i, j, 51)) : pickFrom(kk.clutterMix, D.rand(i, j, 61 + n));
         const Pp = K().PROPS[kind], s = D.rand(i, j, 71 + n), hgt = Pp.h[0] + (Pp.h[1] - Pp.h[0]) * s, y = D.land(P, x, z, hAt, r.i) - 0.05;
-        lists[kind].push([x, y, z, hgt, s > 0.5 ? 1 : -1, i + "," + j + "," + n]);
+        lists[kind].push([x, y, z, hgt, s > 0.5 ? 1 : -1]);
         if (Pp.shadow) sh.push([x, y, z, Pp.shadow * (0.8 + s * 0.4)]);
       }
-    }
-    // what came and what went since the last patch: newcomers grow in, leavers shrink out (the first patch of a trip
-    // just appears). A cell keeps its plant from patch to patch, so only a change of region or the far rim animates
-    { const now = V.now || 0, prev = V.propPrev, next = new Map();
-      for (const [kind, arr] of Object.entries(lists)) for (const e of arr) {
-        const p0 = prev && prev.get(e[5]); e[6] = p0 && p0.kind === kind ? p0.born : prev ? now : -10; e[7] = 0; next.set(e[5], { kind, e });
-      }
-      const dying = (V.dying || []).filter((d) => now - d.e[7] < 1.15);
-      if (prev) for (const [key, p0] of prev) { const nn = next.get(key); if ((!nn || nn.kind !== p0.kind) && p0.e[7] === 0 && Math.hypot(p0.e[0] - cx, p0.e[2] - cz) < RAD) dying.push({ kind: p0.kind, e: [...p0.e.slice(0, 7), now] }); }
-      for (const d of dying) if (lists[d.kind]) lists[d.kind].push(d.e);
-      V.dying = dying; V.propPrev = next; V.dyingUntil = dying.length ? now + 1.2 : 0;
     }
     for (const [kind, arr] of Object.entries(lists)) {
       if (!V.cards[kind] && arr.length && LOADED.has(K().PROPS[kind].file)) { V.cards[kind] = cardMesh(kind, K().PROPS[kind].tree ? 1800 : 2600); V.scene.add(V.cards[kind]); }
       const m = V.cards[kind]; if (!m) continue;
       const g = m.geometry, n = Math.min(arr.length, m.userData.max);
       const ip = g.attributes.iPos.array, is = g.attributes.iSize.array, iff = g.attributes.iFlip.array, asp = m.userData.aspect;
-      const itA = g.attributes.iT.array;
-      for (let q = 0; q < n; q++) { const [x, y, z, hh, fl, , born, die] = arr[q]; ip[q * 3] = x; ip[q * 3 + 1] = y; ip[q * 3 + 2] = z; is[q * 2] = hh * asp; is[q * 2 + 1] = hh; iff[q] = fl; itA[q * 2] = born ?? -10; itA[q * 2 + 1] = die || 0; }
-      g.instanceCount = n; g.attributes.iPos.needsUpdate = g.attributes.iSize.needsUpdate = g.attributes.iFlip.needsUpdate = g.attributes.iT.needsUpdate = true;
+      for (let q = 0; q < n; q++) { const [x, y, z, hh, fl] = arr[q]; ip[q * 3] = x; ip[q * 3 + 1] = y; ip[q * 3 + 2] = z; is[q * 2] = hh * asp; is[q * 2 + 1] = hh; iff[q] = fl; }
+      g.instanceCount = n; g.attributes.iPos.needsUpdate = g.attributes.iSize.needsUpdate = g.attributes.iFlip.needsUpdate = true;
     }
     // places: where they really are on the land, never on the road or in water
     const B = K().BRIDGE, PL = K().PLACES, Wd = typeof WORLD !== "undefined" ? WORLD.places || {} : {}, byFile = {};
@@ -728,22 +741,11 @@ const DIORAMA = (() => {
     if (!usable(I, region)) { detach(); return false; }
     if (!loadThree()) return false;
     if (!V || !V.canvas.isConnected || V.canvas.parentNode !== host) { detach(); V = build(host); if (!V) return false; }
-    // the region's paintings: until a new region's have arrived, the last region's look carries on (on the very first
-    // trip the classic view shows meanwhile)
-    const want = K().of(region);
-    if (ready(want)) {
-      if (V.kit && V.kit !== want) {   // crossed into a new region: a border across the road where you are now
-        V.patch = null;
-        if (V.prof && V.sDisp != null) { const a = R().at(V.prof, V.sDisp - 2), c = R().at(V.prof, V.sDisp + 2), l = Math.hypot(c.x - a.x, c.z - a.z) || 1;
-          V.edge = { s: V.sDisp, old: V.kit, x: (a.x + c.x) / 2, z: (a.z + c.z) / 2, tx: (c.x - a.x) / l, tz: (c.z - a.z) / l, floor: V.floorFile || "dio-floor", t0: V.now || 0 }; }
-      }
-      V.kit = want;
-    } else if (!V.kit) return false;
-    const kit = V.kit, D = R();
+    const D = R();
     // the route
     const pk = (I.origin || "") + ">" + (I.dest || "") + "|" + I.path.length;
     if (pk !== V.profKey) {
-      V.prof = D.profile(I.path, hAt); V.profKey = pk; V.sDisp = null; V.patch = null; V.hint = null; V.edge = null; V.propPrev = null; V.dying = null; if (!V.prof) return false;
+      V.prof = D.profile(I.path, hAt); V.profKey = pk; V.sDisp = null; V.patch = null; V.hint = null; V.allReady = false; if (!V.prof) return false;
       // bridges for the whole trip, found once: the road is straightened and levelled across each one
       const TR = typeof Terrain !== "undefined" ? Terrain : null, TT = TR?.T || {}, pts = V.prof.pts;
       let bx0 = Infinity, bx1 = -Infinity, bz0 = Infinity, bz1 = -Infinity; for (const q of pts) { bx0 = Math.min(bx0, q.x); bx1 = Math.max(bx1, q.x); bz0 = Math.min(bz0, q.z); bz1 = Math.max(bz1, q.z); }
@@ -751,7 +753,11 @@ const DIORAMA = (() => {
       const cross = D.crossings(V.prof, segsAll).filter((c) => { try { return !TR || TR.typeAtPos(D.toMap(c.x, c.z)) !== TT.RIVER; } catch { return true; } });   // fords stay fords
       V.bridges = D.straighten(V.prof, cross);
       V.placed = placeAll(V.prof, segsAll, TR, TT);
+      V.regs = regionsAlong(V.prof, region, I.pos);
     }
+    // every region on this road has its paintings asked for at the start of the trip; the first trip waits for them
+    // (classic view meanwhile), later ones carry on and fill in as they arrive
+    if (!V.allReady) { V.allReady = V.regs.every((g) => ready(g.kit)); if (V.allReady) V.patch = null; else if (!V.drewOnce) return false; }
     const P = V.prof, [hx0, hz0] = D.toWorld(I.pos);
     const nr = D.near(P, hx0, hz0, V.hint); V.hint = nr.i;
     // where you are along the road, eased so the trip's updates glide instead of jumping
@@ -776,10 +782,8 @@ const DIORAMA = (() => {
     else { const goal = target + (V.ahead || 0), gap = goal - V.sDisp, vmax = Math.max(0.6, V.vEst * 1.6 + 0.5); V.sDisp += clamp(gap, -vmax * dt, vmax * dt); }
     const speed = dt > 0 ? (V.sDisp - before) / dt : 0;
     const moving = !I.reduce && (stopKey ? speed > 0.15 : speed > 0.15 || V.vEst > 0.15);
-    const here = D.at(P, V.sDisp);
+    const here = D.at(P, V.sDisp), kit = V.kit = kitAt(V.sDisp);
     // rebuild the land when you've moved on
-    V.now = t;
-    if (V.dyingUntil && t > V.dyingUntil) V.patch = null;   // the ones that went have finished fading: drop them
     if (!V.patch || Math.hypot(here.x - V.patch[0], here.z - V.patch[1]) > 25) rebuild(here.x, here.z, kit);
     // size
     const w = host.clientWidth, h = host.clientHeight, pr = Math.min(devicePixelRatio || 1, phone() ? 1.5 : 1.75);
@@ -816,11 +820,14 @@ const DIORAMA = (() => {
     V.heroShadow.position.set(here.x + 0.25, here.y + 0.05, here.z); V.heroShadow.scale.set(I.riding ? 3.2 : 1.5, 1, I.riding ? 1 : 0.6); V.heroShadow.rotation.y = -camYaw;
     // light
     const Lt = light(I, kit);
+    // crossing a border, the air and the far hills change colour slowly, as the land around you does
+    if (!V.fogC || I.reduce) V.fogC = Lt.fog.clone(); else V.fogC.lerp(Lt.fog, Math.min(1, dt * 0.35)); Lt.fog = V.fogC.clone();
+    const B = borderNear(V.sDisp), gk = B ? B.after : kit;   // the ground: the nearest border's two regions
     V.scene.fog.color.copy(Lt.fog); V.scene.fog.near = Lt.near; V.scene.fog.far = Lt.far; V.renderer.setClearColor(Lt.fog);
-    const gt = new THREE.Color(Lt.tint.r * kit.ground[0], Lt.tint.g * kit.ground[1], Lt.tint.b * kit.ground[2]);
+    const gt = new THREE.Color(Lt.tint.r * gk.ground[0], Lt.tint.g * gk.ground[1], Lt.tint.b * gk.ground[2]);
     V.farGround.material.color.copy(gt);
     { // the region's own ground and distant ridges
-      const fl = kit.floor || "dio-floor";
+      const fl = gk.floor || "dio-floor";
       if (V.floorFile !== fl && LOADED.has(fl)) {
         const gt0 = TEX[fl]; gt0.repeat.copy(TEX["dio-floor"].repeat); V.ground.material.map = gt0; V.ground.material.needsUpdate = true;
         const ft = gt0.clone(); ft.needsUpdate = true; ft.repeat.set(8000 / 60, 8000 / 60); V.farGround.material.map = ft; V.farGround.material.needsUpdate = true; V.floorFile = fl;
@@ -830,7 +837,7 @@ const DIORAMA = (() => {
         if (b.userData.file) {   // the old ridge stays as a ghost that fades out while the new one fades in
           if (b.userData.ghost) V.scene.remove(b.userData.ghost);
           const gh = new THREE.Mesh(b.geometry, b.material.clone()); gh.renderOrder = b.renderOrder - 0.01; gh.frustumCulled = false; V.scene.add(gh);
-          b.userData.ghost = gh; b.userData.fadeAt = t;
+          b.userData.ghost = gh; b.userData.fadeAt = t;   // slowly: 6 s
         }
         TEX[f].repeat.set(4, 1); b.material = b.material.clone(); b.material.map = TEX[f]; b.material.needsUpdate = true; b.userData.file = f;
       });
@@ -841,11 +848,11 @@ const DIORAMA = (() => {
       F.dfSun.value.copy(Lt.sun); F.dfSunDir.value.set(-right.x * 0.7 + fwd.x * 0.6, 0.35, -right.z * 0.7 + fwd.z * 0.6).normalize();   // the light comes from the upper left, as in every painting
     }
     V.ground.material.color.copy(gt);
-    { const T = V.ground.material.userData.tri, E = V.edge;   // the ground blends across the last region border
-      T.edgeOn.value = E && LOADED.has(E.floor) ? Math.min(1, Math.max(0.002, (t - E.t0) / 2)) : 0;   // eases in over 2 s
-      if (E) { T.map2.value = TEX[E.floor] || V.ground.material.map; T.edge.value.set(E.x, E.z, E.tx, E.tz); T.oldTint.value.setRGB(Lt.tint.r * E.old.ground[0], Lt.tint.g * E.old.ground[1], Lt.tint.b * E.old.ground[2]); } } for (const a of V.actors.values()) a.mesh.material.color.setRGB(Math.max(0.7, Lt.tint.r), Math.max(0.72, Lt.tint.g), Math.max(0.8, Lt.tint.b)); if (V.bridgeMats) for (const m of Object.values(V.bridgeMats)) if (m.color) m.color.copy(Lt.tint); V.road.material.color.copy(Lt.tint); V.hero.material.color.setRGB(Math.max(0.78, Lt.tint.r), Math.max(0.8, Lt.tint.g), Math.max(0.86, Lt.tint.b)); V.sky.material.color.copy(Lt.tint);   // you stay easy to see
-    V.backs.forEach((b) => b.material.color.setRGB(Lt.tint.r * kit.far[0], Lt.tint.g * kit.far[1], Lt.tint.b * kit.far[2]));
-    for (const m of [...Object.values(V.cards), ...Object.values(V.places)]) { const u = m.material.uniforms; u.tint.value.copy(Lt.tint); u.camRight.value.copy(right); u.heroPos.value.set(here.x, here.y, here.z); u.camPos.value.copy(V.camera.position); u.now.value = t; }
+    { const T = V.ground.material.userData.tri, f0 = B && (B.before.floor || "dio-floor");   // the ground blends across the border, fixed on the land
+      T.edgeOn.value = B && LOADED.has(f0) ? 1 : 0;
+      if (T.edgeOn.value) { T.map2.value = TEX[f0]; T.edge.value.set(B.x, B.z, B.tx, B.tz); T.oldTint.value.setRGB(Lt.tint.r * B.before.ground[0], Lt.tint.g * B.before.ground[1], Lt.tint.b * B.before.ground[2]); } } for (const a of V.actors.values()) a.mesh.material.color.setRGB(Math.max(0.7, Lt.tint.r), Math.max(0.72, Lt.tint.g), Math.max(0.8, Lt.tint.b)); if (V.bridgeMats) for (const m of Object.values(V.bridgeMats)) if (m.color) m.color.copy(Lt.tint); V.road.material.color.copy(Lt.tint); V.hero.material.color.setRGB(Math.max(0.78, Lt.tint.r), Math.max(0.8, Lt.tint.g), Math.max(0.86, Lt.tint.b)); V.sky.material.color.copy(Lt.tint);   // you stay easy to see
+    { const fc = new THREE.Color(Lt.tint.r * kit.far[0], Lt.tint.g * kit.far[1], Lt.tint.b * kit.far[2]); if (!V.farC || I.reduce) V.farC = fc; else V.farC.lerp(fc, Math.min(1, dt * 0.35)); V.backs.forEach((b) => b.material.color.copy(V.farC)); }
+    for (const m of [...Object.values(V.cards), ...Object.values(V.places)]) { const u = m.material.uniforms; u.tint.value.copy(Lt.tint); u.camRight.value.copy(right); u.heroPos.value.set(here.x, here.y, here.z); u.camPos.value.copy(V.camera.position); }
     V.post.uniforms.grade.value.set(...Lt.grade); V.post.uniforms.dark.value = Lt.dark;
     // sky and ridges sit far off along the camera's view, turning with it
     const cpos = V.camera.position;
@@ -854,7 +861,7 @@ const DIORAMA = (() => {
     for (const b of V.backs) {
       b.position.set(cpos.x, V.camY + b.userData.base, cpos.z);
       const gh = b.userData.ghost;
-      if (gh) { const k = clamp((t - b.userData.fadeAt) / 3, 0, 1); b.material.opacity = k; gh.material.opacity = 1 - k; gh.position.copy(b.position); gh.material.color.copy(b.material.color);
+      if (gh) { const k = clamp((t - b.userData.fadeAt) / 6, 0, 1); b.material.opacity = k; gh.material.opacity = 1 - k; gh.position.copy(b.position); gh.material.color.copy(b.material.color);
         if (k >= 1) { V.scene.remove(gh); gh.material.dispose(); b.userData.ghost = null; b.material.opacity = 1; } }
     }
     V.farGround.position.set(cpos.x, Math.min(here.y, V.camY) - 0.8, cpos.z);
@@ -867,7 +874,7 @@ const DIORAMA = (() => {
       for (const m of [V.river.material, V.lake.material]) { const u = m.uniforms; u.t.value = V.waterT; u.tint.value.copy(Lt.tint);
         u.shallow.value.setRGB(0.36, 0.48, 0.52).lerp(Lt.fog, 0.35); u.deep.value.setRGB(0.1, 0.17, 0.21).lerp(Lt.fog, 0.15); } }
     labels(host, I, here);
-    V.lastDrew = performance.now();
+    V.lastDrew = performance.now(); V.drewOnce = true;
     // draw: the scene, then the finish
     const t0 = typeof performance !== "undefined" ? performance.now() : 0;
     V.renderer.setRenderTarget(V.rt); V.renderer.render(V.scene, V.camera);
