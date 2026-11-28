@@ -123,8 +123,8 @@ const DIOROUTE = (() => {
     const sm = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return 1 - t * t * (3 - 2 * t); };
     h = road.h + (h - road.h) * RELIEF;                             // the land's rise and fall beside the road, toned down
     const base = h + delta * sm(4, 44, r.d);                       // the land, shifted with the road and easing back
-    const lim = 4 + r.d * 0.5;                                     // never steeper than ~1 in 2 above or below the road: no walls
-    const b2 = clamp(base, road.y - lim, road.y + lim);
+    const lim = 3 + r.d * 0.3;                                     // never steeper than ~1 in 3 above or below the road: no walls
+    const b2 = clamp(base, road.y - lim, road.y + (r.side > 0 ? 0.6 + r.d * 0.05 : lim));   // the camera's side stays low: it looks over it
     return b2 + (road.y - b2) * sm(4, 12, r.d);                    // a flat shelf right by the road
   }
   /* rivers near (cx, cz): the map's river lines (Terrain.rivers, map pixels) as world segments within r metres */

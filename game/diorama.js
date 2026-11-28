@@ -861,8 +861,9 @@ const DIORAMA = (() => {
     // nearly there: the camera swings round to look down the road, so the place you're heading for comes into view
     const left = P.len - V.sDisp, ramp = left > 170 ? 0 : left < 45 ? 1 : (170 - left) / 125;
     // toward the place itself when it's standing there (looking across the road means a yaw of +90 degrees), else down the road
-    let swingTo = 0.62; { const dp = (V.placed || []).find((o) => o.name === I.dest);
-      if (dp) { let a = Math.atan2(dp.z - here.z, dp.x - here.x) + Math.PI / 2 - V.yaw; while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; swingTo = clamp(a * 0.85, -0.3, 1.1); } }
+    let swingTo = 0.62, liftTo = 0; { const dp = (V.placed || []).find((o) => o.name === I.dest);
+      if (dp) { let a = Math.atan2(dp.z - here.z, dp.x - here.x) + Math.PI / 2 - V.yaw; while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; swingTo = clamp(a * 0.85, -0.3, 1.1);
+        liftTo = clamp(dp.y + dp.h * 0.45 - here.y - 3, 0, 11) * 0.35; } }   // a place up a mountain: the camera looks up to it
     const swing = I.reduce ? 0 : swingTo * ramp;
     V.swing = V.swing == null ? swing : V.swing + (swing - V.swing) * Math.min(1, dt * 0.7);
     const camYaw = V.yaw + V.swing;
@@ -872,8 +873,10 @@ const DIORAMA = (() => {
     const tall = V.camera.aspect < 1.2, short = V.h < 200, away = tall ? 11 : short ? 8.5 : 16, up = tall ? 3.6 : short ? 2.8 : 4.2, lead = tall || short ? 0.7 : 2;
     const look = I.stop ? 4 : 0; V.lookA = V.lookA == null ? look : V.lookA + (look - V.lookA) * Math.min(1, dt * 1.5);   // something on the road: look a little ahead
     const lx = here.x + cx * (lead + V.lookA), lz = here.z + cz * (lead + V.lookA);
-    V.camera.position.set(lx - fx * away, V.camY + up, lz - fz * away);
-    V.camera.lookAt(lx + cx * (tall ? 0.4 : 1) + fx * 1.5, V.camY + (short ? 2.1 : 2.9), lz + cz * (tall ? 0.4 : 1) + fz * 1.5);
+    const awayN = away + (V.lift || 0) * 3.5;   // a place up a mountain: step back so you and it both fit
+    V.camera.position.set(lx - fx * awayN, V.camY + up, lz - fz * awayN);
+    V.lift = V.lift == null || I.reduce ? liftTo * ramp : V.lift + (liftTo * ramp - V.lift) * Math.min(1, dt * 0.7);
+    V.camera.lookAt(lx + cx * (tall ? 0.4 : 1) + fx * 1.5, V.camY + (short ? 2.1 : 2.9) + V.lift, lz + cz * (tall ? 0.4 : 1) + fz * 1.5);
     const right = new THREE.Vector3(cx, 0, cz);
     // you
     if (moving) V.stride += speed * dt / (I.riding ? 2.6 : 0.84);
