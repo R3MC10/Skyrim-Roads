@@ -249,7 +249,11 @@ const ONBOARD = (() => {
       box.dataset.k = key;
       box.innerHTML = ids.map((id) => { const h = HINTS.find((x) => x[0] === id); return `<div class="fhint ${h[2]}" data-h="${id}"><span>${esc(h[3])}</span><i class="fh-ar" aria-hidden="true"></i></div>`; }).join("");
     }
-    placeHints();
+    /* [perf] the lines follow their controls, which only move when the fight screen is laid out again (or the window
+       changes): for a second after that they are placed every tick, then they stay put until the next change */
+    const sig = `${typeof COMBAT2 !== "undefined" && COMBAT2.gen ? COMBAT2.gen() : 0}|${innerWidth}x${innerHeight}|${key}`, now = Date.now();
+    if (changed || sig !== hmem.pSig) { hmem.pSig = sig; hmem.pAt = now; }
+    if (changed || now - (hmem.pAt || 0) < 1200) placeHints();
     if (changed && FZ()) { FZ().relayout(); placeHints(); }   // [fightscreen] the fight screen keeps a band for them (fightzones.js)
     if (ids.includes("end")) hmem.endShown = true;
     if (ids.includes("intent")) hmem.intShown = true;
