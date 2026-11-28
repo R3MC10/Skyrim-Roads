@@ -81,15 +81,28 @@ const DIORAMA = (() => {
     float dfH(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
     float dfN(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
       return mix(mix(dfH(i), dfH(i + vec2(1., 0.)), f.x), mix(dfH(i + vec2(0., 1.)), dfH(i + 1.), f.x), f.y); }
-    vec3 dioFog(vec3 col, vec3 wp, float mul){
-      vec3 rd = wp - dfCam; float len = max(length(rd), 1e-4), dist = len * mul; rd /= len;
-      float k = dfB * rd.y, h0 = dfCam.y - dfBase;
-      // a light haze over distance (the air itself) + a mist layer lying on the ground that thins fast with height
-      float od = dfHaze * dist + dfA * exp(-dfB * h0) * (abs(k * dist) > 1e-3 ? (1. - exp(-k * dist)) / k : dist);
-      if (dfWisp > 0.01) {
-        vec2 q = (wp.xz - dfWind * dfT) * 0.03;
-        float n = dfN(q) * .62 + dfN(q * 2.6 + 7.3) * .38;
-        od *= max(0., 1. + dfWisp * (n - .48) * 1.7 * smoothstep(5., 35., dist));
+    float dfLayer(float a, float k, float h0, float rdy, float dist){   // fog along a line of sight for density a * exp(-k * height), exact
+      float kk = k * rdy, e = kk * dist;
+      return a * exp(-k * h0) * (abs(e) > 1e-4 ? (1. - exp(-e)) / kk : dist);
+    }
+    vec3 dioFog(vec3 col, vec3 wp, float mul){   // mul < 0: the sky, infinitely far
+      vec3 rd = wp - dfCam; float len = max(length(rd), 1e-4); rd /= len;
+      float sky = mul < 0. ? 1. : 0., dist = sky > .5 ? 1e5 : len * mul, rdy = sky > .5 ? max(rd.y, .012) : rd.y, h0 = dfCam.y - dfBase;
+      // a light haze (the air itself, thinning slowly with height) + a mist lying on the ground that thins fast:
+      // along the horizon the sky never leaves the haze, looking up it soon does, so the land melts into a bright band
+      float od = dfLayer(dfHaze, 1. / 120., h0, rdy, dist) + dfLayer(dfA, dfB, h0, rdy, dist);
+      // wisps: thicker and thinner mist sampled at three points through the air in front of the surface, weighted
+      // by how much mist is at that height, so you look through them instead of seeing them painted on the ground
+      if (dfWisp > 0.01 && sky < .5) {
+        float L = min(dist, 160.), w = 0.;
+        for (int i = 0; i < 3; i++) {
+          float sd = L * (float(i) + .5) / 3.; vec3 p = dfCam + rd * sd;
+          float dens = dfA * exp(-dfB * max(p.y - dfBase, -6.));
+          vec2 q = (p.xz - dfWind * dfT) * .03 + vec2(p.y * .05, 0.);
+          float n = dfN(q) * .62 + dfN(q * 2.6 + 7.3) * .38;
+          w += dens * (n - .47) * (L / 3.);
+        }
+        od += dfWisp * 2.4 * w;
       }
       vec3 ext = max(exp(-max(od, 0.) * vec3(.9, 1., 1.12)), vec3(1. - dfMax));
       float s = pow(max(dot(rd, dfSunDir), 0.), 5.);
@@ -205,6 +218,7 @@ const DIORAMA = (() => {
       m.userData = { base }; m.renderOrder = order; m.frustumCulled = false; scene.add(m); return m;
     };
     const sky = ring("dio-sky", 1500, 1500, -300, 3, -10);
+    sky.material.fog = true; sky.material.userData.dfMul = -1;   // the sky takes the fog as infinitely far: a bright band at the horizon
     // a haze band round the horizon in the fog colour, between the sky and the ridges: the ridges' misty, see-through
     // feet never let the sky's sunrise colour show through as a strip
     const hzc = document.createElement("canvas"); hzc.width = 4; hzc.height = 64; const hgc = hzc.getContext("2d");
