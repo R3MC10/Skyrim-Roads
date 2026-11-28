@@ -2,7 +2,8 @@
 on foot and riding, day / dusk / night / snow, phone-band and PC-band sizes. It drives DIORAMA.frame into a test box the
 size of the travel band for a few seconds of walking.
 Checks: no page errors, the diorama drew (three.js loaded lazily, WebGL ok), trees and plants were placed, you moved along
-the road, the road never climbs steeper than DIOROUTE.GRADE, the canvas isn't blank; a region without a kit (marsh) and
+the road, the road never climbs steeper than DIOROUTE.GRADE, the canvas isn't blank, each region grows its own cut-outs (marsh,
+ash, snowy mountain, coast, tundra, the Rift); a region without a kit and
 Road view: Classic both hand back to the classic view.
 Usage: python3 diorama_ui.py PORT [OUTDIR]"""
 import asyncio, base64, os, sys, tempfile
@@ -59,6 +60,10 @@ async def main():
                  ("Winterhold", "Dawnstar", "mountain", False, 960, 310, "day", "snow")]
         CASES += [("Whiterun", "Riverwood", "tundra", False, 960, 310, "day", "clear", 0.93),   # nearly there: Riverwood comes into view
                   ("Riverwood", "Whiterun", "valley", True, 960, 310, "day", "clear", 0.1), ("Solitude", "Morthal", "valley", False, 960, 310, "day", "clear", 0.4)]   # the White River and its bridge
+        CASES += [("Morthal", "Solitude", "marsh", False, 960, 310, "day", "clear"), ("Windhelm", "Kynesgrove", "ash", True, 960, 310, "dusk", "clear"),
+                  ("Dawnstar", "Winterhold", "coast", False, 960, 310, "day", "clear")]
+        OWN = {"marsh": ["marshtree", "marshdead", "marshsnag", "reeds", "marshgrass"], "ash": ["ashtree", "ashsnag", "ashrocks", "ashshrub"], "mountain": ["sprucesnow", "pinesnow", "rockssnow", "bushsnow"],
+               "coast": ["dunegrass", "coastrocks", "driftwood"], "tundra": ["tundragrass", "boulder"], "autumn": ["bushautumn"]}
         for c in CASES:
             (o, d, region, riding, w, h, tod, weather), f0 = c[:8], (c[8] if len(c) > 8 else 0.3)
             r = await pg.evaluate(RUN, [o, d, region, riding, w, h, tod, weather, 4, f0, None])
@@ -75,6 +80,7 @@ async def main():
             if r["moved"] <= 0.3 and f0 < 0.9: fails.append((tag, "you didn't move along the road", r["moved"]))
             if r["worst"] > 0.1001: fails.append((tag, "road too steep", r["worst"]))
             if dbg.get("riding") != riding: fails.append((tag, "riding flag", dbg.get("riding")))
+            if region in OWN and not any((dbg.get("props") or {}).get(k, 0) > 0 for k in OWN[region]): fails.append((tag, "none of the region's own cut-outs grow", dbg.get("props")))
             if weather == "snow" and (dbg.get("snow") or 0) < 100: fails.append((tag, "it should be snowing", dbg.get("snow")))
             if weather == "clear" and (dbg.get("snow") or 0) > 0: fails.append((tag, "snow in clear weather", dbg.get("snow")))
         # nothing moves when the land is rebuilt: draw at one spot, then 40 m further on, and compare every cut-out and
@@ -175,9 +181,9 @@ async def main():
         print("pace", r)
         if r["walkShare"] < 0.95: fails.append(("pace", "you stop and start between the game's position updates", r["walkShare"]))
         if r["end"] or r["stillAfter"] is None or r["stillAfter"] > 2.5: fails.append(("pace", "you keep walking after the trip stopped", r))
-        # no kit for the marsh, and Road view: Classic → the classic view draws
-        r = await pg.evaluate(RUN, ["Morthal", "Solitude", "marsh", False, 390, 150, "day", "clear", 1, 0.3, None])
-        if r["drew"]: fails.append(("marsh", "should keep the classic view"))
+        # a region with no kit, and Road view: Classic → the classic view draws
+        r = await pg.evaluate(RUN, ["Morthal", "Solitude", "nowhere", False, 390, 150, "day", "clear", 1, 0.3, None])
+        if r["drew"]: fails.append(("no kit", "should keep the classic view"))
         await pg.evaluate("DIORAMA.setMode('classic')")
         r = await pg.evaluate(RUN, ["Falkreath", "Riverwood", "pine", False, 390, 150, "day", "clear", 1, 0.3, None])
         if r["drew"]: fails.append(("classic", "Road view: Classic should keep the classic view"))

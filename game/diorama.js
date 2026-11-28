@@ -69,7 +69,8 @@ const DIORAMA = (() => {
     if (wrap) t.wrapS = t.wrapT = THREE.RepeatWrapping;
     t.anisotropy = 4; TEX[name] = t; return t;
   }
-  const ready = () => K().FILES.every((f) => LOADED.has(f));
+  // a region's paintings, asked for (ground and ridges tile, so they wrap) and all here?
+  const ready = (kit) => K().filesFor(kit).every((f) => { tex(f, /dio-(floor|far|mid|sky|road)/.test(f)); return LOADED.has(f); });
 
   /* fog (one model for everything in the view): exponential height fog after Inigo Quilez's "better fog": the air is
      thickest low down and thins with height, so mist pools in hollows and along the ground while hilltops and the
@@ -245,7 +246,7 @@ const DIORAMA = (() => {
     shadows.count = 0; shadows.renderOrder = 2; shadows.frustumCulled = false; scene.add(shadows);
     // the cut-outs, one mesh per kind
     const cards = {};
-    for (const kind of Object.keys(K().PROPS)) { const m = cardMesh(kind, K().PROPS[kind].tree ? 1800 : 2600); cards[kind] = m; scene.add(m); }
+    for (const kind of K().BASE) { const m = cardMesh(kind, K().PROPS[kind].tree ? 1800 : 2600); cards[kind] = m; scene.add(m); }   // a region's own cut-outs are added when it first needs them
     // you: drawn into a small canvas each frame (mapride.js), shown as a cut-out standing on the road
     const hc = document.createElement("canvas"); hc.width = 320; hc.height = 320; const hg = hc.getContext("2d");
     const heroTex = new THREE.CanvasTexture(hc);
@@ -393,7 +394,9 @@ const DIORAMA = (() => {
       }
     }
     for (const [kind, arr] of Object.entries(lists)) {
-      const m = V.cards[kind], g = m.geometry, n = Math.min(arr.length, m.userData.max);
+      if (!V.cards[kind] && arr.length && LOADED.has(K().PROPS[kind].file)) { V.cards[kind] = cardMesh(kind, K().PROPS[kind].tree ? 1800 : 2600); V.scene.add(V.cards[kind]); }
+      const m = V.cards[kind]; if (!m) continue;
+      const g = m.geometry, n = Math.min(arr.length, m.userData.max);
       const ip = g.attributes.iPos.array, is = g.attributes.iSize.array, iff = g.attributes.iFlip.array, asp = m.userData.aspect;
       for (let q = 0; q < n; q++) { const [x, y, z, hh, fl] = arr[q]; ip[q * 3] = x; ip[q * 3 + 1] = y; ip[q * 3 + 2] = z; is[q * 2] = hh * asp; is[q * 2 + 1] = hh; iff[q] = fl; }
       g.instanceCount = n; g.attributes.iPos.needsUpdate = g.attributes.iSize.needsUpdate = g.attributes.iFlip.needsUpdate = true;
@@ -673,8 +676,11 @@ const DIORAMA = (() => {
     if (!usable(I, region)) { detach(); return false; }
     if (!loadThree()) return false;
     if (!V || !V.canvas.isConnected || V.canvas.parentNode !== host) { detach(); V = build(host); if (!V) return false; }
-    if (!ready()) return false;                          // the paintings are still arriving: classic view meanwhile
-    const kit = K().of(region), D = R();
+    // the region's paintings: until a new region's have arrived, the last region's look carries on (on the very first
+    // trip the classic view shows meanwhile)
+    const want = K().of(region);
+    if (ready(want)) { if (V.kit && V.kit !== want) V.patch = null; V.kit = want; } else if (!V.kit) return false;
+    const kit = V.kit, D = R();
     // the route
     const pk = (I.origin || "") + ">" + (I.dest || "") + "|" + I.path.length;
     if (pk !== V.profKey) {
@@ -752,7 +758,14 @@ const DIORAMA = (() => {
     V.scene.fog.color.copy(Lt.fog); V.scene.fog.near = Lt.near; V.scene.fog.far = Lt.far; V.renderer.setClearColor(Lt.fog);
     const gt = new THREE.Color(Lt.tint.r * kit.ground[0], Lt.tint.g * kit.ground[1], Lt.tint.b * kit.ground[2]);
     V.farGround.material.color.copy(gt);
-    if (!V.farGround.material.map && LOADED.has("dio-floor")) { const ft = TEX["dio-floor"].clone(); ft.needsUpdate = true; ft.repeat.set(8000 / 60, 8000 / 60); V.farGround.material.map = ft; V.farGround.material.needsUpdate = true; }
+    { // the region's own ground and distant ridges
+      const fl = kit.floor || "dio-floor";
+      if (V.floorFile !== fl && LOADED.has(fl)) {
+        const gt0 = TEX[fl]; gt0.repeat.copy(TEX["dio-floor"].repeat); V.ground.material.map = gt0; V.ground.material.needsUpdate = true;
+        const ft = gt0.clone(); ft.needsUpdate = true; ft.repeat.set(8000 / 60, 8000 / 60); V.farGround.material.map = ft; V.farGround.material.needsUpdate = true; V.floorFile = fl;
+      }
+      [kit.farFile || "dio-far", kit.midFile || "dio-mid"].forEach((f, i) => { const b = V.backs[i]; if (b.userData.file !== f && LOADED.has(f)) { TEX[f].repeat.set(4, 1); b.material.map = TEX[f]; b.material.needsUpdate = true; b.userData.file = f; } });
+    }
     { // the fog: thickness and colour from the weather, the sun's side of the sky glowing warmer, wisps carried by the wind
       const F = fogU(), wd = V.snow && Lt.snow ? V.snow.windDir() : [0.7, 0.25], fwd = new THREE.Vector3(); V.camera.getWorldDirection(fwd);
       F.dfCam.value.copy(V.camera.position); F.dfCol.value.copy(Lt.fog); F.dfA.value = Lt.fogA; F.dfHaze.value = Lt.haze; F.dfBase.value = here.y - 1; F.dfT.value = I.reduce ? 0 : t; F.dfWisp.value = Lt.wisp; F.dfWind.value.set(wd[0], wd[1]);

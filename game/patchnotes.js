@@ -5,7 +5,7 @@ const PATCHNOTES = (() => {
   const LIST = [
     { id: "b388-diorama", build: 388, date: "27 Nov 2026", title: "A painted road", items: [
       "While you travel, the road view above the map is now a small painted world: the real road you're on bending over gentle hills, hand-painted trees, ferns and rocks along it, misty ridges and sky behind, and you on the road on foot or on your horse.",
-      "What grows depends on where you are: thick pine forest, open tundra with a few trees, rocky hills, snowy mountains, the coast, river valleys and the Rift's golden birches. The same stretch of road always looks the same, for everyone in a party.",
+      "What grows depends on where you are: thick pine forest, open tundra with lichen-covered boulders, rocky hills, snow-laden spruces in the mountains, driftwood and dune grass on the coast, river valleys, the Rift's golden birches and red bushes, dead trees and reeds in the marshes, and burnt trees and steaming vents in the ash lands. Each region has its own ground too. The same stretch of road always looks the same, for everyone in a party.",
       "Hills stay believable: roads never climb steeper than a real mountain road would.",
       "The five cities, twenty towns and villages, High Hrothgar and Sky Haven Temple each have their own painting, so you can tell Riverwood's water wheel, Solitude's great arch and Dragon Bridge's dragon-head bridge as you ride past.",
       "Towns, cities, forts, farms, camps, shrines and standing stones stand by the road where they really are on the map, with their names over the ones you know. Rivers wind past and you cross them on stone bridges, and as you near the end of the trip the view turns to show the place you're arriving at.",
