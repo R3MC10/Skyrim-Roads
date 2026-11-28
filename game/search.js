@@ -89,6 +89,7 @@ const SEARCH = (() => {
     ["Foe turn speed", "Fights", "k:tbFast", "fast combat speed"],
     ["Fight controls", "Fights", "k:tbDock", "action bar combat wheel cards buttons"],
     ["Fight minigames", "Fights", "k:tbGames", "minigame timing strike aim parry rune spell"],
+    ["Minigame style (unique or simple)", "Fights", "k:tbGamesSimple", "minigame simple one tap easy accessibility unique weapon"],
     ["Text size", "Accessibility", "k:a11yText", "font bigger zoom large"], ["Colour-blind help", "Accessibility", "k:a11yColour", "color blind protan deutan tritan"],
     ["High-contrast text", "Accessibility", "k:a11yContrast", "contrast"], ["Reduce motion", "Accessibility", "k:a11yMotion", "shake flash"],
     ["One-hand mode", "Accessibility", "k:a11yHand", "thumb left right hand"],

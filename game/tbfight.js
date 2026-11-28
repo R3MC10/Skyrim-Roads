@@ -1316,7 +1316,7 @@ const TB = (() => {
         let game;
         const g0 = MINIGAME.kindFor(f, a);
         const CH = typeof CHANNEL !== "undefined" ? CHANNEL : null, ch = CH ? CH.begin(sess, a, tgt, iconOf(f, a)) : null;   // [channel] everyone sees you prepare it
-        try { game = MINIGAME.play(root, f, a, { icon: iconOf(f, a), label: g0 && g0.label ? g0.label : sp ? sp.name : a === "power_attack" ? "Power attack" : a === "bash" ? "Shield bash" : a === "block" ? "Guard" : f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack", onProgress: ch ? (p) => CH.progress(sess, ch, p) : null }); }
+        try { game = MINIGAME.play(root, f, a, { icon: iconOf(f, a), label: g0 && g0.label ? g0.label : sp ? sp.name : a === "power_attack" ? "Power attack" : a === "bash" ? "Shield bash" : a === "block" ? "Guard" : f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack", onProgress: ch ? (p) => CH.progress(sess, ch, p) : null, ally: tgt != null && tgt !== "" }); }
         catch (e) { console.error("minigame", a, e); game = null; }   // a broken minigame must not lock the fight: the move goes in as a normal hit
         if (!game || typeof game.then !== "function") { ui.timing = false; if (ch) CH.done(sess, ch, null); return go(null); }
         const tok = ui.timingTok;

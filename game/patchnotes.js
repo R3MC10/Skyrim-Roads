@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b390-mgunique", build: 390, date: "28 Nov 2026", title: "A fight minigame for every weapon, school and move", items: [
+      "Every weapon now plays its own way: stab twice with a dagger, slash along the arc with a sword, let go at the top of a war axe's wind-up, hit the downbeat of a swinging mace, wind up and follow through with a greatsword, charge a battleaxe without overheating it, drop a warhammer onto the ring, thrust a spear through the gap, draw a bow while the wind sways the target, wait for a crossbow's crosshair to settle, throw left-right combos with your fists, or strike with both blades in two lanes. Power attacks play the same game, but faster and tighter.",
+      "Spells too: fire traces a flame, frost holds steady on a drifting crystal, shock is a quick zigzag. Healing a teammate means dragging the light over to them, Alteration turns a ward's pieces into place, Conjuration opens a star and then holds the portal, Mysticism mirrors a pattern, and casting with both hands uses both thumbs.",
+      "Guarding shows what's coming (an arrow, claws, a spell or a blade), a shield bash is a shove forward, a sneak strike waits for the foe to look away, and shouts now get a game: hold on the first word, let go on the last. A perfect shout gives you +1 Might.",
+      "How much a Perfect or a Miss changes the hit is the same as before, and your skill and timing perks still make every game easier.",
+      "Prefer the old one-tap bar? Settings → Fights → Minigame style → Simple. With reduced motion turned on in your phone, the games also give you a bit more time.",
+    ] },
     { id: "b389-gpumap", build: 389, date: "27 Nov 2026", title: "The map drawn by your graphics chip", items: [
       "The world map can now be drawn by your phone's graphics chip too: the painted land, the fog and the clans' colours, the drifting cloud shadows, birds and water sparkles, and the light over it all. It looks the same (checked pixel by pixel against the old way).",
       "Dragging the map or walking just moves the finished picture along instead of copying it again every frame, so a map you look at takes less work.",

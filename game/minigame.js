@@ -13,6 +13,11 @@
    Moves from items [itemgames]: Shield bash is a timed shove (the parry ring), a staff draws its spell's rune, a scroll
    its spell's rune, an oil flask is thrown (strike bar: a Perfect soaks the foe a round longer, a Miss a round shorter).
    Potions, poisons (poisonfight.js), food and fleeing have no game.
+   [mgunique] Owner (27 Nov 2026): "Mini games in combat should be unique by weapon type, by spell school, by action."
+   kindFor now also names the exact game (g.id: dagger, sword, axe, ..., guard, bash, shout, sneak, destruction-fire,
+   alteration, ...) and mg_games.js registers one game per id (MINIGAME.register). The bar / bow / rune games above stay
+   as the fallback and as "Simple (one tap)" in Settings. Shouts now get a game too (hold on the first word, let go on
+   the last; a Perfect gives +1 Might). Grades, multipliers, the widening by skill/perks and o.onProgress are unchanged.
    Auto and the AI never play it (normal damage). Settings → Fights → Minigames turns it off.
    In a party fight each player plays it on their own phone in their own turn (sharedfight.js uses the same screen).
    [channel] o.onProgress(0..1) reports how far a game that can measure it got (the rune's points, the bow's draw):
@@ -30,7 +35,27 @@ const MINIGAME = (() => {
     Alteration: { pts: [[22, 22], [78, 22], [78, 78], [22, 78]], time: 3000, col: "#8ad1ff", drift: 0 },
     Illusion: { pts: [[30, 25], [72, 35], [60, 75], [25, 68]], time: 3200, col: "#c99bff", drift: 1 },
     Conjuration: { pts: [[50, 12], [72, 82], [14, 38], [86, 38], [28, 82]], time: 3600, col: "#9dffb5", drift: 0 },
+    Mysticism: { pts: [[30, 30], [70, 30], [50, 75]], time: 3000, col: "#7fe0d6", drift: 0 },
   };
+  /* [mgunique] every weapon type, spell school and move has its own game (mg_games.js registers them by id).
+     Owner (27 Nov): "Mini games in combat should be unique by weapon type, by spell school, by action."
+     The grade tables above stay the same for all of them: Good = a normal hit, Perfect/Miss as before. */
+  const REG = {};
+  function register(id, build) { REG[id] = build; }
+  const simple = () => { const p = prefs(); return p.tbGamesSimple === true; };   // Settings → Fights → Simple minigames: one tap for everything
+  const reduced = () => { try { return !!(DOM && matchMedia("(prefers-reduced-motion: reduce)").matches); } catch (e) { return false; } };
+  const WEAPON_IDS = { dagger: "dagger", sword: "sword", axe: "axe", mace: "mace", greatsword: "greatsword", battleaxe: "battleaxe", warhammer: "warhammer", spear: "spear", bow: "bow", crossbow: "crossbow", fist: "fist", staff: "staff", claw: "claw" };
+  /* what kind of blow is coming at your guard: an arrow, a claw, a spell or a blade */
+  function incoming(f) {
+    const e = f && f.e; if (!e) return "blade";
+    const fp = e.fp || null, n = String(e.name || "");
+    if ((fp && fp.caster) || /mage|wizard|necromancer|sorcer|witch|shaman|priest|atronach|wisp|hagraven|lich/i.test(n)) return "spell";
+    if (/archer|hunter|ranger|marksman|bow|scout/i.test(n)) return "arrow";
+    const tags = new Set(e.tags || []);
+    if (tags.has("spirit")) return "spell";
+    if (tags.has("beast") || tags.has("animal") || tags.has("dragon") || /wolf|bear|cat|troll|skeever|spider|chaurus|mudcrab|horker|mammoth|sabre/i.test(n)) return "claw";
+    return "blade";
+  }
   function on() {
     const p = prefs();
     if (p.tbGames === false) return false;
@@ -47,8 +72,24 @@ const MINIGAME = (() => {
   };
   /* a staff in your hand casts its spell instead of swinging (magic.js staffAttack): it draws that spell's rune */
   const staffSpell = (f) => (f && f.weapon && f.weapon.staff && !f.bound && typeof D !== "undefined" ? D.SPELLS[f.weapon.staff.spell] || null : null);
-  /* which game a move gets (null: none, e.g. potions, poisons, shouts, Breathe, End turn) */
+  /* which game a move gets (null: none, e.g. potions, poisons, Breathe, End turn) */
   function kindFor(f, a) {
+    const g = kindBase(f, a);
+    if (!g) return null;
+    if (!g.id) {
+      if (g.kind === "rune") g.id = g.staff ? "staff" : String(g.school).toLowerCase() + (g.school === "Destruction" ? "-" + ((g.spell && g.spell.element) || "fire") : "") ;
+      else if (g.kind === "parry") { g.id = g.shove ? "bash" : "guard"; if (!g.shove) g.foe = incoming(f); }
+      else if (g.toss) g.id = "toss";
+      else if (g.kind === "shout") g.id = "shout";
+      else if (a === "beast:claw" || a === "lord:claw" || a === "beast:maul") g.id = "claw";
+      else if ((((f.turn || 0) <= 1 && f.hidden) || f.sneakNext) && !(f.mount && f.mount.up) && (a === "attack" || a === "power_attack") && g.kind !== "aim") g.id = "sneak";   // your first strike from hiding
+      else if (f.off && (a === "attack" || a === "power_attack") && g.kind !== "aim") g.id = "dual";   // two blades: two lanes
+      else g.id = WEAPON_IDS[f.wt] || (g.kind === "aim" ? "bow" : "sword");
+    }
+    if (String(a).startsWith("dual:") && g.kind === "rune") g.dual = true;   // a dual cast: both thumbs
+    return g;
+  }
+  function kindBase(f, a) {
     if (!f || !a) return null;
     if (a === "attack" || a === "power_attack") {   // [itemgames] a staff: the rune of its spell's school
       const st = staffSpell(f);
@@ -59,6 +100,7 @@ const MINIGAME = (() => {
     if (a === "attack" || a === "beast:claw" || a === "lord:claw") return isBow(f) && a === "attack" ? { kind: "aim" } : { kind: "strike" };
     if (a === "power_attack" || a === "beast:maul") return isBow(f) && a === "power_attack" ? { kind: "aim", hard: true } : { kind: "power" };
     if (a === "block") return { kind: "parry" };
+    if (/^shout:/.test(a)) { let words = 1; try { const k = a.split(":")[1]; words = Math.max(1, Math.min(3, (typeof POWERS !== "undefined" && POWERS.level && f.s ? POWERS.level(f.s, k) : 1) || 1)); } catch (e) { words = 1; } return { kind: "shout", words, label: "Shout" }; }   // [mgunique] shouts get a game too
     const sp = spellOf(a);
     if (sp && sp.kind !== "utility") return { kind: "rune", school: SCHOOLS[sp.school] ? sp.school : "Destruction", spell: sp };
     return null;
@@ -88,6 +130,7 @@ const MINIGAME = (() => {
     const tr = (t) => (typeof I18N !== "undefined" && I18N.tr && I18N.lang?.() === "pl" ? I18N.tr(t) ?? t : t);
     const say = (n, what) => ` · ${tr("Perfect")}: +${n} ${tr(what)}`;
     if (g.toss) return "";   // the oil flask: itemFx below
+    if (g.kind === "shout") { STACKS.add(f, "me", "might", 1); return say(1, "Might"); }   // [mgunique] a shout in rhythm
     if (g.kind === "parry") { STACKS.add(f, "me", "might", 1); STACKS.add(f, "me", "haste", 1); return say(1, "Might, +1 Haste"); }
     if (g.kind === "rune") {
       const sp = g.spell, el = sp.element;
@@ -120,9 +163,9 @@ const MINIGAME = (() => {
   const now = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
   function shell(host, g, o, inner, hint) {
     const el = document.createElement("div");
-    el.className = `tbtime mg mg-${g.kind}${g.hard ? " hard" : ""}`; el.setAttribute("role", "button"); el.tabIndex = 0;
+    el.className = `tbtime mg mg-${g.kind}${g.id ? " mg-id-" + g.id : ""}${g.hard || g.kind === "power" ? " hard" : ""}${g.dual ? " dual" : ""}`; el.setAttribute("role", "button"); el.tabIndex = 0;
     el.setAttribute("aria-label", tr(hint));
-    if (g.school) el.style.setProperty("--mgc", SCHOOLS[g.school].col);
+    if (g.school && SCHOOLS[g.school]) el.style.setProperty("--mgc", SCHOOLS[g.school].col);
     el.innerHTML = `<div class="tbt-in mg-in">${inner}<b class="tl">${o.icon || ""} ${o.label || ""}</b><small class="mg-hint">${tr(hint)}</small></div>`;
     host.appendChild(el);
     return el;
@@ -131,6 +174,7 @@ const MINIGAME = (() => {
     if (el._fin) return; el._fin = true; cleanup();
     el.classList.add("hit", gr.cls); const tl = el.querySelector(".tl"); if (tl) tl.textContent = tr(gr.label);
     if (typeof navigator !== "undefined" && navigator.vibrate) try { navigator.vibrate(gr.cls === "perfect" ? [12, 30, 12] : 10); } catch (e) { /* ignore */ }
+    if (gr.cls === "poor" && typeof SOUND !== "undefined" && SOUND.fx) try { SOUND.fx("miss"); } catch (e) { /* ignore */ }
     setTimeout(() => { el.remove(); done(gr); }, gr.cls === "perfect" ? 420 : 260);
   }
   const keys = (fn, up) => {
@@ -202,7 +246,7 @@ const MINIGAME = (() => {
   /* spells: tap (or trace across) the rune's points in order before it fizzles */
   function rune(host, g, o, w) {
     return new Promise((done) => {
-      const S = SCHOOLS[g.school], n = S.pts.length, limit = S.time * Math.min(1.6, w);
+      const S = Object.assign({}, SCHOOLS[g.school] || SCHOOLS.Destruction, g.rune || {}), n = S.pts.length, limit = S.time * Math.min(1.6, w);   // [mgunique] g.rune: an element's own shape (fire flame, shock zigzag)
       const pts = S.pts.map(([x, y]) => [x, y]);
       const lines = S.circle ? `<circle class="mg-path" cx="50" cy="50" r="35"/>` : `<path class="mg-path" d="M${pts.map((p) => p.join(" ")).join(" L")}${n > 3 ? "" : " Z"}"/>`;
       const el = shell(host, g, o, `<svg class="mg-rune" viewBox="0 0 100 100" aria-hidden="true">${lines}<circle class="mg-clock" cx="50" cy="50" r="47"/>${pts.map(([x, y], i) => `<g class="mg-pt" data-i="${i}"><circle cx="${x}" cy="${y}" r="8"/><text x="${x}" y="${y + 3}">${i + 1}</text></g>`).join("")}</svg>`, "Tap the glowing points in order");
@@ -245,7 +289,11 @@ const MINIGAME = (() => {
     const g = kindFor(f, a);
     if (!g) return Promise.resolve(null);
     if (!DOM || !host) return Promise.resolve(grade(0.5, g));
-    const w = width(f, a, g);
+    const w = width(f, a, g) * (reduced() ? 1.2 : 1);   // reduced motion: a little more time
+    if (simple()) return bar(host, Object.assign({}, g, { kind: g.kind === "power" || g.hard ? "power" : g.kind === "parry" ? "parry" : "strike", simple: true }), o, w);   // one tap timing for every move
+    const id = g.dual && REG.dualcast ? "dualcast" : o && o.ally && g.id === "restoration" && REG["restoration-ally"] ? "restoration-ally" : g.id;   // healing a teammate: drag the light to them
+    if (id && REG[id]) { try { const pr = REG[id](host, g, o, w, KIT); if (pr && typeof pr.then === "function") return pr; } catch (e) { console.error("minigame", id, e); } }
+    if (g.kind === "shout") return bar(host, Object.assign({}, g, { kind: "strike" }), o, w);
     if (g.kind === "aim") return aim(host, g, o, w);
     if (g.kind === "rune") return rune(host, g, o, w);
     return bar(host, g, o, w);
@@ -253,8 +301,10 @@ const MINIGAME = (() => {
   /* Settings → Fights */
   function settingsHTML(seg) {
     if (typeof seg !== "function") return "";
-    return `<div class="setrow"><span>${tr("Minigames")}</span>${seg("tbGames", [[true, tr("On")], [false, tr("Off")]], prefs().tbGames !== false)}</div>`;
+    return `<div class="setrow"><span>${tr("Minigames")}</span>${seg("tbGames", [[true, tr("On")], [false, tr("Off")]], prefs().tbGames !== false)}</div>`
+      + `<div class="setrow"><span>${tr("Minigame style")}</span>${seg("tbGamesSimple", [[false, tr("Unique per move")], [true, tr("Simple (one tap)")]], prefs().tbGamesSimple === true)}</div>`;
   }
-  return { on, kindFor, width, grade, simGrade, perfect, itemFx, play, settingsHTML, GRADES, SCHOOLS };
+  const KIT = { shell, finish, keys, now, grade, tr, SCHOOLS, reduced, bar, aim, rune };
+  return { on, kindFor, width, grade, simGrade, perfect, itemFx, play, settingsHTML, GRADES, SCHOOLS, register, REG, incoming, KIT, simple };
 })();
 if (typeof module !== "undefined") module.exports = MINIGAME;
