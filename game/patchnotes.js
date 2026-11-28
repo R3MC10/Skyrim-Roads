@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b393-roadwalk", build: 393, date: "28 Nov 2026", title: "Walking on, steadily", items: [
+      "In the road view you now keep walking at the trip's own pace, even on very slow ground like snowy mountain paths. Before, you took a step and stopped every second.",
+    ] },
     { id: "b392-diorama", build: 392, date: "28 Nov 2026", title: "A painted road", items: [
       "While you travel, the road view above the map is now a small painted world: the real road you're on bending over gentle hills, hand-painted trees, ferns and rocks along it, misty ridges and sky behind, and you on the road on foot or on your horse.",
       "What grows depends on where you are: thick pine forest, open tundra with lichen-covered boulders, rocky hills, snow-laden spruces in the mountains, driftwood and dune grass on the coast, river valleys, the Rift's golden birches and red bushes, dead trees and reeds in the marshes, and burnt trees and steaming vents in the ash lands. Each region has its own ground too. The same stretch of road always looks the same, for everyone in a party.",

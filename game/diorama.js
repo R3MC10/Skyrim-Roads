@@ -835,7 +835,11 @@ const DIORAMA = (() => {
     const before = V.sDisp;
     if (I.reduce) V.sDisp = stopKey ? V.stopAt - APPROACH.gap : target;
     else if (stopKey) V.sDisp += clamp(V.stopAt - APPROACH.gap - V.sDisp, 0, appr.v * dt);
-    else { const goal = target + (V.ahead || 0), gap = goal - V.sDisp, vmax = Math.max(0.6, V.vEst * 1.6 + 0.5); V.sDisp += clamp(gap, -vmax * dt, vmax * dt); }
+    else {   // glide at the trip's own pace, nudged toward where the game says you are: steady walking between its once-a-second
+             // updates, never a quick burst and a wait
+      const goal = target + (V.ahead || 0), gap = goal - V.sDisp;
+      if (V.vEst > 0.02) { const rate = clamp(V.vEst + gap * 0.8, V.vEst * 0.35, V.vEst * 2 + 1); V.sDisp += Math.min(rate * dt, Math.max(0, gap + V.vEst * 0.6)); }
+      else { const vmax = 0.6 + Math.abs(gap) * 0.8; V.sDisp += clamp(gap, -vmax * dt, vmax * dt); } }
     const speed = dt > 0 ? (V.sDisp - before) / dt : 0;
     const moving = !I.reduce && (stopKey ? speed > 0.15 : speed > 0.15 || V.vEst > 0.15);
     const here = D.at(P, V.sDisp), kit = V.kit = kitAt(V.sDisp);
@@ -879,8 +883,8 @@ const DIORAMA = (() => {
     V.camera.lookAt(lx + cx * (tall ? 0.4 : 1) + fx * 1.5, V.camY + (short ? 2.1 : 2.9) + V.lift, lz + cz * (tall ? 0.4 : 1) + fz * 1.5);
     const right = new THREE.Vector3(cx, 0, cz);
     // you
-    if (moving) V.stride += speed * dt / (I.riding ? 2.6 : 0.84);
-    const pace = I.riding ? clamp(speed / 1.6, 0, 4) : 1;
+    if (moving) V.stride += Math.max(speed, I.riding ? 1.6 : 1.1) * dt / (I.riding ? 2.6 : 0.84);   // a steady walking rhythm even on very slow ground
+    const pace = I.riding ? clamp(Math.max(speed, 1.6) / 1.6, 0, 4) : 1;
     drawHero(I, moving, pace, t, V.stride % 1);
     V.hero.position.set(here.x, here.y, here.z); V.hero.rotation.y = -camYaw;
     company(I, P, here, camYaw, moving, speed, t);

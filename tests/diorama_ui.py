@@ -164,24 +164,27 @@ async def main():
             if abs(r["reached"] * 1000 - r["cue"]) > 1200: fails.append(("approach", "the card should open about when you reach them", r))
             if r["sBack"] < 0: fails.append(("approach", "you jumped back after the stop", r))
         # the game moves you about once a second: you keep walking between updates, and stand still once they stop
-        r = await pg.evaluate("""async () => { const A = WORLD.places.Falkreath, B = WORLD.places.Riverwood, path = Terrain.route([A[0], A[1]], [B[0], B[1]]);
+        for pace in (0.5, 0.08):   # a normal pace, and very slow going (mountains in snow)
+         r = await pg.evaluate("""async (pace) => { const A = WORLD.places.Falkreath, B = WORLD.places.Riverwood, path = Terrain.route([A[0], A[1]], [B[0], B[1]]);
           const box = document.getElementById('diobox'); DIORAMA.detach(); let i = Math.floor(path.length * 0.4), pos = path[i];
           const info = () => ({ pos, path, idx: i, look: HEROART.lookOf(window.__dbg.save()), dest: 'Riverwood', origin: 'Falkreath', id: 'me', company: [{ name: 'Lydia', follower: true, look: { r: 'nord', eq: {} } }] });
           for (let k = 0; k < 200 && !DIORAMA.frame(box, info(), 0, 0, 'pine'); k++) await new Promise((r) => setTimeout(r, 30));
-          let walkFrames = 0, total = 0, stillAfter = null;
+          let walkFrames = 0, total = 0, stillAfter = null, adv = 0, s0 = null;
           for (let f = 0; f < 30 * 7; f++) {
-            if (f < 30 * 4 && f % 30 === 0) { const mv = Terrain.moveAlong(path, i, pos, 1, 0.5); pos = mv.pos; i = mv.idx; }   // updates for 4 s, then none
+            if (f < 30 * 4 && f % 30 === 0) { const mv = Terrain.moveAlong(path, i, pos, 1, pace); pos = mv.pos; i = mv.idx; }   // updates for 4 s, then none
             DIORAMA.frame(box, info(), 1 / 30, f / 30, 'pine');
             const m = DIORAMA.debug().moving;
-            if (f > 35 && f < 30 * 4) { total++; if (m) walkFrames++; }
+            const sd = DIORAMA.debug().s;
+            if (f > 35 && f < 30 * 4) { total++; if (m) walkFrames++; if (s0 != null && sd > s0 + 1e-4) adv++; }   // really moving on, not frozen mid-step
+            s0 = sd;
             if (f >= 30 * 4 && !m && stillAfter == null) stillAfter = (f - 30 * 4) / 30;
             await new Promise((r) => setTimeout(r, 5));
           }
-          return { walkShare: walkFrames / total, stillAfter, end: DIORAMA.debug().moving };
-        }""")
-        print("pace", r)
-        if r["walkShare"] < 0.95: fails.append(("pace", "you stop and start between the game's position updates", r["walkShare"]))
-        if r["end"] or r["stillAfter"] is None or r["stillAfter"] > 2.5: fails.append(("pace", "you keep walking after the trip stopped", r))
+          return { pace, walkShare: walkFrames / total, moveShare: adv / total, stillAfter, end: DIORAMA.debug().moving };
+        }""", pace)
+         print("pace", r)
+         if r["walkShare"] < 0.95 or r["moveShare"] < 0.95: fails.append(("pace", "you stop and start between the game's position updates", r))
+         if r["end"] or r["stillAfter"] is None or r["stillAfter"] > 2.5: fails.append(("pace", "you keep walking after the trip stopped", r))
         # a phone that's too slow: first it steps down to lighter quality (1 pixel per point, lighter blur) and keeps drawing
         q = await pg.evaluate("""async () => {
           const A = WORLD.places.Whiterun, B = WORLD.places.Riverwood, path = Terrain.route([A[0], A[1]], [B[0], B[1]]), S = window.__dbg.save();
