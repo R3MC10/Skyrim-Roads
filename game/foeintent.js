@@ -189,8 +189,9 @@ const FOEINTENT = (() => {
   // ------------------------------------------------------------------ on the page
   const rangeOf = (it) => (it.heal ? "" : it.lo || it.hi ? (r0(it.lo) === r0(it.hi) ? `${r0(it.hi)}` : `${r0(it.lo)}–${r0(it.hi)}`) : it.label);
   /* after the fight screen draws: crosshairs on the targeted cards and an arrow in the scene */
-  function decorate(el, sess) {
+  function decorate(el, sess, now) {
     if (!DOM || !el || !sess) return;
+    arrowTok++;   // an arrow still waiting for its frame is for the old screen
     el.querySelectorAll(".fitm,.fitarrow").forEach((x) => x.remove());
     el.querySelectorAll(".fit-on,.fit-next").forEach((x) => x.classList.remove("fit-on", "fit-next"));
     if (el.classList.contains("tbplay") || sess.done) return;
@@ -214,7 +215,12 @@ const FOEINTENT = (() => {
       m.innerHTML = `<i class="xh" aria-hidden="true"></i><b aria-hidden="true">${list.map((it) => it.ic).join("")}</b>${list.length > 1 ? `<small aria-hidden="true">×${list.length}</small>` : ""}`;
       card.appendChild(m);
     }
-    if (nx) arrow(el, sess, nx);
+    if (!nx) return;
+    /* [perf] the arrow is measured off the laid-out scene: drawn just before the screen shows (the redraw is still moving
+       things around until then, and measuring in the middle of it made the phone lay the whole fight out again) */
+    if (now || typeof requestAnimationFrame !== "function") { arrow(el, sess, nx); return; }
+    const tok = arrowTok;
+    requestAnimationFrame(() => { if (tok === arrowTok && el.isConnected && !el.classList.contains("tbplay") && !sess.done) arrow(el, sess, nx, 0, tok); });
   }
   /* the dashed arrow in the battle scene, from the foe to whoever its next blow is for (fightart.js puts you at 27% of the
      width, the foe at 72%, your allies in a line behind you) */
