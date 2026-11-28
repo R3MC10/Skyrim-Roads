@@ -859,7 +859,11 @@ const DIORAMA = (() => {
     let yaw = Math.atan2(tz, tx);
     if (V.yaw == null || I.reduce) V.yaw = yaw; else { let d = yaw - V.yaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; V.yaw += d * Math.min(1, dt * 0.8); }
     // nearly there: the camera swings round to look down the road, so the place you're heading for comes into view
-    const left = P.len - V.sDisp, swing = I.reduce ? 0 : 0.62 * (left > 170 ? 0 : left < 45 ? 1 : (170 - left) / 125);
+    const left = P.len - V.sDisp, ramp = left > 170 ? 0 : left < 45 ? 1 : (170 - left) / 125;
+    // toward the place itself when it's standing there (looking across the road means a yaw of +90 degrees), else down the road
+    let swingTo = 0.62; { const dp = (V.placed || []).find((o) => o.name === I.dest);
+      if (dp) { let a = Math.atan2(dp.z - here.z, dp.x - here.x) + Math.PI / 2 - V.yaw; while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; swingTo = clamp(a * 0.85, -0.3, 1.1); } }
+    const swing = I.reduce ? 0 : swingTo * ramp;
     V.swing = V.swing == null ? swing : V.swing + (swing - V.swing) * Math.min(1, dt * 0.7);
     const camYaw = V.yaw + V.swing;
     const cx = Math.cos(camYaw), cz = Math.sin(camYaw);       // the way you're going, on screen: to the right
