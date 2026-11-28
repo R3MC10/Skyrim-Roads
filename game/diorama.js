@@ -67,9 +67,10 @@ const DIORAMA = (() => {
     if (TEX[name]) return TEX[name];
     const t = new THREE.TextureLoader().load(name + ".webp", () => LOADED.add(name));
     if (wrap) t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    t.anisotropy = 4; TEX[name] = t; return t;
+    t.anisotropy = /dio-floor|dio-road/.test(name) ? MAXANI : 4; TEX[name] = t; return t;   // the ground is seen at a low angle: full anisotropic filtering keeps it sharp instead of smeared sideways
   }
   // a region's paintings, asked for (ground and ridges tile, so they wrap) and all here?
+  let MAXANI = 8;   // set from the GPU once the renderer exists
   const ready = (kit) => K().filesFor(kit).every((f) => { tex(f, /dio-(floor|far|mid|sky|road)/.test(f)); return LOADED.has(f); });
 
   /* fog (one model for everything in the view): exponential height fog after Inigo Quilez's "better fog": the air is
@@ -202,12 +203,42 @@ const DIORAMA = (() => {
       gl_FragColor = vec4(col, 1.);
     }`;
 
+  /* the ground: the painting is laid on from above where the land is flat and from the side where it is steep
+     (triplanar), so embankments never stretch it into streaks; across a region border it blends from the last
+     region's ground (map2, oldTint) to the new one over ~60 m, along a line across the road where you crossed (edge) */
+  function groundMat(map) {
+    const m = new THREE.MeshBasicMaterial({ map }), fogP = THREE.MeshBasicMaterial.prototype.onBeforeCompile;
+    m.userData.tri = { map2: { value: map }, oldTint: { value: new THREE.Color(1, 1, 1) }, edge: { value: new THREE.Vector4(0, 0, 1, 0) }, edgeOn: { value: 0 } };
+    m.onBeforeCompile = function (sh, r) {
+      fogP.call(this, sh, r);
+      Object.assign(sh.uniforms, m.userData.tri);
+      sh.vertexShader = sh.vertexShader.replace("varying vec3 vDioW;", "varying vec3 vDioW; varying vec3 vTriN;")
+        .replace("#include <begin_vertex>", "#include <begin_vertex>\n vTriN = normalize(mat3(modelMatrix) * normal);");
+      sh.fragmentShader = sh.fragmentShader.replace("varying vec3 vDioW;", "varying vec3 vDioW; varying vec3 vTriN; uniform sampler2D map2; uniform vec3 oldTint; uniform vec4 edge; uniform float edgeOn;")
+        .replace("#include <map_fragment>", `
+          vec3 tn = normalize(vTriN), tw = pow(abs(tn), vec3(4.)); tw /= tw.x + tw.y + tw.z;
+          vec2 ua = vDioW.xz * vec2(1., -1.) / 9., ub = vec2(vDioW.x, -vDioW.y) / 9., uc = vec2(vDioW.z, -vDioW.y) / 9.;
+          // seen at a very low angle the painting's clumps squash into stripes; real ground just looks smooth there,
+          // so it eases toward the painting's soft average colour (a blurrier level of the same texture)
+          float sharp = smoothstep(.05, .32, abs(dot(normalize(vDioW - dfCam), tn)));
+          vec4 t1 = mix(texture2D(map, ua, 5.) * tw.y + texture2D(map, ub, 5.) * tw.z + texture2D(map, uc, 5.) * tw.x, texture2D(map, ua) * tw.y + texture2D(map, ub) * tw.z + texture2D(map, uc) * tw.x, sharp);
+          diffuseColor *= mapTexelToLinear(t1);
+          if (edgeOn > .5) {
+            vec4 t0 = mix(texture2D(map2, ua, 5.) * tw.y + texture2D(map2, ub, 5.) * tw.z + texture2D(map2, uc, 5.) * tw.x, texture2D(map2, ua) * tw.y + texture2D(map2, ub) * tw.z + texture2D(map2, uc) * tw.x, sharp);
+            float f = smoothstep(-30., 30., dot(vDioW.xz - edge.xy, edge.zw));
+            diffuseColor.rgb = mix(oldTint * mapTexelToLinear(t0).rgb, diffuseColor.rgb, f);
+          }`);
+    };
+    m.customProgramCacheKey = () => "dio-ground";
+    return m;
+  }
   function build(host) {
     const canvas = document.createElement("canvas"); canvas.className = "dio-cv"; canvas.setAttribute("aria-hidden", "true");
     host.appendChild(canvas);
     let renderer;
     try { renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance", preserveDrawingBuffer: /[?&]diorama\b/.test(location.search) /* tests read the picture back */ }); } catch { canvas.remove(); webgl = false; return null; }
     patchFog();
+    MAXANI = Math.min(16, renderer.capabilities.getMaxAnisotropy() || 4); for (const [k, t] of Object.entries(TEX)) if (/dio-floor|dio-road/.test(k)) { t.anisotropy = MAXANI; t.needsUpdate = true; }
     const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(32, 2, 0.5, 2600);
     const basic = (map, o = {}) => new THREE.MeshBasicMaterial({ map, ...o });
     // sky and two ridges: rings round the camera, far enough to count as the horizon. They move with you but never
@@ -233,7 +264,7 @@ const DIORAMA = (() => {
     const farGround = new THREE.Mesh(new THREE.PlaneGeometry(8000, 8000).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x8e9fae, depthWrite: false }));   // the land beyond the patch: the forest floor, fading into the fog farGround.renderOrder = -11; scene.add(farGround);   // never hides the ridges behind it
     // the ground patch round you (rebuilt as you go) and the road ribbon
     const gGeo = new THREE.PlaneGeometry(240, 240, 96, 96); gGeo.rotateX(-Math.PI / 2);
-    const ground = new THREE.Mesh(gGeo, basic(tex("dio-floor", true))); ground.frustumCulled = false; scene.add(ground);
+    const ground = new THREE.Mesh(gGeo, groundMat(tex("dio-floor", true))); ground.frustumCulled = false; scene.add(ground);
     const edge = document.createElement("canvas"); edge.width = 64; edge.height = 4; const eg = edge.getContext("2d");
     const gr = eg.createLinearGradient(0, 0, 64, 0); gr.addColorStop(0, "#000"); gr.addColorStop(0.2, "#fff"); gr.addColorStop(0.8, "#fff"); gr.addColorStop(1, "#000"); eg.fillStyle = gr; eg.fillRect(0, 0, 64, 4);
     const road = new THREE.Mesh(new THREE.BufferGeometry(), basic(tex("dio-road", true), { alphaMap: new THREE.CanvasTexture(edge), transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }));
@@ -334,6 +365,7 @@ const DIORAMA = (() => {
       if (TR) { let ty = -1; try { ty = TR.typeAtPos(D.toMap(x, z)); } catch { /* off the map */ } if (ty === TT.SEA || ty === TT.LAKE) { lakeH.push(y); y = level != null ? Math.min(y - 2.6, level - 1.6) : y - 2.6; } }
       p.setXYZ(i, x, y, z); uv.setXY(i, x / 9, -z / 9);
     }
+    V.gGeo.computeVertexNormals();   // the ground shader picks top or side projection by slope
     // the lake / sea sheet sits a little under the lowest shore round it
     if (lakeH.length > 6 && level != null) { V.lake.visible = true; V.lake.position.set(cx, level, cz); } else V.lake.visible = false;
     // river ribbons, 9 m wide, a metre under the banks
@@ -384,10 +416,12 @@ const DIORAMA = (() => {
         if (segs.length && D.riverDist(segs, x, z) < 6) continue;   // nothing grows in the river
         if ((V.bridges || []).some((b) => Math.abs(r.s - b.s) < (b.len || 24) / 2 + 4 && r.d < 7)) continue;   // nor on a bridge or right by its ends
         { let ty = -1; try { ty = TR ? TR.typeAtPos(D.toMap(x, z)) : -1; } catch { /* off the map */ } if (ty === TT.SEA || ty === TT.LAKE) continue; }
-        const tall = n === 0 && r.d > 3.8 && (r.side < 0 || r.d > 26) && D.rand(i, j, 31) < kit.trees;
-        const small = !tall && D.rand(i, j, 41 + n) < kit.clutter * (r.d < 12 ? 1 : 0.55);
+        // across a region border the new region's plants take over gradually, over ~60 m along the road
+        const E = V.edge, kk = E && r.s < E.s + 30 && D.rand(i, j, 97) >= Math.min(1, Math.max(0, (r.s - E.s) / 60 + 0.5)) ? E.old : kit;
+        const tall = n === 0 && r.d > 3.8 && (r.side < 0 || r.d > 26) && D.rand(i, j, 31) < kk.trees;
+        const small = !tall && D.rand(i, j, 41 + n) < kk.clutter * (r.d < 12 ? 1 : 0.55);
         if (!tall && !small) continue;
-        const kind = tall ? pickFrom(kit.treeMix, D.rand(i, j, 51)) : pickFrom(kit.clutterMix, D.rand(i, j, 61 + n));
+        const kind = tall ? pickFrom(kk.treeMix, D.rand(i, j, 51)) : pickFrom(kk.clutterMix, D.rand(i, j, 61 + n));
         const Pp = K().PROPS[kind], s = D.rand(i, j, 71 + n), hgt = Pp.h[0] + (Pp.h[1] - Pp.h[0]) * s, y = D.land(P, x, z, hAt, r.i) - 0.05;
         lists[kind].push([x, y, z, hgt, s > 0.5 ? 1 : -1]);
         if (Pp.shadow) sh.push([x, y, z, Pp.shadow * (0.8 + s * 0.4)]);
@@ -679,12 +713,19 @@ const DIORAMA = (() => {
     // the region's paintings: until a new region's have arrived, the last region's look carries on (on the very first
     // trip the classic view shows meanwhile)
     const want = K().of(region);
-    if (ready(want)) { if (V.kit && V.kit !== want) V.patch = null; V.kit = want; } else if (!V.kit) return false;
+    if (ready(want)) {
+      if (V.kit && V.kit !== want) {   // crossed into a new region: a border across the road where you are now
+        V.patch = null;
+        if (V.prof && V.sDisp != null) { const a = R().at(V.prof, V.sDisp - 2), c = R().at(V.prof, V.sDisp + 2), l = Math.hypot(c.x - a.x, c.z - a.z) || 1;
+          V.edge = { s: V.sDisp, old: V.kit, x: (a.x + c.x) / 2, z: (a.z + c.z) / 2, tx: (c.x - a.x) / l, tz: (c.z - a.z) / l, floor: V.floorFile || "dio-floor" }; }
+      }
+      V.kit = want;
+    } else if (!V.kit) return false;
     const kit = V.kit, D = R();
     // the route
     const pk = (I.origin || "") + ">" + (I.dest || "") + "|" + I.path.length;
     if (pk !== V.profKey) {
-      V.prof = D.profile(I.path, hAt); V.profKey = pk; V.sDisp = null; V.patch = null; V.hint = null; if (!V.prof) return false;
+      V.prof = D.profile(I.path, hAt); V.profKey = pk; V.sDisp = null; V.patch = null; V.hint = null; V.edge = null; if (!V.prof) return false;
       // bridges for the whole trip, found once: the road is straightened and levelled across each one
       const TR = typeof Terrain !== "undefined" ? Terrain : null, TT = TR?.T || {}, pts = V.prof.pts;
       let bx0 = Infinity, bx1 = -Infinity, bz0 = Infinity, bz1 = -Infinity; for (const q of pts) { bx0 = Math.min(bx0, q.x); bx1 = Math.max(bx1, q.x); bz0 = Math.min(bz0, q.z); bz1 = Math.max(bz1, q.z); }
@@ -771,7 +812,10 @@ const DIORAMA = (() => {
       F.dfCam.value.copy(V.camera.position); F.dfCol.value.copy(Lt.fog); F.dfA.value = Lt.fogA; F.dfHaze.value = Lt.haze; F.dfBase.value = here.y - 1; F.dfT.value = I.reduce ? 0 : t; F.dfWisp.value = Lt.wisp; F.dfWind.value.set(wd[0], wd[1]);
       F.dfSun.value.copy(Lt.sun); F.dfSunDir.value.set(-right.x * 0.7 + fwd.x * 0.6, 0.35, -right.z * 0.7 + fwd.z * 0.6).normalize();   // the light comes from the upper left, as in every painting
     }
-    V.ground.material.color.copy(gt); for (const a of V.actors.values()) a.mesh.material.color.setRGB(Math.max(0.7, Lt.tint.r), Math.max(0.72, Lt.tint.g), Math.max(0.8, Lt.tint.b)); if (V.bridgeMats) for (const m of Object.values(V.bridgeMats)) if (m.color) m.color.copy(Lt.tint); V.road.material.color.copy(Lt.tint); V.hero.material.color.setRGB(Math.max(0.78, Lt.tint.r), Math.max(0.8, Lt.tint.g), Math.max(0.86, Lt.tint.b)); V.sky.material.color.copy(Lt.tint);   // you stay easy to see
+    V.ground.material.color.copy(gt);
+    { const T = V.ground.material.userData.tri, E = V.edge;   // the ground blends across the last region border
+      T.edgeOn.value = E && LOADED.has(E.floor) ? 1 : 0;
+      if (E) { T.map2.value = TEX[E.floor] || V.ground.material.map; T.edge.value.set(E.x, E.z, E.tx, E.tz); T.oldTint.value.setRGB(Lt.tint.r * E.old.ground[0], Lt.tint.g * E.old.ground[1], Lt.tint.b * E.old.ground[2]); } } for (const a of V.actors.values()) a.mesh.material.color.setRGB(Math.max(0.7, Lt.tint.r), Math.max(0.72, Lt.tint.g), Math.max(0.8, Lt.tint.b)); if (V.bridgeMats) for (const m of Object.values(V.bridgeMats)) if (m.color) m.color.copy(Lt.tint); V.road.material.color.copy(Lt.tint); V.hero.material.color.setRGB(Math.max(0.78, Lt.tint.r), Math.max(0.8, Lt.tint.g), Math.max(0.86, Lt.tint.b)); V.sky.material.color.copy(Lt.tint);   // you stay easy to see
     V.backs.forEach((b) => b.material.color.setRGB(Lt.tint.r * kit.far[0], Lt.tint.g * kit.far[1], Lt.tint.b * kit.far[2]));
     for (const m of [...Object.values(V.cards), ...Object.values(V.places)]) { const u = m.material.uniforms; u.tint.value.copy(Lt.tint); u.camRight.value.copy(right); u.heroPos.value.set(here.x, here.y, here.z); u.camPos.value.copy(V.camera.position); }
     V.post.uniforms.grade.value.set(...Lt.grade); V.post.uniforms.dark.value = Lt.dark;
