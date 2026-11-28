@@ -55,6 +55,14 @@ for (let k = 0; k < 300; k++) {
   if (R.near(P, x, z).i !== bi || R.near(P, x, z, 0).i !== bi) bad++;
 }
 ok(bad === 0, `near() matches a full scan for 300 random points (${bad} differ)`);
+// far from the road too (the fast path for points a long way off)
+let badFar = 0;
+for (let k = 0; k < 40; k++) {
+  const x = P.pts[0].x + (R.rand(k, 3, 9) - 0.5) * 8000, z = P.pts[0].z + (R.rand(k, 4, 9) - 0.5) * 8000;
+  let bi = 0, bd = Infinity; P.pts.forEach((p, i) => { const d = (p.x - x) ** 2 + (p.z - z) ** 2; if (d < bd) { bd = d; bi = i; } });
+  if (R.near(P, x, z).i !== bi) badFar++;
+}
+ok(badFar === 0, `near() is exact far from the road too (${badFar} differ)`);
 // straight across bridges: a bending route gets a straight, level stretch over the crossing
 const bend = []; for (let i = 0; i <= 40; i++) { const a = i / 40 * 1.2; bend.push([0.5 + Math.sin(a) * 0.03, 0.5 - Math.cos(a) * 0.04 + 0.04]); }
 const PB = R.profile(bend, () => 0.2), mid2 = PB.pts[Math.floor(PB.pts.length / 2)];

@@ -90,13 +90,14 @@ const DIOROUTE = (() => {
     // how far out the road can possibly be: the ring count to reach its bounding box
     const reach = Math.ceil(Math.max(G.x0 - x, x - G.x1, G.z0 - z, z - G.z1, 0) / GB) + 1;
     let best = 0, bd = Infinity;
-    for (let r = 0; r < 100000; r++) {
+    if (reach > 12) {   // far from the road: a straight scan of its points is exact and cheaper than many empty rings
+      for (let k = 0; k < P.length; k++) { const d = (P[k].x - x) ** 2 + (P[k].z - z) ** 2; if (d < bd) { bd = d; best = k; } }
+    } else for (let r = 0; r < 100000; r++) {
       if (r > reach && bd <= ((r - 1) * GB) ** 2) break;   // nothing in a further ring can be closer
-      for (let i = -r; i <= r; i++) for (let j = -r; j <= r; j++) {
-        if (Math.max(Math.abs(i), Math.abs(j)) !== r) continue;
-        const a = G.g.get((cx + i) + "," + (cz + j)); if (!a) continue;
-        for (const k of a) { const d = (P[k].x - x) ** 2 + (P[k].z - z) ** 2; if (d < bd || (d === bd && k < best)) { bd = d; best = k; } }
-      }
+      const cell = (i, j) => { const a = G.g.get((cx + i) + "," + (cz + j)); if (!a) return;
+        for (const k of a) { const d = (P[k].x - x) ** 2 + (P[k].z - z) ** 2; if (d < bd || (d === bd && k < best)) { bd = d; best = k; } } };
+      if (r === 0) cell(0, 0);
+      else for (let i = -r; i <= r; i++) { cell(i, -r); cell(i, r); if (i > -r && i < r) { cell(-r, i); cell(r, i); } }   // only the ring's edge
       if (r > reach + 400) break;
     }
     const p = P[best], dx = x - p.x, dz = z - p.z;

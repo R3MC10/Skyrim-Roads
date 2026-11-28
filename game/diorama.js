@@ -26,10 +26,10 @@ const DIORAMA = (() => {
   const setMode = (m) => store.set(KEY, m === "classic" ? "classic" : "diorama");
   const phone = () => DOM && (matchMedia("(pointer: coarse)").matches || innerWidth < 760);
   function settingsHTML(seg) { return `<div class="setrow"><span>Road view</span>${seg("roadView", [["diorama", "Diorama"], ["classic", "Classic"]], mode())}</div>`; }
-  function pref(k, v) { if (k !== "roadView") return false; setMode(v); if (v === "classic") detach(); slow = 0; avgDt = 0; return true; }
+  function pref(k, v) { if (k !== "roadView") return false; setMode(v); if (v === "classic") detach(); slow = 0; avgDt = 0; low = false; return true; }
 
   // ---------------------------------------------------------------- can it run?
-  let webgl = null, threeState = "none", slow = 0, avgDt = 0;   // slow: seconds spent running too slowly
+  let webgl = null, threeState = "none", slow = 0, avgDt = 0, low = false;   // slow: seconds spent running too slowly; low: lighter quality after that
   function hasWebGL() {
     if (webgl !== null) return webgl;
     try { const c = document.createElement("canvas"); webgl = !!(c.getContext("webgl") || c.getContext("experimental-webgl")); } catch { webgl = false; }
@@ -54,7 +54,7 @@ const DIORAMA = (() => {
     if (!I.pos || !Array.isArray(I.path) || I.path.length < 2) return no("no route");
     if (!R() || !K() || !K().of(region)) return no("no kit for " + region);
     if (typeof PERFMODE !== "undefined" && PERFMODE.saver && PERFMODE.saver()) return no("battery saver");
-    if (slow > 6 && !/[?&]diorama\b/.test(location.search)) return no("too slow");   /* ?diorama (tests): always draw */
+    if (slow > 6 && low && !/[?&]diorama\b/.test(location.search)) return no("too slow");   // already on lighter quality and still slow   /* ?diorama (tests): always draw */
     if (threeState === "failed") return no("three.js failed"); if (!hasWebGL()) return no("no WebGL");
     if (typeof navigator !== "undefined" && navigator.webdriver && !/[?&](assets|diorama)\b/.test(location.search)) return no("screen test");   // screen tests keep the classic view unless they ask
     why = ""; return true;
@@ -364,7 +364,12 @@ const DIORAMA = (() => {
     if (best && !best.x) { const D = R(), a = D.at(V.prof, best.s - 2), c = D.at(V.prof, best.s + 2), l = Math.hypot(c.x - a.x, c.z - a.z) || 1; Object.assign(best, { x: (a.x + c.x) / 2, z: (a.z + c.z) / 2, tx: (c.x - a.x) / l, tz: (c.z - a.z) / l }); }
     return best;
   }
-  function rebuild(cx, cz, kit) {
+  /* the land round you, rebuilt every 25 m: the heavy part (the ground's heights, what grows on every 6 m cell) is spread
+     over frames, a few ms each, into spare buffers, then swapped in at once, so walking on never stutters. A job is a
+     generator: it yields whenever this frame's share of time (V.jobT, set by the caller) is used up. */
+  const JOB_MS = 5;
+  const over = () => performance.now() - V.jobT > JOB_MS;
+  function* rebuild(cx, cz, kit) {
     const P = V.prof, D = R();
     // ground
     const p = V.gGeo.attributes.position, uv = V.gGeo.attributes.uv;
@@ -388,14 +393,17 @@ const DIORAMA = (() => {
       }
       hs.sort((a, c) => a - c); level = hs.length > 4 ? hs[Math.floor(hs.length * 0.1)] - 0.6 : null; LAKE_LEVEL.set(tile, level);
     }
+    const SP = V.gScratch || (V.gScratch = new Float32Array(p.array.length)), SU = V.uScratch || (V.uScratch = new Float32Array(uv.array.length));
     for (let i = 0; i < p.count; i++) {
+      if ((i & 63) === 63 && over()) yield;
       const x = b[i * 3] + cx, z = b[i * 3 + 2] + cz;
       let y = D.land(P, x, z, hAt, hint);
       // water: the river's channel and lake or sea beds sink below the banks
       if (segs.length) { const rd = D.riverDist(segs, x, z); if (rd < 8) { const k = rd < 3.5 ? 1 : 1 - (rd - 3.5) / 4.5, keep = roadKeep(x, z); y -= (underBridge(x, z) ? 3.8 : 2.2) * k * k * (3 - 2 * k) * keep; } }
       if (TR) { let ty = -1; try { ty = TR.typeAtPos(D.toMap(x, z)); } catch { /* off the map */ } if (ty === TT.SEA || ty === TT.LAKE) { lakeH.push(y); y = level != null ? Math.min(y - 2.6, level - 1.6) : y - 2.6; } }
-      p.setXYZ(i, x, y, z); uv.setXY(i, x / 9, -z / 9);
+      SP[i * 3] = x; SP[i * 3 + 1] = y; SP[i * 3 + 2] = z; SU[i * 2] = x / 9; SU[i * 2 + 1] = -z / 9;
     }
+    p.array.set(SP); uv.array.set(SU);   // all at once: the ground never shows half old, half new
     V.gGeo.computeVertexNormals();   // the ground shader picks top or side projection by slope
     // the lake / sea sheet sits a little under the lowest shore round it
     if (lakeH.length > 6 && level != null) { V.lake.visible = true; V.lake.position.set(cx, level, cz); } else V.lake.visible = false;
@@ -441,6 +449,7 @@ const DIORAMA = (() => {
     const pickFrom = (mix, u) => { let a = 0; for (const [kk, w] of Object.entries(mix)) { a += w; if (u <= a) return kk; } return Object.keys(mix)[0]; };
     const c0x = Math.floor((cx - RAD) / CELL), c1x = Math.floor((cx + RAD) / CELL), c0z = Math.floor((cz - RAD) / CELL), c1z = Math.floor((cz + RAD) / CELL);
     for (let i = c0x; i <= c1x; i++) for (let j = c0z; j <= c1z; j++) {
+      if (over()) yield;
       for (let n = 0; n < 2; n++) {
         const x = (i + D.rand(i, j, 11 + n)) * CELL, z = (j + D.rand(i, j, 21 + n)) * CELL;
         const r = D.near(P, x, z); if (r.d < 2.9) continue;
@@ -449,7 +458,8 @@ const DIORAMA = (() => {
         { let ty = -1; try { ty = TR ? TR.typeAtPos(D.toMap(x, z)) : -1; } catch { /* off the map */ } if (ty === TT.SEA || ty === TT.LAKE) continue; }
         // each spot grows what its region grows; the border is a ragged band ~50 m wide, fixed on the land
         const kk = kitAt(r.s + (D.rand(i, j, 97) - 0.5) * 50) || kit;
-        const tall = n === 0 && r.d > 3.8 && (r.side < 0 || r.d > 26) && D.rand(i, j, 31) < kk.trees;
+        // in the short phone band the far side keeps a ~10 m clearing so the land and sky show past the trees
+        const tall = n === 0 && r.d > (V.shortBand && r.side < 0 ? 10 : 3.8) && (r.side < 0 || r.d > 26) && D.rand(i, j, 31) < kk.trees;
         const small = !tall && D.rand(i, j, 41 + n) < kk.clutter * (r.d < 12 ? 1 : 0.55);
         if (!tall && !small) continue;
         const kind = tall ? pickFrom(kk.treeMix, D.rand(i, j, 51)) : pickFrom(kk.clutterMix, D.rand(i, j, 61 + n));
@@ -574,8 +584,8 @@ const DIORAMA = (() => {
         const r = D.near(P, c.x0, c.z0), q = P.pts[r.i];
         // try outward in rings, the road's far side first (the camera looks from the other)
         const reach = c.art.rank >= 7 ? 220 : 120;   // towns and cities look further for dry land before giving up
-        for (let dist = 6; dist <= reach && !spot; dist += 6) for (let k = 0; k < 16 && !spot; k++) {
-          const a = Math.atan2(-q.tx, q.tz) + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (Math.PI / 8);   // starts pointing to the far side, then fans round
+        for (let dist = 9; dist <= reach && !spot; dist += 9) for (let k = 0; k < 12 && !spot; k++) {
+          const a = Math.atan2(-q.tx, q.tz) + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (Math.PI / 6);   // starts pointing to the far side, then fans round
           const x = c.x0 + Math.cos(a) * dist, z = c.z0 + Math.sin(a) * dist;
           if (fits(x, z)) spot = [x, z];
         }
@@ -745,19 +755,20 @@ const DIORAMA = (() => {
     // the route
     const pk = (I.origin || "") + ">" + (I.dest || "") + "|" + I.path.length;
     if (pk !== V.profKey) {
-      V.prof = D.profile(I.path, hAt); V.profKey = pk; V.sDisp = null; V.patch = null; V.hint = null; V.allReady = false; if (!V.prof) return false;
+      const T0 = performance.now(); V.prof = D.profile(I.path, hAt); const T1 = performance.now(); V.profKey = pk; V.sDisp = null; V.patch = null; V.hint = null; V.allReady = false; if (!V.prof) return false;
       // bridges for the whole trip, found once: the road is straightened and levelled across each one
       const TR = typeof Terrain !== "undefined" ? Terrain : null, TT = TR?.T || {}, pts = V.prof.pts;
       let bx0 = Infinity, bx1 = -Infinity, bz0 = Infinity, bz1 = -Infinity; for (const q of pts) { bx0 = Math.min(bx0, q.x); bx1 = Math.max(bx1, q.x); bz0 = Math.min(bz0, q.z); bz1 = Math.max(bz1, q.z); }
       const segsAll = TR ? D.riverSegs(TR.rivers, (bx0 + bx1) / 2, (bz0 + bz1) / 2, Math.max(bx1 - bx0, bz1 - bz0) / 2 + 20) : [];
       const cross = D.crossings(V.prof, segsAll).filter((c) => { try { return !TR || TR.typeAtPos(D.toMap(c.x, c.z)) !== TT.RIVER; } catch { return true; } });   // fords stay fords
-      V.bridges = D.straighten(V.prof, cross);
-      V.placed = placeAll(V.prof, segsAll, TR, TT);
+      V.bridges = D.straighten(V.prof, cross); const T2 = performance.now();
+      V.placed = placeAll(V.prof, segsAll, TR, TT); const T3 = performance.now();
       V.regs = regionsAlong(V.prof, region, I.pos);
+      V.dbg.trip = { profile: T1 - T0, rivers: T2 - T1, places: T3 - T2, regions: performance.now() - T3 };   // ms, for the phone tests
     }
     // every region on this road has its paintings asked for at the start of the trip; the first trip waits for them
     // (classic view meanwhile), later ones carry on and fill in as they arrive
-    if (!V.allReady) { V.allReady = V.regs.every((g) => ready(g.kit)); if (V.allReady) V.patch = null; else if (!V.drewOnce) return false; }
+    if (!V.allReady) { V.allReady = V.regs.every((g) => ready(g.kit)); if (V.allReady) V.dirty = true; else if (!V.drewOnce) return false; }
     const P = V.prof, [hx0, hz0] = D.toWorld(I.pos);
     const nr = D.near(P, hx0, hz0, V.hint); V.hint = nr.i;
     // where you are along the road, eased so the trip's updates glide instead of jumping
@@ -784,14 +795,18 @@ const DIORAMA = (() => {
     const moving = !I.reduce && (stopKey ? speed > 0.15 : speed > 0.15 || V.vEst > 0.15);
     const here = D.at(P, V.sDisp), kit = V.kit = kitAt(V.sDisp);
     // rebuild the land when you've moved on
-    if (!V.patch || Math.hypot(here.x - V.patch[0], here.z - V.patch[1]) > 25) rebuild(here.x, here.z, kit);
+    { const sb = host.clientHeight < 200; if (sb !== V.shortBand) { V.shortBand = sb; if (V.patch) V.dirty = true; }   // the band's shape decides the clearing
+      const moved = V.patch ? Math.hypot(here.x - V.patch[0], here.z - V.patch[1]) : Infinity;
+      if (moved > 100) { V.job = null; V.jobT = Infinity; for (const _ of rebuild(here.x, here.z, kit)) { /* all at once: nothing to show yet */ } }
+      else if (!V.job && (moved > 25 || V.dirty)) { V.dirty = false; V.job = rebuild(here.x, here.z, kit); }   // a picture arrived, or you moved on
+      if (V.job) { V.jobT = performance.now(); if (V.job.next().done) V.job = null; V.dbg.slice = performance.now() - V.jobT; } else V.dbg.slice = 0; }
     // size
-    const w = host.clientWidth, h = host.clientHeight, pr = Math.min(devicePixelRatio || 1, phone() ? 1.5 : 1.75);
+    const w = host.clientWidth, h = host.clientHeight, pr = low ? 1 : Math.min(devicePixelRatio || 1, phone() ? 1.5 : 1.75);
     if (w !== V.w || h !== V.h || V.pr !== pr) {
       V.w = w; V.h = h; V.pr = pr; V.renderer.setPixelRatio(pr); V.renderer.setSize(w, h, false);
       V.camera.aspect = w / Math.max(1, h); V.camera.fov = V.camera.aspect < 1.2 ? 44 : 30; V.camera.updateProjectionMatrix();
       V.rt.setSize(Math.round(w * pr), Math.round(h * pr)); V.post.uniforms.res.value.set(w * pr, h * pr);
-      V.post.uniforms.taps.value = phone() ? 10 : 16; V.post.uniforms.blur.value = (phone() ? 4.5 : 6) * pr;
+      V.post.uniforms.taps.value = low ? 6 : phone() ? 10 : 16; V.post.uniforms.blur.value = (phone() || low ? 4.5 : 6) * pr;
     }
     // the camera: beside the road, looking across it, a little behind you, turning gently with the road
     const ahead = D.at(P, V.sDisp + 14), back = D.at(P, V.sDisp - 14);
@@ -866,9 +881,9 @@ const DIORAMA = (() => {
     }
     V.farGround.position.set(cpos.x, Math.min(here.y, V.camY) - 0.8, cpos.z);
     // snow (it eases in and out with the weather, like the map's)
-    if (V.snow) { V.snow.update(dt, t, V.camera, here.y, Lt, { reduce: I.reduce, lite: phone(), h: V.h }); V.post.uniforms.wo.value = I.reduce ? 0 : V.snow.whiteout(); V.post.uniforms.woT.value = t; const wd = V.snow.windDir(); V.post.uniforms.woDir.value.set(wd[0] * right.x + wd[1] * right.z, 0); }
+    if (V.snow) { V.snow.update(dt, t, V.camera, here.y, Lt, { reduce: I.reduce, lite: phone() || low, h: V.h }); V.post.uniforms.wo.value = I.reduce ? 0 : V.snow.whiteout(); V.post.uniforms.woT.value = t; const wd = V.snow.windDir(); V.post.uniforms.woDir.value.set(wd[0] * right.x + wd[1] * right.z, 0); }
     // a place's picture just arrived: put it in
-    if (V.placeList.some((o) => LOADED.has(o.file) && !V.places[o.file]) || (V.wantBridge && LOADED.has(K().BRIDGE.file))) { V.patch = null; V.wantBridge = false; }
+    if (V.placeList.some((o) => LOADED.has(o.file) && !V.places[o.file]) || (V.wantBridge && LOADED.has(K().BRIDGE.file))) { V.dirty = true; V.wantBridge = false; }
     // the current drifts down the river; the lake ripples slowly
     { V.waterT = (V.waterT || 0) + (I.reduce ? 0 : dt);
       for (const m of [V.river.material, V.lake.material]) { const u = m.uniforms; u.t.value = V.waterT; u.tint.value.copy(Lt.tint);
@@ -881,7 +896,9 @@ const DIORAMA = (() => {
     V.renderer.setRenderTarget(null); V.renderer.render(V.postScene, V.postCam);
     // too slow for this phone? frames that keep taking long hand back to the classic view
     // too slow for this phone? an average under ~18 pictures a second for 6 s hands back to the classic view
-    if (dt > 0 && !I.reduce) { avgDt = avgDt ? avgDt * 0.95 + Math.min(dt, 0.25) * 0.05 : dt; if (avgDt > 0.055) slow += dt; else slow = Math.max(0, slow - dt); }
+    if (dt > 0 && !I.reduce) { avgDt = avgDt ? avgDt * 0.95 + Math.min(dt, 0.25) * 0.05 : dt; if (avgDt > 0.055) slow += dt; else slow = Math.max(0, slow - dt);
+      if (slow > 4 && !low) { low = true; slow = 0; avgDt = 0; }   // first step down: fewer pixels, a lighter blur, less snow; the classic view only if that's still too slow
+    }
     V.dbg = { ...V.dbg, region, ahead: V.ahead || 0, stopAt: V.stopKey ? V.stopAt : null, s: V.sDisp, len: P.len, moving, riding: !!I.riding, tod: Lt.tod, wx: Lt.wx, snow: V.snow ? V.snow.live() : 0, ms: (typeof performance !== "undefined" ? performance.now() : 0) - t0, y: here.y };
     return true;
   }
@@ -913,6 +930,6 @@ const DIORAMA = (() => {
   return { frame, detach, mode, setMode, settingsHTML, pref, usable, cueMs, showing: () => !!(V && V.canvas.isConnected && V.lastDrew && performance.now() - V.lastDrew < 1500), debug: () => (V ? V.dbg : null),
     /* tests: every cut-out and place as it stands now, and whether a spot is in water */
     _v: () => V, _snap: () => V && { props: Object.entries(V.cards).flatMap(([k, m]) => { const a = m.geometry.attributes.iPos.array, n = m.geometry.instanceCount, out = []; for (let i = 0; i < n; i++) out.push([k, a[i * 3], a[i * 3 + 1], a[i * 3 + 2]]); return out; }),
-      places: V.placeList.map((o) => ({ name: o.name, file: o.file, x: o.x, y: o.y, z: o.z, rad: o.rad, s: o.s, d: o.d * o.side, wet: V.wet ? footWet(V.prof, o.x, o.z, o.rad, V.wet) : null })), patch: V.patch, lake: V.lake.visible ? V.lake.position.y : null }, why: () => why || (threeState !== "ready" ? "loading three.js" : V && !ready() ? "loading paintings" : ""), _slow: () => slow };
+      places: V.placeList.map((o) => ({ name: o.name, file: o.file, x: o.x, y: o.y, z: o.z, rad: o.rad, s: o.s, d: o.d * o.side, wet: V.wet ? footWet(V.prof, o.x, o.z, o.rad, V.wet) : null })), patch: V.patch, lake: V.lake.visible ? V.lake.position.y : null }, why: () => why || (threeState !== "ready" ? "loading three.js" : V && !ready() ? "loading paintings" : ""), _slow: () => slow, _q: () => ({ slow, low, pr: V && V.pr }) };
 })();
 if (typeof module !== "undefined") module.exports = DIORAMA;

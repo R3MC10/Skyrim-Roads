@@ -91,8 +91,9 @@ async def main():
           let box = document.getElementById('diobox'); if (box) box.remove();
           box = document.createElement('div'); box.id = 'diobox'; box.style.cssText = 'position:fixed;left:0;top:0;width:960px;height:310px;z-index:99999'; document.body.appendChild(box);
           const snapAt = async (f) => { const i = Math.floor(path.length * f), info = { pos: path[i], path, idx: i, look, sky: null, dest: d, origin: o, known: () => true, id: 'me' };
-            DIORAMA.detach(); for (let k = 0; k < 200 && !DIORAMA.frame(box, info, 0, 0, region); k++) await new Promise((r) => setTimeout(r, 30));
-            for (let k = 0; k < 5; k++) { DIORAMA.frame(box, info, 0, 0, region); await new Promise((r) => setTimeout(r, 30)); }
+            const reg = FPSCENE.regionOf(null, FPSCENE.survey(path[i]));   // as the game does: the region where you are on the map
+            DIORAMA.detach(); for (let k = 0; k < 200 && !DIORAMA.frame(box, info, 0, 0, reg); k++) await new Promise((r) => setTimeout(r, 30));
+            for (let k = 0; k < 5; k++) { DIORAMA.frame(box, info, 0, 0, reg); await new Promise((r) => setTimeout(r, 30)); }
             return DIORAMA._snap(); };
           const a = await snapAt(fa), b = await snapAt(fb);
           const mx = (a.patch[0] + b.patch[0]) / 2, mz = (a.patch[1] + b.patch[1]) / 2, gap = Math.hypot(a.patch[0] - b.patch[0], a.patch[1] - b.patch[1]);
@@ -181,6 +182,18 @@ async def main():
         print("pace", r)
         if r["walkShare"] < 0.95: fails.append(("pace", "you stop and start between the game's position updates", r["walkShare"]))
         if r["end"] or r["stillAfter"] is None or r["stillAfter"] > 2.5: fails.append(("pace", "you keep walking after the trip stopped", r))
+        # a phone that's too slow: first it steps down to lighter quality (1 pixel per point, lighter blur) and keeps drawing
+        q = await pg.evaluate("""async () => {
+          const A = WORLD.places.Whiterun, B = WORLD.places.Riverwood, path = Terrain.route([A[0], A[1]], [B[0], B[1]]), S = window.__dbg.save();
+          const box = document.getElementById('diobox') || Object.assign(document.body.appendChild(document.createElement('div')), { id: 'diobox' }); box.style.cssText = 'position:fixed;left:0;top:0;width:390px;height:150px;z-index:99999';
+          const i = Math.floor(path.length * 0.4), info = { pos: path[i], path, idx: i, look: HEROART.lookOf(S), sky: null, dest: 'Riverwood', origin: 'Whiterun', known: () => true, id: 'me' };
+          DIORAMA.detach(); for (let k = 0; k < 200 && !DIORAMA.frame(box, info, 0, 0, 'tundra'); k++) await new Promise((r) => setTimeout(r, 30));
+          let drew = 0; for (let k = 0; k < 70; k++) if (DIORAMA.frame(box, info, 0.1, k * 0.1, 'tundra')) drew++;
+          return { ...DIORAMA._q(), drew };
+        }""")
+        print("slow phone", q)
+        if not q["low"] or q["pr"] != 1 or q["drew"] < 60: fails.append(("slow phone", "should step down to lighter quality and keep drawing", q))
+        await pg.evaluate("DIORAMA.pref('roadView', 'diorama')")   # back to full quality
         # a region with no kit, and Road view: Classic → the classic view draws
         r = await pg.evaluate(RUN, ["Morthal", "Solitude", "nowhere", False, 390, 150, "day", "clear", 1, 0.3, None])
         if r["drew"]: fails.append(("no kit", "should keep the classic view"))
