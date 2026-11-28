@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b391-snappyfights", build: 391, date: "28 Nov 2026", title: "Snappier fights on phones", items: [
+      "Opening Magic or Items and going back during a fight does a lot less behind-the-scenes work, so slower phones react quicker and stutter less. Nothing looks different.",
+      "Fixed a rare freeze where the fight screen could get stuck rearranging itself for many seconds after you opened a menu.",
+      "The first-fight tips no longer keep re-measuring the screen four times a second while nothing moves.",
+    ] },
     { id: "b390-mgunique", build: 390, date: "28 Nov 2026", title: "A fight minigame for every weapon, school and move", items: [
       "Every weapon now plays its own way: stab twice with a dagger, slash along the arc with a sword, let go at the top of a war axe's wind-up, hit the downbeat of a swinging mace, wind up and follow through with a greatsword, charge a battleaxe without overheating it, drop a warhammer onto the ring, thrust a spear through the gap, draw a bow while the wind sways the target, wait for a crossbow's crosshair to settle, throw left-right combos with your fists, or strike with both blades in two lanes. Power attacks play the same game, but faster and tighter.",
       "Spells too: fire traces a flame, frost holds steady on a drifting crystal, shock is a quick zigzag. Healing a teammate means dragging the light over to them, Alteration turns a ward's pieces into place, Conjuration opens a star and then holds the portal, Mysticism mirrors a pattern, and casting with both hands uses both thumbs.",
