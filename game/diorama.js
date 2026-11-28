@@ -178,28 +178,30 @@ const DIORAMA = (() => {
   const POST_FS = `
     uniform sampler2D t; uniform vec2 res; uniform float focus, band, blur, taps, dark, wo, woT; uniform vec2 woDir; uniform vec3 grade; varying vec2 vUv;
     void main(){
-      vec3 base = texture2D(t, vUv).rgb;
+      // the blur and the glow are mixed in linear light (squared), as a lens does: bright bits bloom into soft round
+      // highlights instead of greying out, which gives the painted diorama its photographic depth
+      vec3 base = texture2D(t, vUv).rgb; base *= base;
       float d = max(0., abs(vUv.y - focus) - band) / (1. - band);
       float r = d * d * blur * 2.2;
       vec3 acc = base; float wsum = 1.; vec3 glow = vec3(0.);
-      for (int i = 0; i < 20; i++) {
+      for (int i = 0; i < 24; i++) {
         if (float(i) >= taps) break;
         float fi = float(i) + .5, a = fi * 2.39996, rr = sqrt(fi / taps);
         vec2 o = vec2(cos(a), sin(a)) * rr;
-        acc += texture2D(t, vUv + o * r / res).rgb; wsum += 1.;
-        glow += max(texture2D(t, vUv + o * 14. / res).rgb - .62, 0.);
+        vec3 c = texture2D(t, vUv + o * r / res).rgb; acc += c * c; wsum += 1.;
+        vec3 g = texture2D(t, vUv + o * 14. / res).rgb; glow += max(g * g - .35, 0.);
       }
-      vec3 col = acc / wsum + glow / taps * .8;
+      vec3 col = sqrt(max(acc / wsum + glow / taps * .9, 0.));
       col *= grade;
       float l = dot(col, vec3(.3,.59,.11));
-      col = mix(vec3(l), col, 1.06);
-      col = mix(col, col * vec3(.84,.92,1.05), (1. - l) * .22);
+      col = mix(vec3(l), col, 1.08);                          // a touch more colour
+      col = mix(col, col * vec3(.82,.9,1.05), (1. - l) * .25);  // cool shadows
       if (wo > .01) {   // whiteout drifting past in patches, carried by the wind
         vec2 p = vUv * vec2(res.x / res.y, 1.) * 1.6 - woDir * woT * .02;
         float n = sin(p.x * 2.1 + woT * .21) * sin(p.y * 2.7 - woT * .17) + .6 * sin(p.x * 4.3 - p.y * 3.1 + woT * .33);
         col = mix(col, vec3(.93, .95, .98) * grade, wo * .08 * smoothstep(-.6, 1.3, n));
       }
-      vec2 q = vUv - .5; col *= 1. - dot(q * vec2(1., 1.25), q * vec2(1., 1.25)) * (.5 + dark);
+      vec2 q = vUv - .5; col *= 1. - dot(q * vec2(1., 1.25), q * vec2(1., 1.25)) * (.55 + dark);
       gl_FragColor = vec4(col, 1.);
     }`;
 
@@ -329,7 +331,7 @@ const DIORAMA = (() => {
     scene.fog = new THREE.Fog(0x8e9fae, 30, 190);
     // the finish
     const rt = new THREE.WebGLRenderTarget(2, 2, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat });
-    const post = new THREE.ShaderMaterial({ uniforms: { t: { value: rt.texture }, res: { value: new THREE.Vector2(1, 1) }, focus: { value: 0.38 }, band: { value: 0.18 }, blur: { value: 8 }, taps: { value: 14 }, grade: { value: new THREE.Vector3(1, 1, 1) }, dark: { value: 0 }, wo: { value: 0 }, woT: { value: 0 }, woDir: { value: new THREE.Vector2(0, 0) } },
+    const post = new THREE.ShaderMaterial({ uniforms: { t: { value: rt.texture }, res: { value: new THREE.Vector2(1, 1) }, focus: { value: 0.40 }, band: { value: 0.13 }, blur: { value: 8 }, taps: { value: 14 }, grade: { value: new THREE.Vector3(1, 1, 1) }, dark: { value: 0 }, wo: { value: 0 }, woT: { value: 0 }, woDir: { value: new THREE.Vector2(0, 0) } },
       vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }", fragmentShader: POST_FS, depthTest: false, depthWrite: false });
     const postScene = new THREE.Scene(), postCam = new THREE.Camera(); postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), post));
     return { haze, shadowTex, actors: new Map(), canvas, renderer, scene, camera, sky, backs, farGround, gGeo, ground, dGeo, farLand, road, shadows, cards, hero, hg, heroTex, heroShadow, snow, rt, post, postScene, postCam, river, waterTex, lake, lakeTex, places, placeList: [], labels: new Map(),
@@ -835,7 +837,7 @@ const DIORAMA = (() => {
       V.w = w; V.h = h; V.pr = pr; V.renderer.setPixelRatio(pr); V.renderer.setSize(w, h, false);
       V.camera.aspect = w / Math.max(1, h); V.camera.fov = V.camera.aspect < 1.2 ? 44 : 30; V.camera.updateProjectionMatrix();
       V.rt.setSize(Math.round(w * pr), Math.round(h * pr)); V.post.uniforms.res.value.set(w * pr, h * pr);
-      V.post.uniforms.taps.value = low ? 6 : phone() ? 10 : 16; V.post.uniforms.blur.value = (phone() || low ? 4.5 : 6) * pr;
+      V.post.uniforms.taps.value = low ? 6 : phone() ? 10 : 20; V.post.uniforms.blur.value = (phone() || low ? 7 : 9) * pr;   // as tuned in the Pinewood Diorama demo
     }
     // the camera: beside the road, looking across it, a little behind you, turning gently with the road
     const ahead = D.at(P, V.sDisp + 14), back = D.at(P, V.sDisp - 14);
